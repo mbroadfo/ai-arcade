@@ -38,7 +38,8 @@ installation automation with backups, not manual Pi edits.
   Start. The user then confirmed the game started and Pac-Man moved left into
   a wall. A further trial used the remaining credit and sent Left, Up, Right,
   Down for 1.2 seconds each, then released all controls. The broker acknowledged
-  every input; confirmation of the other three directions is pending. A wall
+  every input; the user confirmed Left, Up, Right, then Down and subsequent
+  death. All four directions are confirmed. Credits were exhausted. A wall
   blocking movement must not be mistaken for an input failure.
 
 Next validation: confirm effective Start and joystick behavior, then automate
