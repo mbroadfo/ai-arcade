@@ -1,0 +1,6 @@
+aws_region  = "us-west-2"
+bucket_name = "replace-me-ai-arcade-private-backup"
+
+# Backup-safety defaults
+noncurrent_version_expiration_days = 90
+force_destroy                      = false
