@@ -66,7 +66,10 @@ def stop_legacy_brokers():
 def main():
     parser = argparse.ArgumentParser(description='Install AI Arcade Pi services')
     parser.add_argument('--source', default=str(Path(__file__).resolve().parent))
+    parser.add_argument('--timeout', type=float, default=30)
     args = parser.parse_args()
+    if not 0 <= args.timeout <= 600:
+        parser.error('--timeout must be between 0 and 600 seconds')
     source = Path(args.source).resolve()
 
     require_root()
@@ -84,7 +87,7 @@ def main():
     ensure_evdev()
     stop_legacy_brokers()
 
-    stamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+    stamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
     backup = INSTALL_DIR / 'backups' / stamp
     backup.mkdir(parents=True, exist_ok=True)
     shutil.copy2(str(ES_CFG), str(backup / 'es_input.cfg'))
@@ -108,7 +111,7 @@ def main():
     run('systemctl', 'daemon-reload')
     run('systemctl', 'enable', SERVICE_NAME)
     run('systemctl', 'restart', SERVICE_NAME)
-    run(sys.executable, str(INSTALL_DIR / 'verify.py'))
+    run(sys.executable, str(INSTALL_DIR / 'verify.py'), '--timeout', str(args.timeout))
 
     print('\nAI Arcade Pi installation complete.')
     print('Backup snapshot:', backup)

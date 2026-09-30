@@ -13,7 +13,10 @@ def main():
     p.add_argument('--user', default='pi')
     p.add_argument('--key', default=str(Path.home() / '.ssh' / 'id_rsa'))
     p.add_argument('--port', type=int, default=22)
+    p.add_argument('--timeout', type=float, default=30, help='Pi readiness retry window in seconds')
     args = p.parse_args()
+    if not 0 <= args.timeout <= 600:
+        p.error('--timeout must be between 0 and 600 seconds')
 
     ssh = paramiko.SSHClient()
     ssh.load_system_host_keys()
@@ -21,7 +24,8 @@ def main():
     ssh.connect(args.host, port=args.port, username=args.user,
                 key_filename=str(Path(args.key).expanduser()), timeout=10)
     try:
-        _, stdout, stderr = ssh.exec_command('sudo /usr/bin/python3 /opt/ai-arcade/verify.py')
+        _, stdout, stderr = ssh.exec_command(
+            'sudo /usr/bin/python3 /opt/ai-arcade/verify.py --timeout {}'.format(args.timeout))
         out = stdout.read().decode('utf-8', errors='replace')
         err = stderr.read().decode('utf-8', errors='replace')
         code = stdout.channel.recv_exit_status()

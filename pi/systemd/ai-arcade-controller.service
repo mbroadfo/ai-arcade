@@ -5,7 +5,7 @@ Before=getty@tty1.service
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/python3 /opt/ai-arcade/controller_broker.py
+ExecStart=/usr/bin/python3 -u /opt/ai-arcade/controller_broker.py
 WorkingDirectory=/opt/ai-arcade
 Restart=always
 RestartSec=2

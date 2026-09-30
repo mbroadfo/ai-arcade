@@ -4,7 +4,6 @@ import argparse
 from pathlib import Path
 import posixpath
 import sys
-import time
 
 import paramiko
 
@@ -53,7 +52,10 @@ def main():
     p.add_argument('--user', default='pi')
     p.add_argument('--key', default=str(Path.home() / '.ssh' / 'id_rsa'))
     p.add_argument('--port', type=int, default=22)
+    p.add_argument('--timeout', type=float, default=30, help='Pi readiness retry window in seconds')
     args = p.parse_args()
+    if not 0 <= args.timeout <= 600:
+        p.error('--timeout must be between 0 and 600 seconds')
 
     repo = Path(__file__).resolve().parents[1]
     source = repo / 'pi'
@@ -81,9 +83,19 @@ def main():
         finally:
             sftp.close()
 
-        run(ssh, 'sudo /usr/bin/python3 {}/install.py --source {}'.format(remote_root, remote_root))
-        time.sleep(0.5)
-        run(ssh, 'sudo /usr/bin/python3 /opt/ai-arcade/verify.py')
+        try:
+            run(ssh, 'sudo /usr/bin/python3 {0}/install.py --source {0} --timeout {1}'.format(
+                remote_root, args.timeout))
+        except Exception:
+            for command in (
+                'sudo systemctl status ai-arcade-controller.service --no-pager --full',
+                'sudo journalctl -u ai-arcade-controller.service -b -n 100 --no-pager',
+            ):
+                try:
+                    run(ssh, command, check=False)
+                except Exception as exc:
+                    print('Could not collect diagnostics:', exc, file=sys.stderr)
+            raise
     finally:
         ssh.close()
 

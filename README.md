@@ -46,7 +46,18 @@ From Windows:
 python .\tools\install_pi.py --host 192.168.10.155
 ```
 
-The deployment tool uploads the repository-controlled Pi bundle, runs the privileged installer, enables the controller broker at boot, installs EmulationStation and RetroArch mappings, and verifies the result.
+The deployment tool uploads the repository-controlled Pi bundle, runs the privileged installer, enables the controller broker at boot, installs EmulationStation and RetroArch mappings, and verifies the result. Verification retries readiness for up to 30 seconds; failed installs automatically print service status and the current boot's recent journal. Use `--timeout 60` for a longer retry window.
+
+After installation, reboot and verify automatic startup (allow SSH to return after reboot):
+
+```powershell
+ssh pi@192.168.10.155 "sudo reboot"
+python .\tools\verify_pi.py --host 192.168.10.155 --timeout 60
+python .\tools\controller_client.py --host 192.168.10.155 ping
+python .\tools\controller_client.py --host 192.168.10.155 status
+```
+
+Systemd starts the broker and creates both controllers on every boot. The Windows commands only verify or send controller requests.
 
 See `docs/PI_SETUP.md` for details.
 

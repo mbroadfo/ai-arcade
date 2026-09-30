@@ -33,7 +33,31 @@ Defaults:
 
 Override them with `--user`, `--key`, or `--port`.
 
-The deployment tool uploads a temporary installation bundle over SSH, invokes the privileged Pi installer, and runs verification. The Pi does not require GitHub credentials.
+The deployment tool uploads a temporary installation bundle over SSH and invokes the privileged Pi installer, which runs verification before declaring success. The Pi does not require GitHub credentials. The Windows environment needs the dependencies in `requirements.txt` and a working SSH key with the Pi's host key already trusted.
+
+Both deployment and verification accept `--timeout` (default 30 seconds, range 0–600). The verifier polls every half second until the service is active, `/dev/uinput` and both named controllers exist, and port 8765 answers with the expected broker identity and players. All readiness checks must pass in the same attempt. Individual probes have bounded timeouts, so the final attempt can finish slightly beyond the retry window. `--timeout 0` performs one attempt.
+
+Systemd's `Type=simple` reports the service active before Python finishes creating the controllers and listening on TCP. This is why an immediate check after restart can fail despite a healthy service. Waiting happens inside the Pi installer, before it reports success; an arbitrary delay on Windows is unnecessary.
+
+On verification failure, service status and the last 100 journal entries for this service in the current boot are printed automatically. Deployment also collects these diagnostics if an earlier installation step fails. The service runs Python unbuffered so startup messages and errors appear promptly in the journal. Failures retain a nonzero exit code.
+
+## Verify automatic startup after reboot
+
+From Windows, after installing the updated bundle:
+
+```powershell
+ssh pi@192.168.10.155 "sudo reboot"
+```
+
+SSH may report that the connection closed during reboot. Once SSH is available again, run:
+
+```powershell
+python .\tools\verify_pi.py --host 192.168.10.155 --timeout 60
+python .\tools\controller_client.py --host 192.168.10.155 ping
+python .\tools\controller_client.py --host 192.168.10.155 status
+```
+
+The verification timeout covers Pi runtime readiness after SSH connects; it does not retry the SSH connection during reboot. Expect every verification check to pass, ping to report players 1 and 2, and status to list both named controllers and their event devices. These commands do not start a broker. Systemd owns it throughout installation and subsequent boots; no PowerShell-launched broker is needed. A full power-off/start can be checked with the same commands to validate a physical cold boot.
 
 ## Verify directly on the Pi
 
@@ -46,7 +70,7 @@ sudo /usr/bin/python3 /opt/ai-arcade/verify.py
 Expected checks include:
 
 - `/dev/uinput` exists;
-- controller broker systemd service is active;
+- controller broker systemd service is active and enabled at boot;
 - `AI Arcade Player 1` exists;
 - `AI Arcade Player 2` exists;
 - broker TCP ping succeeds;
