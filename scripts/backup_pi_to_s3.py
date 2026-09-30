@@ -185,6 +185,7 @@ def main() -> int:
     excludes = list(bcfg.get("exclude", []))
 
     uploaded = skipped = planned = failed = 0
+    planned_bytes = 0
     manifest_items: list[dict] = []
 
     try:
@@ -203,6 +204,30 @@ def main() -> int:
             sha256 = previous.get("sha256") if metadata_unchanged and not args.full_hash else None
             changed = not metadata_unchanged
 
+            # IMPORTANT: dry-run is metadata-only.  Do not stream/hash remote files
+            # merely to decide what would be uploaded.  This keeps a dry-run fast
+            # even when the Pi contains large port assets or thousands of files.
+            if args.dry_run:
+                item = {
+                    "path": remote.path,
+                    "size": remote.size,
+                    "mtime": remote.mtime,
+                    "sha256": sha256,
+                }
+                manifest_items.append(item)
+
+                if not changed:
+                    skipped += 1
+                    continue
+
+                key = s3_key(prefix, remote.path)
+                planned += 1
+                planned_bytes += remote.size
+                print(f"PLAN     {remote.path} -> s3://{bucket}/{key}")
+                continue
+
+            # Real backups hash changed/new files before upload.  --full-hash also
+            # re-hashes metadata-unchanged files for a deeper integrity check.
             if args.full_hash or changed:
                 try:
                     sha256 = hash_remote(sftp, root / remote.path)
@@ -225,14 +250,9 @@ def main() -> int:
 
             if not changed:
                 skipped += 1
-                print(f"SKIP     {remote.path}")
                 continue
 
             key = s3_key(prefix, remote.path)
-            if args.dry_run:
-                planned += 1
-                print(f"PLAN     {remote.path} -> s3://{bucket}/{key}")
-                continue
 
             try:
                 print(f"UPLOAD   {remote.path}")
@@ -253,7 +273,19 @@ def main() -> int:
         }
 
         if args.dry_run:
-            print(f"\nDry run complete: {planned} upload(s) planned, {skipped} unchanged, {failed} error(s).")
+            def human_bytes(n: int) -> str:
+                value = float(n)
+                for unit in ("B", "KiB", "MiB", "GiB", "TiB"):
+                    if value < 1024 or unit == "TiB":
+                        return f"{value:.1f} {unit}"
+                    value /= 1024
+                return f"{n} B"
+
+            print(
+                f"\nDry run complete: {planned} upload(s) planned "
+                f"({human_bytes(planned_bytes)}), {skipped} unchanged, {failed} error(s)."
+            )
+            print("Dry-run used metadata only; no remote file contents were hashed or uploaded.")
         elif failed == 0:
             local_path = write_manifest(s3, bucket, manifest_key, local_manifest_dir, doc)
             print(f"\nBackup complete: {uploaded} uploaded, {skipped} unchanged.")
