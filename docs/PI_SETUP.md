@@ -36,7 +36,7 @@ Override them with `--user`, `--key`, or `--port`.
 To also install structured EmulationStation observation, add `--with-es-state`.
 This builds a pinned patched frontend, preserves the original binary, and
 restarts ES through its existing RetroPie wrapper. Once installed, verification
-also checks fresh ES state. See [ES_STATE.md](ES_STATE.md) for commands,
+also checks fresh ES state and the loaded catalog. See [ES_STATE.md](ES_STATE.md) for commands,
 prerequisites, limitations, and the automated `--restore-es` rollback option.
 
 The deployment tool uploads a temporary installation bundle over SSH and invokes the privileged Pi installer, which runs verification before declaring success. The Pi does not require GitHub credentials. The Windows environment needs the dependencies in `requirements.txt` and a working SSH key with the Pi's host key already trusted.

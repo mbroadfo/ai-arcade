@@ -14,6 +14,7 @@ import zipfile
 
 from patch_source import patch
 from read_state import read_state
+from read_catalog import read_catalog
 
 REVISION = 'c9d905c31acf4b92d0a76b76c5cdf49e2b266d43'
 ARCHIVE_SHA256 = 'f198fe3658fc717fe00aa391a9adf7fc9c9f871e9781f744d3277d22049b8c3a'
@@ -90,6 +91,8 @@ def wait_ready(timeout=90):
             state = read_state()
             binary = ES_DIR / 'emulationstation'
             if os.stat('/proc/{}/exe'.format(state['pid'])).st_ino == binary.stat().st_ino:
+                catalog = read_catalog()
+                print('ES catalog: {} loaded systems'.format(len(catalog['systems'])), flush=True)
                 print(json.dumps(state, indent=2), flush=True)
                 return
         except (OSError, ValueError, KeyError, TypeError) as exc:
@@ -122,6 +125,8 @@ def main():
             run('systemctl', 'restart', 'getty@tty1.service')
         if (ROOT / 'enabled').exists():
             (ROOT / 'enabled').unlink()
+        if (ROOT / 'catalog-enabled').exists():
+            (ROOT / 'catalog-enabled').unlink()
         print('Original ES restored and restart requested.')
         return
     metadata = (ES_DIR / 'retropie.pkg').read_text()
@@ -201,7 +206,7 @@ def main():
     tmpfiles = Path('/etc/tmpfiles.d/ai-arcade-state.conf')
     tmpfiles.write_text('d /run/ai-arcade 0755 {} {} -\n'.format(user.pw_name, user.pw_gid))
     run('systemd-tmpfiles', '--create', tmpfiles)
-    for name in ('read_state.py', 'install_state.py', 'patch_source.py', 'ArcadeState.h'):
+    for name in ('read_state.py', 'read_catalog.py', 'install_state.py', 'patch_source.py', 'ArcadeState.h'):
         if HERE != ROOT:
             shutil.copy2(str(HERE / name), str(ROOT / name))
     if digest(binary) != digest(built):
@@ -216,6 +221,7 @@ def main():
         restart_es(pid)
     wait_ready()
     (ROOT / 'enabled').write_text(identity + '\n')
+    (ROOT / 'catalog-enabled').write_text('1\n')
     print('ES state installation and verification complete.', flush=True)
 
 

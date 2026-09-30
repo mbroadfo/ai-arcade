@@ -15,6 +15,10 @@ def patch(source, header):
         'es-core/src/Window.h': [
             ('\tbool getAllowSleep();', '\tbool arcadeScreenSaverActive() const { return mRenderScreenSaver; }\n\tbool getAllowSleep();'),
         ],
+        'es-app/src/views/ViewController.cpp': [
+            ('void ViewController::reloadAll()\n{',
+             'void ViewController::reloadAll()\n{\n\tUtils::FileSystem::removeFile("/run/ai-arcade/es-catalog.json");'),
+        ],
     }
     outputs = {}
     for relative, replacements in changes.items():

@@ -3,6 +3,9 @@
 AI Arcade reads the frontend's own C++ objects. The exporter reports the selected
 system or game, not pixels, OCR, or inferred positions from previous button presses.
 
+The same deployment now also exports a separate loaded-library catalog. See
+[ES_CATALOG.md](ES_CATALOG.md) for dashboard caching and live game-ID checks.
+
 ## Install and update
 
 From the repository root and activated Windows virtual environment:

@@ -12,6 +12,7 @@ FILES = [
     'es_state/patch_source.py',
     'es_state/install_state.py',
     'es_state/read_state.py',
+    'es_state/read_catalog.py',
     'controller_broker.py',
     'install.py',
     'verify.py',

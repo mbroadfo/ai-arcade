@@ -8,6 +8,12 @@ from unittest.mock import Mock
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def seed_reload(source):
+    path = source / 'es-app/src/views/ViewController.cpp'
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text('void ViewController::reloadAll()\n{\n}\n')
+
+
 def load(name):
     spec = importlib.util.spec_from_file_location(name, ROOT / 'pi/es_state' / (name + '.py'))
     module = importlib.util.module_from_spec(spec)
@@ -37,9 +43,10 @@ def test_invalid_producer_or_age_is_rejected(boot, now, process):
 
 
 def test_patch_is_idempotent_and_rejects_unknown_source(tmp_path):
+    seed_reload(tmp_path)
     main = tmp_path / 'es-app/src/main.cpp'
     window = tmp_path / 'es-core/src/Window.h'
-    main.parent.mkdir(parents=True)
+    main.parent.mkdir(parents=True, exist_ok=True)
     window.parent.mkdir(parents=True)
     main.write_text('#include "EmulationStation.h"\n\t\tif(window.isSleeping())\n'
                     'SDL_WaitEventTimeout(&event, PowerSaver::getTimeout())')
@@ -60,9 +67,10 @@ def test_patch_is_idempotent_and_rejects_unknown_source(tmp_path):
 
 
 def test_old_heartbeat_patch_is_upgraded(tmp_path):
+    seed_reload(tmp_path)
     main = tmp_path / 'es-app/src/main.cpp'
     window = tmp_path / 'es-core/src/Window.h'
-    main.parent.mkdir(parents=True)
+    main.parent.mkdir(parents=True, exist_ok=True)
     window.parent.mkdir(parents=True)
     main.write_text('#include "EmulationStation.h"\n#include "ArcadeState.h"\n'
                     '\t\tpublishArcadeState(window);\n\n\t\tif(window.isSleeping())\n'

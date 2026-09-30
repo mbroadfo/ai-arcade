@@ -77,6 +77,14 @@ def runtime_checks():
             ).returncode == 0
         except (OSError, subprocess.TimeoutExpired):
             results['EmulationStation live state'] = False
+    if (ES_STATE_ROOT / 'catalog-enabled').exists():
+        try:
+            results['EmulationStation catalog'] = subprocess.run(
+                ['/usr/bin/python3', str(ES_STATE_ROOT / 'read_catalog.py'), '--check'],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=10
+            ).returncode == 0
+        except (OSError, subprocess.TimeoutExpired):
+            results['EmulationStation catalog'] = False
     return results
 
 

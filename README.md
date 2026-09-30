@@ -87,6 +87,17 @@ LEFT and checks the selected systems directly from ES state. See
 [ES_STATE.md](docs/ES_STATE.md) for the supported build, state contract, automated
 rollback, and observation limits.
 
+Export ES's loaded systems and game lists into a local dashboard cache:
+
+```powershell
+python .\tools\es_catalog.py --host 192.168.10.155
+python .\tools\es_catalog.py --host 192.168.10.155 --refresh
+```
+
+See [ES_CATALOG.md](docs/ES_CATALOG.md) for cache usage, collection deduplication,
+visibility, and live target checks. Recognition by ES does not establish that a
+game is playable or supported by an AI controller.
+
 ## Architecture direction
 
 The larger design separates:
