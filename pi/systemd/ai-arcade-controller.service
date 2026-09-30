@@ -1,0 +1,14 @@
+[Unit]
+Description=AI Arcade Controller Broker
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /opt/ai-arcade/controller_broker.py
+WorkingDirectory=/opt/ai-arcade
+Restart=always
+RestartSec=2
+User=root
+
+[Install]
+WantedBy=multi-user.target
