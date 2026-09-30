@@ -15,16 +15,12 @@ INSTALL_DIR = Path('/opt/ai-arcade')
 SERVICE_NAME = 'ai-arcade-controller.service'
 SERVICE_DST = Path('/etc/systemd/system') / SERVICE_NAME
 MODULES_FILE = Path('/etc/modules-load.d/ai-arcade.conf')
+RA_CFG = Path('/opt/retropie/configs/all/retroarch.cfg')
 
 
 def run(*args, check=True):
     print('+', ' '.join(str(a) for a in args))
     return subprocess.run([str(a) for a in args], check=check)
-
-
-def require_root():
-    if os.geteuid() != 0:
-        raise SystemExit('ERROR: run with sudo/root')
 
 
 def ensure_evdev():
@@ -63,6 +59,40 @@ def stop_legacy_brokers():
         time.sleep(0.5)
 
 
+def set_retroarch_setting(path, key, value):
+    """Set one RetroArch config value without disturbing unrelated settings."""
+    text = path.read_text(errors='replace')
+    lines = text.splitlines()
+
+    found = False
+    output = []
+
+    for line in lines:
+        stripped = line.strip()
+
+        if '=' in stripped:
+            existing_key = stripped.split('=', 1)[0].strip()
+            if existing_key == key:
+                output.append('{} = "{}"'.format(key, value))
+                found = True
+                continue
+
+        output.append(line)
+
+    if not found:
+        output.append('{} = "{}"'.format(key, value))
+
+    path.write_text('\n'.join(output) + '\n')
+
+
+def require_root():
+    geteuid = getattr(os, 'geteuid', None)
+    if geteuid is None:
+        raise SystemExit('ERROR: this installer must run on Linux')
+    if geteuid() != 0:
+        raise SystemExit('ERROR: run with sudo/root')
+
+
 def main():
     parser = argparse.ArgumentParser(description='Install AI Arcade Pi services')
     parser.add_argument('--source', default=str(Path(__file__).resolve().parent))
@@ -77,7 +107,9 @@ def main():
         raise SystemExit('ERROR: RetroPie EmulationStation config not found: %s' % ES_CFG)
     if not RA_DIR.is_dir():
         raise SystemExit('ERROR: RetroArch autoconfig directory not found: %s' % RA_DIR)
-
+    if not RA_CFG.exists():
+        raise SystemExit('ERROR: RetroArch config not found: %s' % RA_CFG)
+    
     if not Path('/dev/uinput').exists():
         run('modprobe', 'uinput')
     if not Path('/dev/uinput').exists():
@@ -91,10 +123,18 @@ def main():
     backup = INSTALL_DIR / 'backups' / stamp
     backup.mkdir(parents=True, exist_ok=True)
     shutil.copy2(str(ES_CFG), str(backup / 'es_input.cfg'))
+    shutil.copy2(str(RA_CFG), str(backup / 'retroarch.cfg'))
+
     for name in ('AI Arcade Player 1.cfg', 'AI Arcade Player 2.cfg'):
         existing = RA_DIR / name
         if existing.exists():
             shutil.copy2(str(existing), str(backup / name))
+
+    set_retroarch_setting(
+        RA_CFG,
+        'network_cmd_enable',
+        'true'
+    )
 
     INSTALL_DIR.mkdir(parents=True, exist_ok=True)
     shutil.copy2(str(source / 'controller_broker.py'), str(INSTALL_DIR / 'controller_broker.py'))
