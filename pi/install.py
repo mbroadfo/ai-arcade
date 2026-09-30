@@ -3,8 +3,10 @@ import argparse
 import datetime
 import os
 import shutil
+import signal
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 ES_CFG = Path('/opt/retropie/configs/all/emulationstation/es_input.cfg')
@@ -15,9 +17,9 @@ SERVICE_DST = Path('/etc/systemd/system') / SERVICE_NAME
 MODULES_FILE = Path('/etc/modules-load.d/ai-arcade.conf')
 
 
-def run(*args):
+def run(*args, check=True):
     print('+', ' '.join(str(a) for a in args))
-    subprocess.run([str(a) for a in args], check=True)
+    return subprocess.run([str(a) for a in args], check=check)
 
 
 def require_root():
@@ -35,6 +37,30 @@ def ensure_evdev():
         run('apt-get', 'update')
         run('apt-get', 'install', '-y', 'python3-pip')
     run('pip3', 'install', 'evdev>=1.6,<2')
+
+
+def stop_legacy_brokers():
+    """Stop manually launched brokers so systemd can own port 8765."""
+    run('systemctl', 'stop', SERVICE_NAME, check=False)
+    me = os.getpid()
+    victims = []
+    for proc in Path('/proc').iterdir():
+        if not proc.name.isdigit() or int(proc.name) == me:
+            continue
+        try:
+            cmdline = (proc / 'cmdline').read_bytes().replace(b'\x00', b' ').decode('utf-8', errors='replace')
+        except (OSError, IOError):
+            continue
+        if 'controller_broker.py' in cmdline:
+            victims.append(int(proc.name))
+    for pid in victims:
+        print('+ stopping legacy controller broker pid', pid)
+        try:
+            os.kill(pid, signal.SIGTERM)
+        except ProcessLookupError:
+            pass
+    if victims:
+        time.sleep(0.5)
 
 
 def main():
@@ -56,6 +82,7 @@ def main():
 
     MODULES_FILE.write_text('uinput\n')
     ensure_evdev()
+    stop_legacy_brokers()
 
     stamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
     backup = INSTALL_DIR / 'backups' / stamp
