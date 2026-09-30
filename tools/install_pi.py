@@ -8,6 +8,10 @@ import sys
 import paramiko
 
 FILES = [
+    'es_state/ArcadeState.h',
+    'es_state/patch_source.py',
+    'es_state/install_state.py',
+    'es_state/read_state.py',
     'controller_broker.py',
     'install.py',
     'verify.py',
@@ -33,26 +37,34 @@ def mkdir_p(sftp, path):
 
 def run(ssh, command, check=True):
     print('remote>', command)
-    stdin, stdout, stderr = ssh.exec_command(command)
-    out = stdout.read().decode('utf-8', errors='replace')
-    err = stderr.read().decode('utf-8', errors='replace')
-    code = stdout.channel.recv_exit_status()
-    if out:
-        print(out, end='' if out.endswith('\n') else '\n')
-    if err:
-        print(err, end='' if err.endswith('\n') else '\n', file=sys.stderr)
+    transport = ssh.get_transport()
+    channel = transport.open_session()
+    channel.set_combine_stderr(True)
+    channel.exec_command(command)
+    # Drain merged output continuously, including long compiler output.
+    stdout = channel.makefile('rb')
+    for line in stdout:
+        print(line.decode('utf-8', errors='replace'), end='', flush=True)
+    code = channel.recv_exit_status()
+    stdout.close()
+    channel.close()
     if check and code != 0:
         raise RuntimeError('remote command failed with exit code %d' % code)
     return code
 
 
 def main():
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(errors='backslashreplace')
     p = argparse.ArgumentParser(description='Install AI Arcade runtime on RetroPie')
     p.add_argument('--host', default='192.168.10.155')
     p.add_argument('--user', default='pi')
     p.add_argument('--key', default=str(Path.home() / '.ssh' / 'id_rsa'))
     p.add_argument('--port', type=int, default=22)
     p.add_argument('--timeout', type=float, default=30, help='Pi readiness retry window in seconds')
+    es_options = p.add_mutually_exclusive_group()
+    es_options.add_argument('--with-es-state', action='store_true', help='Build and activate structured ES observation')
+    es_options.add_argument('--restore-es', action='store_true', help='Restore the saved original ES binary')
     args = p.parse_args()
     if not 0 <= args.timeout <= 600:
         p.error('--timeout must be between 0 and 600 seconds')
@@ -84,12 +96,18 @@ def main():
             sftp.close()
 
         try:
+            if args.restore_es:
+                run(ssh, 'sudo /usr/bin/python3 {}/es_state/install_state.py --rollback'.format(remote_root))
+                return 0
             run(ssh, 'sudo /usr/bin/python3 {0}/install.py --source {0} --timeout {1}'.format(
                 remote_root, args.timeout))
+            if args.with_es_state:
+                run(ssh, 'sudo /usr/bin/python3 {}/es_state/install_state.py'.format(remote_root))
         except Exception:
             for command in (
                 'sudo systemctl status ai-arcade-controller.service --no-pager --full',
                 'sudo journalctl -u ai-arcade-controller.service -b -n 100 --no-pager',
+                'tail -n 80 /opt/retropie/configs/all/emulationstation/es_log.txt',
             ):
                 try:
                     run(ssh, command, check=False)

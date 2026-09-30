@@ -33,6 +33,12 @@ Defaults:
 
 Override them with `--user`, `--key`, or `--port`.
 
+To also install structured EmulationStation observation, add `--with-es-state`.
+This builds a pinned patched frontend, preserves the original binary, and
+restarts ES through its existing RetroPie wrapper. Once installed, verification
+also checks fresh ES state. See [ES_STATE.md](ES_STATE.md) for commands,
+prerequisites, limitations, and the automated `--restore-es` rollback option.
+
 The deployment tool uploads a temporary installation bundle over SSH and invokes the privileged Pi installer, which runs verification before declaring success. The Pi does not require GitHub credentials. The Windows environment needs the dependencies in `requirements.txt` and a working SSH key with the Pi's host key already trusted.
 
 Both deployment and verification accept `--timeout` (default 30 seconds, range 0–600). The verifier polls every half second until the service is active, `/dev/uinput` and both named controllers exist, and port 8765 answers with the expected broker identity and players. All readiness checks must pass in the same attempt. Individual probes have bounded timeouts, so the final attempt can finish slightly beyond the retry window. `--timeout 0` performs one attempt.

@@ -70,7 +70,7 @@ def test_ping_connection_failure(verifier, monkeypatch):
 
 
 def test_diagnostics_attempt_journal_even_if_status_fails(verifier, monkeypatch):
-    run = Mock(side_effect=[OSError('status unavailable'), Mock(returncode=0)])
+    run = Mock(side_effect=[OSError('status unavailable'), Mock(returncode=0), Mock(returncode=0)])
     monkeypatch.setattr(verifier.subprocess, 'run', run)
     verifier.diagnostics()
     assert run.call_args_list[1].args[0][0] == 'journalctl'
@@ -137,7 +137,7 @@ def test_deployment_failure_collects_diagnostics_and_closes_ssh(monkeypatch):
     ssh = Mock()
     monkeypatch.setattr(deploy.paramiko, 'SSHClient', lambda: ssh)
     monkeypatch.setattr(sys, 'argv', ['install_pi.py'])
-    remote = Mock(side_effect=[RuntimeError('install failed'), 3, 0])
+    remote = Mock(side_effect=[RuntimeError('install failed'), 3, 0, 0])
     monkeypatch.setattr(deploy, 'run', remote)
     with pytest.raises(RuntimeError, match='install failed'):
         deploy.main()
@@ -145,3 +145,29 @@ def test_deployment_failure_collects_diagnostics_and_closes_ssh(monkeypatch):
     assert 'systemctl status' in remote.call_args_list[1].args[1]
     assert 'journalctl' in remote.call_args_list[2].args[1]
     ssh.close.assert_called_once()
+
+
+def test_remote_run_streams_merged_binary_output(capsys):
+    deploy = load('tools/install_pi.py')
+    ssh = Mock()
+    channel = ssh.get_transport.return_value.open_session.return_value
+    stream = Mock()
+    stream.__iter__ = Mock(return_value=iter([b'compile progress\n', b'complete\n']))
+    channel.makefile.return_value = stream
+    channel.recv_exit_status.return_value = 0
+    assert deploy.run(ssh, 'build') == 0
+    channel.set_combine_stderr.assert_called_once_with(True)
+    channel.makefile.assert_called_once_with('rb')
+    assert 'compile progress' in capsys.readouterr().out
+    channel.close.assert_called_once()
+
+
+@pytest.mark.parametrize('enabled, code, expected', [(False, 1, None), (True, 0, True), (True, 1, False)])
+def test_optional_es_state_verification(verifier, monkeypatch, tmp_path, enabled, code, expected):
+    monkeypatch.setattr(verifier, 'ES_STATE_ROOT', tmp_path)
+    if enabled:
+        (tmp_path / 'enabled').touch()
+    monkeypatch.setattr(verifier, 'systemctl_ok', lambda op: True)
+    monkeypatch.setattr(verifier, 'broker_ping', lambda: True)
+    monkeypatch.setattr(verifier.subprocess, 'run', Mock(return_value=Mock(returncode=code)))
+    assert verifier.runtime_checks().get('EmulationStation live state') is expected

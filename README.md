@@ -72,6 +72,21 @@ python .\tools\controller_client.py --host 192.168.10.155 tap 1 LEFT
 python .\tools\controller_client.py --host 192.168.10.155 tap 1 BUTTON_1
 ```
 
+## Read EmulationStation state
+
+Install the pinned ES patch and read its live view/selection as JSON:
+
+```powershell
+python .\tools\install_pi.py --host 192.168.10.155 --timeout 60 --with-es-state
+python .\tools\es_state.py --host 192.168.10.155
+python .\tools\test_es_navigation.py --host 192.168.10.155
+```
+
+The first build compiles ES on the Pi. The navigation test uses only RIGHT and
+LEFT and checks the selected systems directly from ES state. See
+[ES_STATE.md](docs/ES_STATE.md) for the supported build, state contract, automated
+rollback, and observation limits.
+
 ## Architecture direction
 
 The larger design separates:

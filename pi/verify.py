@@ -10,6 +10,7 @@ import xml.etree.ElementTree as ET
 ES_CFG = Path('/opt/retropie/configs/all/emulationstation/es_input.cfg')
 RA_DIR = Path('/opt/retropie/configs/all/retroarch/autoconfig')
 SERVICE = 'ai-arcade-controller.service'
+ES_STATE_ROOT = Path('/opt/ai-arcade/es-state')
 EXPECTED = {
     'AI Arcade Player 1': '030000000912000001a1000001000000',
     'AI Arcade Player 2': '030000000912000002a1000001000000',
@@ -68,6 +69,14 @@ def runtime_checks():
     for name in EXPECTED:
         results[name] = ('N: Name="%s"' % name) in devices
     results['broker TCP ping'] = broker_ping()
+    if (ES_STATE_ROOT / 'enabled').exists():
+        try:
+            results['EmulationStation live state'] = subprocess.run(
+                ['/usr/bin/python3', str(ES_STATE_ROOT / 'read_state.py')],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=3
+            ).returncode == 0
+        except (OSError, subprocess.TimeoutExpired):
+            results['EmulationStation live state'] = False
     return results
 
 
@@ -86,6 +95,7 @@ def diagnostics():
     for command in (
         ['systemctl', 'status', SERVICE, '--no-pager', '--full'],
         ['journalctl', '-u', SERVICE, '-b', '-n', '100', '--no-pager'],
+        ['tail', '-n', '60', str(ES_CFG.parent / 'es_log.txt')],
     ):
         print('\nDiagnostics: ' + ' '.join(command), flush=True)
         try:
