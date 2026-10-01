@@ -67,12 +67,15 @@ class Maze:
         Corners with a single way on are followed automatically (forced moves need no model).
         Returns (decision_tile, steps_away, directions) where directions[i] is the move to make
         on step i. decision_tile is None if the corridor runs out within `limit` steps (dead end).
-        A tile where Pac-Man can go two or more ways other than back is a decision tile.
+        A tile with three or more exits, where Pac-Man can go two or more ways other than back, is a decision tile.
+        A corner is never one: seen mid-turn (his heading already changed to the new way), back looks like a second way
+        on, which used to make every corner a junction nobody could have asked about in time.
         """
         directions, current, arrived = [], tile, heading
         for steps in range(limit):
-            options = [d for d in self.exits(current) if d != OPPOSITE.get(arrived)]
-            if len(options) >= 2:
+            exits = self.exits(current)
+            options = [d for d in exits if d != OPPOSITE.get(arrived)]
+            if len(options) >= 2 and len(exits) >= 3:
                 return current, steps, directions
             if not options:
                 return None, steps, directions
