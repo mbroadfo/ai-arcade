@@ -67,11 +67,13 @@ class Player:
         self.game = GameStats()  # what happened in the current game
         self.last_reflex = (None, 0.0)
         self.stats = {"on_time": 0, "late_rule": 0, "queries": 0, "chained": 0, "revised": 0,
-                      "late_why": {}}
+                      "late_why": {}, "moves": {}}  # moves: executed junction decisions by who made them
+        self.last_how = None  # how the last _go() changed the proposed direction: None, "revise" or "reflex"
         self.latencies, self.sources = [], {}
 
     def log(self, **record):
         record["t"] = round(time.time(), 3)
+        record.setdefault("frame", self.last_frame)  # lines up the log with a recording of the stream
         self.decisions_log.write(json.dumps(record) + "\n")
 
     def _facts(self, state, image, tile, arriving):
@@ -128,7 +130,7 @@ class Player:
 
     def _go(self, state, image, tile, arriving, chosen, where, source):
         """Steer to `chosen` unless survival vetoes it. A turn-back is logged with why and what was around."""
-        facts = None
+        facts, how = None, None
         if self.revise and source not in ("late-rule", "corridor"):  # check a stored answer against the world now
             facts = junction_facts(state, image, tile=tile, arriving=arriving)
             better = self._revise(facts, chosen)
@@ -137,8 +139,11 @@ class Player:
                     self.revised_keys.add((tile, arriving))
                     self.stats["revised"] += 1
                     self.log(event="revise", tile=list(tile), was=chosen, now=better, goal=self.goal, source=source)
-                chosen, source = better, "revised"
+                chosen, source, how = better, "revised", "revise"
         final = self._survive(state, image, tile, arriving, chosen, where, facts)
+        if final != chosen:
+            how = "reflex"
+        self.last_how = how
         heading = LOWER_TO_UPPER.get(state.pacman.direction)
         if final == OPPOSITE.get(heading) and self.broker.held != final:
             here = Maze(image).bfs(tuple(state.pacman.tile))
@@ -223,6 +228,7 @@ class Player:
         else:
             self.game.refuges += 1
         self.log(event=kind, phase="start", tile=list(tile), steps=self._ghost_steps(state, here))
+        self.stats["moves"]["code-hold"] = self.stats["moves"].get("code-hold", 0) + 1
         return True
 
     def _refuge_run(self, state, image, me):
@@ -234,6 +240,7 @@ class Player:
             return False
         if time.time() - self.refuge_ran_at > 2.0:
             self.log(event="refuge", phase="run", tile=list(me), direction=direction)
+            self.stats["moves"]["code-hold"] = self.stats["moves"].get("code-hold", 0) + 1
         self.refuge_ran_at = time.time()
         self.broker.steer(direction)
         return True
@@ -242,6 +249,23 @@ class Player:
     def _ghost_steps(state, here):
         return sorted(here[g.tile] for n, g in state.ghosts.items()
                       if not state.frightened[n] and not state.eyes[n] and g.tile in here)
+
+    MOVE_LABELS = {"model": "model", "rule": "rule", "fallback": "code-fallback"}
+
+    def _book_move(self, key, decision, final, label=None, late=None, answered_at=None):
+        """One record per junction decision: who proposed the direction, who executed it, how old the answer was.
+
+        by: model (the model's answer, executed as given), rule (the rule decider: the control), code-fallback (the
+        model failed or was unsure and the rule decided), code-late (no answer in time, the rule decided), reflex-override
+        or code-revise (code changed the proposal), code-hold (a park or refuge). Forced single-exit corners are
+        mechanical and not counted."""
+        by = ({"reflex": "reflex-override", "revise": "code-revise"}.get(self.last_how) or label
+              or self.MOVE_LABELS.get(decision.source, decision.source))
+        self.stats["moves"][by] = self.stats["moves"].get(by, 0) + 1
+        age = None if answered_at is None else round(time.time() - answered_at, 2)
+        self.log(event="move", tile=list(key[0]), arriving=key[1], goal=self.goal, mods=dict(self.mods),
+                 proposed=decision.direction, source=decision.source, confidence=round(decision.confidence, 2),
+                 latency_ms=round(decision.latency_ms), age_s=age, executed=final, by=by, late=late)
 
     def _watch_for_pause(self, state, frame):
         """A ghost-sized score jump means a ghost was just eaten: the game freezes for about a second."""
@@ -398,13 +422,16 @@ class Player:
             return None
 
         if junction is not None and steps <= 1 and key in self.plan:
-            decision = self.plan[key][0]
+            decision, _, answered_at = self.plan[key]
             self.consumed.add(key)
-            if key not in self.applied:
+            first = key not in self.applied
+            if first:
                 self.applied.add(key)
                 self.stats["on_time"] += 1
-            self.commit = (tuple(junction), self._go(state, image, junction, arriving, decision.direction, "junction",
-                                                     decision.source))
+            final = self._go(state, image, junction, arriving, decision.direction, "junction", decision.source)
+            if first:
+                self._book_move(key, decision, final, answered_at=answered_at)
+            self.commit = (tuple(junction), final)
         elif junction is not None and steps == 0:
             # At the junction with no answer yet: a rule decides, and we count it as late.
             facts = junction_facts(state, image, tile=junction, arriving=heading, park=self.park)
@@ -417,8 +444,9 @@ class Player:
             why = self._late_reason(key, asked_now)
             self.stats["late_why"][why] = self.stats["late_why"].get(why, 0) + 1
             self.log(event="late", tile=list(junction), direction=decision.direction, why=why, steps_seen=steps)
-            self.commit = (tuple(junction), self._go(state, image, junction, heading, decision.direction, "junction",
-                                                     "late-rule"))
+            final = self._go(state, image, junction, heading, decision.direction, "junction", "late-rule")
+            self._book_move(key, decision, final, label="code-late", late=why)
+            self.commit = (tuple(junction), final)
         elif path:
             self._go(state, image, me, heading, path[0], "corridor", "corridor")  # corridor / forced corner
         return None

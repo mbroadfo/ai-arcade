@@ -14,6 +14,7 @@ from pathlib import Path
 from broker_link import BrokerLink
 from decision_worker import DecisionWorker
 from gamelib import DEFAULT_GAME, ROOT, load_game
+from run_manifest import build_manifest
 from state_client import StateStream
 from strategist import MockStrategistClient, Strategist
 from systemone import DEFAULT_HOST, MockSystemOne, OllamaSystemOne
@@ -76,6 +77,9 @@ def main():
                                  None if args.chain is None else f"chain{args.chain}", args.tag) if p)
     decisions_log = open(out_dir / f"{label}-decisions.jsonl", "w", buffering=1)
     results_path = out_dir / f"{label}-games.jsonl"
+    manifest_path = out_dir / f"{label}-manifest.json"
+    manifest = build_manifest(args, label)
+    manifest_path.write_text(json.dumps(manifest, indent=2))
 
     stream = StateStream(args.host, game=game)
     stream.start_latest()
@@ -134,11 +138,19 @@ def main():
             pass
         decisions_log.close()
         stream.close()
+        manifest.update(ended=time.strftime("%Y-%m-%dT%H:%M:%S"), games_completed=len(results))
+        manifest_path.write_text(json.dumps(manifest, indent=2))
 
     s = player.stats
     print(f"\ndecisions: {s['on_time']} on time, {s['late_rule']} late (rule filled in), "
           f"{s['queries']} queries ({s.get('chained', 0)} chained), {s.get('revised', 0)} stale answers revised; "
           f"late because {s.get('late_why', {})}; sources {player.sources}")
+    moves = s.get("moves", {})
+    if moves:
+        total = sum(moves.values())
+        print(f"junction decisions by who executed them ({total}): "
+              + ", ".join(f"{k} {v}" for k, v in sorted(moves.items(), key=lambda kv: -kv[1]))
+              + f". The model's own: {100 * moves.get('model', 0) / total:.0f}%.")
     if hasattr(player.strategy, "stats"):
         print(f"strategist: {player.strategy.stats}; asked {player.strategy.strategist.stats}")
     if player.latencies:
@@ -149,10 +161,14 @@ def main():
     if results:
         scores = [r["score"] for r in results]
         print(f"scores: mean {statistics.mean(scores):.0f}, best {max(scores)}, worst {min(scores)}")
-        for key in ("ghosts_eaten", "fruit_eaten", "fruit_shown", "energizers", "reflexes", "parks", "parked_seconds",
+        for key in ("boards_cleared", "dots_total", "ghosts_eaten", "fruit_eaten", "fruit_shown", "energizers", "reflexes", "parks", "parked_seconds",
                     "park_deaths", "refuges", "refuge_seconds", "refuge_deaths"):
             if key in results[0]:
                 print(f"{key}: per game {[r[key] for r in results]}")
+        if "lives" in results[0]:
+            for r in results:
+                print(f"game {r['game']} lives (seconds, score earned): "
+                      + ", ".join(f"({l['seconds']}, {l['score']})" for l in r["lives"]))
         if "feasts" in results[0]:
             sizes = [n for r in results for n in r["feasts"]]
             print("ghosts eaten per energizer: " + "  ".join(f"{k}x: {sizes.count(k)}" for k in range(5))

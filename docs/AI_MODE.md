@@ -63,6 +63,32 @@ The **survival instinct** (`survival.py`) sits above every goal and every decide
 to a normal ghost within 3 steps and another way is at least 2 steps safer, it overrides the choice, at
 junctions and in corridors. Overrides are logged as `reflex` events and counted per game.
 
+### Who made each move (provenance), the run manifest, per-life stats
+
+A result can only be claimed for the AI if the AI made the moves. Every run therefore records, per junction decision, who
+proposed the direction and who executed it (forced single-exit corners are mechanical and not counted):
+
+| `by` | Meaning |
+|---|---|
+| `model` | the model's answer, executed as given |
+| `rule` | the rule decider (the control, L4) |
+| `code-fallback` | the model failed or was unsure, the rule decided |
+| `code-late` | no answer in time, the rule decided; `late` says why (`seen_too_late`, `in_flight`, `other_arrival`, `not_asked`) |
+| `reflex-override` / `code-revise` | code changed the proposed direction |
+| `code-hold` | a park or the refuge (code-triggered until the model gets those choices) |
+
+The decision log has one `move` event per decision (proposed, source, confidence, latency, the answer's age when used,
+executed, `by`, `late`), and every log line carries the `frame` so it lines up with a recording. The run summary prints
+the counts and "The model's own: N%". Each run also writes `<label>-manifest.json`: git commit and whether the tree was
+dirty, game, decider and model (with the Ollama digest), knowledge rung, goal, strategist, every switch, seed, games asked.
+Each game's result carries `lives` (seconds, score earned and dots for every life), `boards_cleared`, `dots_total` and
+`board_dots`.
+
+First model-decider run with the full stack (nimble, L2, one game, 1 Oct 2026): score 5770, but the model's own moves were
+31% of 233 junction decisions (72); the late rule fill-in made 154 (66%) and the reflex changed 7 (3%). The model's median
+answer took 244 ms; answers were late because they were still in flight (79), the junction was seen too late (64) or was
+answered under another arriving direction (11).
+
 ### Ablation switches
 
 Code that overrules or helps the decider must be switchable, so a model run is not credited for moves the code made.
