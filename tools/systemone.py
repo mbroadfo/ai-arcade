@@ -10,9 +10,6 @@ import random
 import time
 import urllib.request
 
-from pacman_features import score_option
-
-
 class SystemOneError(RuntimeError):
     pass
 
@@ -40,9 +37,11 @@ class OllamaSystemOne:
 
 class MockSystemOne:
     """Stands in for a real model. Scores options from `hint` (the same facts the text state
-    describes), softmaxes them into probabilities with a little noise, and sleeps like a model."""
+    describes) with the game's `scorer(goal, option)`, softmaxes them into probabilities with a
+    little noise, and sleeps like a model."""
 
-    def __init__(self, latency_ms=(90, 500), temperature=0.7, noise=0.15, seed=0):
+    def __init__(self, scorer, latency_ms=(90, 500), temperature=0.7, noise=0.15, seed=0):
+        self.scorer = scorer
         self.latency_ms, self.temperature, self.noise = latency_ms, temperature, noise
         self.rng = random.Random(seed)
 
@@ -54,7 +53,7 @@ class MockSystemOne:
             if question["type"] != "choice":
                 raise SystemOneError("mock only answers choice questions")
             options = list(question["criteria"])
-            scores = [score_option(hint["goal"], hint["options"][o]) + self.rng.gauss(0, self.noise)
+            scores = [self.scorer(hint["goal"], hint["options"][o]) + self.rng.gauss(0, self.noise)
                       for o in options]
             top = max(scores)
             weights = [math.exp((s - top) / self.temperature) for s in scores]

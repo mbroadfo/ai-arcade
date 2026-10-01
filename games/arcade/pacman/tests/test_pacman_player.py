@@ -1,12 +1,11 @@
 from pathlib import Path
 import sys
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools'))
-import deciders
-import pacman_features as pf
 import systemone
-from pacman_maze import Maze
-from pacman_state import decode
+from games.arcade.pacman import deciders
+from games.arcade.pacman import features as pf
+from games.arcade.pacman.maze import Maze
+from games.arcade.pacman.state import decode
 
 IMAGE = (Path(__file__).parent / 'fixtures' / 'pacman_play_ram.bin').read_bytes()
 STATE = decode(IMAGE)
@@ -41,7 +40,7 @@ def test_rule_decider_picks_an_available_option():
 
 
 def test_mock_model_returns_normalised_probabilities_and_respects_latency():
-    client = systemone.MockSystemOne(latency_ms=(1, 2), seed=1)
+    client = systemone.MockSystemOne(pf.score_option, latency_ms=(1, 2), seed=1)
     d = deciders.SystemOneDecider(client)
     decision = d.decide(facts(), "clear_dots")
     assert decision.source == "model"
@@ -60,6 +59,6 @@ def test_decider_falls_back_to_the_rule_when_the_model_fails():
 
 
 def test_low_confidence_triggers_the_fallback():
-    client = systemone.MockSystemOne(latency_ms=(0, 0), seed=1)
+    client = systemone.MockSystemOne(pf.score_option, latency_ms=(0, 0), seed=1)
     decision = deciders.SystemOneDecider(client, min_confidence=0.999).decide(facts(), "clear_dots")
     assert decision.source == "fallback" and "low confidence" in decision.note

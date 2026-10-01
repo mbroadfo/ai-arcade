@@ -11,8 +11,9 @@ from pathlib import Path
 
 import paramiko
 
+import _bootstrap  # noqa: F401
 from controller_client import send
-from pacman_state import REGIONS, decode
+from games.arcade.pacman.state import REGIONS, decode
 from probe_mame_input import MAME_LOG, run
 
 STATE_FILE = "/dev/shm/ai-arcade-state.bin"
@@ -58,7 +59,7 @@ def main():
     ssh.load_system_host_keys()
     ssh.set_missing_host_key_policy(paramiko.RejectPolicy())
     ssh.connect(hostname=args.host, username=args.user, timeout=10)
-    here = Path(__file__).parent
+    here = _bootstrap.ROOT / "tools"
 
     try:
         run(ssh, f"mkdir -p {REMOTE_DIR}")

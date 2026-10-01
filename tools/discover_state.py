@@ -42,7 +42,7 @@ class Session:
             f.write(f"return {{{{0x{self.args.start:X}, 0x{self.args.end:X}}}}}\n")
         sftp.close()
         run(self.ssh, f"pkill -9 -x mame || true; rm -f {REQ} {OUT}")
-        run(self.ssh, f"nohup mame {self.args.romset} -rompath /home/pi/RetroPie/roms/arcade "
+        run(self.ssh, f"nohup mame {self.args.romset} -rompath /home/pi/RetroPie/roms/{self.args.system} "
                       "-sound none -video accel -nowindow -skip_gameinfo -joystick "
                       "-joystickprovider sdl -ctrlrpath /home/pi/.mame/ctrlr -ctrlr aiarcade "
                       f"-autoboot_script {REMOTE_DIR}/mame_snapshot_service.lua "
@@ -223,6 +223,7 @@ def run_experiment(args):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("romset")
+    parser.add_argument("--system", default="arcade", help="EmulationStation system folder (arcade, nes, ...)")
     parser.add_argument("--host", default="192.168.10.155")
     parser.add_argument("--user", default="pi")
     parser.add_argument("--broker-port", type=int, default=8765)
@@ -258,7 +259,8 @@ def main():
     lives = uniq(find_lives(life_series))
 
     anchors = {}
-    profile = PROFILES / f"{args.romset}.json"
+    game_dir = PROFILES / args.system / args.romset
+    profile = game_dir / "profile.json"
     if profile.exists():
         for e in json.loads(profile.read_text())["named_ram"]:
             anchors[e["address"]] = e["description"]
@@ -274,7 +276,8 @@ def main():
         "position_vertical": [dict(addr=label(i), axis_score=y) for i, y in vert],
         "progress_counters": [dict(addr=label(i), changed_intervals=c) for i, c in counters],
     }
-    out = PROFILES / f"{args.romset}.discovered.json"
+    game_dir.mkdir(parents=True, exist_ok=True)
+    out = game_dir / "discovered.json"
     out.write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps(report, indent=2))
     print(f"\nWrote {out}")

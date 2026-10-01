@@ -4,9 +4,8 @@ import sys
 import threading
 import time
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools'))
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'pi'))
-import pacman_state as ps
+from games.arcade import pacman
+from games.arcade.pacman import state as ps
 import state_client
 import state_server
 
@@ -42,7 +41,7 @@ def start_server(tmp_path):
 def test_client_receives_hello_and_decoded_state(tmp_path):
     server, _, stop, thread = start_server(tmp_path)
     try:
-        stream = state_client.StateStream("127.0.0.1", server.port)
+        stream = state_client.StateStream("127.0.0.1", server.port, game=pacman)
         assert stream.regions == list(ps.AGENT_REGIONS)
         frame, state, _ = stream.next_state()
         assert frame == 1 and state.credits == 1 and state.mode == "attract"
@@ -56,7 +55,7 @@ def test_client_receives_hello_and_decoded_state(tmp_path):
 def test_new_frames_are_pushed_and_unchanged_frames_are_not(tmp_path):
     server, state_file, stop, thread = start_server(tmp_path)
     try:
-        stream = state_client.StateStream("127.0.0.1", server.port)
+        stream = state_client.StateStream("127.0.0.1", server.port, game=pacman)
         stream.next_state()
         write_state(state_file, 2, a4E6E=2, a4E00=3)
         frame, state, _ = stream.next_state()
@@ -71,7 +70,7 @@ def test_new_frames_are_pushed_and_unchanged_frames_are_not(tmp_path):
 def test_latest_returns_newest_and_waits_for_newer(tmp_path):
     server, state_file, stop, thread = start_server(tmp_path)
     try:
-        stream = state_client.StateStream("127.0.0.1", server.port)
+        stream = state_client.StateStream("127.0.0.1", server.port, game=pacman)
         stream.start_latest()
         assert stream.latest()[0] == 1
         write_state(state_file, 5, a4E6E=4)
@@ -92,10 +91,10 @@ def test_latest_returns_newest_and_waits_for_newer(tmp_path):
 def test_server_survives_a_client_disconnecting(tmp_path):
     server, state_file, stop, thread = start_server(tmp_path)
     try:
-        first = state_client.StateStream("127.0.0.1", server.port)
+        first = state_client.StateStream("127.0.0.1", server.port, game=pacman)
         first.close()
         write_state(state_file, 2)
-        second = state_client.StateStream("127.0.0.1", server.port)
+        second = state_client.StateStream("127.0.0.1", server.port, game=pacman)
         assert second.next_state()[0] == 2
         second.close()
     finally:
@@ -107,7 +106,7 @@ def test_server_survives_a_client_disconnecting(tmp_path):
 def test_slow_reader_is_not_dropped_and_sees_fresh_data(tmp_path):
     server, state_file, stop, thread = start_server(tmp_path)
     try:
-        stream = state_client.StateStream("127.0.0.1", server.port)
+        stream = state_client.StateStream("127.0.0.1", server.port, game=pacman)
         stream.next_state()
         for frame in range(2, 400):  # the reader stalls (no recv) while many snapshots are produced
             write_state(state_file, frame, a4E6E=frame % 100)

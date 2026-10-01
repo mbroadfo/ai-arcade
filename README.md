@@ -65,11 +65,11 @@ See `docs/PI_SETUP.md` for details.
 
 For Windows testing without an LLM, double-click these files in the repository:
 
-- `Start-PacMan.cmd`: navigates ES to the exact Arcade `pacman.zip` entry and
+- `games/arcade/pacman/Start-PacMan.cmd`: navigates ES to the exact Arcade `pacman.zip` entry and
   launches it. ES must be running with its state exporter; close menus first.
   It stops if state is stale, navigation stalls, or the target cannot be found.
   It does not stop an already running emulator. A long game list can take a minute.
-- `PacMan-Controls.cmd`: while Pac-Man is running, press **C** for coin,
+- `games/arcade/pacman/PacMan-Controls.cmd`: while Pac-Man is running, press **C** for coin,
   **1** for one-player Start, and **WASD / arrow keys** for short joystick taps.
   Hold a direction key to repeat; **Q** closes the tester and releases controls.
   This reads the current MAME 2003 core-wide Select/Start remap to compensate
@@ -79,7 +79,7 @@ For Windows testing without an LLM, double-click these files in the repository:
 
 These use the repository's `.venv` and existing trusted SSH key, defaulting to
 `192.168.10.155`. They also run from PowerShell, for example
-`.\Start-PacMan.cmd`. Pass `--host ADDRESS` to target a different Pi.
+`.\gamesrcade\pacman\Start-PacMan.cmd`. Pass `--host ADDRESS` to target a different Pi.
 
 Once the broker is installed and running:
 
@@ -140,7 +140,8 @@ This repository contains no commercial ROMs, BIOS files, CHDs, disk/tape images,
 ```text
 pi/                 Pi runtime, installer, service, emulator mappings
 scripts/            backup/inventory/repository support tooling
-tools/              operator/deployment clients
+tools/              general operator, deployment and AI-player tools (no game logic)
+games/              one folder per game: games/<EmulationStation system>/<rom>/ (see games/README.md)
 docs/               architecture and setup documentation
 infra/               backup infrastructure definitions
 config/              example/local configuration

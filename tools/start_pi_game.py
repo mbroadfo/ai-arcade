@@ -7,25 +7,27 @@ import argparse
 import json
 import sys
 import time
-from pathlib import Path
 
 import paramiko
 
-from pacman_state import AGENT_REGIONS
+from gamelib import DEFAULT_GAME, ROOT, load_game, load_profile, split_spec
 from probe_mame_input import MAME_LOG, run
 
 REMOTE_DIR = "/home/pi/ai-arcade"
 STATE_FILE = "/dev/shm/ai-arcade-state.bin"
 SERVER_LOG = "/tmp/ai-arcade-state-server.log"
-ROOT = Path(__file__).resolve().parent.parent
 
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument("--game", default=DEFAULT_GAME, help="<system>/<name>, e.g. arcade/pacman")
     parser.add_argument("--host", default="192.168.10.155")
     parser.add_argument("--user", default="pi")
     parser.add_argument("--state-port", type=int, default=8766)
     args = parser.parse_args()
+    system, _ = split_spec(args.game)
+    romset = load_profile(args.game)["romset"]
+    AGENT_REGIONS = load_game(args.game).AGENT_REGIONS
 
     ssh = paramiko.SSHClient()
     ssh.load_system_host_keys()
@@ -43,7 +45,7 @@ def main():
         run(ssh, "pkill -9 -x mame || true; pkill -f '[p]acman_agent.py' || true; "
                  "pkill -f '[s]tate_server.py' || true")
         run(ssh, f"rm -f {STATE_FILE}")
-        run(ssh, "nohup mame pacman -rompath /home/pi/RetroPie/roms/arcade -sound none "
+        run(ssh, f"nohup env SDL_AUDIODRIVER=alsa mame {romset} -rompath /home/pi/RetroPie/roms/{system} "
                  "-video accel -nowindow -skip_gameinfo -joystick -joystickprovider sdl "
                  "-ctrlrpath /home/pi/.mame/ctrlr -ctrlr aiarcade "
                  f"-autoboot_script {REMOTE_DIR}/mame_state_export.lua "

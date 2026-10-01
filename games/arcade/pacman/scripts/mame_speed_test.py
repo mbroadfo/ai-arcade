@@ -11,12 +11,13 @@ from pathlib import Path
 
 import paramiko
 
-from pacman_state import AGENT_REGIONS, REGIONS
+import _bootstrap  # noqa: F401
+from games.arcade.pacman.state import AGENT_REGIONS, REGIONS
 from probe_mame_input import run
 
 REMOTE_DIR = "/home/pi/ai-arcade"
 LOG = "/tmp/ai-arcade-speed.log"
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = _bootstrap.ROOT
 
 
 def regions_lua(regions):

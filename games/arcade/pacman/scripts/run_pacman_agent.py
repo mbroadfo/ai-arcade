@@ -9,13 +9,15 @@ from pathlib import Path
 
 import paramiko
 
-from pacman_state import AGENT_REGIONS
+import _bootstrap  # noqa: F401
+from games.arcade.pacman.state import AGENT_REGIONS
 from probe_mame_input import MAME_LOG, run
 
 REMOTE_DIR = "/home/pi/ai-arcade"
 STATE_FILE = "/dev/shm/ai-arcade-state.bin"
 AGENT_LOG = "/tmp/ai-arcade-agent.log"
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = _bootstrap.ROOT
+GAME = ROOT / "games" / "arcade" / "pacman"
 
 
 def main():
@@ -36,8 +38,9 @@ def main():
         run(ssh, f"mkdir -p {REMOTE_DIR}")
         sftp = ssh.open_sftp()
         sftp.put(str(ROOT / "tools" / "mame_state_export.lua"), f"{REMOTE_DIR}/mame_state_export.lua")
-        sftp.put(str(ROOT / "tools" / "pacman_state.py"), f"{REMOTE_DIR}/pacman_state.py")
-        sftp.put(str(ROOT / "pi" / "pacman_agent.py"), f"{REMOTE_DIR}/pacman_agent.py")
+        sftp.put(str(GAME / "state.py"), f"{REMOTE_DIR}/pacman_state.py")
+        sftp.put(str(ROOT / "tools" / "state_regions.py"), f"{REMOTE_DIR}/state_regions.py")
+        sftp.put(str(GAME / "scripts" / "pi_pacman_agent.py"), f"{REMOTE_DIR}/pacman_agent.py")
         with sftp.file(f"{REMOTE_DIR}/regions.lua", "w") as f:
             f.write("return {" + ", ".join(f"{{0x{a:X}, 0x{b:X}, {n}}}" for a, b, n in AGENT_REGIONS) + "}\n")
         sftp.close()

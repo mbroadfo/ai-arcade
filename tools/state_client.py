@@ -12,16 +12,18 @@ import threading
 import time
 
 from controller_client import send
-from pacman_state import decode, expand
+from gamelib import DEFAULT_GAME, load_game
+from state_regions import expand
 
 DEFAULT_PORT = 8766
 
 
 class StateStream:
-    """Connects to the Pi and yields decoded snapshots. Game-agnostic until decode() is applied."""
+    """Connects to the Pi and yields snapshots. `game` (a game package) supplies decode(); without it
+    only raw snapshots (next_raw) are available."""
 
-    def __init__(self, host, port=DEFAULT_PORT, timeout=5.0):
-        self.host, self.port, self.timeout = host, port, timeout
+    def __init__(self, host, port=DEFAULT_PORT, timeout=5.0, game=None):
+        self.host, self.port, self.timeout, self.game = host, port, timeout, game
         self.reconnects = 0
         self._closed = False
         self._connect()
@@ -56,10 +58,10 @@ class StateStream:
         return struct.unpack("<I", payload[:4])[0], payload[4:]
 
     def next_state(self):
-        """Block for the next snapshot; returns (frame, PacmanState, 4096-byte RAM image)."""
+        """Block for the next snapshot; returns (frame, decoded game state, 4096-byte RAM image)."""
         frame, body = self.next_raw()
         image = expand(body, self.regions)
-        return frame, decode(image), image
+        return frame, self.game.decode(image), image
 
     def start_latest(self):
         """Read continuously in a background thread so latest() never returns a stale queue entry."""
@@ -106,7 +108,7 @@ class StateStream:
 
 
 def measure(args):
-    stream = StateStream(args.host, args.state_port)
+    stream = StateStream(args.host, args.state_port, game=load_game(args.game))
     print("connected; regions:", stream.regions)
 
     print(f"\nstream rate over {args.seconds}s ...")
@@ -159,6 +161,7 @@ def main():
     parser.add_argument("--host", default="192.168.10.155")
     parser.add_argument("--state-port", type=int, default=DEFAULT_PORT)
     parser.add_argument("--broker-port", type=int, default=8765)
+    parser.add_argument("--game", default=DEFAULT_GAME, help="<system>/<name>, e.g. arcade/pacman")
     parser.add_argument("--measure", action="store_true")
     parser.add_argument("--seconds", type=int, default=10)
     parser.add_argument("--taps", type=int, default=5)
@@ -166,10 +169,10 @@ def main():
     if args.measure:
         measure(args)
         return 0
-    stream = StateStream(args.host, args.state_port)
+    stream = StateStream(args.host, args.state_port, game=load_game(args.game))
     while True:
         frame, state, _ = stream.next_state()
-        print(frame, state.mode, "score", state.score, "lives", state.lives, "pac", state.pacman.tile)
+        print(frame, state)
 
 
 if __name__ == "__main__":

@@ -17,9 +17,10 @@ import time
 import urllib.request
 from pathlib import Path
 
-from deciders import RuleDecider, describe_option
-from pacman_features import GOALS, junction_facts, render_text
-from pacman_state import decode
+import _bootstrap  # noqa: F401
+from games.arcade.pacman.deciders import RuleDecider, describe_option
+from games.arcade.pacman.features import GOALS, junction_facts, render_text
+from games.arcade.pacman.state import decode
 
 ROOT = Path(__file__).resolve().parent.parent
 

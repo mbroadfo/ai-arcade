@@ -2,10 +2,9 @@ from dataclasses import replace
 from pathlib import Path
 import sys
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools'))
-import pacman_ghosts as pg
-from pacman_maze import Maze
-from pacman_state import decode
+from games.arcade.pacman import ghosts as pg
+from games.arcade.pacman.maze import Maze
+from games.arcade.pacman.state import decode
 
 IMAGE = (Path(__file__).parent / 'fixtures' / 'pacman_play_ram.bin').read_bytes()
 

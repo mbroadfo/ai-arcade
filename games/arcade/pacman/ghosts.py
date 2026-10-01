@@ -3,7 +3,7 @@
 Source: ablackett82/pacman actors.js (differential-tested against the ROM), cross-checked
 against the Pac-Man Dossier. At each tile a ghost picks the exit whose neighbouring tile is
 nearest (squared distance) to its target tile. It never reverses or enters a wall; ties go to the
-later of right, down, left, up. Tiles are (l, h) pairs (docs/PACMAN_RAM_MAP.md).
+later of right, down, left, up. Tiles are (l, h) pairs (RAM_MAP.md).
 
 Simplifications, all listed so nobody mistakes this for a full simulator:
 - Pac-Man is held at his current tile and heading while forecasting (targets stay fixed).
@@ -15,7 +15,7 @@ Special tiles (found by comparing this module with ~3,000 recorded ghost decisio
 ROM's behaviour): ghosts may not turn UP on four tiles near the house and Pac-Man's start, and make no
 choice in the tunnel row (they go straight).
 """
-from pacman_maze import MOVES, step
+from .maze import MOVES, step
 
 ORDER = ("RIGHT", "DOWN", "LEFT", "UP")  # ROM direction numbers 0..3; ties go to the LATER one
 # Direction vectors as the ROM's 16-bit (h << 8 | l) words: right (0,-1), down (1,0), left (0,1), up (-1,0)

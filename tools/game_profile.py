@@ -1,12 +1,12 @@
 """Build a machine-readable profile for any MAME romset, with no per-game hand work.
 
-Combines three automatic sources into games/<romset>.json:
+Combines three automatic sources into games/<system>/<romset>/profile.json:
   1. Controls: MAME's own port enumeration (tools/mame_ports_probe.lua) mapped to the
      broker's canonical controls.
   2. Score/high-score RAM: MAME's hiscore.dat (addresses MAME itself uses to persist scores).
   3. Named variables (lives, energy, timers...): the community cheat.dat database.
 
-Usage: python tools/game_profile.py pacman
+Usage: python tools/game_profile.py pacman [--system arcade]
 """
 import argparse
 import json
@@ -20,7 +20,7 @@ from probe_mame_input import run
 
 PI_HISCORE = "/usr/share/games/mame/plugins/hiscore/hiscore.dat"
 PI_CHEAT = "/opt/retropie/libretrocores/lr-mame2003/metadata/cheat.dat"
-PI_ROMPATH = "/home/pi/RetroPie/roms/arcade"
+PI_ROMS = "/home/pi/RetroPie/roms"
 PORTS_LUA = "mame_ports_probe.lua"
 PORTS_LOG = "/tmp/ai-arcade-ports.log"
 
@@ -103,6 +103,7 @@ def parse_ports(log_text):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("romset")
+    parser.add_argument("--system", default="arcade", help="EmulationStation system folder (arcade, nes, ...)")
     parser.add_argument("--host", default="192.168.10.155")
     parser.add_argument("--user", default="pi")
     args = parser.parse_args()
@@ -121,7 +122,7 @@ def main():
 
         run(ssh, "pkill -9 -x mame || true")
         run(ssh, f"rm -f {PORTS_LOG}")
-        run(ssh, f"nohup mame {args.romset} -rompath {PI_ROMPATH} -sound none -video accel "
+        run(ssh, f"nohup mame {args.romset} -rompath {PI_ROMS}/{args.system} -sound none -video accel "
                  f"-nowindow -skip_gameinfo -autoboot_script /home/pi/ai-arcade/{PORTS_LUA} "
                  "> /tmp/ai-arcade-mame.log 2>&1 < /dev/null &")
         ports_text = ""
@@ -146,8 +147,8 @@ def main():
         "score_ram": parse_hiscore(hiscore, args.romset),
         "named_ram": parse_cheat(cheat, args.romset),
     }
-    PROFILES_DIR.mkdir(exist_ok=True)
-    path = PROFILES_DIR / f"{args.romset}.json"
+    path = PROFILES_DIR / args.system / args.romset / "profile.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(profile, indent=2) + "\n")
     print(json.dumps(profile, indent=2))
     print(f"\nWrote {path}")

@@ -9,9 +9,10 @@ import collections
 import pickle
 import sys
 
-from pacman_ghosts import GHOST_NAMES, LOWER, choose_exit, direction_between, is_scatter, targets
-from pacman_maze import Maze
-from pacman_state import decode
+import _bootstrap  # noqa: F401
+from games.arcade.pacman.ghosts import GHOST_NAMES, LOWER, choose_exit, direction_between, is_scatter, targets
+from games.arcade.pacman.maze import Maze
+from games.arcade.pacman.state import decode
 
 SETTLE_FRAMES = 3  # the game queues the new choice a frame or two after next_tile changes
 

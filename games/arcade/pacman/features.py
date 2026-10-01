@@ -3,7 +3,7 @@
 The model never plans routes (a single forward pass can't). Code does the geometry; the model
 makes the judgment call: which way, given the current goal.
 """
-from pacman_maze import LOWER_TO_UPPER, MOVES, OPPOSITE, Maze, step
+from .maze import LOWER_TO_UPPER, MOVES, OPPOSITE, Maze, step
 
 GOALS = {
     "clear_dots": "Eat all the dots. Prefer the direction with the nearest food, unless a ghost threatens it.",

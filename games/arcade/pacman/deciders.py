@@ -5,7 +5,7 @@ SystemOneDecider asks a System One model and falls back to the rule when it is u
 """
 from dataclasses import dataclass, field
 
-from pacman_features import GOALS, render_text, score_option
+from .features import GOALS, render_text, score_option
 
 
 @dataclass
@@ -53,7 +53,7 @@ class SystemOneDecider:
             "criteria": criteria,
         }}
         try:
-            reply = self.client.ask(render_text(facts, goal), questions, hint=dict(facts, goal=goal))
+            reply = self.client.ask(facts.get("state_text") or render_text(facts, goal), questions, hint=dict(facts, goal=goal))
         except Exception as exc:  # model down or slow: never leave Pac-Man without a decision
             return self._fallback(facts, goal, f"model error: {exc}")
         answer = reply["answers"]["direction"]

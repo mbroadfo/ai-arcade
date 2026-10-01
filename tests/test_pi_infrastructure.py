@@ -106,9 +106,11 @@ def test_installer_repeats_safely_and_verifies_after_restart(monkeypatch, tmp_pa
     es.write_text('<inputList/>')
     ra = tmp_path / 'autoconfig'
     ra.mkdir()
+    ra_cfg = tmp_path / 'retroarch.cfg'
+    ra_cfg.write_text('')
     install_dir = tmp_path / 'installed'
     for name, value in {
-        'ES_CFG': es, 'RA_DIR': ra, 'INSTALL_DIR': install_dir,
+        'ES_CFG': es, 'RA_DIR': ra, 'RA_CFG': ra_cfg, 'INSTALL_DIR': install_dir,
         'SERVICE_DST': tmp_path / 'broker.service',
         'MODULES_FILE': tmp_path / 'modules.conf',
     }.items():

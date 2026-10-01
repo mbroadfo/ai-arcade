@@ -1,6 +1,6 @@
 """Pac-Man maze queries over a 4096-byte RAM image (0x4000-0x4FFF). Pure functions, no I/O.
 
-Tiles are (l, h) pairs as in docs/PACMAN_RAM_MAP.md: `l` rises downward, `h` rises leftward.
+Tiles are (l, h) pairs as in RAM_MAP.md: `l` rises downward, `h` rises leftward.
 Maze tile codes come from video RAM: 0x10 dot, 0x14 energizer, 0x40 blank, wall = (code & 0xC0) == 0xC0.
 """
 from collections import deque

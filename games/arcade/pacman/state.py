@@ -1,4 +1,4 @@
-"""Decode Pac-Man work RAM (0x4000-0x4FFF) into game state. Map: docs/PACMAN_RAM_MAP.md."""
+"""Decode Pac-Man work RAM (0x4000-0x4FFF) into game state. Map: RAM_MAP.md."""
 from dataclasses import dataclass
 
 BASE = 0x4000
@@ -19,17 +19,6 @@ AGENT_REGIONS = [
 GHOSTS = ("red", "pink", "blue", "orange")
 DIRECTIONS = {0: "right", 1: "down", 2: "left", 3: "up"}  # on-screen, per vector table $32FF
 MODES = {0: "init", 1: "attract", 2: "coin", 3: "playing"}
-
-
-def expand(raw, regions=AGENT_REGIONS):
-    """Rebuild the 4096-byte image at BASE from a compact export (regions concatenated in order)."""
-    buf = bytearray(0x1000)
-    pos = 0
-    for start, end, _every in regions:
-        size = end - start + 1
-        buf[start - BASE: end - BASE + 1] = raw[pos: pos + size]
-        pos += size
-    return bytes(buf)
 
 
 def bcd(data):

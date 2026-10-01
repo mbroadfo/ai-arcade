@@ -16,7 +16,8 @@ import time
 from collections import deque
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from pacman_state import AGENT_REGIONS, decode, expand  # noqa: E402  (copied next to this script by run_pacman_agent.py)
+from pacman_state import AGENT_REGIONS, decode  # noqa: E402  (copied next to this script by run_pacman_agent.py)
+from state_regions import expand  # noqa: E402  (likewise)
 
 STATE_FILE = "/dev/shm/ai-arcade-state.bin"
 DOT, ENERGIZER, BLANK = 0x10, 0x14, 0x40
@@ -70,7 +71,7 @@ def read_state():
     if len(raw) < expected:
         return None
     frame = struct.unpack("<I", raw[:4])[0]
-    return frame, expand(raw[4:expected])
+    return frame, expand(raw[4:expected], AGENT_REGIONS)
 
 
 def tile_at(buf, l, h):

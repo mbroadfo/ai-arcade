@@ -12,6 +12,7 @@ from pathlib import Path
 
 import paramiko
 
+import _bootstrap  # noqa: F401
 from controller_client import send
 from probe_mame_input import MAME_LOG, run
 

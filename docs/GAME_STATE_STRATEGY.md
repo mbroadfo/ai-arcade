@@ -46,5 +46,5 @@ When RAM semantics are unknown, MAME can still provide frames, plus layer-1 scor
 
 ## Pac-Man status
 
-Layers 0, 1 and a full hand-validated decoder (`tools/pacman_state.py`, `docs/PACMAN_RAM_MAP.md`) pass
-`tools/validate_pacman_state.py`. Pac-Man is the reference for checking that layer 2 finds the same answers.
+Layers 0, 1 and a full hand-validated decoder (`games/arcade/pacman/state.py`, `games/arcade/pacman/RAM_MAP.md`) pass
+`games/arcade/pacman/scripts/validate_pacman_state.py`. Pac-Man is the reference for checking that layer 2 finds the same answers.
