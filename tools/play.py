@@ -16,7 +16,7 @@ from decision_worker import DecisionWorker
 from gamelib import DEFAULT_GAME, ROOT, load_game
 from state_client import StateStream
 from strategist import MockStrategistClient, Strategist
-from systemone import MockSystemOne, OllamaSystemOne
+from systemone import DEFAULT_HOST, MockSystemOne, OllamaSystemOne
 
 
 def build_decider(game, args):
@@ -37,7 +37,7 @@ def main():
     parser.add_argument("--decider", choices=("rule", "mock", "ollama"), default="rule")
     parser.add_argument("--latency", default="90,500", help="mock model latency range in ms")
     parser.add_argument("--model", default="nimble")
-    parser.add_argument("--ollama-host", default="http://localhost:11434")
+    parser.add_argument("--ollama-host", default=DEFAULT_HOST)
     parser.add_argument("--min-confidence", type=float, default=0.0)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--lookahead", type=int, default=None, help="tiles ahead to query (game default if unset)")

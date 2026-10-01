@@ -126,6 +126,12 @@ never sees or sets a raw number, and the scale is bounded.
 Label results by what the model did: with `--strategist ollama` and the rule decider, the model sets parameters
 and code picks every direction (not the S1M playing); with `--decider ollama` as well, a model does both.
 
+### Model server
+
+ai-arcade runs its own Ollama (`tools/ollama/`, port 11435), separate from the Zork project's. Measured throughput: about
+12 answers a second in total, one request at a time; parallel slots do not apply to `nimble` (architecture `qwen35`). Plan the
+lookahead around about 4-5 questions per junction transition. Details, setup and the numbers: `tools/ollama/README.md`.
+
 ## What the model is told (ablation rungs)
 
 Set with `--knowledge`. Each rung is cumulative, so a result can be labelled by the help it had:

@@ -1,0 +1,37 @@
+# ai-arcade's own Ollama server, separate from the Zork observatory project's (which keeps its own settings and baselines).
+#
+#   docker compose -f tools/ollama/compose.yml up -d      # http://localhost:11435 (ai-arcade's default)
+#   docker compose -f tools/ollama/compose.yml down       # stops it; the model volume is kept
+#
+# Own model volume, holding only what ai-arcade uses (nimble). One-time setup, copying it from the Zork volume:
+#   docker volume create ai-arcade-ollama-models
+#   (see tools/ollama/README.md for the copy command)
+#
+# Memory: nimble takes 8.9 GB of the 12 GB card, so only one server can have it loaded at a time. Each request asks to keep it
+# loaded for 30 minutes; if the other server holds it, unload there first:
+#   curl http://localhost:11434/api/generate -d '{"model":"nimble","keep_alive":0}'
+name: ai-arcade-ollama
+
+services:
+  ollama:
+    image: ollama/ollama:0.35.0  # pinned: results are compared on one engine version
+    ports:
+      - "11435:11434"
+    volumes:
+      - models:/root/.ollama
+    environment:
+      - OLLAMA_MAX_LOADED_MODELS=1
+      - OLLAMA_KEEP_ALIVE=30m
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped
+
+volumes:
+  models:
+    external: true
+    name: ai-arcade-ollama-models

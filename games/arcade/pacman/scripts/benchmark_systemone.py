@@ -21,6 +21,7 @@ import _bootstrap  # noqa: F401
 from games.arcade.pacman.deciders import RuleDecider, describe_option
 from games.arcade.pacman.features import GOALS, junction_facts, render_text
 from games.arcade.pacman.state import decode
+from systemone import DEFAULT_HOST
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -77,7 +78,7 @@ def scenarios(base):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", default="nimble")
-    parser.add_argument("--host", default="http://localhost:11434")
+    parser.add_argument("--host", default=DEFAULT_HOST)
     parser.add_argument("--calls", type=int, default=40)
     args = parser.parse_args()
 

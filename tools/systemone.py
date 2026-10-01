@@ -6,9 +6,13 @@ the same facts a model would and answers after a realistic delay.
 """
 import json
 import math
+import os
 import random
 import time
 import urllib.request
+
+# ai-arcade has its own Ollama (tools/ollama/compose.yml), separate from the Zork project's on 11434.
+DEFAULT_HOST = os.environ.get("ARCADE_OLLAMA_HOST", "http://localhost:11435")
 
 class SystemOneError(RuntimeError):
     pass
@@ -17,7 +21,7 @@ class SystemOneError(RuntimeError):
 class OllamaSystemOne:
     """POST {host}/v1/systemone (Ollama 0.35+). Request/response per docs.ollama.com/api/systemone."""
 
-    def __init__(self, model="nimble", host="http://localhost:11434", keep_alive="30m", timeout=5.0):
+    def __init__(self, model="nimble", host=DEFAULT_HOST, keep_alive="30m", timeout=5.0):
         self.model, self.host, self.keep_alive, self.timeout = model, host.rstrip("/"), keep_alive, timeout
 
     def ask(self, state, questions, hint=None):
