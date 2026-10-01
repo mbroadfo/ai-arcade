@@ -28,7 +28,8 @@ FIXTURES = Path(__file__).parent / "fixtures"
 RECORDING = FIXTURES / "pacman_replay_v3.bin.gz"
 FPS = 60.0
 # the switch sets replayed: defaults, and everything that steers turned on
-CONFIGS = {"default": {}, "all_on": {"park": True, "refuge": True, "danger_query": True, "revise": True}}
+CONFIGS = {"default": {}, "all_on": {"park": True, "refuge": True, "danger_query": True, "revise": True},
+           "model_alone": {"late": "keep", "reflex": False}}
 
 
 def golden_path(name):
@@ -42,7 +43,7 @@ def make_fixture(pkl, start, end):
         out.write(struct.pack("<I", frame))
         for a, b, _ in AGENT_REGIONS:
             out.write(image[a - BASE: b - BASE + 1])
-    RECORDING.write_bytes(gzip.compress(out.getvalue(), 9))
+    RECORDING.write_bytes(gzip.compress(out.getvalue(), 9, mtime=0))
     print(f"{len(frames)} frames -> {RECORDING} ({RECORDING.stat().st_size // 1024} KB)")
 
 
@@ -79,23 +80,29 @@ class ReplayStream:
 
 
 class ReplayWorker:
-    """Answers with the rule decider on the next take_all(), stamped with replay time."""
+    """Answers with the rule decider, stamped with replay time. latency=0: on the next take_all(). latency > 0: like
+    our model server, one question at a time, each taking `latency` seconds of replay time (urgent ones first)."""
 
-    def __init__(self, clock):
-        self.clock, self.rule, self.done, self.keys = clock, RuleDecider(), [], set()
+    def __init__(self, clock, latency=0.0):
+        self.clock, self.latency, self.rule, self.done, self.keys = clock, latency, RuleDecider(), [], set()
+        self.free_at = 0.0  # when the server finishes what it already has
 
     def submit(self, key, goal, facts, urgent=False):
         if key in self.keys:
             return False
         self.keys.add(key)
-        self.done.append((key, goal, facts, self.rule.decide(facts, goal), self.clock()))
+        ready = max(self.clock(), self.free_at) + self.latency
+        self.free_at = ready
+        self.done.append((ready, (key, goal, facts, self.rule.decide(facts, goal))))
         return True
 
     def pending(self, key):
         return key in self.keys
 
     def take_all(self):
-        out, self.done = self.done, []
+        now = self.clock()  # latency 0: everything asked is ready by the next take_all, stamped when it was asked
+        out = [item + (ready,) for ready, item in self.done if ready <= now]
+        self.done = [(ready, item) for ready, item in self.done if ready > now]
         for item in out:
             self.keys.discard(item[0])
         return out
@@ -115,10 +122,12 @@ class Broker:
         pass
 
 
-def replay(config):
+def replay(config, latency=0.0, switches=None):
+    """The decisions log of the recorded minute under CONFIGS[config] (or `switches`), answers taking `latency` s."""
     frames, clock, log = load_frames(), Clock(), io.StringIO()
-    p = player.Player(ReplayStream(frames, clock), Broker(), ReplayWorker(clock),
-                      goals.GoalManager("auto", clock=clock), log, clock=clock, **CONFIGS[config])
+    p = player.Player(ReplayStream(frames, clock), Broker(), ReplayWorker(clock, latency),
+                      goals.GoalManager("auto", clock=clock), log, clock=clock,
+                      **(CONFIGS[config] if switches is None else switches))
     for _ in frames:
         p.tick()
     return log.getvalue()
@@ -143,7 +152,7 @@ def main():
         summary = {e: events.count(e) for e in sorted(set(events))}
         print(f"{config}: {len(events)} events in {time.time() - t0:.1f} s {summary}")
         if args.update:
-            golden_path(config).write_bytes(gzip.compress(text.encode(), 9))
+            golden_path(config).write_bytes(gzip.compress(text.encode(), 9, mtime=0))
 
 
 if __name__ == "__main__":

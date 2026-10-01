@@ -59,6 +59,9 @@ def main():
                         help="in a corridor with a ghost close, ask the model carry on or turn back (urgent) and execute it")
     parser.add_argument("--danger-model", default=None,
                         help="a separate (fast) model for the danger query, e.g. tev1:0.8b; default: the decider's own")
+    parser.add_argument("--late", choices=("rule", "keep"), default="rule",
+                        help="no answer on arrival at a junction: the rule decides (code-late), or keep: nothing changes "
+                             "and he waits for the model's answer (with --no-reflex, the model alone)")
     parser.add_argument("--no-reflex", action="store_true", help="turn the survival instinct off (ablation)")
     parser.add_argument("--chain", type=int, default=None, help="look-ahead chain depth, 0 = off (game default if unset)")
     parser.add_argument("--tag", default="", help="label added to the run files")
@@ -80,6 +83,7 @@ def main():
                                  None if args.strategist == "code" else f"strat-{args.strategist}",
                                  "park" if args.park else None, "refuge" if args.refuge else None,
                                  "danger" if args.danger_query else None, "revise" if args.revise else None, "noreflex" if args.no_reflex else None,
+                                 None if args.late == "rule" else f"late-{args.late}",
                                  None if args.chain is None else f"chain{args.chain}", args.tag) if p)
     decisions_log = open(out_dir / f"{label}-decisions.jsonl", "w", buffering=1)
     results_path = out_dir / f"{label}-games.jsonl"
@@ -96,7 +100,7 @@ def main():
     broker = BrokerLink(args.host)
     worker = DecisionWorker(build_decider(game, args))
     extra = {"lookahead": args.lookahead} if args.lookahead is not None else {}
-    extra.update(revise=args.revise, reflex=not args.no_reflex)
+    extra.update(revise=args.revise, reflex=not args.no_reflex, late=args.late)
     if args.park:
         extra["park"] = True
     if args.refuge:
@@ -159,6 +163,7 @@ def main():
 
     s = player.stats
     print(f"\ndecisions: {s['on_time']} on time, {s['late_rule']} late (rule filled in), "
+          f"{s.get('late_keep', 0)} late (kept going or waited), "
           f"{s['queries']} queries ({s.get('chained', 0)} chained), {s.get('revised', 0)} stale answers revised; "
           f"late because {s.get('late_why', {})}; sources {player.sources}")
     if hasattr(player, "ledger"):

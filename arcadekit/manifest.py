@@ -14,7 +14,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 
 # switches that let code help or overrule the decider: a result must say which were on
-SWITCHES = ("revise", "no_reflex", "chain", "lookahead", "park", "refuge", "danger_query", "danger_model", "min_confidence")
+SWITCHES = ("revise", "no_reflex", "late", "chain", "lookahead", "park", "refuge", "danger_query", "danger_model",
+            "min_confidence")
 
 
 def _git(*args):

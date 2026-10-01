@@ -16,7 +16,7 @@ from arcadekit.answers import AnswerBook
 from arcadekit.ledger import SOURCE_BY, Ledger
 
 from .danger import ASK_EVERY, MAX_AGE, MAX_DRIFT, danger_facts
-from .deciders import RuleDecider
+from .deciders import Decision, RuleDecider
 from .events import GameStats
 from .features import GOALS, LURE_RADIUS, junction_facts, ready_to_eat, score_option
 from .goals import stance_text
@@ -35,13 +35,14 @@ PLAN_TTL = 4.0  # seconds before a stored answer is considered stale
 REVISE_REGRET = 2.5  # with revise on, a stored answer is replaced if another exit scores this much better
 GHOST_SCORES = (200, 400, 800, 1600)
 PAUSE_FRAMES = 60  # the game freezes for about this many frames when a ghost is eaten
+LATE_DEFAULTS = ("rule", "keep")  # with no answer on arrival: the rule decides, or nothing changes (see _late_keep)
 
 
 class Player:
     def __init__(self, stream, broker, worker, strategy, decisions_log, strategy_interval=0.5,
                  lookahead=LOOKAHEAD_STEPS, knowledge=None, revise=False, reflex=True,
                  chain_depth=CHAIN_DEPTH, park=False, refuge=False, danger_query=False,
-                 danger_worker=None, clock=time.time):
+                 danger_worker=None, clock=time.time, late="rule"):
         # Ablation switches. revise: code re-checks each stored answer against fresh facts (code overruling the
         # decider, so off by default). reflex: the survival instinct. chain_depth: look-ahead chain, 0 = off.
         self.clock = clock  # wall-clock seconds; a replay passes recorded time
@@ -53,6 +54,12 @@ class Player:
         # answer is executed. danger_worker: a separate (fast) model for it; None = the main worker, at the front.
         self.danger_query, self.danger_worker = danger_query, danger_worker
         self.danger_asked_at, self.danger_out, self.danger_answer = 0.0, None, None
+        # late: what happens when no answer is there on arrival. "rule" decides (code-late); "keep" changes nothing and
+        # waits for the model's answer (_late_keep), so a run can be the model alone. An ablation switch.
+        if late not in LATE_DEFAULTS:
+            raise ValueError(f"late must be one of {LATE_DEFAULTS}")
+        self.late = late
+        self.waiting = None  # (key, why, since): at a junction with no answer, late="keep"
         self.hold = None  # {"kind": "park"|"refuge", "tile", "push", "since", "noted", "exit", "booked"} while parked
         self.refuge_ran_at, self.refuge_cooldown = 0.0, 0.0
         self.lookahead = lookahead
@@ -76,7 +83,7 @@ class Player:
         self.finished = 0
         self.game = GameStats()  # what happened in the current game
         self.last_reflex = (None, 0.0)
-        self.stats = {"on_time": 0, "late_rule": 0, "queries": 0, "chained": 0, "revised": 0,
+        self.stats = {"on_time": 0, "late_rule": 0, "late_keep": 0, "queries": 0, "chained": 0, "revised": 0,
                       "late_why": {},
                       "danger": {"asked": 0, "answered": 0, "dropped": 0, "turned_back": 0, "carried_on": 0}}  # moves: executed junction decisions by who made them
         self.last_how = None  # how the last _go() changed the proposed direction: None, "revise" or "reflex"
@@ -262,7 +269,7 @@ class Player:
         return sorted(here[g.tile] for n, g in state.ghosts.items()
                       if not state.frightened[n] and not state.eyes[n] and g.tile in here)
 
-    def _book_move(self, key, decision, final, late=None, answered_at=None):
+    def _book_move(self, key, decision, final, late=None, answered_at=None, **extra):
         """One record per junction decision: who proposed the direction, who executed it, how old the answer was
         (arcadekit.ledger has the vocabulary). Forced single-exit corners are mechanical and not booked."""
         if self.last_how:  # the reflex or a revision changed the proposal
@@ -272,7 +279,35 @@ class Player:
         age = None if answered_at is None else round(self.clock() - answered_at, 2)
         self.ledger.book(by, via, tile=list(key[0]), arriving=key[1], goal=self.goal, mods=dict(self.mods),
                          proposed=decision.choice, source=decision.source, confidence=round(decision.confidence, 2),
-                         latency_ms=round(decision.latency_ms), age_s=age, executed=final, late=late)
+                         latency_ms=round(decision.latency_ms), age_s=age, executed=final, late=late, **extra)
+
+    def _late_keep(self, state, image, junction, heading, key, why):
+        """late="keep": no answer on arrival and nothing changes. He carries on if his way goes on (booked code-late via
+        keep when he leaves the tile), or stops against the wall and waits. An answer that arrives while he is still on
+        the tile is used and booked as the model's, with how long he waited."""
+        if self.waiting is None or self.waiting[0] != key:
+            self.waiting = (key, why, self.clock())
+            self.stats["late_keep"] += 1
+            self.stats["late_why"][why] = self.stats["late_why"].get(why, 0) + 1
+            self.log(event="late", tile=list(junction), direction=None, why=why, steps_seen=0, default="keep")
+        if heading and Maze(image).passable(step(tuple(junction), heading)):
+            final = self._go(state, image, junction, heading, heading, "junction", "late-keep")  # the reflex may veto
+            if final != heading:  # it did: that is code's move, booked now
+                self._book_move(key, Decision(heading, "keep"), final, late=why)
+                self.applied.add(key)
+                self.waiting, self.commit = None, (tuple(junction), final)
+        else:
+            self.broker.steer(heading)  # push on into the wall: stopped, waiting for the answer
+
+    def _left_waiting(self, here):
+        """He left the junction he was waiting at without an answer: he carried on, and code's default made that move."""
+        key, why, since = self.waiting
+        if here == tuple(key[0]):
+            return
+        self.waiting = None
+        if key not in self.applied:
+            self.ledger.book("code-late", "keep", tile=list(key[0]), arriving=key[1], goal=self.goal, executed=key[1],
+                             late=why, waited_s=round(self.clock() - since, 2))
 
     def _watch_for_pause(self, state, frame):
         """A ghost-sized score jump means a ghost was just eaten: the game freezes for about a second."""
@@ -391,7 +426,7 @@ class Player:
         if state.mode != "playing":
             return None
         if not self.was_playing:
-            self.game_started, self.game, self.commit = self.clock(), GameStats(), None
+            self.game_started, self.game, self.commit, self.waiting = self.clock(), GameStats(), None, None
             self.book.forget()
             self.book.clear_queued()
         self.was_playing, self.last_state = True, state
@@ -400,7 +435,7 @@ class Player:
         if image[0x4E04 - 0x4000] != 3:  # READY screen, death animation, level transition
             self.broker.steer(None)
             self.book.forget()
-            self.commit = None
+            self.commit, self.waiting = None, None
             if self.hold is not None:  # the READY screen after a life lost while waiting
                 self.game.park_deaths += self.hold["kind"] == "park"
                 self.game.refuge_deaths += self.hold["kind"] == "refuge"
@@ -456,6 +491,8 @@ class Player:
         # heading would otherwise look like arriving at a new junction and decide again: two answers that disagree
         # flip him back and forth on the spot while a ghost closes in. Survival can still override the commitment.
         here = tuple(me)
+        if self.waiting:
+            self._left_waiting(here)
         if self.commit and here != self.commit[0] and (junction is None or tuple(junction) != self.commit[0]):
             self.commit = None  # he has left it
         if self.commit and here == self.commit[0]:
@@ -471,8 +508,14 @@ class Player:
                 self.stats["on_time"] += 1
             final = self._go(state, image, junction, arriving, decision.choice, "junction", decision.source)
             if first:
-                self._book_move(key, decision, final, answered_at=answered_at)
+                extra = {}
+                if self.waiting and self.waiting[0] == key:  # it came while he waited at the junction (late="keep")
+                    extra = {"waited_s": round(self.clock() - self.waiting[2], 2)}
+                    self.waiting = None
+                self._book_move(key, decision, final, answered_at=answered_at, **extra)
             self.commit = (tuple(junction), final)
+        elif junction is not None and steps == 0 and self.late == "keep":
+            self._late_keep(state, image, junction, heading, key, self.book.late_reason(key, asked_now))
         elif junction is not None and steps == 0:
             # At the junction with no answer yet: a rule decides, and we count it as late.
             facts = junction_facts(state, image, tile=junction, arriving=heading, park=self.park)
