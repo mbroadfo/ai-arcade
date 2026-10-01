@@ -79,7 +79,7 @@ For Windows testing without an LLM, double-click these files in the repository:
 
 These use the repository's `.venv` and existing trusted SSH key, defaulting to
 `192.168.10.155`. They also run from PowerShell, for example
-`.\gamesrcade\pacman\Start-PacMan.cmd`. Pass `--host ADDRESS` to target a different Pi.
+`.\games\arcade\pacman\Start-PacMan.cmd`. Pass `--host ADDRESS` to target a different Pi.
 
 Once the broker is installed and running:
 
