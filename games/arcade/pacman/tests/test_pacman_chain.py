@@ -1,6 +1,7 @@
 """Chained look-ahead: an answer for one junction triggers the question about the junction it leads to."""
 import io
 import json
+import time
 from dataclasses import replace
 from pathlib import Path
 
@@ -23,7 +24,7 @@ class FakeWorker:
     def submit(self, key, goal, facts):
         self.submitted.append(key)
         decision = self.rule.decide(facts, goal)
-        self.finished.append((key, goal, facts, decision, 0.0))
+        self.finished.append((key, goal, facts, decision, time.time()))
         return True
 
     def pending(self, key):
@@ -203,3 +204,55 @@ def test_late_reasons_are_told_apart():
     assert p._late_reason(key) == "other_arrival"
     p.worker.finished.append((key, "g", {}, None, 0.0))  # FakeWorker.pending: asked, answer not taken yet
     assert p._late_reason(key) == "in_flight"
+
+
+class Stream:
+    """Feeds a fixed sequence of (frame, state, image) snapshots to Player.tick()."""
+
+    def __init__(self, states):
+        self.states = list(states)
+
+    def latest(self, newer_than=-1, timeout=2.0):
+        return self.states.pop(0)
+
+
+class Steer:
+    held = None
+
+    def __init__(self):
+        self.sent = []
+
+    def steer(self, direction):
+        self.sent.append(direction)
+
+    def tap(self, *a, **k):
+        pass
+
+    def release_all(self):
+        pass
+
+
+def at(tile, direction="left"):
+    ghosts = {n: replace(g, tile=(0, 0), next_tile=(0, 0)) for n, g in STATE.ghosts.items()}
+    return replace(STATE, ghosts=ghosts, mode="playing", pacman=replace(STATE.pacman, tile=tile, direction=direction))
+
+
+def test_a_stored_answer_is_used_once_and_gone_when_pacman_leaves_the_junction():
+    junction, arriving = next(junction_starts())
+    heading = arriving.lower()
+    far = next(t for t, a in junction_starts() if abs(t[0] - junction[0]) + abs(t[1] - junction[1]) > 12)
+    seq = [(1, at(junction, heading), IMAGE), (2, at(junction, heading), IMAGE), (3, at(far, heading), IMAGE)]
+    p = player.Player(Stream(seq), Steer(), FakeWorker(), goals.GoalManager("clear_dots"), io.StringIO())
+    for _ in range(2):
+        p.tick()
+    key = (junction, arriving)
+    assert key in p.consumed  # applied at its junction
+    p.tick()  # Pac-Man is elsewhere now
+    assert key not in p.plan and key not in p.consumed  # no stale reuse if he comes back to this junction later
+
+
+def test_late_reason_says_when_the_junction_was_only_seen_too_late():
+    p = make_player()
+    key = ((40, 40), "LEFT")
+    assert p._late_reason(key, asked_now=True) == "seen_too_late"
+    assert p._late_reason(key) == "not_asked"

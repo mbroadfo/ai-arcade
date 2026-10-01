@@ -48,6 +48,8 @@ class Player:
         self.plan = {}  # (junction tile, arriving direction) -> (Decision, goal, finished_at)
         self.depth = {}  # plan key -> how many answers deep the chain was when it was asked
         self.pause_until, self.prev_score = -1, None
+        self.revised_keys = set()  # situations already counted as revised
+        self.consumed = set()  # plan keys already applied: single-use, retired once Pac-Man has moved on
         self.applied = set()  # junctions already counted, so stats are per junction, not per tick
         self.last_frame, self.last_start_attempt = -1, 0.0
         self.was_playing, self.game_started, self.last_state = False, 0.0, None
@@ -107,8 +109,10 @@ class Player:
             facts = junction_facts(state, image, tile=tile, arriving=arriving)
             better = self._revise(facts, chosen)
             if better:
-                self.stats["revised"] += 1
-                self.log(event="revise", tile=list(tile), was=chosen, now=better, goal=self.goal, source=source)
+                if (tile, arriving) not in self.revised_keys:  # count a situation once, not once per control tick
+                    self.revised_keys.add((tile, arriving))
+                    self.stats["revised"] += 1
+                    self.log(event="revise", tile=list(tile), was=chosen, now=better, goal=self.goal, source=source)
                 chosen, source = better, "revised"
         final = self._survive(state, image, tile, arriving, chosen, where, facts)
         heading = LOWER_TO_UPPER.get(state.pacman.direction)
@@ -131,8 +135,11 @@ class Player:
             self.log(event="pause", frame=frame, score=jump)
         self.prev_score = state.score
 
-    def _late_reason(self, key):
-        """Why there was no stored answer on arrival: in flight, filed under another arriving direction, or never asked."""
+    def _late_reason(self, key, asked_now=False):
+        """Why there was no stored answer on arrival. asked_now: this very tick was the first chance to ask, i.e.
+        the junction only came into view 0-1 tiles ahead (too close together to ask in time)."""
+        if asked_now:
+            return "seen_too_late"
         if self.worker.pending(key):
             return "in_flight"
         if any(k[0] == key[0] for k in self.plan):
@@ -228,7 +235,12 @@ class Player:
         junction, steps, path = maze.walk_to_decision(me, heading)
         arriving = path[-1] if path and junction is not None else heading
         key = (junction, arriving)
+        for done in [k for k in self.consumed if k != key]:  # an answer is used once, at its junction
+            self.plan.pop(done, None)
+            self.consumed.discard(done)
+            self.revised_keys.discard(done)
 
+        asked_now = False
         if junction is not None:
             self.applied = {k for k in self.applied if k == key}
             if key not in self.plan and steps <= self.lookahead:
@@ -236,9 +248,11 @@ class Player:
                 if self.worker.submit(key, self.goal, facts):
                     self.depth[key] = 0
                     self.stats["queries"] += 1
+                    asked_now = True
 
         if junction is not None and steps <= 1 and key in self.plan:
             decision = self.plan[key][0]
+            self.consumed.add(key)
             if key not in self.applied:
                 self.applied.add(key)
                 self.stats["on_time"] += 1
@@ -249,10 +263,11 @@ class Player:
             decision = self.rule.decide(facts, self.goal)
             self.plan[key] = (decision, self.goal, time.time())
             self.applied.add(key)
+            self.consumed.add(key)
             self.stats["late_rule"] += 1
-            why = self._late_reason(key)
+            why = self._late_reason(key, asked_now)
             self.stats["late_why"][why] = self.stats["late_why"].get(why, 0) + 1
-            self.log(event="late", tile=list(junction), direction=decision.direction, why=why)
+            self.log(event="late", tile=list(junction), direction=decision.direction, why=why, steps_seen=steps)
             self._go(state, image, junction, heading, decision.direction, "junction", "late-rule")
         elif path:
             self._go(state, image, me, heading, path[0], "corridor", "corridor")  # corridor / forced corner
