@@ -12,6 +12,7 @@ The stream, broker link and decision worker are passed in (they are general tool
 import json
 import time
 
+from arcadekit.answers import AnswerBook
 from arcadekit.ledger import SOURCE_BY, Ledger
 
 from .danger import ASK_EVERY, MAX_AGE, MAX_DRIFT, danger_facts
@@ -63,12 +64,12 @@ class Player:
         self.strategy_interval = strategy_interval
         self.goal, self.goal_at = "clear_dots", 0.0
         self.mods = {}  # the stance a slow layer has set (goals.STANCE levels); empty = all normal
-        self.plan = {}  # (junction tile, arriving direction) -> (Decision, goal, finished_at)
-        self.depth = {}  # plan key -> how many answers deep the chain was when it was asked
+        # questions asked ahead and their answers, keyed (junction tile, arriving direction); depth = how many answers
+        # deep the chain was when it was asked (arcadekit.answers)
+        self.book = AnswerBook(worker, self.clock, ttl=PLAN_TTL, urgent_worker=danger_worker)
         self.pause_until, self.prev_score = -1, None
         self.revised_keys = set()  # situations already counted as revised
         self.commit = None  # (junction tile, direction): the decision made on this visit to a junction tile
-        self.consumed = set()  # plan keys already applied: single-use, retired once Pac-Man has moved on
         self.applied = set()  # junctions already counted, so stats are per junction, not per tick
         self.last_frame, self.last_start_attempt = -1, 0.0
         self.was_playing, self.game_started, self.last_state = False, 0.0, None
@@ -281,29 +282,19 @@ class Player:
             self.log(event="pause", frame=frame, score=jump)
         self.prev_score = state.score
 
-    def _late_reason(self, key, asked_now=False):
-        """Why there was no stored answer on arrival. asked_now: this very tick was the first chance to ask, i.e.
-        the junction only came into view 0-1 tiles ahead (too close together to ask in time)."""
-        if asked_now:
-            return "seen_too_late"
-        if self.worker.pending(key):
-            return "in_flight"
-        if any(k[0] == key[0] for k in self.plan):
-            return "other_arrival"
-        return "not_asked"
+    # the book's state, by the names the tests and the log analysis use
+    plan = property(lambda self: self.book.plan)
+    depth = property(lambda self: self.book.depth)
+    consumed = property(lambda self: self.book.consumed)
 
     def _collect(self, state, image, frame):
         """Store finished answers and, for each, ask about the junction it leads to (the chain)."""
         paused = frame < self.pause_until
         limit = 0 if self.chain_depth == 0 else (self.chain_depth + 2 if paused else self.chain_depth)
-        if self.danger_worker is not None:
-            for key, goal, facts, decision, finished_at in self.danger_worker.take_all():
-                self._danger_answered(key, decision, finished_at)
-        for key, goal, facts, decision, finished_at in self.worker.take_all():
-            if key[0] == "danger":  # a danger answer that came back through the main worker
-                self._danger_answered(key, decision, finished_at)
-                continue
-            self.plan[key] = (decision, goal, finished_at)
+        answers, urgent = self.book.collect()
+        for key, goal, facts, decision, finished_at in urgent:  # danger answers
+            self._danger_answered(key, decision, finished_at)
+        for key, goal, facts, decision, finished_at in answers:
             self.latencies.append(decision.latency_ms)
             self.sources[decision.source] = self.sources.get(decision.source, 0) + 1
             depth = self.depth.get(key, 0)
@@ -318,9 +309,8 @@ class Player:
             if junction is None or steps > CHAIN_MAX_STEPS:
                 continue
             key2 = (junction, path[-1] if path else decision.choice)
-            if key2 not in self.plan and not self.worker.pending(key2):
-                if self.worker.submit(key2, self.goal, self._facts(state, image, junction, key2[1])):
-                    self.depth[key2] = depth + 1
+            if not self.book.has(key2) and not self.book.pending(key2):
+                if self.book.ask(key2, self.goal, self._facts(state, image, junction, key2[1]), depth=depth + 1):
                     self.stats["queries"] += 1
                     self.stats["chained"] += 1
 
@@ -359,8 +349,7 @@ class Player:
                 asked = danger_facts(self._facts(state, image, me, heading), heading)  # then the full prompt text
             if asked is not None:
                 key = ("danger", tuple(me), heading)
-                worker = self.danger_worker or self.worker
-                if worker.submit(key, self.goal, asked, urgent=True):
+                if self.book.ask(key, self.goal, asked, urgent=True):
                     self.danger_out, self.danger_asked_at = key, now
                     self.stats["danger"]["asked"] += 1
         return steered
@@ -402,14 +391,16 @@ class Player:
         if state.mode != "playing":
             return None
         if not self.was_playing:
-            self.game_started, self.plan, self.game, self.commit = self.clock(), {}, GameStats(), None
-            self.worker.clear_queued()
+            self.game_started, self.game, self.commit = self.clock(), GameStats(), None
+            self.book.forget()
+            self.book.clear_queued()
         self.was_playing, self.last_state = True, state
         self.game.update(state, image, self.goal, self.clock())
 
         if image[0x4E04 - 0x4000] != 3:  # READY screen, death animation, level transition
             self.broker.steer(None)
-            self.plan, self.commit = {}, None
+            self.book.forget()
+            self.commit = None
             if self.hold is not None:  # the READY screen after a life lost while waiting
                 self.game.park_deaths += self.hold["kind"] == "park"
                 self.game.refuge_deaths += self.hold["kind"] == "refuge"
@@ -442,25 +433,22 @@ class Player:
         if self._refuge_run(state, image, state.pacman.tile):
             return None
         now = self.clock()
-        self.plan = {k: p for k, p in self.plan.items() if now - p[2] < PLAN_TTL}  # drop stale answers
+        self.book.drop_stale()
         maze = Maze(image)
         me = state.pacman.tile
         heading = LOWER_TO_UPPER.get(state.pacman.direction)
         junction, steps, path = maze.walk_to_decision(me, heading)
         arriving = path[-1] if path and junction is not None else heading
         key = (junction, arriving)
-        for done in [k for k in self.consumed if k != key]:  # an answer is used once, at its junction
-            self.plan.pop(done, None)
-            self.consumed.discard(done)
+        for done in self.book.retire_except(key):  # an answer is used once, at its junction
             self.revised_keys.discard(done)
 
         asked_now = False
         if junction is not None:
             self.applied = {k for k in self.applied if k == key}
-            if key not in self.plan and steps <= self.lookahead:
+            if not self.book.has(key) and steps <= self.lookahead:
                 facts = self._facts(state, image, junction, arriving)
-                if self.worker.submit(key, self.goal, facts):
-                    self.depth[key] = 0
+                if self.book.ask(key, self.goal, facts):
                     self.stats["queries"] += 1
                     asked_now = True
 
@@ -474,9 +462,9 @@ class Player:
             self.commit = (here, self._go(state, image, me, heading, self.commit[1], "junction", "commit"))
             return None
 
-        if junction is not None and steps <= 1 and key in self.plan:
-            decision, _, answered_at = self.plan[key]
-            self.consumed.add(key)
+        if junction is not None and steps <= 1 and self.book.has(key):
+            decision, _, answered_at = self.book.get(key)
+            self.book.use(key)
             first = key not in self.applied
             if first:
                 self.applied.add(key)
@@ -490,11 +478,11 @@ class Player:
             facts = junction_facts(state, image, tile=junction, arriving=heading, park=self.park)
             facts["mods"] = dict(self.mods)
             decision = self.rule.decide(facts, self.goal)
-            self.plan[key] = (decision, self.goal, self.clock())
+            self.book.put(key, decision, self.goal)
             self.applied.add(key)
-            self.consumed.add(key)
+            self.book.use(key)
             self.stats["late_rule"] += 1
-            why = self._late_reason(key, asked_now)
+            why = self.book.late_reason(key, asked_now)
             self.stats["late_why"][why] = self.stats["late_why"].get(why, 0) + 1
             self.log(event="late", tile=list(junction), direction=decision.choice, why=why, steps_seen=steps)
             final = self._go(state, image, junction, heading, decision.choice, "junction", "late-rule")

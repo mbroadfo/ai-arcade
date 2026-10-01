@@ -199,11 +199,11 @@ def test_reflex_switch_off_lets_a_deadly_choice_stand():
 def test_late_reasons_are_told_apart():
     p = make_player()
     key = ((40, 40), "LEFT")
-    assert p._late_reason(key) == "not_asked"
+    assert p.book.late_reason(key) == "not_asked"
     p.plan[((40, 40), "UP")] = (None, "g", 0.0)
-    assert p._late_reason(key) == "other_arrival"
+    assert p.book.late_reason(key) == "other_arrival"
     p.worker.finished.append((key, "g", {}, None, 0.0))  # FakeWorker.pending: asked, answer not taken yet
-    assert p._late_reason(key) == "in_flight"
+    assert p.book.late_reason(key) == "in_flight"
 
 
 class Stream:
@@ -254,8 +254,8 @@ def test_a_stored_answer_is_used_once_and_gone_when_pacman_leaves_the_junction()
 def test_late_reason_says_when_the_junction_was_only_seen_too_late():
     p = make_player()
     key = ((40, 40), "LEFT")
-    assert p._late_reason(key, asked_now=True) == "seen_too_late"
-    assert p._late_reason(key) == "not_asked"
+    assert p.book.late_reason(key, asked_now=True) == "seen_too_late"
+    assert p.book.late_reason(key) == "not_asked"
 
 
 HEADON = (Path(__file__).parent / 'fixtures' / 'pacman_headon_ram.bin').read_bytes()  # recorded: a death on the right side
