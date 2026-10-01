@@ -2,38 +2,38 @@
   "romset": "pacman",
   "description": "Pac-Man (Midway)",
   "controls": {
-    "player1": [
-      "DOWN",
-      "LEFT",
-      "RIGHT",
-      "UP"
-    ],
     "player2": [
       "DOWN",
       "LEFT",
       "RIGHT",
       "UP"
     ],
-    "coin_slots": [
+    "player1": [
+      "DOWN",
+      "LEFT",
+      "RIGHT",
+      "UP"
+    ],
+    "start_buttons": [
       1,
       2
     ],
-    "start_buttons": [
+    "coin_slots": [
       1,
       2
     ]
   },
   "analog_inputs": [],
   "other_inputs": [
-    "Service 1",
-    "Rack Test (Cheat)",
-    "Cabinet",
-    "Service Mode",
-    "Difficulty",
+    "Lives",
     "Ghost Names",
     "Coinage",
     "Bonus Life",
-    "Lives"
+    "Difficulty",
+    "Cabinet",
+    "Service Mode",
+    "Service 1",
+    "Rack Test (Cheat)"
   ],
   "score_ram": [
     {

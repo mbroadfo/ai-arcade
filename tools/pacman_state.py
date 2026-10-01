@@ -61,8 +61,8 @@ def decode(buf):
         mode=MODES.get(b(0x4E00), f"unknown({b(0x4E00)})"),
         credits=bcd([b(0x4E6E)]),
         lives=b(0x4E14),
-        score=bcd(span(0x4E80, 4)),
-        high_score=bcd(span(0x4E88, 4)),
+        score=bcd(span(0x4E80, 3)),  # 6 digits; 4E83 is a flag that becomes 1 past 10,000
+        high_score=bcd(span(0x4E88, 3)),
         dots_eaten=b(0x4E0E),
         level=b(0x4E13) + 1,
         pacman=Actor(

@@ -28,8 +28,9 @@ Address space read from standalone MAME 0.206 via Lua: `:maincpu` program space.
 | `4E6F` | Lives per game (dip setting) | source |
 | `4E14` | Lives remaining | validated (=3 after start); also cheat.dat "Infinite Lives" |
 | `4E15` | Lives displayed | source |
-| `4E80-4E83` | P1 score, BCD, least-significant byte first | validated (score = 10 x dots) |
-| `4E88-4E8B` | High score, BCD | validated; also MAME hiscore.dat |
+| `4E80-4E82` | P1 score, 6 BCD digits, least-significant byte first | validated (score = 10 x dots; sane through 11,720) |
+| `4E83` | Not score: was 1 once score passed 10,000 (probably the bonus-life flag; unverified) | observed in a 10-game run |
+| `4E88-4E8A` | High score, 6 BCD digits | validated; also MAME hiscore.dat (which lists 4 bytes) |
 | `4E0E` | Dots eaten this level (244 total incl. 4 energizers) | validated; cheat.dat sets F4 = "Finish this Level" |
 | `4E13` | Level counter (0-based; clamp 0x14) | source |
 | `4D00-4D07` | Ghost positions, (l,h) byte pairs: red, pink, blue, orange | observed moving |
