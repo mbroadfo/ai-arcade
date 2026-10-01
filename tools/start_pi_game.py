@@ -24,6 +24,9 @@ def main():
     parser.add_argument("--host", default="192.168.10.155")
     parser.add_argument("--user", default="pi")
     parser.add_argument("--state-port", type=int, default=8766)
+    parser.add_argument("--speed", type=float, default=1.0,
+                        help="emulation speed relative to real time (MAME -speed), e.g. 0.5 gives the decider twice the "
+                             "time per decision; wall-clock seconds in the results stretch by the same factor")
     args = parser.parse_args()
     system, _ = split_spec(args.game)
     romset = load_profile(args.game)["romset"]
@@ -48,6 +51,7 @@ def main():
         run(ssh, f"nohup env SDL_AUDIODRIVER=alsa mame {romset} -rompath /home/pi/RetroPie/roms/{system} "
                  "-video accel -nowindow -skip_gameinfo -joystick -joystickprovider sdl "
                  "-ctrlrpath /home/pi/.mame/ctrlr -ctrlr aiarcade "
+                 + (f"-speed {args.speed} " if args.speed != 1.0 else "") +
                  f"-autoboot_script {REMOTE_DIR}/mame_state_export.lua "
                  f"> {MAME_LOG} 2>&1 < /dev/null &")
         for _ in range(40):

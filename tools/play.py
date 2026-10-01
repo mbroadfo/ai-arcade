@@ -88,6 +88,10 @@ def main():
 
     stream = StateStream(args.host, game=game)
     stream.start_latest()
+    first, t0 = stream.latest()[0], time.time()  # emulated frames per second: a run at reduced MAME -speed must say so
+    time.sleep(2.0)
+    manifest["emulated_fps"] = round((stream.latest()[0] - first) / (time.time() - t0), 1)
+    manifest_path.write_text(json.dumps(manifest, indent=2))
     broker = BrokerLink(args.host)
     worker = DecisionWorker(build_decider(game, args))
     extra = {"lookahead": args.lookahead} if args.lookahead is not None else {}
