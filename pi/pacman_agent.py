@@ -8,6 +8,7 @@ commands to the controller broker on localhost. Standard library only (Pi runs P
 import argparse
 import json
 import os
+import signal
 import socket
 import struct
 import sys
@@ -15,7 +16,7 @@ import time
 from collections import deque
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from pacman_state import decode  # noqa: E402  (copied next to this script by run_pacman_agent.py)
+from pacman_state import AGENT_REGIONS, decode, expand  # noqa: E402  (copied next to this script by run_pacman_agent.py)
 
 STATE_FILE = "/dev/shm/ai-arcade-state.bin"
 DOT, ENERGIZER, BLANK = 0x10, 0x14, 0x40
@@ -65,10 +66,11 @@ def read_state():
             raw = f.read()
     except OSError:
         return None
-    if len(raw) < 4 + 0x1000:
+    expected = 4 + sum(end - start + 1 for start, end, _ in AGENT_REGIONS)
+    if len(raw) < expected:
         return None
     frame = struct.unpack("<I", raw[:4])[0]
-    return frame, raw[4:4 + 0x1000]
+    return frame, expand(raw[4:expected])
 
 
 def tile_at(buf, l, h):
@@ -143,6 +145,7 @@ def main():
     parser.add_argument("--results", default="/tmp/ai-arcade-games.jsonl")
     args = parser.parse_args()
 
+    signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))  # let `finally` release the controls
     log = open(args.log, "w", buffering=1)
     broker = Broker()
     deadline = time.time() + args.seconds

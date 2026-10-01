@@ -9,7 +9,7 @@ from pathlib import Path
 
 import paramiko
 
-from pacman_state import REGIONS
+from pacman_state import AGENT_REGIONS
 from probe_mame_input import MAME_LOG, run
 
 REMOTE_DIR = "/home/pi/ai-arcade"
@@ -39,7 +39,7 @@ def main():
         sftp.put(str(ROOT / "tools" / "pacman_state.py"), f"{REMOTE_DIR}/pacman_state.py")
         sftp.put(str(ROOT / "pi" / "pacman_agent.py"), f"{REMOTE_DIR}/pacman_agent.py")
         with sftp.file(f"{REMOTE_DIR}/regions.lua", "w") as f:
-            f.write("return {" + ", ".join(f"{{0x{a:X}, 0x{b:X}}}" for a, b in REGIONS) + "}\n")
+            f.write("return {" + ", ".join(f"{{0x{a:X}, 0x{b:X}, {n}}}" for a, b, n in AGENT_REGIONS) + "}\n")
         sftp.close()
 
         run(ssh, "pkill -9 -x mame || true; pkill -f '[p]acman_agent.py' || true")

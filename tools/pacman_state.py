@@ -2,11 +2,34 @@
 from dataclasses import dataclass
 
 BASE = 0x4000
-REGIONS = [(0x4000, 0x4FFF)]
+REGIONS = [(0x4000, 0x4FFF)]  # everything, every frame (validation and discovery use this)
+
+# Light export for the live agent: (start, end, refresh every N frames). Roughly 10x fewer reads
+# per frame than REGIONS. Everything decode() uses is inside the fast regions; the maze is read
+# from video RAM, which only changes when a dot is eaten.
+AGENT_REGIONS = [
+    (0x4D00, 0x4D3F, 1),  # positions, directions, tiles, wanted direction
+    (0x4DA0, 0x4DDF, 1),  # ghost flags, fruit
+    (0x4E00, 0x4E15, 1),  # mode, sub-state, dots, level, lives
+    (0x4E6E, 0x4E6E, 1),  # credits
+    (0x4E80, 0x4E8A, 1),  # score, high score
+    (0x4040, 0x43BF, 4),  # maze tiles
+]
 
 GHOSTS = ("red", "pink", "blue", "orange")
 DIRECTIONS = {0: "right", 1: "down", 2: "left", 3: "up"}  # on-screen, per vector table $32FF
 MODES = {0: "init", 1: "attract", 2: "coin", 3: "playing"}
+
+
+def expand(raw, regions=AGENT_REGIONS):
+    """Rebuild the 4096-byte image at BASE from a compact export (regions concatenated in order)."""
+    buf = bytearray(0x1000)
+    pos = 0
+    for start, end, _every in regions:
+        size = end - start + 1
+        buf[start - BASE: end - BASE + 1] = raw[pos: pos + size]
+        pos += size
+    return bytes(buf)
 
 
 def bcd(data):
