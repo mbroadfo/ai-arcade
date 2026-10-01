@@ -116,6 +116,10 @@ See [ES_CATALOG.md](docs/ES_CATALOG.md) for cache usage, collection deduplicatio
 visibility, and live target checks. Recognition by ES does not establish that a
 game is playable or supported by an AI controller.
 
+## AI mode
+
+Standalone MAME streams game state to a PC, which decides and steers. See `docs/AI_MODE.md`.
+
 ## Architecture direction
 
 The larger design separates:

@@ -14,7 +14,7 @@ Address space read from standalone MAME 0.206 via Lua: `:maincpu` program space.
 
 ## Provenance column
 
-- **observed** = seen changing the expected way in our scripted MAME run (`tools/ram_experiment.py`).
+- **observed** = seen changing the expected way in our scripted MAME run (scripted MAME runs, now `games/arcade/pacman/scripts/validate_pacman_state.py` and `tools/discover_state.py`).
 - **source** = stated by the community code/disassembly, not yet independently observed here.
 - **verify** = hypothesis; needs a targeted experiment before the decoder trusts it.
 

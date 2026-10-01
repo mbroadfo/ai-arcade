@@ -1,8 +1,19 @@
+"""One-time Pi setup: write the MAME controller profile (aiarcade.cfg) that standalone MAME uses in AI mode.
+
+Maps the cabinet pad to COIN1, START1 and the joystick. Safe to re-run. Does not touch human mode.
+
+    python tools/configure_mame_controller.py [--host ADDRESS]
+"""
+import argparse
 import os
+
 import paramiko
 
-HOST = "192.168.10.155"
-USER = "pi"
+parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+parser.add_argument("--host", default="192.168.10.155")
+parser.add_argument("--user", default="pi")
+args = parser.parse_args()
+HOST, USER = args.host, args.user
 KEY = os.path.expanduser("~/.ssh/id_rsa")
 
 # Tokens verified with tools/probe_mame_input.py: button 8 -> BUTTON9, button 9 -> BUTTON10.
