@@ -256,3 +256,47 @@ def test_late_reason_says_when_the_junction_was_only_seen_too_late():
     key = ((40, 40), "LEFT")
     assert p._late_reason(key, asked_now=True) == "seen_too_late"
     assert p._late_reason(key) == "not_asked"
+
+
+HEADON = (Path(__file__).parent / 'fixtures' / 'pacman_headon_ram.bin').read_bytes()  # recorded: a death on the right side
+
+
+def test_a_ghost_reaching_the_junction_as_pacman_does_is_run_from_not_into():
+    """Recorded: Pac-Man heads UP the h=38 corridor, 1 step from the junction (56,38) where his plan turns LEFT. A ghost
+    comes DOWN the same corridor and reaches the junction as he does. From the junction, LEFT looks clear (the ghost is
+    16 steps away by the long way round); only from his own tile is the ghost 3 steps ahead. He died here."""
+    st = decode(HEADON)
+    assert tuple(st.pacman.tile) == (57, 38)
+    p = player.Player(None, Steer(), FakeWorker(), goals.GoalManager("clear_dots"), io.StringIO())
+    assert p._survive(st, HEADON, (56, 38), "UP", "LEFT", "junction") == "DOWN"  # turn round, not on into the ghost
+    assert json.loads(p.decisions_log.getvalue().splitlines()[-1])["event"] == "reflex"
+
+
+def test_the_decision_at_a_junction_holds_while_pacman_is_still_on_its_tile():
+    """Each heading change on the tile used to re-key the junction and decide again: UP, RIGHT, UP, RIGHT while a ghost
+    closed in (recorded at (38,44), three deaths). One decision per visit now."""
+    junction, arriving = next(junction_starts())
+    exits = Maze(IMAGE).exits(junction)
+    seq = [(i, at(junction, h), IMAGE) for i, h in enumerate(("right", "up", "right", "up", "left"), start=1)]
+    steer = Steer()
+    p = player.Player(Stream(seq), steer, FakeWorker(), goals.GoalManager("clear_dots"), io.StringIO())
+    p.tick()
+    first = steer.sent[-1]
+    assert first in exits
+    flip = next(d for d in exits if d != first)
+    p.rule.decide = lambda facts, goal: type("D", (), {"direction": flip, "source": "rule"})()  # a new decision would flip
+    for _ in range(4):
+        p.tick()
+    assert set(steer.sent) == {first}
+    assert p.stats["late_rule"] <= 1  # decided once, not on every change of heading
+
+
+def test_the_commitment_ends_when_pacman_leaves_the_junction():
+    junction, arriving = next(junction_starts())
+    far = next(t for t, a in junction_starts() if abs(t[0] - junction[0]) + abs(t[1] - junction[1]) > 12)
+    seq = [(1, at(junction, arriving.lower()), IMAGE), (2, at(far, arriving.lower()), IMAGE)]
+    p = player.Player(Stream(seq), Steer(), FakeWorker(), goals.GoalManager("clear_dots"), io.StringIO())
+    p.tick()
+    assert p.commit and p.commit[0] == junction
+    p.tick()
+    assert p.commit is None or p.commit[0] != junction

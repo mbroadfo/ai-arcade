@@ -4,7 +4,7 @@ Sits above every goal and every decider (rule, model, fallback). It only fires w
 leads to a normal ghost within DEADLY_STEPS and another way is clearly safer; otherwise it stays quiet
 and the goal's choice stands.
 """
-DEADLY_STEPS = 3  # a ghost this close along the chosen way is about to catch us
+DEADLY_STEPS = 4  # a ghost this close along the chosen way is about to catch us (head-on it closes two tiles a tile)
 MARGIN = 2  # the safer way must be at least this many steps further from the nearest ghost
 
 

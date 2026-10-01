@@ -51,6 +51,7 @@ class Player:
         self.depth = {}  # plan key -> how many answers deep the chain was when it was asked
         self.pause_until, self.prev_score = -1, None
         self.revised_keys = set()  # situations already counted as revised
+        self.commit = None  # (junction tile, direction): the decision made on this visit to a junction tile
         self.consumed = set()  # plan keys already applied: single-use, retired once Pac-Man has moved on
         self.applied = set()  # junctions already counted, so stats are per junction, not per tick
         self.last_frame, self.last_start_attempt = -1, 0.0
@@ -90,13 +91,26 @@ class Player:
         return best if best != chosen and regret > REVISE_REGRET else None
 
     def _survive(self, state, image, tile, arriving, chosen, where, facts=None):
-        """The survival instinct: veto `chosen` if it runs into a ghost and a clearly safer way exists."""
+        """The survival instinct: veto `chosen` if it runs into a ghost and a clearly safer way exists.
+
+        Two views, because they see different things. From the junction `chosen` is for: is the exit itself safe?
+        From Pac-Man's own tile: is the very next step safe? (A ghost reaching the junction as he does is invisible
+        from the junction: its exit looks clear. From his tile it is a ghost 3 steps ahead.)"""
         if not self.reflex or not self._near_threat(state):
             return chosen
+        me, heading = tuple(state.pacman.tile), LOWER_TO_UPPER.get(state.pacman.direction)
+        if me != tuple(tile) and heading:
+            own = reflex(junction_facts(state, image), heading)  # his next step is along the corridor, `heading`
+            if own is not None:
+                return self._noted_reflex(where, me, heading, own, state, image)
         facts = facts or junction_facts(state, image, tile=tile, arriving=arriving)
         better = reflex(facts, chosen)
         if better is None:
             return chosen
+        return self._noted_reflex(where, tile, chosen, better, state, image, facts)
+
+    def _noted_reflex(self, where, tile, chosen, better, state, image, facts=None):
+        facts = facts or junction_facts(state, image)
         key, at = self.last_reflex
         if key != (chosen, better) or time.time() - at > 1.0:  # count an emergency once, not per tick
             self.game.reflexes += 1
@@ -129,6 +143,7 @@ class Player:
                      heading=heading, to=final, blue_steps=blue, normal_steps=normal,
                      fruit=bool(state.fruit_tile))
         self.broker.steer(final)
+        return final
 
     def _watch_for_pause(self, state, frame):
         """A ghost-sized score jump means a ghost was just eaten: the game freezes for about a second."""
@@ -212,14 +227,14 @@ class Player:
         if state.mode != "playing":
             return None
         if not self.was_playing:
-            self.game_started, self.plan, self.game = time.time(), {}, GameStats()
+            self.game_started, self.plan, self.game, self.commit = time.time(), {}, GameStats(), None
             self.worker.clear_queued()
         self.was_playing, self.last_state = True, state
         self.game.update(state, image, self.goal, time.time())
 
         if image[0x4E04 - 0x4000] != 3:  # READY screen, death animation, level transition
             self.broker.steer(None)
-            self.plan = {}
+            self.plan, self.commit = {}, None
             return None
 
         if time.time() - self.goal_at > self.strategy_interval:
@@ -258,13 +273,24 @@ class Player:
                     self.stats["queries"] += 1
                     asked_now = True
 
+        # A junction is decided once per visit. Pac-Man spends several frames on its tile, and each change of his
+        # heading would otherwise look like arriving at a new junction and decide again: two answers that disagree
+        # flip him back and forth on the spot while a ghost closes in. Survival can still override the commitment.
+        here = tuple(me)
+        if self.commit and here != self.commit[0] and (junction is None or tuple(junction) != self.commit[0]):
+            self.commit = None  # he has left it
+        if self.commit and here == self.commit[0]:
+            self.commit = (here, self._go(state, image, me, heading, self.commit[1], "junction", "commit"))
+            return None
+
         if junction is not None and steps <= 1 and key in self.plan:
             decision = self.plan[key][0]
             self.consumed.add(key)
             if key not in self.applied:
                 self.applied.add(key)
                 self.stats["on_time"] += 1
-            self._go(state, image, junction, arriving, decision.direction, "junction", decision.source)
+            self.commit = (tuple(junction), self._go(state, image, junction, arriving, decision.direction, "junction",
+                                                     decision.source))
         elif junction is not None and steps == 0:
             # At the junction with no answer yet: a rule decides, and we count it as late.
             facts = junction_facts(state, image, tile=junction, arriving=heading)
@@ -277,7 +303,8 @@ class Player:
             why = self._late_reason(key, asked_now)
             self.stats["late_why"][why] = self.stats["late_why"].get(why, 0) + 1
             self.log(event="late", tile=list(junction), direction=decision.direction, why=why, steps_seen=steps)
-            self._go(state, image, junction, heading, decision.direction, "junction", "late-rule")
+            self.commit = (tuple(junction), self._go(state, image, junction, heading, decision.direction, "junction",
+                                                     "late-rule"))
         elif path:
             self._go(state, image, me, heading, path[0], "corridor", "corridor")  # corridor / forced corner
         return None
