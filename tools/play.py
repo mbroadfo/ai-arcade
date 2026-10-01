@@ -54,6 +54,10 @@ def main():
                         help="ambush: wait against a wall near the energizer instead of pacing back and forth")
     parser.add_argument("--refuge", action="store_true",
                         help="hide at the game's safe spot when ghosts are close and he can get there first")
+    parser.add_argument("--danger-query", action="store_true",
+                        help="in a corridor with a ghost close, ask the model carry on or turn back (urgent) and execute it")
+    parser.add_argument("--danger-model", default=None,
+                        help="a separate (fast) model for the danger query, e.g. tev1:0.8b; default: the decider's own")
     parser.add_argument("--no-reflex", action="store_true", help="turn the survival instinct off (ablation)")
     parser.add_argument("--chain", type=int, default=None, help="look-ahead chain depth, 0 = off (game default if unset)")
     parser.add_argument("--tag", default="", help="label added to the run files")
@@ -73,7 +77,8 @@ def main():
     label = "-".join(p for p in (stamp, args.game.replace("/", "_"), args.decider, args.knowledge,
                                  None if args.goal == "auto" else args.goal,
                                  None if args.strategist == "code" else f"strat-{args.strategist}",
-                                 "park" if args.park else None, "refuge" if args.refuge else None, "revise" if args.revise else None, "noreflex" if args.no_reflex else None,
+                                 "park" if args.park else None, "refuge" if args.refuge else None,
+                                 "danger" if args.danger_query else None, "revise" if args.revise else None, "noreflex" if args.no_reflex else None,
                                  None if args.chain is None else f"chain{args.chain}", args.tag) if p)
     decisions_log = open(out_dir / f"{label}-decisions.jsonl", "w", buffering=1)
     results_path = out_dir / f"{label}-games.jsonl"
@@ -91,6 +96,12 @@ def main():
         extra["park"] = True
     if args.refuge:
         extra["refuge"] = True
+    if args.danger_query:
+        extra["danger_query"] = True
+        if args.danger_model:
+            extra["danger_worker"] = DecisionWorker(game.deciders.SystemOneDecider(
+                OllamaSystemOne(model=args.danger_model, host=args.ollama_host, timeout=2.0),
+                min_confidence=args.min_confidence))
     if args.chain is not None:
         extra["chain_depth"] = args.chain
     manager = game.goals.GoalManager(args.goal)
@@ -151,6 +162,8 @@ def main():
         print(f"junction decisions by who executed them ({total}): "
               + ", ".join(f"{k} {v}" for k, v in sorted(moves.items(), key=lambda kv: -kv[1]))
               + f". The model's own: {100 * moves.get('model', 0) / total:.0f}%.")
+    if args.danger_query:
+        print(f"danger queries: {s.get('danger')}")
     if hasattr(player.strategy, "stats"):
         print(f"strategist: {player.strategy.stats}; asked {player.strategy.strategist.stats}")
     if player.latencies:

@@ -50,10 +50,11 @@ class SystemOneDecider:
 
     def decide(self, facts, goal):
         criteria = {d: describe_option(o) for d, o in facts["options"].items()}
+        where = ("Pac-Man is in a corridor and a ghost is close: he can carry on or turn back."
+                 if facts.get("danger") else "Pac-Man is at a junction.")
         questions = {"direction": {
             "type": "choice",
-            "instructions": f"Pac-Man is at a junction. Goal: {goal} - {GOALS[goal]} "
-                            "Which direction should Pac-Man take?",
+            "instructions": f"{where} Goal: {goal} - {GOALS[goal]} Which direction should Pac-Man take?",
             "criteria": criteria,
         }}
         try:

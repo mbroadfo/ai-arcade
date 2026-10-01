@@ -21,7 +21,7 @@ class FakeWorker:
     def __init__(self):
         self.submitted, self.finished, self.rule = [], [], RuleDecider()
 
-    def submit(self, key, goal, facts):
+    def submit(self, key, goal, facts, urgent=False):
         self.submitted.append(key)
         decision = self.rule.decide(facts, goal)
         self.finished.append((key, goal, facts, decision, time.time()))

@@ -61,3 +61,22 @@ def test_queue_is_bounded_and_can_be_cleared():
     gate.set()
     keys = {item[0] for item in wait_for(worker, 2)}
     assert "running" in keys and "a" not in keys
+
+
+def test_an_urgent_request_goes_to_the_front_and_is_accepted_when_the_queue_is_full():
+    gate = threading.Event()
+
+    class Blocked:
+        def decide(self, facts, goal):
+            gate.wait(2)
+            return facts
+
+    worker = DecisionWorker(Blocked(), max_queue=2)
+    assert worker.submit("running", "g", 0)
+    time.sleep(0.05)  # the thread has taken it off the queue
+    assert worker.submit("a", "g", 1) and worker.submit("b", "g", 2)
+    assert not worker.submit("c", "g", 3)  # full
+    assert worker.submit("danger", "g", 9, urgent=True)  # but this one cannot wait
+    gate.set()
+    order = [item[0] for item in wait_for(worker, 4)]
+    assert order == ["running", "danger", "a", "b"]

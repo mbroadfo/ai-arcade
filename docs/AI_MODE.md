@@ -63,6 +63,16 @@ The **survival instinct** (`survival.py`) sits above every goal and every decide
 to a normal ghost within 3 steps and another way is at least 2 steps safer, it overrides the choice, at
 junctions and in corridors. Overrides are logged as `reflex` events and counted per game.
 
+### The danger query (`--danger-query`)
+
+The model is normally asked only at junctions, so mid-corridor the survival reflex (code) was the only thing that could turn
+Pac-Man round: in a live `tev1:0.8b` game 26 of its 47 reflex firings were corridor turn-backs. With the switch on, a ghost
+within 8 steps along the way ahead (or 3 behind) in a plain corridor makes the player ask the model the one choice a corridor
+has, carry on or turn back, with the threat data. The question jumps the queue; code only decides *when to ask* and drops answers
+older than 0.4 s or for a spot he has left. The model's turn-backs are booked as `model-danger` in the provenance counts and
+logged as `danger` events; the summary prints asked / answered / dropped / turned_back / carried_on. Run it with `--no-reflex`
+to see the model alone, and without `--danger-query` to see what the reflex contributes.
+
 ### Who made each move (provenance), the run manifest, per-life stats
 
 A result can only be claimed for the AI if the AI made the moves. Every run therefore records, per junction decision, who
@@ -102,6 +112,7 @@ The switches are written into the run's file names.
 | `--lookahead N` | 8 | start asking about a junction this many tiles ahead |
 | `--park` | off | ambush only: wait against a wall near the energizer instead of pacing back and forth (below) |
 | `--refuge` | off | hide at the game's safe spot when a ghost is close and he can get there first (below) |
+| `--danger-query` | off | in a corridor with a ghost close, ask the model carry on or turn back (urgent, at the front of the queue) and execute its answer (below). `--danger-model M` sends it to a separate, faster model |
 | `--strategist code\|mock\|ollama` | code | who sets the goal and stance (below). `mock` repeats the code's choice after a delay, to separate the cost of latency from the model's judgment |
 
 The run summary also says why answers were late: `seen_too_late` (the junction first came into view 0-1 tiles ahead:

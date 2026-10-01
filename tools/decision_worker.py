@@ -16,13 +16,15 @@ class DecisionWorker:
         for _ in range(threads):
             threading.Thread(target=self._loop, daemon=True).start()
 
-    def submit(self, key, goal, facts):
-        """Queue a request. False if the key is already known or the queue is full."""
+    def submit(self, key, goal, facts, urgent=False):
+        """Queue a request. False if the key is already known or the queue is full.
+        urgent: goes to the front (and is accepted even when the queue is full), for questions whose answer is
+        worthless a moment later."""
         with self.cond:
-            if key in self.keys or len(self.queue) >= self.max_queue:
+            if key in self.keys or (len(self.queue) >= self.max_queue and not urgent):
                 return False
             self.keys.add(key)
-            self.queue.append((key, goal, facts))
+            (self.queue.appendleft if urgent else self.queue.append)((key, goal, facts))
             self.cond.notify()
             return True
 

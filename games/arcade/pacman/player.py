@@ -12,6 +12,7 @@ The stream, broker link and decision worker are passed in (they are general tool
 import json
 import time
 
+from .danger import ASK_EVERY, MAX_AGE, MAX_DRIFT, danger_facts
 from .deciders import RuleDecider
 from .events import GameStats
 from .features import GOALS, LURE_RADIUS, junction_facts, ready_to_eat, score_option
@@ -36,13 +37,18 @@ PAUSE_FRAMES = 60  # the game freezes for about this many frames when a ghost is
 class Player:
     def __init__(self, stream, broker, worker, strategy, decisions_log, strategy_interval=0.5,
                  lookahead=LOOKAHEAD_STEPS, knowledge=None, revise=False, reflex=True,
-                 chain_depth=CHAIN_DEPTH, park=False, refuge=False):
+                 chain_depth=CHAIN_DEPTH, park=False, refuge=False, danger_query=False,
+                 danger_worker=None):
         # Ablation switches. revise: code re-checks each stored answer against fresh facts (code overruling the
         # decider, so off by default). reflex: the survival instinct. chain_depth: look-ahead chain, 0 = off.
         self.revise, self.reflex, self.chain_depth = revise, reflex, chain_depth
         # park: ambush waits against a wall near the energizer instead of pacing. refuge: hide at the safe spot when a
         # ghost is close and he can get there first. Both off by default (park.py); neither lets the reflex steer while held.
         self.park, self.refuge = park, refuge
+        # danger_query: in a corridor with a ghost close, the model is asked "carry on or turn back" (danger.py) and its
+        # answer is executed. danger_worker: a separate (fast) model for it; None = the main worker, at the front.
+        self.danger_query, self.danger_worker = danger_query, danger_worker
+        self.danger_asked_at, self.danger_out, self.danger_answer = 0.0, None, None
         self.hold = None  # {"kind": "park"|"refuge", "tile", "push", "since", "noted", "exit", "booked"} while parked
         self.refuge_ran_at, self.refuge_cooldown = 0.0, 0.0
         self.lookahead = lookahead
@@ -67,7 +73,8 @@ class Player:
         self.game = GameStats()  # what happened in the current game
         self.last_reflex = (None, 0.0)
         self.stats = {"on_time": 0, "late_rule": 0, "queries": 0, "chained": 0, "revised": 0,
-                      "late_why": {}, "moves": {}}  # moves: executed junction decisions by who made them
+                      "late_why": {}, "moves": {},
+                      "danger": {"asked": 0, "answered": 0, "dropped": 0, "turned_back": 0, "carried_on": 0}}  # moves: executed junction decisions by who made them
         self.last_how = None  # how the last _go() changed the proposed direction: None, "revise" or "reflex"
         self.latencies, self.sources = [], {}
 
@@ -290,7 +297,13 @@ class Player:
         """Store finished answers and, for each, ask about the junction it leads to (the chain)."""
         paused = frame < self.pause_until
         limit = 0 if self.chain_depth == 0 else (self.chain_depth + 2 if paused else self.chain_depth)
+        if self.danger_worker is not None:
+            for key, goal, facts, decision, finished_at in self.danger_worker.take_all():
+                self._danger_answered(key, decision, finished_at)
         for key, goal, facts, decision, finished_at in self.worker.take_all():
+            if key[0] == "danger":  # a danger answer that came back through the main worker
+                self._danger_answered(key, decision, finished_at)
+                continue
             self.plan[key] = (decision, goal, finished_at)
             self.latencies.append(decision.latency_ms)
             self.sources[decision.source] = self.sources.get(decision.source, 0) + 1
@@ -311,6 +324,47 @@ class Player:
                     self.depth[key2] = depth + 1
                     self.stats["queries"] += 1
                     self.stats["chained"] += 1
+
+    def _danger_answered(self, key, decision, finished_at):
+        self.danger_out = None
+        self.danger_answer = (key, decision, finished_at)
+        self.stats["danger"]["answered"] += 1
+        self.latencies.append(decision.latency_ms)
+        self.sources[decision.source] = self.sources.get(decision.source, 0) + 1
+
+    def _danger(self, state, image, me, heading):
+        """A corridor with a ghost close: apply the model's last answer, and ask again. True if it steered."""
+        steered = False
+        now = time.time()
+        if self.danger_answer is not None:
+            (_, asked_tile, asked_heading), decision, finished_at = self.danger_answer
+            self.danger_answer = None
+            drift = abs(me[0] - asked_tile[0]) + abs(me[1] - asked_tile[1])
+            if now - finished_at > MAX_AGE or heading != asked_heading or drift > MAX_DRIFT:
+                self.stats["danger"]["dropped"] += 1  # too late to matter
+            elif decision.direction == OPPOSITE[heading]:
+                self.stats["danger"]["turned_back"] += 1
+                self.stats["moves"]["model-danger"] = self.stats["moves"].get("model-danger", 0) + 1
+                self.log(event="danger", phase="turn back", tile=list(me), heading=heading, source=decision.source,
+                         confidence=round(decision.confidence, 2), latency_ms=round(decision.latency_ms),
+                         age_s=round(now - finished_at, 2))
+                self.broker.steer(decision.direction)
+                steered = True
+            else:
+                self.stats["danger"]["carried_on"] += 1
+        if self.danger_out is not None and now - self.danger_asked_at > 2.0:
+            self.danger_out = None  # an answer that never came: ask again
+        if self.danger_out is None and now - self.danger_asked_at >= ASK_EVERY and self._near_threat(state):
+            asked = None
+            if danger_facts(junction_facts(state, image, tile=me, arriving=heading), heading) is not None:  # cheap check
+                asked = danger_facts(self._facts(state, image, me, heading), heading)  # then the full prompt text
+            if asked is not None:
+                key = ("danger", tuple(me), heading)
+                worker = self.danger_worker or self.worker
+                if worker.submit(key, self.goal, asked, urgent=True):
+                    self.danger_out, self.danger_asked_at = key, now
+                    self.stats["danger"]["asked"] += 1
+        return steered
 
     def _pregame(self, state):
         """Attract/coin screens: put in a coin, press start. Returns True if it handled the frame."""
@@ -448,5 +502,7 @@ class Player:
             self._book_move(key, decision, final, label="code-late", late=why)
             self.commit = (tuple(junction), final)
         elif path:
+            if self.danger_query and self._danger(state, image, me, heading):
+                return None  # the model turned him round
             self._go(state, image, me, heading, path[0], "corridor", "corridor")  # corridor / forced corner
         return None
