@@ -1,18 +1,36 @@
-"""The safe spot, used inside the ambush goal.
+"""Waiting, without a wait button. Two separate ideas that both use it.
 
-Known from play: with all four ghosts out of the house, Pac-Man can wait pushing UP into the wall at the top of the
-stub to the right of the block above his start, and the ghosts gather around instead of catching him. He stops there
-only because the wall stops him: the game has no wait button, and the stub's top is a corner with a wall above.
-(The tile was named by the player; whether it is really safe in this build is what the park counters are for.)
+Pac-Man stops only when his heading runs into a wall; holding that heading keeps him there. So "parking" is
+"arrive at a tile with a wall straight ahead and keep pushing the same way".
 
-Ambush with parking: head for the spot (the option scoring pulls toward it, features.lure_score), hold UP against the
-wall while the ghosts come in, and when enough have gathered leave for the energizer. The survival reflex is off
-while parked: that is the point of the experiment, and the log says what happened.
+1. Parking near an energizer (`--park`, ambush only). Waiting for the ghosts to gather, he used to pace back and forth
+   near the pellet, losing time and nearness. Instead he goes to a wall-stop tile a few steps from the pellet and holds
+   there, then goes and eats it once ghosts have gathered (the usual ambush rule).
+
+2. The refuge (`--refuge`, any goal). With all four ghosts out of the house there is a tile where he can hide: the top
+   of the stub to the right of the block above his start, tile (53, 44), pushing UP into the wall. It earns nothing; it is
+   a quick hideaway when ghosts are close. He runs there if he can get there first, waits until the ghosts have gone
+   away, and leaves. The tile was named by the player; the refuge counters say whether it holds up.
+
+The survival reflex does not steer while he is parked: the point of both is to stay put. The log says what happened.
 """
-SAFE_SPOT = (53, 44)  # tile (l, h): one stub up the right-hand side of the block above the start, corner, wall above
-PUSH = "UP"  # hold this into the wall to stay put
-GATHER = 3  # leave when this many normal ghosts are within LURE_RADIUS steps
-MAX_SECONDS = 12.0  # ... or after waiting this long
+from .maze import ENERGIZER, MOVES, OPPOSITE, step
+
+# --- parking near an energizer
+HOVER_MIN, HOVER_MAX = 3, 8  # a stop this many steps from the pellet (near enough to dash, far enough not to be trapped)
+HOVER_SECONDS = 10.0  # give up waiting for the ghosts after this long
+
+# --- the refuge
+SAFE_SPOT = (53, 44)  # tile (l, h): a corner with a wall above and to the left; hold UP (or LEFT) to stay
+REFUGE_TRIGGER = 8  # a normal ghost this close (steps) sends him there ...
+REFUGE_RANGE = 12  # ... if the spot is no further than this
+REFUGE_MARGIN = 2  # ... and no ghost can be on his route or at the spot within this many steps of when he is
+REFUGE_CLEAR = 12  # he leaves when no normal ghost is within this many steps of the spot
+REFUGE_SECONDS = 15.0  # ... or after this long
+
+
+def normal_ghosts(state):
+    return [g for name, g in state.ghosts.items() if not state.frightened[name] and not state.eyes[name]]
 
 
 def all_out(state, here):
@@ -22,5 +40,57 @@ def all_out(state, here):
 
 def gathered(state, here, radius):
     """Normal (dangerous) ghosts within `radius` steps."""
-    return sum(1 for name, g in state.ghosts.items()
-               if not state.frightened[name] and not state.eyes[name] and here.get(g.tile, 99) <= radius)
+    return sum(1 for g in normal_ghosts(state) if here.get(g.tile, 99) <= radius)
+
+
+def nearest_normal(state, here):
+    steps = [here[g.tile] for g in normal_ghosts(state) if g.tile in here]
+    return min(steps) if steps else None
+
+
+def is_stop(maze, tile, heading):
+    """Heading `heading` at `tile` runs into a wall, he can have arrived that way, and the tile is not a dead end."""
+    return (maze.passable(tile) and not maze.passable(step(tile, heading))
+            and maze.passable(step(tile, OPPOSITE[heading])) and len(maze.exits(tile)) >= 2)
+
+
+def nearest_energizer(maze, here):
+    found = [(d, t) for t, d in here.items() if maze.code(t) == ENERGIZER]
+    return min(found)[1] if found else None
+
+
+def hover_stop(maze, energizer):
+    """The wall-stop tile to wait at for this energizer: (tile, heading into the wall), nearest in range, or None."""
+    from_pellet = maze.bfs(energizer)
+    best = None
+    for tile, d in from_pellet.items():
+        if HOVER_MIN <= d <= HOVER_MAX:
+            for heading in MOVES:
+                if is_stop(maze, tile, heading) and (best is None or (d, tile, heading) < best):
+                    best = (d, tile, heading)
+    return None if best is None else (best[1], best[2])
+
+
+def refuge_move(state, maze, me):
+    """The direction to take toward the refuge, or None (not needed, too far, or a ghost would get there first)."""
+    me = tuple(me)
+    if me == SAFE_SPOT:
+        return None
+    here = maze.bfs(me)
+    if not all_out(state, here):
+        return None
+    near = nearest_normal(state, here)
+    if near is None or near > REFUGE_TRIGGER:
+        return None
+    to_spot = maze.bfs(SAFE_SPOT)
+    if to_spot.get(me, 99) > REFUGE_RANGE:
+        return None
+    route, tile = [], me  # walk downhill to the spot: the shortest way
+    while tile != SAFE_SPOT:
+        tile = min((step(tile, d) for d in MOVES if maze.passable(step(tile, d))), key=lambda t: to_spot.get(t, 99))
+        route.append(tile)
+    for ghost in normal_ghosts(state):  # nobody may be on the route, or at the spot, when he gets there
+        reach = maze.bfs(ghost.tile)
+        if any(reach.get(t, 99) < k + REFUGE_MARGIN for k, t in enumerate(route, start=1)):
+            return None
+    return next(d for d in MOVES if step(me, d) == route[0])

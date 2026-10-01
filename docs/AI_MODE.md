@@ -74,7 +74,8 @@ The switches are written into the run's file names.
 | `--no-reflex` | reflex on | turn the survival instinct off |
 | `--chain N` | 2 | after an answer, also ask about the junction it leads to, N deep (N+2 during the ghost-eaten pause); 0 = off |
 | `--lookahead N` | 8 | start asking about a junction this many tiles ahead |
-| `--park` | off | ambush only: wait at the game's safe spot instead of pacing near the energizer (below) |
+| `--park` | off | ambush only: wait against a wall near the energizer instead of pacing back and forth (below) |
+| `--refuge` | off | hide at the game's safe spot when a ghost is close and he can get there first (below) |
 | `--strategist code\|mock\|ollama` | code | who sets the goal and stance (below). `mock` repeats the code's choice after a delay, to separate the cost of latency from the model's judgment |
 
 The run summary also says why answers were late: `seen_too_late` (the junction first came into view 0-1 tiles ahead:
@@ -85,18 +86,25 @@ Each game's result also carries what the goals are about: `ghosts_eaten`, `fruit
 `energizers`, `feasts` (ghosts eaten per energizer; a full feast is 4, worth 3000), `deaths`, `reflexes` and
 seconds spent per goal.
 
-### Ambush with the safe spot (`--park`)
+### Waiting without a wait button (`--park`, `--refuge`)
 
-With all four ghosts out of the house there is a tile Pac-Man can wait on, pushing UP into the wall (`park.py`: the top of the
-stub to the right of the block above his start, at tile (53, 44); named by the player, to be confirmed by the counters).
-The game has no wait button: he stops only because the wall stops him, so the spot is a corner with a wall above.
+Pac-Man stops only when his heading runs into a wall, and holding that heading keeps him there. Two separate ideas use it
+(`park.py`). While held, the survival reflex does not steer: the point is to stay put, and the log says what happened.
 
-During `ambush`, with every ghost out, the option scoring pulls toward the spot instead of hovering near the energizer. At
-the spot he holds UP while the ghosts come in, with the survival reflex deliberately off. He leaves by the best exit when 3
-ghosts are within 9 steps, after 12 s, or when the goal changes. Then the normal ambush rule takes him to the energizer.
-Per game: `parks`, `parked_seconds` and `park_deaths` (a life lost while waiting there); the decision log has `park`
-events (`start`, `waiting`, `leave` with why, `died`) with the ghosts' step distances. The knowledge rungs do not describe
-the spot yet, so a model direction-picker only feels it through the scoring that code does.
+- **`--park`: wait near an energizer.** During `ambush` he used to pace back and forth near the pellet, losing time and nearness.
+  Now the option scoring pulls him to a wall-stop tile 3-8 steps from the pellet (a tile with a wall straight ahead, a way in
+  and a way out; never a dead end) and he holds there. He goes for the pellet when ghosts have gathered (the usual ambush
+  rule), after 10 s, or when the goal changes.
+- **`--refuge`: hide at the safe spot.** With all four ghosts out of the house there is a corner he can hide in, tile (53, 44),
+  the top of the stub to the right of the block above his start, holding UP into the wall. It earns nothing: it is a quick
+  hideaway. Any goal except hunting: when a normal ghost is within 8 steps, the spot is within 12, and no ghost can be on his
+  route or at the spot before him (2-step margin), he runs there. He waits until no ghost is within 12 steps of the spot
+  (or 15 s), then leaves by the best exit and does not run back for 8 s.
+
+Per game: `parks`, `parked_seconds`, `park_deaths`, `refuges`, `refuge_seconds`, `refuge_deaths` (a life lost while held or on the
+way to the refuge). The decision log has `park` and `refuge` events (`start`, `run`, `waiting`, `leave` with why, `died`) with
+the normal ghosts' step distances. The tile was named by the player; the refuge counters say whether it holds up. The
+knowledge rungs do not describe either yet.
 
 ### The slow layer: goal and stance
 

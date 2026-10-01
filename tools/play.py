@@ -50,7 +50,9 @@ def main():
     parser.add_argument("--revise", action="store_true",
                         help="code re-checks stored answers against fresh facts (overrules the decider; off by default)")
     parser.add_argument("--park", action="store_true",
-                        help="ambush: wait at the game's safe spot instead of pacing near the energizer (game-specific)")
+                        help="ambush: wait against a wall near the energizer instead of pacing back and forth")
+    parser.add_argument("--refuge", action="store_true",
+                        help="hide at the game's safe spot when ghosts are close and he can get there first")
     parser.add_argument("--no-reflex", action="store_true", help="turn the survival instinct off (ablation)")
     parser.add_argument("--chain", type=int, default=None, help="look-ahead chain depth, 0 = off (game default if unset)")
     parser.add_argument("--tag", default="", help="label added to the run files")
@@ -70,7 +72,7 @@ def main():
     label = "-".join(p for p in (stamp, args.game.replace("/", "_"), args.decider, args.knowledge,
                                  None if args.goal == "auto" else args.goal,
                                  None if args.strategist == "code" else f"strat-{args.strategist}",
-                                 "park" if args.park else None, "revise" if args.revise else None, "noreflex" if args.no_reflex else None,
+                                 "park" if args.park else None, "refuge" if args.refuge else None, "revise" if args.revise else None, "noreflex" if args.no_reflex else None,
                                  None if args.chain is None else f"chain{args.chain}", args.tag) if p)
     decisions_log = open(out_dir / f"{label}-decisions.jsonl", "w", buffering=1)
     results_path = out_dir / f"{label}-games.jsonl"
@@ -83,6 +85,8 @@ def main():
     extra.update(revise=args.revise, reflex=not args.no_reflex)
     if args.park:
         extra["park"] = True
+    if args.refuge:
+        extra["refuge"] = True
     if args.chain is not None:
         extra["chain_depth"] = args.chain
     manager = game.goals.GoalManager(args.goal)
@@ -146,7 +150,7 @@ def main():
         scores = [r["score"] for r in results]
         print(f"scores: mean {statistics.mean(scores):.0f}, best {max(scores)}, worst {min(scores)}")
         for key in ("ghosts_eaten", "fruit_eaten", "fruit_shown", "energizers", "reflexes", "parks", "parked_seconds",
-                    "park_deaths"):
+                    "park_deaths", "refuges", "refuge_seconds", "refuge_deaths"):
             if key in results[0]:
                 print(f"{key}: per game {[r[key] for r in results]}")
         if "feasts" in results[0]:

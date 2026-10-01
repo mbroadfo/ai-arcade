@@ -5,7 +5,7 @@ makes the judgment call: which way, given the current goal.
 """
 from .goals import GOALS, WEIGHTS, scaled_weights, stance_text  # noqa: F401  (GOALS re-exported for deciders)
 from .maze import ENERGIZER, LOWER_TO_UPPER, MOVES, OPPOSITE, Maze, step
-from .park import GATHER, SAFE_SPOT, all_out
+from .park import hover_stop, nearest_energizer
 
 ROOM_RADIUS = 8
 GHOST_PACE = 0.5  # a blue ghost moves about half as fast as Pac-Man: it covers this many tiles per tile he covers
@@ -31,7 +31,7 @@ def intercept_tile(maze, ghost, distance):
     return tile
 
 
-def option_facts(maze, state, modes, tile, direction):
+def option_facts(maze, state, modes, tile, direction, stop=None):
     """Facts about leaving `tile` in `direction`."""
     nxt = step(tile, direction)
     if not maze.passable(nxt):
@@ -49,7 +49,7 @@ def option_facts(maze, state, modes, tile, direction):
     fruit = dist.get(tuple(state.fruit_tile)) if state.fruit_tile else None
     return {
         "edible_count": sum(1 for d in edible if d <= GROUP_REACH),
-        "park_steps": dist[SAFE_SPOT] + 1 if SAFE_SPOT in dist else None,  # (only used when park_ok)
+        "stop_steps": dist[stop] + 1 if stop in dist else None,  # the wall-stop tile near the energizer (--park)
         "food_steps": min(food) + 1 if food else None,
         "energizer_steps": min(energizers) + 1 if energizers else None,
         "fruit_steps": fruit + 1 if fruit is not None else None,
@@ -61,15 +61,20 @@ def option_facts(maze, state, modes, tile, direction):
 
 def junction_facts(state, image, tile=None, arriving=None, park=False):
     """Structured facts for choosing a direction at `tile` (default: Pac-Man's current tile).
-    park: the safe spot is in play (park.py), so options say whether it is usable and how far it is."""
+    park: waiting near an energizer is in play (park.py), so options say how far the wall-stop tile to wait at is."""
     maze = Maze(image)
     tile = tile or state.pacman.tile
     arriving = arriving or LOWER_TO_UPPER.get(state.pacman.direction)
     modes = ghost_modes(state)
 
+    stop = None
+    if park:
+        pellet = nearest_energizer(maze, maze.bfs(tile))
+        found = hover_stop(maze, pellet) if pellet else None
+        stop = found[0] if found else None
     options = {}
     for direction in MOVES:
-        facts = option_facts(maze, state, modes, tile, direction)
+        facts = option_facts(maze, state, modes, tile, direction, stop)
         if facts is not None:
             facts["reverse"] = direction == OPPOSITE.get(arriving)
             options[direction] = facts
@@ -78,11 +83,9 @@ def junction_facts(state, image, tile=None, arriving=None, park=False):
     close = [here[g.tile] for n, g in state.ghosts.items() if modes[n] == "normal" and g.tile in here]
     pressure = min(close) if close else None  # steps to the nearest normal ghost, any direction
     ghosts_close = sum(1 for d in close if d <= LURE_RADIUS)  # normal ghosts near enough to be caught in a feast
-    park_ok = park and all_out(state, here)  # the safe spot works only with every ghost out of the house
     for o in options.values():
         o["pressure"] = pressure
         o["ghosts_close"] = ghosts_close
-        o["park_ok"] = park_ok
     ghosts = [{
         "name": name,
         "mode": modes[name],
@@ -152,21 +155,24 @@ def chase_pull(steps):
 
 
 def park_pull(steps):
-    """Ambush with every ghost out: head for the safe spot (see park.py); strictly nearer is better."""
+    """Ambush: head for the wall-stop tile near the energizer (see park.py); strictly nearer is better."""
     return 4.0 / (1 + steps) + 0.1 * (30 - min(steps, 30))
+
+
+def ready_to_eat(option):
+    """Ghosts have gathered close enough: go and eat the energizer."""
+    pressure = option.get("pressure")
+    return option.get("ghosts_close", 0) >= 2 or (pressure is not None and pressure <= LURE_PANIC)
 
 
 def lure_score(option):
     """Ambush: close in on an energizer and wait, then eat it once ghosts have gathered close behind.
-    With every ghost out and a safe spot to reach, wait there instead of pacing near the energizer."""
+    With a wall-stop tile to wait at (--park), go there and hold, instead of pacing near the energizer."""
     es = option.get("energizer_steps")
-    pressure = option.get("pressure")
-    ready = (option.get("ghosts_close", 0) >= (GATHER if option.get("park_ok") else 2)
-             or (pressure is not None and pressure <= LURE_PANIC))
-    if ready:
+    if ready_to_eat(option):
         return 0.0 if es is None else 8.0 / (1 + es)  # go and eat it now
-    if option.get("park_ok") and option.get("park_steps") is not None:
-        return park_pull(option["park_steps"])
+    if option.get("stop_steps") is not None:
+        return park_pull(option["stop_steps"])
     if es is None:
         return 0.0
     if es > HOVER_STEPS:

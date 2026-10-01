@@ -14,11 +14,12 @@ import time
 
 from .deciders import RuleDecider
 from .events import GameStats
-from .features import GOALS, LURE_RADIUS, junction_facts, score_option
+from .features import GOALS, LURE_RADIUS, junction_facts, ready_to_eat, score_option
 from .goals import stance_text
 from .knowledge import build_state_text
 from .maze import LOWER_TO_UPPER, OPPOSITE, Maze, step
-from .park import GATHER, MAX_SECONDS, PUSH, SAFE_SPOT, all_out, gathered
+from .park import (HOVER_MAX, HOVER_MIN, HOVER_SECONDS, REFUGE_CLEAR, REFUGE_SECONDS, SAFE_SPOT, all_out, gathered,
+                   is_stop, nearest_energizer, nearest_normal, refuge_move)
 from .survival import reflex
 
 THREAT_NEAR = 10  # only run the survival check when a normal ghost is this close (tiles, straight line)
@@ -35,12 +36,15 @@ PAUSE_FRAMES = 60  # the game freezes for about this many frames when a ghost is
 class Player:
     def __init__(self, stream, broker, worker, strategy, decisions_log, strategy_interval=0.5,
                  lookahead=LOOKAHEAD_STEPS, knowledge=None, revise=False, reflex=True,
-                 chain_depth=CHAIN_DEPTH, park=False):
+                 chain_depth=CHAIN_DEPTH, park=False, refuge=False):
         # Ablation switches. revise: code re-checks each stored answer against fresh facts (code overruling the
         # decider, so off by default). reflex: the survival instinct. chain_depth: look-ahead chain, 0 = off.
         self.revise, self.reflex, self.chain_depth = revise, reflex, chain_depth
-        self.park = park  # ambush: wait at the safe spot (park.py) instead of pacing near the energizer; off by default
-        self.parked_since, self.park_exit, self.park_noted = None, None, 0.0
+        # park: ambush waits against a wall near the energizer instead of pacing. refuge: hide at the safe spot when a
+        # ghost is close and he can get there first. Both off by default (park.py); neither lets the reflex steer while held.
+        self.park, self.refuge = park, refuge
+        self.hold = None  # {"kind": "park"|"refuge", "tile", "push", "since", "noted", "exit", "booked"} while parked
+        self.refuge_ran_at, self.refuge_cooldown = 0.0, 0.0
         self.lookahead = lookahead
         self.knowledge = knowledge  # rung L0..L3b, or None for the original compact fact text
         self.stream, self.broker, self.strategy = stream, broker, strategy
@@ -148,41 +152,90 @@ class Player:
         self.broker.steer(final)
         return final
 
-    def _parking(self, state, image, me):
-        """Ambush at the safe spot: hold into the wall while the ghosts gather, then leave. True if it steered."""
-        if not self.park:
+    def _book(self, hold):
+        """Add the time spent holding to the game's totals, once."""
+        if not hold["booked"]:
+            hold["booked"] = True
+            seconds = time.time() - hold["since"]
+            if hold["kind"] == "park":
+                self.game.parked_seconds += seconds
+            else:
+                self.game.refuge_seconds += seconds
+
+    def _holding(self, state, image, me):
+        """Parked against a wall: keep pushing into it while the reason holds, then leave. True if it steered."""
+        hold = self.hold
+        if hold is None:
             return False
-        if tuple(me) != SAFE_SPOT:
-            self.parked_since = self.park_exit = None
+        me = tuple(me)
+        if me != hold["tile"]:  # off the tile: by his own exit, or something moved him
+            self._book(hold)
+            self.hold = None
+            return False
+        if hold["exit"]:  # leaving: keep to the chosen exit until he is off the tile (the corridor logic would turn him)
+            self._go(state, image, me, hold["push"], hold["exit"], "junction", "hold-exit")
+            return True
+        here = Maze(image).bfs(me)
+        near, now = nearest_normal(state, here), time.time()
+        if hold["kind"] == "park":
+            gathered_close = ready_to_eat({"ghosts_close": gathered(state, here, LURE_RADIUS), "pressure": near})
+            reason = ("goal changed" if self.goal != "ambush" else "gathered" if gathered_close
+                      else "timeout" if now - hold["since"] > HOVER_SECONDS else None)
+        else:
+            reason = ("clear" if near is None or near > REFUGE_CLEAR
+                      else "timeout" if now - hold["since"] > REFUGE_SECONDS else None)
+        steps = self._ghost_steps(state, here)
+        if reason is None:
+            self.broker.steer(hold["push"])  # stay put. The reflex does not steer while parked, on purpose
+            if now - hold["noted"] > 2.0:
+                hold["noted"] = now
+                self.log(event=hold["kind"], phase="waiting", steps=steps)
+            return True
+        self._book(hold)
+        if hold["kind"] == "refuge":
+            self.refuge_cooldown = now + 8.0  # do not run straight back
+        hold["exit"] = self.rule.decide(self._facts(state, image, me, hold["push"]), self.goal).direction
+        self.log(event=hold["kind"], phase="leave", why=reason, exit=hold["exit"], steps=steps)
+        self._go(state, image, me, hold["push"], hold["exit"], "junction", "hold-exit")
+        return True
+
+    def _begin_hold(self, state, image, me, heading):
+        """He is against a wall (his heading runs into it): is this a place to wait?"""
+        maze, tile = Maze(image), tuple(me)
+        if heading is None or maze.passable(step(tile, heading)):
+            return False
+        here, kind = maze.bfs(tile), None
+        near = nearest_normal(state, here)
+        if self.refuge and tile == SAFE_SPOT and all_out(state, here) and self.goal != "hunt_ghosts":
+            if near is not None and near <= REFUGE_CLEAR:
+                kind = "refuge"
+        if kind is None and self.park and self.goal == "ambush" and is_stop(maze, tile, heading):
+            pellet = nearest_energizer(maze, here)
+            if pellet and HOVER_MIN <= maze.bfs(pellet).get(tile, 99) <= HOVER_MAX and not ready_to_eat(
+                    {"ghosts_close": gathered(state, here, LURE_RADIUS), "pressure": near}):
+                kind = "park"
+        if kind is None:
             return False
         now = time.time()
-        if self.park_exit:  # leaving: keep to the exit chosen until he has left the tile (the corridor logic would turn him)
-            self._go(state, image, me, "UP", self.park_exit, "junction", "park-exit")
-            return True
-        here = Maze(image).bfs(SAFE_SPOT)
-        crowd = gathered(state, here, LURE_RADIUS)
-        waiting = self.goal == "ambush" and all_out(state, here)
-        if self.parked_since is None:
-            if not waiting or crowd >= GATHER:
-                return False
-            self.parked_since, self.park_noted = now, now
+        self.hold = {"kind": kind, "tile": tile, "push": heading, "since": now, "noted": now, "exit": None, "booked": False}
+        if kind == "park":
             self.game.parks += 1
-            self.log(event="park", phase="start", crowd=crowd, steps=self._ghost_steps(state, here))
-        reason = ("gathered" if crowd >= GATHER else "timeout" if now - self.parked_since > MAX_SECONDS
-                  else None if waiting else "no longer ambush with every ghost out")
-        if reason is None:
-            self.broker.steer(PUSH)  # push into the wall: stay put. No reflex while parked, on purpose
-            if now - self.park_noted > 2.0:
-                self.park_noted = now
-                self.log(event="park", phase="waiting", crowd=crowd, steps=self._ghost_steps(state, here))
-            return True
-        self.game.parked_seconds += now - self.parked_since
-        self.parked_since = None
-        facts = self._facts(state, image, SAFE_SPOT, "UP")
-        self.park_exit = self.rule.decide(facts, self.goal).direction
-        self.log(event="park", phase="leave", why=reason, crowd=crowd, exit=self.park_exit,
-                 steps=self._ghost_steps(state, here))
-        self._go(state, image, me, "UP", self.park_exit, "junction", "park-exit")
+        else:
+            self.game.refuges += 1
+        self.log(event=kind, phase="start", tile=list(tile), steps=self._ghost_steps(state, here))
+        return True
+
+    def _refuge_run(self, state, image, me):
+        """A ghost is close and the safe spot can be reached first: go there. True if it steered."""
+        if not self.refuge or self.goal == "hunt_ghosts" or time.time() < self.refuge_cooldown:
+            return False
+        direction = refuge_move(state, Maze(image), me)
+        if direction is None:
+            return False
+        if time.time() - self.refuge_ran_at > 2.0:
+            self.log(event="refuge", phase="run", tile=list(me), direction=direction)
+        self.refuge_ran_at = time.time()
+        self.broker.steer(direction)
         return True
 
     @staticmethod
@@ -280,10 +333,14 @@ class Player:
         if image[0x4E04 - 0x4000] != 3:  # READY screen, death animation, level transition
             self.broker.steer(None)
             self.plan, self.commit = {}, None
-            if self.parked_since is not None:  # the READY screen after a life lost while waiting at the safe spot
-                self.game.park_deaths += 1
-                self.log(event="park", phase="died")
-            self.parked_since = self.park_exit = None
+            if self.hold is not None:  # the READY screen after a life lost while waiting
+                self.game.park_deaths += self.hold["kind"] == "park"
+                self.game.refuge_deaths += self.hold["kind"] == "refuge"
+                self.log(event=self.hold["kind"], phase="died")
+            elif time.time() - self.refuge_ran_at < 1.5:
+                self.game.refuge_deaths += 1
+                self.log(event="refuge", phase="died on the way")
+            self.hold = None
             return None
 
         if time.time() - self.goal_at > self.strategy_interval:
@@ -299,7 +356,13 @@ class Player:
 
         self._watch_for_pause(state, frame)
         self._collect(state, image, frame)
-        if self._parking(state, image, state.pacman.tile):
+        if self._holding(state, image, state.pacman.tile):
+            return None
+        heading_now = LOWER_TO_UPPER.get(state.pacman.direction)
+        if (self.park or self.refuge) and self._begin_hold(state, image, state.pacman.tile, heading_now) \
+                and self._holding(state, image, state.pacman.tile):
+            return None
+        if self._refuge_run(state, image, state.pacman.tile):
             return None
         now = time.time()
         self.plan = {k: p for k, p in self.plan.items() if now - p[2] < PLAN_TTL}  # drop stale answers
