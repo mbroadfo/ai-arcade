@@ -6,9 +6,10 @@ What a game package provides:
   score_option    heuristic option score (drives the mock model and the rule decider)
   deciders        RuleDecider, SystemOneDecider
   knowledge       LEVELS and build_state_text(): the L0..L3b help rungs
-  player          Player and RuleStrategy: the play loop
+  goals           GOALS, MISSIONS, GoalManager: what to try to achieve (survival.py can override)
+  player          Player: the play loop (goal manager, deciders, survival reflex, per-game stats)
 Layout: profile.json (ROM, controls), discovered.json (auto-found RAM), RAM_MAP.md, scripts/, tests/.
 """
-from . import deciders, knowledge, player  # noqa: F401
+from . import deciders, goals, knowledge, player  # noqa: F401
 from .features import score_option  # noqa: F401
 from .state import AGENT_REGIONS, REGIONS, decode  # noqa: F401

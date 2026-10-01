@@ -41,9 +41,9 @@ Address space read from standalone MAME 0.206 via Lua: `:maincpu` program space.
 | `4D30` | Pac-Man current direction | validated (left/right/up/down) |
 | `4D3C` | Pac-Man wanted direction; only valid while the joystick is held | validated mid-hold |
 | `4DA6-4DA9` | Ghost frightened (blue) flags | source |
-| `4DAC-4DAF` | Ghost "eyes" (eaten, returning home) flags | source |
-| `4DD2-4DD3` | Fruit position (l,h); `8094` hex word = spawn | source |
-| `4DD4` | Fruit/bonus value currently on screen, 0 = none | source |
+| `4DAC-4DAF` | Ghost "eyes" (eaten, returning home) flags. Rises about 1 s after the +200/400/800 score jump; the frightened flag may already be clear then | observed (9 ghost scores = 9 rises) |
+| `4DD2-4DD3` | Fruit position in pixels (l,h); spawns at (0x94, 0x80) = tile (50, 46), zeroed when it leaves or is eaten. Pixel to tile: `(p >> 3) + (32, 30)` | observed (240 s recording: 4 appearances, at 70 and 170 dots, all timed out after about 6 s) |
+| `4DD4` | Fruit code on screen (6 on level 1), 0 = none; stays set a little after the fruit vanishes | observed |
 | `4DC1` | Scatter/chase phase counter | source |
 | `4FF0-4FFF` | Sprite attribute regs | hardware map |
 | `4000-43FF` | Video RAM (maze tiles incl. dots/energizers) | hardware map |

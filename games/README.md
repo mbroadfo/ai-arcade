@@ -28,9 +28,10 @@ games/arcade/pacman/
 | `score_option(goal, option)` | the mock model in `tools/systemone.py` |
 | `deciders.RuleDecider`, `deciders.SystemOneDecider(client)` | `tools/play.py` |
 | `knowledge.LEVELS`, `knowledge.build_state_text(...)` | the ablation rungs |
-| `player.Player(stream, broker, worker, strategy, log, knowledge=, lookahead=)`, `player.RuleStrategy` | `tools/play.py` |
+| `goals.GOALS`, `goals.MISSIONS`, `goals.GoalManager(mission)` | `tools/play.py --goal` |
+| `player.Player(stream, broker, worker, goal_manager, log, knowledge=, lookahead=)` | `tools/play.py` |
 
-`Player.tick()` returns a result dict (`game`, `score`, `level`, `seconds`) when a game ends.
+`Player.tick()` returns a result dict (`game`, `score`, `level`, `seconds`, plus the game's own metrics, for Pac-Man ghosts/fruit eaten, deaths, reflexes) when a game ends.
 
 ## Adding a game
 

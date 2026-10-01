@@ -21,6 +21,11 @@ DIRECTIONS = {0: "right", 1: "down", 2: "left", 3: "up"}  # on-screen, per vecto
 MODES = {0: "init", 1: "attract", 2: "coin", 3: "playing"}
 
 
+def pixel_to_tile(pos):
+    """Pixel position bytes (l, h) to a maze tile. Observed: tile = (pos >> 3) + (32, 30) for Pac-Man."""
+    return ((pos[0] >> 3) + 32, (pos[1] >> 3) + 30)
+
+
 def bcd(data):
     """Little-endian BCD bytes (least-significant pair first) to int."""
     value = 0
@@ -56,6 +61,8 @@ class PacmanState:
     phase: int = 0  # 4DC1: scatter/chase phase counter; even = scatter, odd = chase (in normal play)
     substate: int = 0  # 4E04: 3 = normal play
     elroy: bool = False  # 4DB6: Blinky is Cruise Elroy (chases even in scatter)
+    fruit_tile: tuple = None  # maze tile of the bonus fruit while it is on screen, else None
+    fruit_value: int = 0  # 4DD4: fruit code on screen (6 on level 1), 0 = none
 
 
 def decode(buf):
@@ -76,6 +83,8 @@ def decode(buf):
         )
         for i, name in enumerate(GHOSTS)
     }
+    fruit_pos = (b(0x4DD2), b(0x4DD3))
+    fruit_tile = pixel_to_tile(fruit_pos) if b(0x4DD4) and fruit_pos != (0, 0) else None
     return PacmanState(
         mode=MODES.get(b(0x4E00), f"unknown({b(0x4E00)})"),
         credits=bcd([b(0x4E6E)]),
@@ -97,4 +106,6 @@ def decode(buf):
         phase=b(0x4DC1),
         substate=b(0x4E04),
         elroy=bool(b(0x4DB6)),
+        fruit_tile=fruit_tile,
+        fruit_value=b(0x4DD4),
     )

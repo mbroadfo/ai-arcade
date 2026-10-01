@@ -30,6 +30,10 @@ def describe_option(o):
              f"room {o['room']}"]
     if o["edible_steps"] is not None:
         parts.append(f"edible ghost {o['edible_steps']} steps")
+    if o.get("fruit_steps") is not None:
+        parts.append(f"bonus fruit {o['fruit_steps']} steps")
+    if o.get("energizer_steps") is not None:
+        parts.append(f"energizer {o['energizer_steps']} steps")
     if o["reverse"]:
         parts.append("reverse")
     return ", ".join(parts)

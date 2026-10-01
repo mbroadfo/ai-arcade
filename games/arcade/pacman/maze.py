@@ -55,6 +55,9 @@ class Maze:
                     queue.append(nxt)
         return dist
 
+    def energizers_left(self):
+        return sum(1 for l in range(0x20, 0x40) for h in range(0x1E, 0x3E) if self.code((l, h)) == ENERGIZER)
+
     def food_left(self):
         return sum(1 for l in range(0x20, 0x40) for h in range(0x1E, 0x3E) if self.has_food((l, h)))
 

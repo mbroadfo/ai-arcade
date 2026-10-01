@@ -8,6 +8,7 @@ import sys
 import time
 
 from state_client import StateStream
+from state_regions import expand
 
 
 def main():
@@ -20,8 +21,8 @@ def main():
     stream = StateStream(args.host)
     frames, t_end = [], time.time() + args.seconds
     while time.time() < t_end:
-        frame, _, image = stream.next_state()
-        frames.append((frame, image))
+        frame, body = stream.next_raw()
+        frames.append((frame, expand(body, stream.regions)))
     stream.close()
     with open(args.out, "wb") as f:
         pickle.dump(frames, f)

@@ -34,6 +34,39 @@ python tools/play.py --game arcade/pacman --decider ollama --model nimble --know
 `--decider` is `rule` (control), `mock` (simulated model latency) or `ollama`. Each run writes
 `runs/<time>-<game>-<decider>-<knowledge>-decisions.jsonl` and `...-games.jsonl` (git-ignored).
 
+## Goals and survival
+
+A **goal** is a standing objective, chosen slowly and held. Pac-Man's goals (`games/arcade/pacman/goals.py`):
+
+| Goal | Try to |
+|---|---|
+| `clear_dots` | eat every dot (default) |
+| `hunt_ghosts` | eat as many ghosts as possible: energizer, then chase the blue ones |
+| `ambush` | lure ghosts close near an energizer, eat it, then eat the ghosts: 200, 400, 800, 1600 |
+| `pacifist` | eat dots but never a ghost, not even a blue one |
+| `eat_fruit` | eat the bonus fruit whenever it appears |
+
+`--goal NAME` pins a goal for the whole game. `--goal auto` (default) follows this policy, highest first:
+
+1. **Feast:** blue ghosts we can still reach before they turn back (the blue window is measured in emulated
+   frames, 360 on level 1, shorter on later levels) go to `hunt_ghosts`.
+2. **Fruit:** bonus fruit on screen within reach goes to `eat_fruit`.
+3. **Ambush:** an energizer within 20 steps and 2+ ghosts chasing goes to `ambush`: hold about 4 steps from the
+   energizer until 2+ ghosts are within 9 steps (or one is within 4), then eat it. Time-boxed to 20 s, then a
+   15 s cooldown.
+4. Otherwise `clear_dots`, the long-term objective.
+
+A higher-ranked goal takes over at once; otherwise a goal is held at least 4 s, and it ends early when its
+trigger disappears. Ghosts that are not blue are never chased. A slow LLM can replace the chooser later.
+
+The **survival instinct** (`survival.py`) sits above every goal and every decider: if the chosen way leads
+to a normal ghost within 3 steps and another way is at least 2 steps safer, it overrides the choice, at
+junctions and in corridors. Overrides are logged as `reflex` events and counted per game.
+
+Each game's result also carries what the goals are about: `ghosts_eaten`, `fruit_eaten`, `fruit_shown`,
+`energizers`, `feasts` (ghosts eaten per energizer; a full feast is 4, worth 3000), `deaths`, `reflexes` and
+seconds spent per goal.
+
 ## What the model is told (ablation rungs)
 
 Set with `--knowledge`. Each rung is cumulative, so a result can be labelled by the help it had:

@@ -13,27 +13,25 @@ import json
 import time
 
 from .deciders import RuleDecider
-from .features import GOALS, junction_facts, threat_distance
+from .events import GameStats
+from .features import GOALS, junction_facts, score_option
 from .knowledge import build_state_text
-from .maze import LOWER_TO_UPPER, Maze
+from .maze import LOWER_TO_UPPER, OPPOSITE, Maze, step
+from .survival import reflex
 
+THREAT_NEAR = 10  # only run the survival check when a normal ghost is this close (tiles, straight line)
 LOOKAHEAD_STEPS = 8  # default: query a junction this many tiles ahead (~0.8 s of travel)
-
-
-class RuleStrategy:
-    """Slow-loop goal chooser. Replace with an LLM (e.g. Qwen) that returns one of GOALS."""
-
-    def choose(self, state, image):
-        if any(state.frightened[name] and not state.eyes[name] for name in state.ghosts):
-            return "hunt_ghosts"
-        threat = threat_distance(state, image)
-        if threat is not None and threat <= 8:
-            return "avoid_ghosts"
-        return "clear_dots"
+CHAIN_DEPTH = 2  # when an answer arrives, also ask about the junction it leads to, this many junctions deep
+CHAIN_DEPTH_PAUSE = 4  # ... deeper while the game is frozen after a ghost is eaten (nothing moves for ~1.2 s)
+CHAIN_MAX_STEPS = 14  # do not chain to a junction further than this
+PLAN_TTL = 4.0  # seconds before a stored answer is considered stale
+REVISE_REGRET = 1.0  # a stored answer is replaced if, on fresh facts, another exit scores this much better
+GHOST_SCORES = (200, 400, 800, 1600)
+PAUSE_FRAMES = 60  # the game freezes for about this many frames when a ghost is eaten
 
 
 class Player:
-    def __init__(self, stream, broker, worker, strategy, decisions_log, strategy_interval=2.0,
+    def __init__(self, stream, broker, worker, strategy, decisions_log, strategy_interval=0.5,
                  lookahead=LOOKAHEAD_STEPS, knowledge=None):
         self.lookahead = lookahead
         self.knowledge = knowledge  # rung L0..L3b, or None for the original compact fact text
@@ -43,12 +41,16 @@ class Player:
         self.decisions_log = decisions_log
         self.strategy_interval = strategy_interval
         self.goal, self.goal_at = "clear_dots", 0.0
-        self.plan = {}  # junction tile -> (Decision, goal, finished_at)
+        self.plan = {}  # (junction tile, arriving direction) -> (Decision, goal, finished_at)
+        self.depth = {}  # plan key -> how many answers deep the chain was when it was asked
+        self.pause_until, self.prev_score = -1, None
         self.applied = set()  # junctions already counted, so stats are per junction, not per tick
         self.last_frame, self.last_start_attempt = -1, 0.0
         self.was_playing, self.game_started, self.last_state = False, 0.0, None
         self.finished = 0
-        self.stats = {"on_time": 0, "late_rule": 0, "queries": 0}
+        self.game = GameStats()  # what happened in the current game
+        self.last_reflex = (None, 0.0)
+        self.stats = {"on_time": 0, "late_rule": 0, "queries": 0, "chained": 0, "revised": 0}
         self.latencies, self.sources = [], {}
 
     def log(self, **record):
@@ -62,18 +64,92 @@ class Player:
             facts["state_text"] = build_state_text(self.knowledge, state, image, facts, tile, arriving, goal_text)
         return facts
 
-    def _collect(self):
-        got = self.worker.take()
-        if not got:
-            return
-        tile, goal, facts, decision, finished_at = got
-        self.plan[tile] = (decision, goal, finished_at)
-        self.latencies.append(decision.latency_ms)
-        self.sources[decision.source] = self.sources.get(decision.source, 0) + 1
-        self.log(event="decision", tile=list(tile), goal=goal, direction=decision.direction,
-                 source=decision.source, confidence=round(decision.confidence, 3),
-                 latency_ms=round(decision.latency_ms), probabilities=decision.probabilities,
-                 note=decision.note)
+    def _near_threat(self, state):
+        me = state.pacman.tile
+        return any(not state.frightened[n] and not state.eyes[n]
+                   and abs(g.tile[0] - me[0]) + abs(g.tile[1] - me[1]) <= THREAT_NEAR
+                   for n, g in state.ghosts.items())
+
+    def _revise(self, facts, chosen):
+        """A stored answer was made some tiles ago; the world has moved. Keep it unless it is now clearly worse."""
+        options = facts["options"]
+        if chosen not in options:
+            return None
+        best = max(options, key=lambda d: score_option(self.goal, options[d]))
+        regret = score_option(self.goal, options[best]) - score_option(self.goal, options[chosen])
+        return best if best != chosen and regret > REVISE_REGRET else None
+
+    def _survive(self, state, image, tile, arriving, chosen, where, facts=None):
+        """The survival instinct: veto `chosen` if it runs into a ghost and a clearly safer way exists."""
+        if not self._near_threat(state):
+            return chosen
+        facts = facts or junction_facts(state, image, tile=tile, arriving=arriving)
+        better = reflex(facts, chosen)
+        if better is None:
+            return chosen
+        key, at = self.last_reflex
+        if key != (chosen, better) or time.time() - at > 1.0:  # count an emergency once, not per tick
+            self.game.reflexes += 1
+            self.log(event="reflex", where=where, tile=list(tile), chosen=chosen, override=better,
+                     threat=facts["options"][chosen]["threat_steps"])
+        self.last_reflex = ((chosen, better), time.time())
+        return better
+
+    def _go(self, state, image, tile, arriving, chosen, where, source):
+        """Steer to `chosen` unless survival vetoes it. A turn-back is logged with why and what was around."""
+        facts = None
+        if source not in ("late-rule", "corridor"):  # a stored answer: check it against the world as it is now
+            facts = junction_facts(state, image, tile=tile, arriving=arriving)
+            better = self._revise(facts, chosen)
+            if better:
+                self.stats["revised"] += 1
+                self.log(event="revise", tile=list(tile), was=chosen, now=better, goal=self.goal, source=source)
+                chosen, source = better, "revised"
+        final = self._survive(state, image, tile, arriving, chosen, where, facts)
+        heading = LOWER_TO_UPPER.get(state.pacman.direction)
+        if final == OPPOSITE.get(heading) and self.broker.held != final:
+            here = Maze(image).bfs(tuple(state.pacman.tile))
+            blue = sorted(here[g.tile] for n, g in state.ghosts.items()
+                          if state.frightened[n] and not state.eyes[n] and g.tile in here)
+            normal = sorted(here[g.tile] for n, g in state.ghosts.items()
+                            if not state.frightened[n] and not state.eyes[n] and g.tile in here)
+            self.log(event="reverse", why="reflex" if final != chosen else source, where=where, goal=self.goal,
+                     heading=heading, to=final, blue_steps=blue, normal_steps=normal,
+                     fruit=bool(state.fruit_tile))
+        self.broker.steer(final)
+
+    def _watch_for_pause(self, state, frame):
+        """A ghost-sized score jump means a ghost was just eaten: the game freezes for about a second."""
+        jump = None if self.prev_score is None else state.score - self.prev_score
+        if jump in GHOST_SCORES + tuple(x + 10 for x in GHOST_SCORES):  # +10: a dot eaten in the same step
+            self.pause_until = frame + PAUSE_FRAMES
+            self.log(event="pause", frame=frame, score=jump)
+        self.prev_score = state.score
+
+    def _collect(self, state, image, frame):
+        """Store finished answers and, for each, ask about the junction it leads to (the chain)."""
+        limit = CHAIN_DEPTH_PAUSE if frame < self.pause_until else CHAIN_DEPTH
+        for key, goal, facts, decision, finished_at in self.worker.take_all():
+            self.plan[key] = (decision, goal, finished_at)
+            self.latencies.append(decision.latency_ms)
+            self.sources[decision.source] = self.sources.get(decision.source, 0) + 1
+            depth = self.depth.get(key, 0)
+            self.log(event="decision", tile=list(key[0]), arriving=key[1], goal=goal,
+                     direction=decision.direction, source=decision.source,
+                     confidence=round(decision.confidence, 3), latency_ms=round(decision.latency_ms),
+                     probabilities=decision.probabilities, note=decision.note, chain=depth)
+            if depth >= limit:
+                continue
+            nxt = step(key[0], decision.direction)
+            junction, steps, path = Maze(image).walk_to_decision(nxt, decision.direction)
+            if junction is None or steps > CHAIN_MAX_STEPS:
+                continue
+            key2 = (junction, path[-1] if path else decision.direction)
+            if key2 not in self.plan and not self.worker.pending(key2):
+                if self.worker.submit(key2, self.goal, self._facts(state, image, junction, key2[1])):
+                    self.depth[key2] = depth + 1
+                    self.stats["queries"] += 1
+                    self.stats["chained"] += 1
 
     def _pregame(self, state):
         """Attract/coin screens: put in a coin, press start. Returns True if it handled the frame."""
@@ -84,6 +160,15 @@ class Player:
             self.last_start_attempt = time.time()
             self.broker.tap("COIN" if state.credits == 0 else "START")
         return True
+
+    def partial_result(self):
+        """The game in progress as a result record (for when a run is stopped mid-game), or None."""
+        last = self.last_state
+        if not self.was_playing or last is None:
+            return None
+        return {"game": self.finished + 1, "score": last.score, "level": last.level, "dots": last.dots_eaten,
+                "seconds": round(time.time() - self.game_started), "partial": True,
+                "goal": getattr(self.strategy, "mission", None), **self.game.summary()}
 
     def tick(self):
         frame, state, image = self.stream.latest(newer_than=self.last_frame)
@@ -96,14 +181,17 @@ class Player:
                 last = self.last_state
                 self.log(event="game_over", game=self.finished, score=last.score, level=last.level)
                 return {"game": self.finished, "score": last.score, "level": last.level,
-                        "dots": last.dots_eaten, "seconds": round(time.time() - self.game_started)}
+                        "dots": last.dots_eaten, "seconds": round(time.time() - self.game_started),
+                        "goal": getattr(self.strategy, "mission", None), **self.game.summary()}
             self._pregame(state)
             return None
         if state.mode != "playing":
             return None
         if not self.was_playing:
-            self.game_started, self.plan = time.time(), {}
+            self.game_started, self.plan, self.game = time.time(), {}, GameStats()
+            self.worker.clear_queued()
         self.was_playing, self.last_state = True, state
+        self.game.update(state, image, self.goal, time.time())
 
         if image[0x4E04 - 0x4000] != 3:  # READY screen, death animation, level transition
             self.broker.steer(None)
@@ -111,41 +199,45 @@ class Player:
             return None
 
         if time.time() - self.goal_at > self.strategy_interval:
-            goal = self.strategy.choose(state, image)
+            goal = self.strategy.choose(state, image, frame)
             if goal != self.goal:
                 self.log(event="goal", goal=goal)
             self.goal, self.goal_at = goal, time.time()
 
-        self._collect()
+        self._watch_for_pause(state, frame)
+        self._collect(state, image, frame)
+        now = time.time()
+        self.plan = {k: p for k, p in self.plan.items() if now - p[2] < PLAN_TTL}  # drop stale answers
         maze = Maze(image)
         me = state.pacman.tile
         heading = LOWER_TO_UPPER.get(state.pacman.direction)
         junction, steps, path = maze.walk_to_decision(me, heading)
+        arriving = path[-1] if path and junction is not None else heading
+        key = (junction, arriving)
 
         if junction is not None:
-            self.plan = {t: p for t, p in self.plan.items() if t == junction}  # drop passed junctions
-            self.applied &= {junction}
-            if junction not in self.plan and steps <= self.lookahead:
-                arriving = path[-1] if path else heading
+            self.applied = {k for k in self.applied if k == key}
+            if key not in self.plan and steps <= self.lookahead:
                 facts = self._facts(state, image, junction, arriving)
-                if self.worker.submit(junction, self.goal, facts):
+                if self.worker.submit(key, self.goal, facts):
+                    self.depth[key] = 0
                     self.stats["queries"] += 1
 
-        if junction is not None and steps <= 1 and junction in self.plan:
-            decision = self.plan[junction][0]
-            if junction not in self.applied:
-                self.applied.add(junction)
+        if junction is not None and steps <= 1 and key in self.plan:
+            decision = self.plan[key][0]
+            if key not in self.applied:
+                self.applied.add(key)
                 self.stats["on_time"] += 1
-            self.broker.steer(decision.direction)
+            self._go(state, image, junction, arriving, decision.direction, "junction", decision.source)
         elif junction is not None and steps == 0:
             # At the junction with no answer yet: a rule decides, and we count it as late.
             facts = junction_facts(state, image, tile=junction, arriving=heading)
             decision = self.rule.decide(facts, self.goal)
-            self.plan[junction] = (decision, self.goal, time.time())
-            self.applied.add(junction)
+            self.plan[key] = (decision, self.goal, time.time())
+            self.applied.add(key)
             self.stats["late_rule"] += 1
             self.log(event="late", tile=list(junction), direction=decision.direction)
-            self.broker.steer(decision.direction)
+            self._go(state, image, junction, heading, decision.direction, "junction", "late-rule")
         elif path:
-            self.broker.steer(path[0])  # follow the corridor / forced corner
+            self._go(state, image, me, heading, path[0], "corridor", "corridor")  # corridor / forced corner
         return None

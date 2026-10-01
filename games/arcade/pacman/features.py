@@ -3,13 +3,9 @@
 The model never plans routes (a single forward pass can't). Code does the geometry; the model
 makes the judgment call: which way, given the current goal.
 """
-from .maze import LOWER_TO_UPPER, MOVES, OPPOSITE, Maze, step
+from .goals import GOALS, WEIGHTS  # noqa: F401  (GOALS re-exported for deciders)
+from .maze import ENERGIZER, LOWER_TO_UPPER, MOVES, OPPOSITE, Maze, step
 
-GOALS = {
-    "clear_dots": "Eat all the dots. Prefer the direction with the nearest food, unless a ghost threatens it.",
-    "avoid_ghosts": "Survive first. Prefer the direction away from threatening ghosts with the most open room.",
-    "hunt_ghosts": "Blue ghosts are edible right now. Prefer the direction toward the nearest blue ghost; avoid others.",
-}
 ROOM_RADIUS = 8
 
 
@@ -31,8 +27,12 @@ def option_facts(maze, state, modes, tile, direction):
                if modes[name] == "normal" and g.tile in dist]
     edible = [dist[g.tile] + 1 for name, g in state.ghosts.items()
               if modes[name] == "frightened" and g.tile in dist]
+    energizers = [d for t, d in dist.items() if maze.code(t) == ENERGIZER]
+    fruit = dist.get(tuple(state.fruit_tile)) if state.fruit_tile else None
     return {
         "food_steps": min(food) + 1 if food else None,
+        "energizer_steps": min(energizers) + 1 if energizers else None,
+        "fruit_steps": fruit + 1 if fruit is not None else None,
         "threat_steps": min(threats) if threats else None,
         "edible_steps": min(edible) if edible else None,
         "room": sum(1 for d in dist.values() if d <= ROOM_RADIUS),
@@ -54,6 +54,12 @@ def junction_facts(state, image, tile=None, arriving=None):
             options[direction] = facts
 
     here = maze.bfs(tile)
+    close = [here[g.tile] for n, g in state.ghosts.items() if modes[n] == "normal" and g.tile in here]
+    pressure = min(close) if close else None  # steps to the nearest normal ghost, any direction
+    ghosts_close = sum(1 for d in close if d <= LURE_RADIUS)  # normal ghosts near enough to be caught in a feast
+    for o in options.values():
+        o["pressure"] = pressure
+        o["ghosts_close"] = ghosts_close
     ghosts = [{
         "name": name,
         "mode": modes[name],
@@ -61,7 +67,9 @@ def junction_facts(state, image, tile=None, arriving=None):
         "heading": LOWER_TO_UPPER.get(g.direction, "?"),
     } for name, g in state.ghosts.items()]
 
+    here_fruit = here.get(tuple(state.fruit_tile)) if state.fruit_tile else None
     return {
+        "fruit_steps": here_fruit,
         "tile": list(tile),
         "arriving": arriving,
         "options": options,
@@ -89,32 +97,59 @@ def render_text(facts, goal):
         lines.append(
             f"{direction}{' (reverse)' if o['reverse'] else ''}: "
             f"food in {o['food_steps']} steps, threat in {o['threat_steps']}, "
-            f"edible ghost in {o['edible_steps']}, room {o['room']}")
+            f"edible ghost in {o['edible_steps']}, fruit in {o.get('fruit_steps')}, room {o['room']}")
+    if facts.get("fruit_steps") is not None:
+        lines.append(f"bonus fruit on screen, {facts['fruit_steps']} steps away")
     for g in facts["ghosts"]:
         where = "in the ghost house" if g["steps"] is None else f"{g['steps']} steps away"
         lines.append(f"ghost {g['name']} {g['mode']} {where}, heading {g['heading']}")
     return "\n".join(lines)
 
 
-GOAL_WEIGHTS = {  # food, threat, room, edible
-    "clear_dots": (1.0, 1.6, 0.25, 0.0),
-    "avoid_ghosts": (0.2, 2.4, 0.6, 0.0),
-    "hunt_ghosts": (0.3, 1.4, 0.2, 1.4),
-}
 THREAT_HORIZON = 7
+ROOM_PRESSURE = 12  # open room only matters when a normal ghost is this close (steps)
+LURE_RADIUS = 9  # ambush: eat the energizer when 2+ normal ghosts are this close (or 1 within LURE_PANIC)
+LURE_PANIC = 4
+HOVER_STEPS = 4  # ambush: wait about this many steps from the energizer until the ghosts have closed in
+FOOD_REACH = 45  # food pull is linear in distance up to this, so far-away dots still attract
+
+
+def food_pull(steps):
+    """Strictly decreasing in distance everywhere: near dots count most, far dots still beat no progress."""
+    return 3.0 / (1 + steps) + 0.04 * (FOOD_REACH - min(steps, FOOD_REACH))
+
+
+def lure_score(option):
+    """Ambush: close in on an energizer and wait, then eat it once ghosts have gathered close behind."""
+    es = option["energizer_steps"]
+    pressure = option.get("pressure")
+    ready = option.get("ghosts_close", 0) >= 2 or (pressure is not None and pressure <= LURE_PANIC)
+    if ready:
+        return 8.0 / (1 + es)  # go and eat it now
+    if es > HOVER_STEPS:
+        return 3.0 * 3.0 / (1 + es)  # approach
+    return -1.5 * (HOVER_STEPS + 1 - es)  # too close to eat it yet: hold back, ghosts still on their way
 
 
 def score_option(goal, option):
     """Heuristic desirability of one option. Shared by the rule decider and the mock model."""
-    w_food, w_threat, w_room, w_edible = GOAL_WEIGHTS[goal]
+    w_food, w_threat, w_room, w_edible, w_fruit, w_energizer, w_lure = WEIGHTS[goal]
     score = 0.0
     if option["food_steps"] is not None:
-        score += w_food * 3.0 / (1 + option["food_steps"])
+        score += w_food * food_pull(option["food_steps"])
     if option["threat_steps"] is not None and option["threat_steps"] < THREAT_HORIZON:
         score -= w_threat * (THREAT_HORIZON - option["threat_steps"]) / 2.0
-    score += w_room * min(option["room"], 30) / 30.0 * 3.0
+    pressure = option.get("pressure")
+    if pressure is not None and pressure <= ROOM_PRESSURE:  # no ghost near: where there is room is irrelevant
+        score += w_room * min(option["room"], 30) / 30.0 * 3.0
     if option["edible_steps"] is not None:
         score += w_edible * 4.0 / (1 + option["edible_steps"])
+    if option.get("fruit_steps") is not None:
+        score += w_fruit * 4.0 / (1 + option["fruit_steps"])
+    if w_energizer and option.get("energizer_steps") is not None and option["edible_steps"] is None:
+        score += w_energizer * 3.0 / (1 + option["energizer_steps"])
+    if w_lure and option.get("energizer_steps") is not None:
+        score += w_lure * lure_score(option)
     if option["reverse"]:
         score -= 0.3
     return score

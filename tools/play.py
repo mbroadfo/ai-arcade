@@ -41,6 +41,7 @@ def main():
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--lookahead", type=int, default=None, help="tiles ahead to query (game default if unset)")
     parser.add_argument("--knowledge", choices=None, help="help rung the game offers, e.g. L0..L3b")
+    parser.add_argument("--goal", default="auto", help="standing goal: auto, or pin one (game-specific names)")
     parser.add_argument("--tag", default="", help="label added to the run files")
     parser.add_argument("--games", type=int, default=1)
     parser.add_argument("--seconds", type=int, default=3600)
@@ -50,10 +51,13 @@ def main():
     game = load_game(args.game)
     if args.knowledge and args.knowledge not in game.knowledge.LEVELS:
         parser.error(f"--knowledge must be one of {game.knowledge.LEVELS}")
+    if args.goal not in game.goals.MISSIONS:
+        parser.error(f"--goal must be one of {game.goals.MISSIONS}")
     out_dir = Path(args.out)
     out_dir.mkdir(exist_ok=True)
     stamp = time.strftime("%Y%m%d-%H%M%S")
-    label = "-".join(p for p in (stamp, args.game.replace("/", "_"), args.decider, args.knowledge, args.tag) if p)
+    label = "-".join(p for p in (stamp, args.game.replace("/", "_"), args.decider, args.knowledge,
+                                 None if args.goal == "auto" else args.goal, args.tag) if p)
     decisions_log = open(out_dir / f"{label}-decisions.jsonl", "w", buffering=1)
     results_path = out_dir / f"{label}-games.jsonl"
 
@@ -62,13 +66,13 @@ def main():
     broker = BrokerLink(args.host)
     worker = DecisionWorker(build_decider(game, args))
     extra = {"lookahead": args.lookahead} if args.lookahead is not None else {}
-    player = game.player.Player(stream, broker, worker, game.player.RuleStrategy(), decisions_log,
+    player = game.player.Player(stream, broker, worker, game.goals.GoalManager(args.goal), decisions_log,
                                 knowledge=args.knowledge, **extra)
 
     results, deadline = [], time.time() + args.seconds
     last_good = time.time()
     print(f"playing {args.games} game(s) of {args.game} with decider={args.decider} "
-          f"knowledge={args.knowledge}; logs in {out_dir}", flush=True)
+          f"goal={args.goal} knowledge={args.knowledge}; logs in {out_dir}", flush=True)
     try:
         while time.time() < deadline and player.finished < args.games:
             try:
@@ -88,6 +92,12 @@ def main():
     except KeyboardInterrupt:
         pass
     finally:
+        partial = player.partial_result() if player.finished < args.games else None
+        if partial:
+            results.append(partial)
+            results_path.write_text("".join(json.dumps(r) + "\n" for r in results))
+            print(f"STOPPED mid-game {partial['game']}: score={partial['score']} level={partial['level']} "
+                  f"seconds={partial['seconds']} (partial)", flush=True)
         try:
             broker.release_all()
         except OSError:
@@ -97,7 +107,8 @@ def main():
 
     s = player.stats
     print(f"\ndecisions: {s['on_time']} on time, {s['late_rule']} late (rule filled in), "
-          f"{s['queries']} model queries; sources {player.sources}")
+          f"{s['queries']} queries ({s.get('chained', 0)} chained), {s.get('revised', 0)} stale answers revised; "
+          f"sources {player.sources}")
     if player.latencies:
         print(f"model latency: median {statistics.median(player.latencies):.0f} ms, "
               f"max {max(player.latencies):.0f} ms")
@@ -106,6 +117,13 @@ def main():
     if results:
         scores = [r["score"] for r in results]
         print(f"scores: mean {statistics.mean(scores):.0f}, best {max(scores)}, worst {min(scores)}")
+        for key in ("ghosts_eaten", "fruit_eaten", "fruit_shown", "energizers", "reflexes"):
+            if key in results[0]:
+                print(f"{key}: per game {[r[key] for r in results]}")
+        if "feasts" in results[0]:
+            sizes = [n for r in results for n in r["feasts"]]
+            print("ghosts eaten per energizer: " + "  ".join(f"{k}x: {sizes.count(k)}" for k in range(5))
+                  + f"   (of {len(sizes)} energizers)")
     return 0
 
 

@@ -23,6 +23,7 @@ RULES_L1 = """\
 PAC-MAN RULES
 You steer Pac-Man through a maze. You hold one of four directions (UP, DOWN, LEFT, RIGHT); Pac-Man keeps moving that way until a wall stops him. He may turn or reverse at any time.
 - Pac-Man eats dots (10 points) by passing over them. Eating every dot clears the level. Energizers (4 big dots, 50 points) turn the ghosts blue for a short time.
+- A bonus fruit appears in the middle of the maze, below the ghost house, after 70 and again after 170 dots are eaten. It vanishes after a few seconds. Eating it scores bonus points (100 on level 1).
 - Four ghosts roam the maze: Red, Pink, Blue, Orange. A normal ghost touching Pac-Man costs a life. Ghosts move at about Pac-Man's speed, so a ghost behind you stays behind you but one ahead of you must be avoided.
 - While blue (frightened), ghosts are harmless and can be eaten: 200, then 400, 800, 1600 points for each in a row. An eaten ghost shows only eyes and hurries home, harmless. Blue ghosts wander randomly and are slower.
 - Ghosts never reverse on their own; at a junction they pick among the other exits. They all reverse when the mode changes (scatter to chase, or an energizer being eaten).
@@ -109,6 +110,8 @@ def render_l2(state, image, tile, arriving, facts):
             move = {True: "coming toward you", False: "moving away", None: "direction unclear"}[gf["approaching"]]
             lines.append(f"- {label}: {_band(gf['steps'])}, {gf['steps']} steps away ({_rel(*gf['offset'])}), "
                          f"{move}, would arrive via {gf['via']}.")
+    if state.fruit_tile and facts.get("fruit_steps") is not None:
+        lines.append(f"- BONUS FRUIT on screen, {facts['fruit_steps']} steps away; it will vanish soon.")
     lines.append("EXITS")
     for direction, o in facts["options"].items():
         bits = [f"nearest dot {o['food_steps']} steps" if o["food_steps"] is not None else "no dots reachable",
@@ -117,6 +120,10 @@ def render_l2(state, image, tile, arriving, facts):
                 f"open room {o['room']} tiles"]
         if o["edible_steps"] is not None:
             bits.append(f"blue ghost {o['edible_steps']} steps")
+        if o.get("fruit_steps") is not None:
+            bits.append(f"bonus fruit {o['fruit_steps']} steps")
+        if o.get("energizer_steps") is not None:
+            bits.append(f"energizer {o['energizer_steps']} steps")
         if o["reverse"]:
             bits.append("this is turning back")
         lines.append(f"- {direction}: " + ", ".join(bits))
