@@ -38,9 +38,10 @@ class Player:
     def __init__(self, stream, broker, worker, strategy, decisions_log, strategy_interval=0.5,
                  lookahead=LOOKAHEAD_STEPS, knowledge=None, revise=False, reflex=True,
                  chain_depth=CHAIN_DEPTH, park=False, refuge=False, danger_query=False,
-                 danger_worker=None):
+                 danger_worker=None, clock=time.time):
         # Ablation switches. revise: code re-checks each stored answer against fresh facts (code overruling the
         # decider, so off by default). reflex: the survival instinct. chain_depth: look-ahead chain, 0 = off.
+        self.clock = clock  # wall-clock seconds; a replay passes recorded time
         self.revise, self.reflex, self.chain_depth = revise, reflex, chain_depth
         # park: ambush waits against a wall near the energizer instead of pacing. refuge: hide at the safe spot when a
         # ghost is close and he can get there first. Both off by default (park.py); neither lets the reflex steer while held.
@@ -79,7 +80,7 @@ class Player:
         self.latencies, self.sources = [], {}
 
     def log(self, **record):
-        record["t"] = round(time.time(), 3)
+        record["t"] = round(self.clock(), 3)
         record.setdefault("frame", self.last_frame)  # lines up the log with a recording of the stream
         self.decisions_log.write(json.dumps(record) + "\n")
 
@@ -128,11 +129,11 @@ class Player:
     def _noted_reflex(self, where, tile, chosen, better, state, image, facts=None):
         facts = facts or junction_facts(state, image)
         key, at = self.last_reflex
-        if key != (chosen, better) or time.time() - at > 1.0:  # count an emergency once, not per tick
+        if key != (chosen, better) or self.clock() - at > 1.0:  # count an emergency once, not per tick
             self.game.reflexes += 1
             self.log(event="reflex", where=where, tile=list(tile), chosen=chosen, override=better,
                      threat=facts["options"][chosen]["threat_steps"])
-        self.last_reflex = ((chosen, better), time.time())
+        self.last_reflex = ((chosen, better), self.clock())
         return better
 
     def _go(self, state, image, tile, arriving, chosen, where, source):
@@ -168,7 +169,7 @@ class Player:
         """Add the time spent holding to the game's totals, once."""
         if not hold["booked"]:
             hold["booked"] = True
-            seconds = time.time() - hold["since"]
+            seconds = self.clock() - hold["since"]
             if hold["kind"] == "park":
                 self.game.parked_seconds += seconds
             else:
@@ -188,7 +189,7 @@ class Player:
             self._go(state, image, me, hold["push"], hold["exit"], "junction", "hold-exit")
             return True
         here = Maze(image).bfs(me)
-        near, now = nearest_normal(state, here), time.time()
+        near, now = nearest_normal(state, here), self.clock()
         if hold["kind"] == "park":
             gathered_close = ready_to_eat({"ghosts_close": gathered(state, here, LURE_RADIUS), "pressure": near})
             reason = ("goal changed" if self.goal != "ambush" else "gathered" if gathered_close
@@ -228,7 +229,7 @@ class Player:
                 kind = "park"
         if kind is None:
             return False
-        now = time.time()
+        now = self.clock()
         self.hold = {"kind": kind, "tile": tile, "push": heading, "since": now, "noted": now, "exit": None, "booked": False}
         if kind == "park":
             self.game.parks += 1
@@ -240,15 +241,15 @@ class Player:
 
     def _refuge_run(self, state, image, me):
         """A ghost is close and the safe spot can be reached first: go there. True if it steered."""
-        if not self.refuge or self.goal == "hunt_ghosts" or time.time() < self.refuge_cooldown:
+        if not self.refuge or self.goal == "hunt_ghosts" or self.clock() < self.refuge_cooldown:
             return False
         direction = refuge_move(state, Maze(image), me)
         if direction is None:
             return False
-        if time.time() - self.refuge_ran_at > 2.0:
+        if self.clock() - self.refuge_ran_at > 2.0:
             self.log(event="refuge", phase="run", tile=list(me), direction=direction)
             self.stats["moves"]["code-hold"] = self.stats["moves"].get("code-hold", 0) + 1
-        self.refuge_ran_at = time.time()
+        self.refuge_ran_at = self.clock()
         self.broker.steer(direction)
         return True
 
@@ -269,7 +270,7 @@ class Player:
         by = ({"reflex": "reflex-override", "revise": "code-revise"}.get(self.last_how) or label
               or self.MOVE_LABELS.get(decision.source, decision.source))
         self.stats["moves"][by] = self.stats["moves"].get(by, 0) + 1
-        age = None if answered_at is None else round(time.time() - answered_at, 2)
+        age = None if answered_at is None else round(self.clock() - answered_at, 2)
         self.log(event="move", tile=list(key[0]), arriving=key[1], goal=self.goal, mods=dict(self.mods),
                  proposed=decision.direction, source=decision.source, confidence=round(decision.confidence, 2),
                  latency_ms=round(decision.latency_ms), age_s=age, executed=final, by=by, late=late)
@@ -335,7 +336,7 @@ class Player:
     def _danger(self, state, image, me, heading):
         """A corridor with a ghost close: apply the model's last answer, and ask again. True if it steered."""
         steered = False
-        now = time.time()
+        now = self.clock()
         if self.danger_answer is not None:
             (_, asked_tile, asked_heading), decision, finished_at = self.danger_answer
             self.danger_answer = None
@@ -371,8 +372,8 @@ class Player:
         if state.mode not in ("attract", "coin"):
             return False
         self.broker.steer(None)
-        if time.time() - self.last_start_attempt > 4:
-            self.last_start_attempt = time.time()
+        if self.clock() - self.last_start_attempt > 4:
+            self.last_start_attempt = self.clock()
             self.broker.tap("COIN" if state.credits == 0 else "START")
         return True
 
@@ -382,7 +383,7 @@ class Player:
         if not self.was_playing or last is None:
             return None
         return {"game": self.finished + 1, "score": last.score, "level": last.level, "dots": last.dots_eaten,
-                "seconds": round(time.time() - self.game_started), "partial": True,
+                "seconds": round(self.clock() - self.game_started), "partial": True,
                 "goal": getattr(self.strategy, "mission", None), **self.game.summary()}
 
     def tick(self):
@@ -396,17 +397,17 @@ class Player:
                 last = self.last_state
                 self.log(event="game_over", game=self.finished, score=last.score, level=last.level)
                 return {"game": self.finished, "score": last.score, "level": last.level,
-                        "dots": last.dots_eaten, "seconds": round(time.time() - self.game_started),
+                        "dots": last.dots_eaten, "seconds": round(self.clock() - self.game_started),
                         "goal": getattr(self.strategy, "mission", None), **self.game.summary()}
             self._pregame(state)
             return None
         if state.mode != "playing":
             return None
         if not self.was_playing:
-            self.game_started, self.plan, self.game, self.commit = time.time(), {}, GameStats(), None
+            self.game_started, self.plan, self.game, self.commit = self.clock(), {}, GameStats(), None
             self.worker.clear_queued()
         self.was_playing, self.last_state = True, state
-        self.game.update(state, image, self.goal, time.time())
+        self.game.update(state, image, self.goal, self.clock())
 
         if image[0x4E04 - 0x4000] != 3:  # READY screen, death animation, level transition
             self.broker.steer(None)
@@ -415,13 +416,13 @@ class Player:
                 self.game.park_deaths += self.hold["kind"] == "park"
                 self.game.refuge_deaths += self.hold["kind"] == "refuge"
                 self.log(event=self.hold["kind"], phase="died")
-            elif time.time() - self.refuge_ran_at < 1.5:
+            elif self.clock() - self.refuge_ran_at < 1.5:
                 self.game.refuge_deaths += 1
                 self.log(event="refuge", phase="died on the way")
             self.hold = None
             return None
 
-        if time.time() - self.goal_at > self.strategy_interval:
+        if self.clock() - self.goal_at > self.strategy_interval:
             goal = self.strategy.choose(state, image, frame)
             mods = dict(getattr(self.strategy, "mods", {}))
             if goal != self.goal:
@@ -430,7 +431,7 @@ class Player:
                 self.log(event="stance", mods=mods)
             for record in getattr(self.strategy, "drain", lambda: [])():  # the slow layer's own notes
                 self.log(**record)
-            self.goal, self.mods, self.goal_at = goal, mods, time.time()
+            self.goal, self.mods, self.goal_at = goal, mods, self.clock()
 
         self._watch_for_pause(state, frame)
         self._collect(state, image, frame)
@@ -442,7 +443,7 @@ class Player:
             return None
         if self._refuge_run(state, image, state.pacman.tile):
             return None
-        now = time.time()
+        now = self.clock()
         self.plan = {k: p for k, p in self.plan.items() if now - p[2] < PLAN_TTL}  # drop stale answers
         maze = Maze(image)
         me = state.pacman.tile
@@ -491,7 +492,7 @@ class Player:
             facts = junction_facts(state, image, tile=junction, arriving=heading, park=self.park)
             facts["mods"] = dict(self.mods)
             decision = self.rule.decide(facts, self.goal)
-            self.plan[key] = (decision, self.goal, time.time())
+            self.plan[key] = (decision, self.goal, self.clock())
             self.applied.add(key)
             self.consumed.add(key)
             self.stats["late_rule"] += 1
