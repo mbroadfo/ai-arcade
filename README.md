@@ -120,6 +120,9 @@ game is playable or supported by an AI controller.
 
 Standalone MAME streams game state to a PC, which decides and steers. See `docs/AI_MODE.md`.
 
+Adding a game, and how every game's AI play is measured: `docs/GAME_WORKSHOP.md`. Moving shared code out of
+Pac-Man so games reuse it instead of copying it: `docs/REFACTOR_PLAN.md`.
+
 ## Architecture direction
 
 The larger design separates:
