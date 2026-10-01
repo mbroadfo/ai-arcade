@@ -42,6 +42,10 @@ def main():
     parser.add_argument("--lookahead", type=int, default=None, help="tiles ahead to query (game default if unset)")
     parser.add_argument("--knowledge", choices=None, help="help rung the game offers, e.g. L0..L3b")
     parser.add_argument("--goal", default="auto", help="standing goal: auto, or pin one (game-specific names)")
+    parser.add_argument("--revise", action="store_true",
+                        help="code re-checks stored answers against fresh facts (overrules the decider; off by default)")
+    parser.add_argument("--no-reflex", action="store_true", help="turn the survival instinct off (ablation)")
+    parser.add_argument("--chain", type=int, default=None, help="look-ahead chain depth, 0 = off (game default if unset)")
     parser.add_argument("--tag", default="", help="label added to the run files")
     parser.add_argument("--games", type=int, default=1)
     parser.add_argument("--seconds", type=int, default=3600)
@@ -57,7 +61,9 @@ def main():
     out_dir.mkdir(exist_ok=True)
     stamp = time.strftime("%Y%m%d-%H%M%S")
     label = "-".join(p for p in (stamp, args.game.replace("/", "_"), args.decider, args.knowledge,
-                                 None if args.goal == "auto" else args.goal, args.tag) if p)
+                                 None if args.goal == "auto" else args.goal,
+                                 "revise" if args.revise else None, "noreflex" if args.no_reflex else None,
+                                 None if args.chain is None else f"chain{args.chain}", args.tag) if p)
     decisions_log = open(out_dir / f"{label}-decisions.jsonl", "w", buffering=1)
     results_path = out_dir / f"{label}-games.jsonl"
 
@@ -66,6 +72,9 @@ def main():
     broker = BrokerLink(args.host)
     worker = DecisionWorker(build_decider(game, args))
     extra = {"lookahead": args.lookahead} if args.lookahead is not None else {}
+    extra.update(revise=args.revise, reflex=not args.no_reflex)
+    if args.chain is not None:
+        extra["chain_depth"] = args.chain
     player = game.player.Player(stream, broker, worker, game.goals.GoalManager(args.goal), decisions_log,
                                 knowledge=args.knowledge, **extra)
 
@@ -108,7 +117,7 @@ def main():
     s = player.stats
     print(f"\ndecisions: {s['on_time']} on time, {s['late_rule']} late (rule filled in), "
           f"{s['queries']} queries ({s.get('chained', 0)} chained), {s.get('revised', 0)} stale answers revised; "
-          f"sources {player.sources}")
+          f"late because {s.get('late_why', {})}; sources {player.sources}")
     if player.latencies:
         print(f"model latency: median {statistics.median(player.latencies):.0f} ms, "
               f"max {max(player.latencies):.0f} ms")

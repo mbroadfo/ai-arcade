@@ -25,14 +25,18 @@ CHAIN_DEPTH = 2  # when an answer arrives, also ask about the junction it leads 
 CHAIN_DEPTH_PAUSE = 4  # ... deeper while the game is frozen after a ghost is eaten (nothing moves for ~1.2 s)
 CHAIN_MAX_STEPS = 14  # do not chain to a junction further than this
 PLAN_TTL = 4.0  # seconds before a stored answer is considered stale
-REVISE_REGRET = 1.0  # a stored answer is replaced if, on fresh facts, another exit scores this much better
+REVISE_REGRET = 2.5  # with revise on, a stored answer is replaced if another exit scores this much better
 GHOST_SCORES = (200, 400, 800, 1600)
 PAUSE_FRAMES = 60  # the game freezes for about this many frames when a ghost is eaten
 
 
 class Player:
     def __init__(self, stream, broker, worker, strategy, decisions_log, strategy_interval=0.5,
-                 lookahead=LOOKAHEAD_STEPS, knowledge=None):
+                 lookahead=LOOKAHEAD_STEPS, knowledge=None, revise=False, reflex=True,
+                 chain_depth=CHAIN_DEPTH):
+        # Ablation switches. revise: code re-checks each stored answer against fresh facts (code overruling the
+        # decider, so off by default). reflex: the survival instinct. chain_depth: look-ahead chain, 0 = off.
+        self.revise, self.reflex, self.chain_depth = revise, reflex, chain_depth
         self.lookahead = lookahead
         self.knowledge = knowledge  # rung L0..L3b, or None for the original compact fact text
         self.stream, self.broker, self.strategy = stream, broker, strategy
@@ -50,7 +54,8 @@ class Player:
         self.finished = 0
         self.game = GameStats()  # what happened in the current game
         self.last_reflex = (None, 0.0)
-        self.stats = {"on_time": 0, "late_rule": 0, "queries": 0, "chained": 0, "revised": 0}
+        self.stats = {"on_time": 0, "late_rule": 0, "queries": 0, "chained": 0, "revised": 0,
+                      "late_why": {}}
         self.latencies, self.sources = [], {}
 
     def log(self, **record):
@@ -81,7 +86,7 @@ class Player:
 
     def _survive(self, state, image, tile, arriving, chosen, where, facts=None):
         """The survival instinct: veto `chosen` if it runs into a ghost and a clearly safer way exists."""
-        if not self._near_threat(state):
+        if not self.reflex or not self._near_threat(state):
             return chosen
         facts = facts or junction_facts(state, image, tile=tile, arriving=arriving)
         better = reflex(facts, chosen)
@@ -98,7 +103,7 @@ class Player:
     def _go(self, state, image, tile, arriving, chosen, where, source):
         """Steer to `chosen` unless survival vetoes it. A turn-back is logged with why and what was around."""
         facts = None
-        if source not in ("late-rule", "corridor"):  # a stored answer: check it against the world as it is now
+        if self.revise and source not in ("late-rule", "corridor"):  # check a stored answer against the world now
             facts = junction_facts(state, image, tile=tile, arriving=arriving)
             better = self._revise(facts, chosen)
             if better:
@@ -126,9 +131,18 @@ class Player:
             self.log(event="pause", frame=frame, score=jump)
         self.prev_score = state.score
 
+    def _late_reason(self, key):
+        """Why there was no stored answer on arrival: in flight, filed under another arriving direction, or never asked."""
+        if self.worker.pending(key):
+            return "in_flight"
+        if any(k[0] == key[0] for k in self.plan):
+            return "other_arrival"
+        return "not_asked"
+
     def _collect(self, state, image, frame):
         """Store finished answers and, for each, ask about the junction it leads to (the chain)."""
-        limit = CHAIN_DEPTH_PAUSE if frame < self.pause_until else CHAIN_DEPTH
+        paused = frame < self.pause_until
+        limit = 0 if self.chain_depth == 0 else (self.chain_depth + 2 if paused else self.chain_depth)
         for key, goal, facts, decision, finished_at in self.worker.take_all():
             self.plan[key] = (decision, goal, finished_at)
             self.latencies.append(decision.latency_ms)
@@ -236,7 +250,9 @@ class Player:
             self.plan[key] = (decision, self.goal, time.time())
             self.applied.add(key)
             self.stats["late_rule"] += 1
-            self.log(event="late", tile=list(junction), direction=decision.direction)
+            why = self._late_reason(key)
+            self.stats["late_why"][why] = self.stats["late_why"].get(why, 0) + 1
+            self.log(event="late", tile=list(junction), direction=decision.direction, why=why)
             self._go(state, image, junction, heading, decision.direction, "junction", "late-rule")
         elif path:
             self._go(state, image, me, heading, path[0], "corridor", "corridor")  # corridor / forced corner

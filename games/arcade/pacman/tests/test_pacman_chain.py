@@ -6,6 +6,7 @@ from pathlib import Path
 
 from games.arcade.pacman import goals, player
 from games.arcade.pacman.deciders import RuleDecider
+from games.arcade.pacman.features import junction_facts, score_option as features_score
 from games.arcade.pacman.maze import Maze, step
 from games.arcade.pacman.state import decode
 
@@ -126,8 +127,79 @@ def test_a_stale_answer_is_revised_only_when_it_is_now_clearly_worse():
         return base
 
     # the blue ghost is now toward UP; the stored answer (made when it was elsewhere) says DOWN
-    facts = {"options": {"UP": option(edible_steps=2), "DOWN": option(edible_steps=None)}}
+    facts = {"options": {"UP": option(edible_steps=1), "DOWN": option(edible_steps=None)}}
     assert p._revise(facts, "DOWN") == "UP"
     assert p._revise(facts, "UP") is None  # already the best
     near_tie = {"options": {"UP": option(edible_steps=5), "DOWN": option(edible_steps=6)}}
     assert p._revise(near_tie, "DOWN") is None  # not worth changing the plan for a small difference
+
+
+def test_ablation_switches_default_to_code_not_overruling_the_decider():
+    p = make_player()
+    assert p.revise is False and p.reflex is True and p.chain_depth == player.CHAIN_DEPTH
+
+
+def test_revise_is_skipped_unless_switched_on():
+    import io
+
+    class Broker:
+        held = None
+        steered = None
+
+        def steer(self, direction):
+            self.steered = direction
+
+    junction, arriving = next(junction_starts())
+    exits = Maze(IMAGE).exits(junction)
+    chosen, other = exits[0], exits[1]
+    for switch in (False, True):
+        p = player.Player(None, Broker(), FakeWorker(), goals.GoalManager("clear_dots"), io.StringIO(), revise=switch)
+        p._revise = lambda facts, was, other=other: other  # pretend fresh facts say another exit is clearly better
+        p._go(STATE, IMAGE, junction, arriving, chosen, "junction", "rule")
+        assert p.broker.steered == (other if switch else chosen)
+        assert p.stats["revised"] == (1 if switch else 0)
+
+
+def test_chain_depth_zero_turns_the_chain_off():
+    p = make_player()
+    p.chain_depth = 0
+    start = next(junction_starts())
+    p.worker.submit(start, p.goal, p._facts(STATE, IMAGE, *start))
+    p.depth[start] = 0
+    for _ in range(5):
+        p._collect(STATE, IMAGE, frame=100)
+    assert len(p.worker.submitted) == 1
+
+
+def test_reflex_switch_off_lets_a_deadly_choice_stand():
+    import io
+
+    class Broker:
+        held = None
+
+        def steer(self, direction):
+            self.steered = direction
+
+    maze = Maze(IMAGE)
+    tile, arriving = next(junction_starts())
+    exits = maze.exits(tile)
+    ahead = next(d for d in exits if d != {"LEFT": "RIGHT", "RIGHT": "LEFT", "UP": "DOWN", "DOWN": "UP"}[arriving])
+    near = step(tile, ahead)
+    st = replace(STATE, pacman=replace(STATE.pacman, tile=tile, direction=arriving.lower()),
+                 frightened={n: False for n in STATE.ghosts}, eyes={n: False for n in STATE.ghosts},
+                 ghosts={n: replace(g, tile=near, next_tile=near) if n == "red" else replace(g, tile=(0, 0), next_tile=(0, 0))
+                         for n, g in STATE.ghosts.items()})
+    on = player.Player(None, Broker(), FakeWorker(), goals.GoalManager("clear_dots"), io.StringIO())
+    off = player.Player(None, Broker(), FakeWorker(), goals.GoalManager("clear_dots"), io.StringIO(), reflex=False)
+    assert on._survive(st, IMAGE, tile, arriving, ahead, "junction") != ahead
+    assert off._survive(st, IMAGE, tile, arriving, ahead, "junction") == ahead
+
+
+def test_late_reasons_are_told_apart():
+    p = make_player()
+    key = ((40, 40), "LEFT")
+    assert p._late_reason(key) == "not_asked"
+    p.plan[((40, 40), "UP")] = (None, "g", 0.0)
+    assert p._late_reason(key) == "other_arrival"
+    p.worker.finished.append((key, "g", {}, None, 0.0))  # FakeWorker.pending: asked, answer not taken yet
+    assert p._late_reason(key) == "in_flight"

@@ -63,6 +63,21 @@ The **survival instinct** (`survival.py`) sits above every goal and every decide
 to a normal ghost within 3 steps and another way is at least 2 steps safer, it overrides the choice, at
 junctions and in corridors. Overrides are logged as `reflex` events and counted per game.
 
+### Ablation switches
+
+Code that overrules or helps the decider must be switchable, so a model run is not credited for moves the code made.
+The switches are written into the run's file names.
+
+| Switch | Default | Meaning |
+|---|---|---|
+| `--revise` | off | re-check each stored answer against fresh facts and replace it if another exit scores 2.5+ better. Code overruling the decider: label any run that uses it |
+| `--no-reflex` | reflex on | turn the survival instinct off |
+| `--chain N` | 2 | after an answer, also ask about the junction it leads to, N deep (N+2 during the ghost-eaten pause); 0 = off |
+| `--lookahead N` | 8 | start asking about a junction this many tiles ahead |
+
+The run summary also says why answers were late: `in_flight` (asked, not back yet), `other_arrival` (answered for
+the junction but under a different arriving direction) or `not_asked`.
+
 Each game's result also carries what the goals are about: `ghosts_eaten`, `fruit_eaten`, `fruit_shown`,
 `energizers`, `feasts` (ghosts eaten per energizer; a full feast is 4, worth 3000), `deaths`, `reflexes` and
 seconds spent per goal.
