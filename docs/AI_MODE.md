@@ -74,6 +74,7 @@ The switches are written into the run's file names.
 | `--no-reflex` | reflex on | turn the survival instinct off |
 | `--chain N` | 2 | after an answer, also ask about the junction it leads to, N deep (N+2 during the ghost-eaten pause); 0 = off |
 | `--lookahead N` | 8 | start asking about a junction this many tiles ahead |
+| `--park` | off | ambush only: wait at the game's safe spot instead of pacing near the energizer (below) |
 | `--strategist code\|mock\|ollama` | code | who sets the goal and stance (below). `mock` repeats the code's choice after a delay, to separate the cost of latency from the model's judgment |
 
 The run summary also says why answers were late: `seen_too_late` (the junction first came into view 0-1 tiles ahead:
@@ -83,6 +84,19 @@ junctions are often 1-3 tiles apart, so no model could have answered in time), `
 Each game's result also carries what the goals are about: `ghosts_eaten`, `fruit_eaten`, `fruit_shown`,
 `energizers`, `feasts` (ghosts eaten per energizer; a full feast is 4, worth 3000), `deaths`, `reflexes` and
 seconds spent per goal.
+
+### Ambush with the safe spot (`--park`)
+
+With all four ghosts out of the house there is a tile Pac-Man can wait on, pushing UP into the wall (`park.py`: the top of the
+stub to the right of the block above his start, at tile (53, 44); named by the player, to be confirmed by the counters).
+The game has no wait button: he stops only because the wall stops him, so the spot is a corner with a wall above.
+
+During `ambush`, with every ghost out, the option scoring pulls toward the spot instead of hovering near the energizer. At
+the spot he holds UP while the ghosts come in, with the survival reflex deliberately off. He leaves by the best exit when 3
+ghosts are within 9 steps, after 12 s, or when the goal changes. Then the normal ambush rule takes him to the energizer.
+Per game: `parks`, `parked_seconds` and `park_deaths` (a life lost while waiting there); the decision log has `park`
+events (`start`, `waiting`, `leave` with why, `died`) with the ghosts' step distances. The knowledge rungs do not describe
+the spot yet, so a model direction-picker only feels it through the scoring that code does.
 
 ### The slow layer: goal and stance
 

@@ -14,10 +14,11 @@ import time
 
 from .deciders import RuleDecider
 from .events import GameStats
-from .features import GOALS, junction_facts, score_option
+from .features import GOALS, LURE_RADIUS, junction_facts, score_option
 from .goals import stance_text
 from .knowledge import build_state_text
 from .maze import LOWER_TO_UPPER, OPPOSITE, Maze, step
+from .park import GATHER, MAX_SECONDS, PUSH, SAFE_SPOT, all_out, gathered
 from .survival import reflex
 
 THREAT_NEAR = 10  # only run the survival check when a normal ghost is this close (tiles, straight line)
@@ -34,10 +35,12 @@ PAUSE_FRAMES = 60  # the game freezes for about this many frames when a ghost is
 class Player:
     def __init__(self, stream, broker, worker, strategy, decisions_log, strategy_interval=0.5,
                  lookahead=LOOKAHEAD_STEPS, knowledge=None, revise=False, reflex=True,
-                 chain_depth=CHAIN_DEPTH):
+                 chain_depth=CHAIN_DEPTH, park=False):
         # Ablation switches. revise: code re-checks each stored answer against fresh facts (code overruling the
         # decider, so off by default). reflex: the survival instinct. chain_depth: look-ahead chain, 0 = off.
         self.revise, self.reflex, self.chain_depth = revise, reflex, chain_depth
+        self.park = park  # ambush: wait at the safe spot (park.py) instead of pacing near the energizer; off by default
+        self.parked_since, self.park_exit, self.park_noted = None, None, 0.0
         self.lookahead = lookahead
         self.knowledge = knowledge  # rung L0..L3b, or None for the original compact fact text
         self.stream, self.broker, self.strategy = stream, broker, strategy
@@ -68,7 +71,7 @@ class Player:
         self.decisions_log.write(json.dumps(record) + "\n")
 
     def _facts(self, state, image, tile, arriving):
-        facts = junction_facts(state, image, tile=tile, arriving=arriving)
+        facts = junction_facts(state, image, tile=tile, arriving=arriving, park=self.park)
         facts["mods"], facts["stance"] = dict(self.mods), stance_text(self.mods)
         if self.knowledge:
             goal_text = f"GOAL: {self.goal} - {GOALS[self.goal]} {facts['stance']}".rstrip()
@@ -144,6 +147,48 @@ class Player:
                      fruit=bool(state.fruit_tile))
         self.broker.steer(final)
         return final
+
+    def _parking(self, state, image, me):
+        """Ambush at the safe spot: hold into the wall while the ghosts gather, then leave. True if it steered."""
+        if not self.park:
+            return False
+        if tuple(me) != SAFE_SPOT:
+            self.parked_since = self.park_exit = None
+            return False
+        now = time.time()
+        if self.park_exit:  # leaving: keep to the exit chosen until he has left the tile (the corridor logic would turn him)
+            self._go(state, image, me, "UP", self.park_exit, "junction", "park-exit")
+            return True
+        here = Maze(image).bfs(SAFE_SPOT)
+        crowd = gathered(state, here, LURE_RADIUS)
+        waiting = self.goal == "ambush" and all_out(state, here)
+        if self.parked_since is None:
+            if not waiting or crowd >= GATHER:
+                return False
+            self.parked_since, self.park_noted = now, now
+            self.game.parks += 1
+            self.log(event="park", phase="start", crowd=crowd, steps=self._ghost_steps(state, here))
+        reason = ("gathered" if crowd >= GATHER else "timeout" if now - self.parked_since > MAX_SECONDS
+                  else None if waiting else "no longer ambush with every ghost out")
+        if reason is None:
+            self.broker.steer(PUSH)  # push into the wall: stay put. No reflex while parked, on purpose
+            if now - self.park_noted > 2.0:
+                self.park_noted = now
+                self.log(event="park", phase="waiting", crowd=crowd, steps=self._ghost_steps(state, here))
+            return True
+        self.game.parked_seconds += now - self.parked_since
+        self.parked_since = None
+        facts = self._facts(state, image, SAFE_SPOT, "UP")
+        self.park_exit = self.rule.decide(facts, self.goal).direction
+        self.log(event="park", phase="leave", why=reason, crowd=crowd, exit=self.park_exit,
+                 steps=self._ghost_steps(state, here))
+        self._go(state, image, me, "UP", self.park_exit, "junction", "park-exit")
+        return True
+
+    @staticmethod
+    def _ghost_steps(state, here):
+        return sorted(here[g.tile] for n, g in state.ghosts.items()
+                      if not state.frightened[n] and not state.eyes[n] and g.tile in here)
 
     def _watch_for_pause(self, state, frame):
         """A ghost-sized score jump means a ghost was just eaten: the game freezes for about a second."""
@@ -235,6 +280,10 @@ class Player:
         if image[0x4E04 - 0x4000] != 3:  # READY screen, death animation, level transition
             self.broker.steer(None)
             self.plan, self.commit = {}, None
+            if self.parked_since is not None:  # the READY screen after a life lost while waiting at the safe spot
+                self.game.park_deaths += 1
+                self.log(event="park", phase="died")
+            self.parked_since = self.park_exit = None
             return None
 
         if time.time() - self.goal_at > self.strategy_interval:
@@ -250,6 +299,8 @@ class Player:
 
         self._watch_for_pause(state, frame)
         self._collect(state, image, frame)
+        if self._parking(state, image, state.pacman.tile):
+            return None
         now = time.time()
         self.plan = {k: p for k, p in self.plan.items() if now - p[2] < PLAN_TTL}  # drop stale answers
         maze = Maze(image)
@@ -293,7 +344,7 @@ class Player:
                                                      decision.source))
         elif junction is not None and steps == 0:
             # At the junction with no answer yet: a rule decides, and we count it as late.
-            facts = junction_facts(state, image, tile=junction, arriving=heading)
+            facts = junction_facts(state, image, tile=junction, arriving=heading, park=self.park)
             facts["mods"] = dict(self.mods)
             decision = self.rule.decide(facts, self.goal)
             self.plan[key] = (decision, self.goal, time.time())

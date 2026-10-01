@@ -14,6 +14,8 @@ class GameStats:
     def __init__(self):
         self.ghosts_eaten = self.fruit_eaten = self.fruit_missed = self.fruit_shown = 0
         self.energizers = self.deaths = self.reflexes = 0
+        self.parks = self.park_deaths = 0  # safe-spot waits, and deaths while parked
+        self.parked_seconds = 0.0
         self.feasts, self._feast = [], None  # ghosts eaten per energizer (a full feast is 4 = 3000 points)
         self.goal_seconds = {}
         self._prev, self._energizers_left, self._last_t = None, None, None
@@ -58,4 +60,5 @@ class GameStats:
                 "fruit_shown": self.fruit_shown, "fruit_missed": self.fruit_missed,
                 "energizers": self.energizers, "feasts": self.feasts + ([self._feast] if self._feast is not None else []),
                 "deaths": self.deaths, "reflexes": self.reflexes,
+                "parks": self.parks, "parked_seconds": round(self.parked_seconds), "park_deaths": self.park_deaths,
                 "goal_seconds": {k: round(v) for k, v in self.goal_seconds.items()}}
