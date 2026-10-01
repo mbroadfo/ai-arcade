@@ -71,8 +71,8 @@ Questions: does the game run at full speed on the Pi 3 under MAME 0.206, and how
 
 Exit: full speed, and a written estimate of decisions per second and the warning before each.
 
-Pac-Man: the agent export was cut to about 1 KB a frame (the maze only every 4th frame) to keep the Pi's per-frame
-cost small, but the measured speed was never written down; it should be, here. A junction comes up every few tiles at about 7.6 tiles a second, often only 1 to 3 tiles after the
+Pac-Man: the Pi 3 runs it at about 85% speed (51.4 emulated frames a second against the arcade's 60.6, from the
+v3 recording; `play.py` now records `emulated_fps` in every manifest). A junction comes up every few tiles at about 7.6 tiles a second, often only 1 to 3 tiles after the
 previous one, so the warning can be under 200 ms. That single fact explains most late answers (`seen_too_late`).
 
 ### Stage 1: controls
@@ -176,11 +176,17 @@ never choose:
 - **Ask ahead**: query a decision point before arriving (Pac-Man: `--lookahead 8` tiles).
 - **Chain**: when an answer arrives, ask about the decision point it leads to (`--chain 2`).
 - **Urgent lane**: questions whose answer is worthless a moment later jump the queue (`--danger-query`).
-- **Answer queue (planned)**: always hold an answer for the current and next decision point, so a late model answer
-  falls back on an earlier model answer, not on code.
+- **Check the decision points first.** In Pac-Man most "late" answers were corners seen mid-turn and mistaken for
+  junctions; no amount of asking ahead could have caught them. Count late decisions by tile type before tuning timing.
+- **Measure timing offline.** The replay (`tests/replay.py`) can answer with a serial server's latency, so a timing
+  idea is measured in seconds, not in a batch of games. An answer queue along every branch was tried that way and
+  dropped: no gain at 40-80 ms, a small loss at 200-250 ms.
+- **Late default**: `--late rule` lets the rule decide; `--late keep` changes nothing and waits for the model, which
+  with the reflex off is the model alone.
 
-Choose the model for the cadence. In v13, `tev1:0.8b` (80 ms) made 69% of Pac-Man's junction decisions itself;
-`nimble` (250 ms) made 31%, because 67% of its answers were late.
+Choose the model for the cadence. In v13, `tev1:0.8b` (80 ms) made 69% of Pac-Man's junction decisions itself (86%
+of the real junctions once corners are left out); `nimble` (250 ms) made 31%, because 67% of its answers were late.
+To judge a slow model's choices without the latency handicap, run the game slower (`start_pi_game.py --speed 0.5`).
 
 Exit: a model batch and a "model alone" batch (every `override` and `skill` off), both in the standard format.
 
@@ -257,7 +263,8 @@ to one; see `docs/REFACTOR_PLAN.md`.
 | Lesson | Evidence |
 |---|---|
 | Runs labelled "AI" can be entirely code | v2 to v12 used the rule decider; provenance was added to stop that happening silently |
-| Latency, not judgment, is the first wall | `nimble`: 67% of junction decisions late in v13. Junctions 1 to 3 tiles apart give no time to answer |
+| Check what counts as a decision before blaming latency | 83% of `tev1:0.8b`'s late decisions in v13 were corners mistaken for junctions |
+| Latency, not judgment, is the first wall for a slow model | `nimble`: 67% of junction decisions late in v13 (45% of those were corners) |
 | A smaller, faster model can beat a bigger one in real time | `tev1:0.8b` made 69% of its own moves vs 31% for `nimble`, at a similar score |
 | The reflex was doing much of the surviving | the same model with the reflex off: mean 2,373 vs 4,023 (v14 vs v13) |
 | Being asked is not the same as understanding | danger query, reflex off: asked 65 times, turned back once, carried on 47 times; no score gain |

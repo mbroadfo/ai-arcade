@@ -1,6 +1,8 @@
 # Refactor plan: from one game to many
 
-Status: proposed, 2026-10-01. Nothing in this plan has been done yet.
+Status, 2026-10-01: phase 0 done (`0cea045`); phase 1 done (`1dcfc91`, `43f8e04`, `15e08f0`) except `OutcomeStats`,
+which moves with the report in phase 2. `player.py` is 490 lines after phase 1, not the 300 estimated: what remains
+is mostly Pac-Man's own (holds, the danger query, the reflex).
 
 ## Why now
 
@@ -172,7 +174,7 @@ Behaviour-preserving. No new features.
 7. `OutcomeStats`: the game-independent half of `GameStats` (score, level, deaths, per-life log, boards). Pac-Man's
    `GameStats` keeps ghosts, fruit, energizers, feasts, parks, refuges and adds the outcome block.
 
-Done when: tests and the replay check pass unchanged; `player.py` is mostly Pac-Man (expected about 300 lines).
+Done when: tests and the replay check pass unchanged; `player.py` is mostly Pac-Man.
 
 ### Phase 2: games declare their switches and metrics; `play.py` becomes generic
 
@@ -237,10 +239,15 @@ Compare the three play loops. Extract a shared loop only if they share a real sh
 
 ## Sequencing with the model-first work
 
-The model-first work (the answer queue so the model is never late, park and hide and chase as model choices, the
+The model-first work (keeping the model from being late, park and hide and chase as model choices, the
 reflex as a measured option) would otherwise be built inside `player.py` and then moved. Doing phases 0 to 2 first puts
-it in the right place from the start: the answer queue belongs in `AnswerBook`, and new model choices are booked
-through the `Ledger`. Phases 3 to 5 can interleave with it.
+it in the right place from the start: asking ahead belongs in `AnswerBook`, and new model choices are booked through
+the `Ledger`. Phases 3 to 5 can interleave with it.
+
+Measured since: most late decisions were corners mistaken for junctions (fixed in `18371ae`). After that fix the
+replay with a serial model server answers 96-97% of junctions in time at 40-80 ms. An answer queue that asks ahead
+along every branch gained nothing there and slightly hurt at 200-250 ms (it loads the one-at-a-time server), so it
+was not kept. `--late keep` (`5e21701`) makes a model-alone run possible.
 
 ## What we deliberately do not build
 
