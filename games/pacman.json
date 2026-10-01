@@ -1,0 +1,432 @@
+{
+  "romset": "pacman",
+  "description": "Pac-Man (Midway)",
+  "controls": {
+    "player1": [
+      "DOWN",
+      "LEFT",
+      "RIGHT",
+      "UP"
+    ],
+    "player2": [
+      "DOWN",
+      "LEFT",
+      "RIGHT",
+      "UP"
+    ],
+    "coin_slots": [
+      1,
+      2
+    ],
+    "start_buttons": [
+      1,
+      2
+    ]
+  },
+  "analog_inputs": [],
+  "other_inputs": [
+    "Service 1",
+    "Rack Test (Cheat)",
+    "Cabinet",
+    "Service Mode",
+    "Difficulty",
+    "Ghost Names",
+    "Coinage",
+    "Bonus Life",
+    "Lives"
+  ],
+  "score_ram": [
+    {
+      "cpu": "maincpu",
+      "space": "program",
+      "address": 20104,
+      "length": 4
+    },
+    {
+      "cpu": "maincpu",
+      "space": "program",
+      "address": 17389,
+      "length": 6
+    },
+    {
+      "cpu": "maincpu",
+      "space": "program",
+      "address": 17361,
+      "length": 1
+    }
+  ],
+  "named_ram": [
+    {
+      "cpu": 0,
+      "address": 19988,
+      "value": 6,
+      "description": "Infinite Lives"
+    },
+    {
+      "cpu": 0,
+      "address": 19989,
+      "value": 5,
+      "description": "Infinite Lives (2/2)"
+    },
+    {
+      "cpu": 0,
+      "address": 19982,
+      "value": 244,
+      "description": "Finish this Level Now!"
+    },
+    {
+      "cpu": 0,
+      "address": 19978,
+      "value": 126,
+      "description": "Start at Strawberry"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 1,
+      "description": "Start at Strawberry (2/2)"
+    },
+    {
+      "cpu": 0,
+      "address": 19978,
+      "value": 127,
+      "description": "Start at 1st Orange"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 2,
+      "description": "Start at 1st Orange (2/2)"
+    },
+    {
+      "cpu": 0,
+      "address": 19978,
+      "value": 128,
+      "description": "Start at 2nd Orange"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 3,
+      "description": "Start at 2nd Orange (2/2)"
+    },
+    {
+      "cpu": 0,
+      "address": 19978,
+      "value": 129,
+      "description": "Start at 1st Apple"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 4,
+      "description": "Start at 1st Apple (2/2)"
+    },
+    {
+      "cpu": 0,
+      "address": 19978,
+      "value": 130,
+      "description": "Start at 2nd Apple"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 5,
+      "description": "Start at 2nd Apple (2/2)"
+    },
+    {
+      "cpu": 0,
+      "address": 19978,
+      "value": 131,
+      "description": "Start at 1st Pineapple"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 6,
+      "description": "Start at 1st Pineapple (2/2)"
+    },
+    {
+      "cpu": 0,
+      "address": 19978,
+      "value": 132,
+      "description": "Start at 2nd Pineapple"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 7,
+      "description": "Start at 2nd Pineapple (2/2)"
+    },
+    {
+      "cpu": 0,
+      "address": 19978,
+      "value": 133,
+      "description": "Start at 1st Galaxian"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 8,
+      "description": "Start at 1st Galaxian (2/2)"
+    },
+    {
+      "cpu": 0,
+      "address": 19978,
+      "value": 134,
+      "description": "Start at 2nd Galaxian"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 9,
+      "description": "Start at 2nd Galaxian (2/2)"
+    },
+    {
+      "cpu": 0,
+      "address": 19978,
+      "value": 135,
+      "description": "Start at 1st Bell"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 10,
+      "description": "Start at 1st Bell (2/2)"
+    },
+    {
+      "cpu": 0,
+      "address": 19978,
+      "value": 136,
+      "description": "Start at 2nd Bell"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 11,
+      "description": "Start at 2nd Bell (2/2)"
+    },
+    {
+      "cpu": 0,
+      "address": 19978,
+      "value": 135,
+      "description": "Start at 1st Key"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 12,
+      "description": "Start at 1st Key (2/2)"
+    },
+    {
+      "cpu": 0,
+      "address": 19978,
+      "value": 136,
+      "description": "Start at 2nd Key"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 13,
+      "description": "Start at 2nd Key (2/2)"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 0,
+      "description": "Practice Cherry"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 1,
+      "description": "Practice Strawberry"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 2,
+      "description": "Practice 1st Orange"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 3,
+      "description": "Practice 2nd Orange"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 4,
+      "description": "Practice 1st Apple"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 5,
+      "description": "Practice 2nd Apple"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 6,
+      "description": "Practice 1st Pineapple"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 7,
+      "description": "Practice 2nd Pineapple"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 8,
+      "description": "Practice 1st Galaxian"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 9,
+      "description": "Practice 2nd Galaxian"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 10,
+      "description": "Practice 1st Bell"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 11,
+      "description": "Practice 2nd Bell"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 12,
+      "description": "Practice 1st Key"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 13,
+      "description": "Practice 2nd Key"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 255,
+      "description": "Split-Screen (Unplayable)"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 254,
+      "description": "No maze or dots(Unfinishable)"
+    },
+    {
+      "cpu": 0,
+      "address": 19901,
+      "value": 0,
+      "description": "Stay blue until eaten"
+    },
+    {
+      "cpu": 0,
+      "address": 19902,
+      "value": 0,
+      "description": "Stay blue until eaten (2/2)"
+    },
+    {
+      "cpu": 0,
+      "address": 19901,
+      "value": 88,
+      "description": "Slow changeback"
+    },
+    {
+      "cpu": 0,
+      "address": 19902,
+      "value": 2,
+      "description": "Slow changeback (2/2)"
+    },
+    {
+      "cpu": 0,
+      "address": 19901,
+      "value": 104,
+      "description": "Moderate changeback"
+    },
+    {
+      "cpu": 0,
+      "address": 19902,
+      "value": 1,
+      "description": "Moderate changeback (2/2)"
+    },
+    {
+      "cpu": 0,
+      "address": 19901,
+      "value": 240,
+      "description": "Quick changeback"
+    },
+    {
+      "cpu": 0,
+      "address": 19902,
+      "value": 0,
+      "description": "Quick changeback (2/2)"
+    },
+    {
+      "cpu": 0,
+      "address": 19901,
+      "value": 120,
+      "description": "Lightning changeback"
+    },
+    {
+      "cpu": 0,
+      "address": 19902,
+      "value": 0,
+      "description": "Lightning changeback (2/2)"
+    },
+    {
+      "cpu": 0,
+      "address": 19901,
+      "value": 1,
+      "description": "No change to blue"
+    },
+    {
+      "cpu": 0,
+      "address": 19902,
+      "value": 0,
+      "description": "No change to blue (2/2)"
+    },
+    {
+      "cpu": 0,
+      "address": 19879,
+      "value": 1,
+      "description": "Red always blue"
+    },
+    {
+      "cpu": 0,
+      "address": 19880,
+      "value": 1,
+      "description": "Pink always blue"
+    },
+    {
+      "cpu": 0,
+      "address": 19881,
+      "value": 1,
+      "description": "Green always blue"
+    },
+    {
+      "cpu": 0,
+      "address": 19882,
+      "value": 1,
+      "description": "Orange always blue"
+    },
+    {
+      "cpu": 0,
+      "address": 19877,
+      "value": 0,
+      "description": "Ghosts Always Edible (No Pts)"
+    }
+  ]
+}

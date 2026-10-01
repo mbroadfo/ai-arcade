@@ -5,19 +5,18 @@ HOST = "192.168.10.155"
 USER = "pi"
 KEY = os.path.expanduser("~/.ssh/id_rsa")
 
+# Tokens verified with tools/probe_mame_input.py: button 8 -> BUTTON9, button 9 -> BUTTON10.
 CFG = """<?xml version="1.0"?>
 <mameconfig version="10">
     <system name="default">
         <input>
 
-            <mapdevice device="AIArcadePlayer1" controller="JOYCODE_1" />
-
             <port type="COIN1">
-                <newseq type="standard">JOYCODE_1_SELECT</newseq>
+                <newseq type="standard">JOYCODE_1_BUTTON9</newseq>
             </port>
 
             <port type="START1">
-                <newseq type="standard">JOYCODE_1_START</newseq>
+                <newseq type="standard">JOYCODE_1_BUTTON10</newseq>
             </port>
 
             <port type="P1_JOYSTICK_UP">
@@ -63,6 +62,13 @@ try:
 
     with sftp.file(path, "w") as f:
         f.write(CFG)
+
+    # A per-game cfg overrides the controller profile; drop the failed hand-written one.
+    try:
+        sftp.remove("/home/pi/.mame/cfg/pacman.cfg")
+        print("Removed stale /home/pi/.mame/cfg/pacman.cfg")
+    except OSError:
+        pass
 
     sftp.close()
     print("Wrote:", path)
