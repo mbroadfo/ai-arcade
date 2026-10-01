@@ -256,3 +256,37 @@ def test_a_turn_back_is_logged_with_its_reason_and_what_was_around():
     log.truncate(0), log.seek(0)
     player._go(st, IMAGE, st.pacman.tile, heading, opposite, "junction", "late-rule")
     assert log.getvalue() == ""  # already going that way: not a reversal
+
+
+def test_the_chase_pull_drops_at_every_step_so_the_shortest_route_always_wins():
+    pulls = [features.chase_pull(s) for s in range(0, 45)]
+    assert all(a > b for a, b in zip(pulls, pulls[1:]))
+    assert pulls[0] - pulls[1] > 0.2 and pulls[20] - pulls[21] > 0.1  # still steep far away
+
+
+def test_while_hunting_a_turn_back_toward_the_ghost_needs_a_clear_gain():
+    def opt(steps, reverse):
+        return {"food_steps": None, "threat_steps": None, "edible_steps": steps, "fruit_steps": None,
+                "energizer_steps": None, "room": 10, "reverse": reverse, "pressure": None, "ghosts_close": 0}
+    ahead, back = opt(10, False), opt(9, True)  # one step nearer by turning round: not worth it
+    assert features.score_option("hunt_ghosts", ahead) > features.score_option("hunt_ghosts", back)
+    assert features.score_option("hunt_ghosts", opt(10, False)) < features.score_option("hunt_ghosts", opt(3, True))
+
+
+def test_a_blue_ghost_is_aimed_at_where_it_is_heading_not_where_it_was():
+    from dataclasses import replace
+    from games.arcade.pacman.maze import Maze, step
+    from games.arcade.pacman.state import decode
+    from pathlib import Path
+    image = (Path(__file__).parent / "fixtures" / "pacman_play_ram.bin").read_bytes()
+    maze = Maze(image)
+    ghost = next(g for g in decode(image).ghosts.values())
+    tile = next(t for t in ((l, h) for l in range(0x20, 0x40) for h in range(0x1E, 0x3E))
+                if maze.passable(t) and all(maze.passable(step(t, "LEFT" if i == 0 else "LEFT")) for i in range(1)))
+    run = [tile]
+    while maze.passable(step(run[-1], "LEFT")) and len(run) < 8:
+        run.append(step(run[-1], "LEFT"))
+    ghost = replace(ghost, tile=run[0], direction="left")
+    assert features.intercept_tile(maze, ghost, 0) == run[0]
+    far = features.intercept_tile(maze, ghost, 2 * (len(run) - 1))
+    assert far == run[-1] and run[-1] != run[0]  # led along its heading, stopped at the wall

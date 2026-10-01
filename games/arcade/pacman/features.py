@@ -7,6 +7,7 @@ from .goals import GOALS, WEIGHTS  # noqa: F401  (GOALS re-exported for deciders
 from .maze import ENERGIZER, LOWER_TO_UPPER, MOVES, OPPOSITE, Maze, step
 
 ROOM_RADIUS = 8
+GHOST_PACE = 0.5  # a blue ghost moves about half as fast as Pac-Man: it covers this many tiles per tile he covers
 
 
 def ghost_modes(state):
@@ -14,6 +15,19 @@ def ghost_modes(state):
         name: "eyes" if state.eyes[name] else "frightened" if state.frightened[name] else "normal"
         for name in state.ghosts
     }
+
+
+def intercept_tile(maze, ghost, distance):
+    """Where a blue ghost will probably be when Pac-Man gets there: on along its heading, a tile for every
+    1/GHOST_PACE tiles Pac-Man still has to cover. Stops at a wall (the ghost turns there, we cannot know where)."""
+    heading = LOWER_TO_UPPER.get(ghost.direction)
+    tile = ghost.tile
+    for _ in range(round(distance * GHOST_PACE)):
+        nxt = step(tile, heading) if heading else tile
+        if not maze.passable(nxt):
+            break
+        tile = nxt
+    return tile
 
 
 def option_facts(maze, state, modes, tile, direction):
@@ -25,8 +39,11 @@ def option_facts(maze, state, modes, tile, direction):
     food = [d for t, d in dist.items() if maze.has_food(t)]
     threats = [dist[g.tile] + 1 for name, g in state.ghosts.items()
                if modes[name] == "normal" and g.tile in dist]
-    edible = [dist[g.tile] + 1 for name, g in state.ghosts.items()
-              if modes[name] == "frightened" and g.tile in dist]
+    edible = []
+    for name, g in state.ghosts.items():
+        if modes[name] == "frightened" and g.tile in dist:
+            meet = intercept_tile(maze, g, dist[g.tile])
+            edible.append(dist.get(meet, dist[g.tile]) + 1)
     energizers = [d for t, d in dist.items() if maze.code(t) == ENERGIZER]
     fruit = dist.get(tuple(state.fruit_tile)) if state.fruit_tile else None
     return {
@@ -112,11 +129,18 @@ LURE_RADIUS = 9  # ambush: eat the energizer when 2+ normal ghosts are this clos
 LURE_PANIC = 4
 HOVER_STEPS = 4  # ambush: wait about this many steps from the energizer until the ghosts have closed in
 FOOD_REACH = 45  # food pull is linear in distance up to this, so far-away dots still attract
+CHASE_REACH = 40  # a blue ghost's pull is linear up to this many steps: every step closer is worth the same
+HUNT_TURN_BACK = 1.2  # while hunting, reversing needs a clear gain: dithering between two routes loses the ghost
 
 
 def food_pull(steps):
     """Strictly decreasing in distance everywhere: near dots count most, far dots still beat no progress."""
     return 3.0 / (1 + steps) + 0.04 * (FOOD_REACH - min(steps, FOOD_REACH))
+
+
+def chase_pull(steps):
+    """Strictly decreasing in distance, steeply: the shortest route to the ghost always wins."""
+    return 6.0 / (1 + steps) + 0.12 * (CHASE_REACH - min(steps, CHASE_REACH))
 
 
 def lure_score(option):
@@ -143,7 +167,7 @@ def score_option(goal, option):
     if pressure is not None and pressure <= ROOM_PRESSURE:  # no ghost near: where there is room is irrelevant
         score += w_room * min(option["room"], 30) / 30.0 * 3.0
     if option["edible_steps"] is not None:
-        score += w_edible * 4.0 / (1 + option["edible_steps"])
+        score += w_edible * (chase_pull(option["edible_steps"]) if w_edible > 0 else 4.0 / (1 + option["edible_steps"]))
     if option.get("fruit_steps") is not None:
         score += w_fruit * 4.0 / (1 + option["fruit_steps"])
     if w_energizer and option.get("energizer_steps") is not None and option["edible_steps"] is None:
@@ -151,5 +175,5 @@ def score_option(goal, option):
     if w_lure and option.get("energizer_steps") is not None:
         score += w_lure * lure_score(option)
     if option["reverse"]:
-        score -= 0.3
+        score -= HUNT_TURN_BACK if goal == "hunt_ghosts" and option["edible_steps"] is not None else 0.3
     return score
