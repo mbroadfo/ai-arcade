@@ -19,14 +19,26 @@ Both are on the Pi already. Pac-Man check: cheat.dat `4E14`/`4E15` = lives and `
 all matching our independent validation. Caveats: coverage varies by game; cheat.dat targets older MAME drivers,
 so addresses should be re-validated on 0.206; it rarely names positions or enemies.
 
-## Layer 2 - Experiment-driven discovery (semi-automatic, to build)
+## Layer 2 - Experiment-driven discovery (built: `tools/discover_state.py`)
 
-For anything unnamed, drive scripted actions through the broker and watch RAM (`mame_state_export.lua`
-streams any regions listed in `regions.lua`; `ram_experiment.py` shows the change-diff idea):
-- coin -> a byte that increments (credits), start -> credits decrement, mode byte changes;
-- hold a direction -> byte pairs that change monotonically with direction sign (player position);
-- repeat idle runs to subtract noise; keep only candidates stable across runs.
-Output candidates with a confidence score; a human or LLM confirms and the result is saved as a profile.
+`python tools/discover_state.py <romset>` runs a scripted session through the broker (attract idle, coin, start,
+4x each direction hold, then idle until lives are lost) while `mame_snapshot_service.lua` dumps the whole
+address space on request (about one snapshot per second, no per-frame cost). It then ranks candidates:
+
+| Signal | Rule | Pac-Man result (known truth) |
+|---|---|---|
+| Credits | stable in attract, rises on coin, drops by 1 on start | found `4E6E` + 3 false positives |
+| Lives | starts 1-9, steps down by exactly 1 (mod 256) before it first rises | found `4E14`, `4E15` (+ 5 false positives); cheat.dat names both |
+| Score / progress | constant while idle, changes in 3+ play intervals, mostly upward (binary or BCD) | found `4E80/81`, `4E88/89`, `4E0E`, and on-screen score digits |
+| Position | byte deltas flip sign between opposite holds; low on the other axis | truth (`4D09` `4D3A` horizontal, `4D08` `4D39` vertical) is in the top 12, mixed with ghost and sprite bytes |
+
+Notes learned from running it:
+- Hardware mirrors RAM (`4Cxx`=`6Cxx`=`CCxx`=`ECxx`); candidates are collapsed only when the bytes around them match in every snapshot.
+- Position is the weakest signal: ghosts chase the player, so their bytes correlate with the input.
+  Treat position output as a shortlist to confirm, not an answer.
+- Cheat-DB anchors are attached to candidates automatically when present.
+- `--save`/`--load` keep the raw snapshots so heuristics can be tuned offline without replaying the game.
+- Assumes a game with coin/start and a directional controller; games needing other inputs need a different script.
 
 ## Layer 3 - Fallback: pixels
 

@@ -1,0 +1,190 @@
+{
+  "credits": [
+    "0x41F2",
+    "0x4DD6",
+    "0x4E03",
+    "0x4E6E"
+  ],
+  "lives": [
+    {
+      "addr": "0x4D1C",
+      "start": 1,
+      "end": 255,
+      "drops": 2
+    },
+    {
+      "addr": "0x4D1E",
+      "start": 1,
+      "end": 255,
+      "drops": 2
+    },
+    {
+      "addr": "0x4D22",
+      "start": 1,
+      "end": 255,
+      "drops": 2
+    },
+    {
+      "addr": "0x4D26",
+      "start": 1,
+      "end": 255,
+      "drops": 2
+    },
+    {
+      "addr": "0x4D45",
+      "start": 2,
+      "end": 0,
+      "drops": 2
+    },
+    {
+      "addr": "0x4E14 [cheat.dat: Infinite Lives]",
+      "start": 2,
+      "end": 0,
+      "drops": 2
+    },
+    {
+      "addr": "0x4E15 [cheat.dat: Infinite Lives (2/2)]",
+      "start": 1,
+      "end": 255,
+      "drops": 2
+    }
+  ],
+  "position_horizontal": [
+    {
+      "addr": "0x4C06",
+      "axis_score": 0.5
+    },
+    {
+      "addr": "0x4C1A",
+      "axis_score": 0.5
+    },
+    {
+      "addr": "0x4C3A",
+      "axis_score": 0.5
+    },
+    {
+      "addr": "0x4C8C",
+      "axis_score": 0.5
+    },
+    {
+      "addr": "0x4D09",
+      "axis_score": 0.5
+    },
+    {
+      "addr": "0x4D1D",
+      "axis_score": 0.5
+    },
+    {
+      "addr": "0x4D27",
+      "axis_score": 0.5
+    },
+    {
+      "addr": "0x4D3A",
+      "axis_score": 0.5
+    },
+    {
+      "addr": "0x4DCF",
+      "axis_score": 0.5
+    },
+    {
+      "addr": "0x4EC0",
+      "axis_score": -0.5
+    },
+    {
+      "addr": "0x4FAA",
+      "axis_score": 0.5
+    }
+  ],
+  "position_vertical": [
+    {
+      "addr": "0x4C8B",
+      "axis_score": 0.75
+    },
+    {
+      "addr": "0x4C0A",
+      "axis_score": 0.625
+    },
+    {
+      "addr": "0x4C1B",
+      "axis_score": 0.625
+    },
+    {
+      "addr": "0x4C3B",
+      "axis_score": 0.625
+    },
+    {
+      "addr": "0x4D08",
+      "axis_score": -0.625
+    },
+    {
+      "addr": "0x4D1C",
+      "axis_score": -0.625
+    },
+    {
+      "addr": "0x4D26",
+      "axis_score": -0.625
+    },
+    {
+      "addr": "0x4D39",
+      "axis_score": -0.625
+    },
+    {
+      "addr": "0x43EE",
+      "axis_score": -0.5
+    },
+    {
+      "addr": "0x43F8",
+      "axis_score": -0.5
+    },
+    {
+      "addr": "0x4C24",
+      "axis_score": -0.5
+    },
+    {
+      "addr": "0x4D23",
+      "axis_score": 0.5
+    }
+  ],
+  "progress_counters": [
+    {
+      "addr": "0x43D9",
+      "changed_intervals": 10
+    },
+    {
+      "addr": "0x43EF",
+      "changed_intervals": 3
+    },
+    {
+      "addr": "0x43F9",
+      "changed_intervals": 3
+    },
+    {
+      "addr": "0x4D9E",
+      "changed_intervals": 8
+    },
+    {
+      "addr": "0x4D9F",
+      "changed_intervals": 6
+    },
+    {
+      "addr": "0x4E0E [cheat.dat: Finish this Level Now!]",
+      "changed_intervals": 7
+    },
+    {
+      "addr": "0x4E80",
+      "changed_intervals": 7
+    },
+    {
+      "addr": "0x4E81",
+      "changed_intervals": 3
+    },
+    {
+      "addr": "0x4E88",
+      "changed_intervals": 7
+    },
+    {
+      "addr": "0x4E89",
+      "changed_intervals": 3
+    }
+  ]
+}
