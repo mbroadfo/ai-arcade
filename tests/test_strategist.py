@@ -1,7 +1,7 @@
 import threading
 import time
 
-from strategist import MockStrategistClient, Strategist, build_questions, parse_reply
+from arcadekit.strategist import MockStrategistClient, Strategist, build_questions, parse_reply
 
 SCHEMA = {
     "instructions": "Advise.",

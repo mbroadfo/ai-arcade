@@ -55,7 +55,7 @@ def simulate(image, start, heading, goal="clear_dots", max_steps=600, decider=No
         junction, steps, path = maze.walk_to_decision(me, heading)
         if junction is not None and steps == 0:
             facts = junction_facts(state, image, tile=me, arriving=heading)
-            move = decider.decide(facts, goal).direction
+            move = decider.decide(facts, goal).choice
         elif path:
             move = path[0]
         else:

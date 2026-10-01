@@ -21,7 +21,7 @@ import _bootstrap  # noqa: F401
 from games.arcade.pacman.deciders import RuleDecider, describe_option
 from games.arcade.pacman.features import GOALS, junction_facts, render_text
 from games.arcade.pacman.state import decode
-from systemone import DEFAULT_HOST
+from arcadekit.systemone import DEFAULT_HOST
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -118,7 +118,7 @@ def main():
         passed += ok
         probs = {k: round(v, 2) for k, v in answer["probabilities"].items()}
         print(f"  [{'PASS' if ok else 'FAIL'}] {name}: chose {answer['choice']} {probs} "
-              f"(rule would choose {rule.decide(case, goal).direction})")
+              f"(rule would choose {rule.decide(case, goal).choice})")
     print(f"  {passed}/{len(scenarios(facts))} passed")
 
     probs_total = sum(data["answers"]["direction"]["probabilities"].values())

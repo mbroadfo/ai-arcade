@@ -207,7 +207,7 @@ class Player:
         self._book(hold)
         if hold["kind"] == "refuge":
             self.refuge_cooldown = now + 8.0  # do not run straight back
-        hold["exit"] = self.rule.decide(self._facts(state, image, me, hold["push"]), self.goal).direction
+        hold["exit"] = self.rule.decide(self._facts(state, image, me, hold["push"]), self.goal).choice
         self.log(event=hold["kind"], phase="leave", why=reason, exit=hold["exit"], steps=steps)
         self._go(state, image, me, hold["push"], hold["exit"], "junction", "hold-exit")
         return True
@@ -272,7 +272,7 @@ class Player:
         self.stats["moves"][by] = self.stats["moves"].get(by, 0) + 1
         age = None if answered_at is None else round(self.clock() - answered_at, 2)
         self.log(event="move", tile=list(key[0]), arriving=key[1], goal=self.goal, mods=dict(self.mods),
-                 proposed=decision.direction, source=decision.source, confidence=round(decision.confidence, 2),
+                 proposed=decision.choice, source=decision.source, confidence=round(decision.confidence, 2),
                  latency_ms=round(decision.latency_ms), age_s=age, executed=final, by=by, late=late)
 
     def _watch_for_pause(self, state, frame):
@@ -310,16 +310,16 @@ class Player:
             self.sources[decision.source] = self.sources.get(decision.source, 0) + 1
             depth = self.depth.get(key, 0)
             self.log(event="decision", tile=list(key[0]), arriving=key[1], goal=goal,
-                     direction=decision.direction, source=decision.source,
+                     direction=decision.choice, source=decision.source,
                      confidence=round(decision.confidence, 3), latency_ms=round(decision.latency_ms),
                      probabilities=decision.probabilities, note=decision.note, chain=depth)
             if depth >= limit:
                 continue
-            nxt = step(key[0], decision.direction)
-            junction, steps, path = Maze(image).walk_to_decision(nxt, decision.direction)
+            nxt = step(key[0], decision.choice)
+            junction, steps, path = Maze(image).walk_to_decision(nxt, decision.choice)
             if junction is None or steps > CHAIN_MAX_STEPS:
                 continue
-            key2 = (junction, path[-1] if path else decision.direction)
+            key2 = (junction, path[-1] if path else decision.choice)
             if key2 not in self.plan and not self.worker.pending(key2):
                 if self.worker.submit(key2, self.goal, self._facts(state, image, junction, key2[1])):
                     self.depth[key2] = depth + 1
@@ -343,13 +343,13 @@ class Player:
             drift = abs(me[0] - asked_tile[0]) + abs(me[1] - asked_tile[1])
             if now - finished_at > MAX_AGE or heading != asked_heading or drift > MAX_DRIFT:
                 self.stats["danger"]["dropped"] += 1  # too late to matter
-            elif decision.direction == OPPOSITE[heading]:
+            elif decision.choice == OPPOSITE[heading]:
                 self.stats["danger"]["turned_back"] += 1
                 self.stats["moves"]["model-danger"] = self.stats["moves"].get("model-danger", 0) + 1
                 self.log(event="danger", phase="turn back", tile=list(me), heading=heading, source=decision.source,
                          confidence=round(decision.confidence, 2), latency_ms=round(decision.latency_ms),
                          age_s=round(now - finished_at, 2))
-                self.broker.steer(decision.direction)
+                self.broker.steer(decision.choice)
                 steered = True
             else:
                 self.stats["danger"]["carried_on"] += 1
@@ -483,7 +483,7 @@ class Player:
             if first:
                 self.applied.add(key)
                 self.stats["on_time"] += 1
-            final = self._go(state, image, junction, arriving, decision.direction, "junction", decision.source)
+            final = self._go(state, image, junction, arriving, decision.choice, "junction", decision.source)
             if first:
                 self._book_move(key, decision, final, answered_at=answered_at)
             self.commit = (tuple(junction), final)
@@ -498,8 +498,8 @@ class Player:
             self.stats["late_rule"] += 1
             why = self._late_reason(key, asked_now)
             self.stats["late_why"][why] = self.stats["late_why"].get(why, 0) + 1
-            self.log(event="late", tile=list(junction), direction=decision.direction, why=why, steps_seen=steps)
-            final = self._go(state, image, junction, heading, decision.direction, "junction", "late-rule")
+            self.log(event="late", tile=list(junction), direction=decision.choice, why=why, steps_seen=steps)
+            final = self._go(state, image, junction, heading, decision.choice, "junction", "late-rule")
             self._book_move(key, decision, final, label="code-late", late=why)
             self.commit = (tuple(junction), final)
         elif path:

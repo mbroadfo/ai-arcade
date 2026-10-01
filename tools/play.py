@@ -11,13 +11,14 @@ import sys
 import time
 from pathlib import Path
 
+from gamelib import DEFAULT_GAME, ROOT, load_game  # first: puts the repository root on sys.path
+
+from arcadekit.decisions import DecisionWorker
+from arcadekit.manifest import build_manifest
+from arcadekit.strategist import MockStrategistClient, Strategist
+from arcadekit.systemone import DEFAULT_HOST, MockSystemOne, OllamaSystemOne
 from broker_link import BrokerLink
-from decision_worker import DecisionWorker
-from gamelib import DEFAULT_GAME, ROOT, load_game
-from run_manifest import build_manifest
 from state_client import StateStream
-from strategist import MockStrategistClient, Strategist
-from systemone import DEFAULT_HOST, MockSystemOne, OllamaSystemOne
 
 
 def build_decider(game, args):

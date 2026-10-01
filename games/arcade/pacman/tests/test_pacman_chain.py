@@ -79,7 +79,7 @@ def test_each_answer_asks_about_the_junction_it_leads_to():
     assert len(keys) == 1 + player.CHAIN_DEPTH  # the first question plus the chain, no more
     maze = Maze(IMAGE)
     for (tile, arriving), nxt in zip(keys, keys[1:]):
-        direction = p.plan[(tile, arriving)][0].direction
+        direction = p.plan[(tile, arriving)][0].choice
         assert nxt[0] == maze.walk_to_decision(step(tile, direction), direction)[0]
 
 

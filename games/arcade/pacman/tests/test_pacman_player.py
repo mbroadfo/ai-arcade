@@ -1,7 +1,7 @@
 from pathlib import Path
 import sys
 
-import systemone
+from arcadekit import systemone
 from games.arcade.pacman import deciders
 from games.arcade.pacman import features as pf
 from games.arcade.pacman.maze import Maze
@@ -36,7 +36,7 @@ def test_ghosts_in_the_house_have_no_path_distance():
 
 
 def test_rule_decider_picks_an_available_option():
-    assert deciders.RuleDecider().decide(facts(), "clear_dots").direction in facts()["options"]
+    assert deciders.RuleDecider().decide(facts(), "clear_dots").choice in facts()["options"]
 
 
 def test_mock_model_returns_normalised_probabilities_and_respects_latency():
@@ -45,7 +45,7 @@ def test_mock_model_returns_normalised_probabilities_and_respects_latency():
     decision = d.decide(facts(), "clear_dots")
     assert decision.source == "model"
     assert abs(sum(decision.probabilities.values()) - 1) < 1e-9
-    assert decision.direction in facts()["options"]
+    assert decision.choice in facts()["options"]
 
 
 class Broken:

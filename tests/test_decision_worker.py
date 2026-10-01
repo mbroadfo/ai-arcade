@@ -1,7 +1,7 @@
 import threading
 import time
 
-from decision_worker import DecisionWorker
+from arcadekit.decisions import DecisionWorker
 
 
 class Decider:

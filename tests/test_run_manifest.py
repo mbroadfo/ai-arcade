@@ -3,7 +3,7 @@ import json
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-from run_manifest import SWITCHES, build_manifest, model_digest
+from arcadekit.manifest import SWITCHES, build_manifest, model_digest
 
 
 def args(**kw):

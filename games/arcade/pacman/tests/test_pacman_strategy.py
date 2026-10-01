@@ -31,7 +31,7 @@ class FakeStrategist:
 
 
 def advice(goal, **mods):
-    from strategist import Advice
+    from arcadekit.strategist import Advice
     return Advice(goal, mods, 0.9, 20.0, 0.0)
 
 
