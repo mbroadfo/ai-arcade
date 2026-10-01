@@ -12,6 +12,8 @@ The stream, broker link and decision worker are passed in (they are general tool
 import json
 import time
 
+from arcadekit.ledger import SOURCE_BY, Ledger
+
 from .danger import ASK_EVERY, MAX_AGE, MAX_DRIFT, danger_facts
 from .deciders import RuleDecider
 from .events import GameStats
@@ -74,10 +76,11 @@ class Player:
         self.game = GameStats()  # what happened in the current game
         self.last_reflex = (None, 0.0)
         self.stats = {"on_time": 0, "late_rule": 0, "queries": 0, "chained": 0, "revised": 0,
-                      "late_why": {}, "moves": {},
+                      "late_why": {},
                       "danger": {"asked": 0, "answered": 0, "dropped": 0, "turned_back": 0, "carried_on": 0}}  # moves: executed junction decisions by who made them
         self.last_how = None  # how the last _go() changed the proposed direction: None, "revise" or "reflex"
         self.latencies, self.sources = [], {}
+        self.ledger = Ledger(self.log)  # who executed each move (arcadekit.ledger)
 
     def log(self, **record):
         record["t"] = round(self.clock(), 3)
@@ -236,7 +239,7 @@ class Player:
         else:
             self.game.refuges += 1
         self.log(event=kind, phase="start", tile=list(tile), steps=self._ghost_steps(state, here))
-        self.stats["moves"]["code-hold"] = self.stats["moves"].get("code-hold", 0) + 1
+        self.ledger.count("code-skill", kind)
         return True
 
     def _refuge_run(self, state, image, me):
@@ -248,7 +251,7 @@ class Player:
             return False
         if self.clock() - self.refuge_ran_at > 2.0:
             self.log(event="refuge", phase="run", tile=list(me), direction=direction)
-            self.stats["moves"]["code-hold"] = self.stats["moves"].get("code-hold", 0) + 1
+            self.ledger.count("code-skill", "refuge")
         self.refuge_ran_at = self.clock()
         self.broker.steer(direction)
         return True
@@ -258,22 +261,17 @@ class Player:
         return sorted(here[g.tile] for n, g in state.ghosts.items()
                       if not state.frightened[n] and not state.eyes[n] and g.tile in here)
 
-    MOVE_LABELS = {"model": "model", "rule": "rule", "fallback": "code-fallback"}
-
-    def _book_move(self, key, decision, final, label=None, late=None, answered_at=None):
-        """One record per junction decision: who proposed the direction, who executed it, how old the answer was.
-
-        by: model (the model's answer, executed as given), rule (the rule decider: the control), code-fallback (the
-        model failed or was unsure and the rule decided), code-late (no answer in time, the rule decided), reflex-override
-        or code-revise (code changed the proposal), code-hold (a park or refuge). Forced single-exit corners are
-        mechanical and not counted."""
-        by = ({"reflex": "reflex-override", "revise": "code-revise"}.get(self.last_how) or label
-              or self.MOVE_LABELS.get(decision.source, decision.source))
-        self.stats["moves"][by] = self.stats["moves"].get(by, 0) + 1
+    def _book_move(self, key, decision, final, late=None, answered_at=None):
+        """One record per junction decision: who proposed the direction, who executed it, how old the answer was
+        (arcadekit.ledger has the vocabulary). Forced single-exit corners are mechanical and not booked."""
+        if self.last_how:  # the reflex or a revision changed the proposal
+            by, via = "code-override", self.last_how
+        else:
+            by, via = ("code-late" if late else SOURCE_BY[decision.source]), "junction"
         age = None if answered_at is None else round(self.clock() - answered_at, 2)
-        self.log(event="move", tile=list(key[0]), arriving=key[1], goal=self.goal, mods=dict(self.mods),
-                 proposed=decision.choice, source=decision.source, confidence=round(decision.confidence, 2),
-                 latency_ms=round(decision.latency_ms), age_s=age, executed=final, by=by, late=late)
+        self.ledger.book(by, via, tile=list(key[0]), arriving=key[1], goal=self.goal, mods=dict(self.mods),
+                         proposed=decision.choice, source=decision.source, confidence=round(decision.confidence, 2),
+                         latency_ms=round(decision.latency_ms), age_s=age, executed=final, late=late)
 
     def _watch_for_pause(self, state, frame):
         """A ghost-sized score jump means a ghost was just eaten: the game freezes for about a second."""
@@ -345,7 +343,7 @@ class Player:
                 self.stats["danger"]["dropped"] += 1  # too late to matter
             elif decision.choice == OPPOSITE[heading]:
                 self.stats["danger"]["turned_back"] += 1
-                self.stats["moves"]["model-danger"] = self.stats["moves"].get("model-danger", 0) + 1
+                self.ledger.count(SOURCE_BY[decision.source], "danger")
                 self.log(event="danger", phase="turn back", tile=list(me), heading=heading, source=decision.source,
                          confidence=round(decision.confidence, 2), latency_ms=round(decision.latency_ms),
                          age_s=round(now - finished_at, 2))
@@ -500,7 +498,7 @@ class Player:
             self.stats["late_why"][why] = self.stats["late_why"].get(why, 0) + 1
             self.log(event="late", tile=list(junction), direction=decision.choice, why=why, steps_seen=steps)
             final = self._go(state, image, junction, heading, decision.choice, "junction", "late-rule")
-            self._book_move(key, decision, final, label="code-late", late=why)
+            self._book_move(key, decision, final, late=why)
             self.commit = (tuple(junction), final)
         elif path:
             if self.danger_query and self._danger(state, image, me, heading):

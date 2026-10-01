@@ -78,17 +78,18 @@ to see the model alone, and without `--danger-query` to see what the reflex cont
 A result can only be claimed for the AI if the AI made the moves. Every run therefore records, per junction decision, who
 proposed the direction and who executed it (forced single-exit corners are mechanical and not counted):
 
-| `by` | Meaning |
-|---|---|
-| `model` | the model's answer, executed as given |
-| `rule` | the rule decider (the control, L4) |
-| `code-fallback` | the model failed or was unsure, the rule decided |
-| `code-late` | no answer in time, the rule decided; `late` says why (`seen_too_late`, `in_flight`, `other_arrival`, `not_asked`) |
-| `reflex-override` / `code-revise` | code changed the proposed direction |
-| `code-hold` | a park or the refuge (code-triggered until the model gets those choices) |
+| `by` | `via` | Meaning |
+|---|---|---|
+| `model` | `junction`, `danger` | the model's answer, executed as given |
+| `rule` | `junction` | the rule decider (the control, L4) |
+| `code-fallback` | `junction`, `danger` | the model failed or was unsure, the rule decided |
+| `code-late` | `junction` | no answer in time, the rule decided; `late` says why (`seen_too_late`, `in_flight`, `other_arrival`, `not_asked`) |
+| `code-override` | `reflex`, `revise` | code changed the proposed direction |
+| `code-skill` | `park`, `refuge` | a park or the refuge (code-triggered until the model gets those choices) |
 
-The decision log has one `move` event per decision (proposed, source, confidence, latency, the answer's age when used,
-executed, `by`, `late`), and every log line carries the `frame` so it lines up with a recording. The run summary prints
+The vocabulary is `arcadekit/ledger.py`, shared by every game. Logs written before it (up to v15) used `reflex-override`,
+`code-revise`, `code-hold` and `model-danger`; `OLD_LABELS` there maps them. The decision log has one `move` event per
+decision (proposed, source, confidence, latency, the answer's age when used, executed, `by`, `via`, `late`), and every log line carries the `frame` so it lines up with a recording. The run summary prints
 the counts and "The model's own: N%". Each run also writes `<label>-manifest.json`: git commit and whether the tree was
 dirty, game, decider and model (with the Ollama digest), knowledge rung, goal, strategist, every switch, seed, games asked.
 Each game's result carries `lives` (seconds, score earned and dots for every life), `boards_cleared`, `dots_total` and

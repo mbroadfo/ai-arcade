@@ -136,7 +136,7 @@ def test_a_turn_back_answer_is_executed_and_booked_as_the_models_move():
     p.tick()  # asks
     p.tick()  # the answer is in: turn back
     assert steer.sent[-1] == OPPOSITE[HEADING]
-    assert p.stats["danger"]["turned_back"] == 1 and p.stats["moves"]["model-danger"] == 1
+    assert p.stats["danger"]["turned_back"] == 1 and p.ledger.counts == {("model", "danger"): 1}
     event = danger_events(log)[0]
     assert event["phase"] == "turn back" and event["source"] == "model" and event["latency_ms"] == 40
 

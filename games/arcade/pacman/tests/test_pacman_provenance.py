@@ -35,9 +35,9 @@ def test_a_model_answer_that_arrives_in_time_is_booked_as_the_models_move_with_i
     p.was_playing = True  # a new game would clear the plan
     p.plan[(junction, arriving)] = (Decision(exits[0], "model", 0.9, 120.0), "clear_dots", time.time() - 0.3)
     p.tick()
-    assert p.stats["moves"] == {"model": 1}
+    assert p.ledger.counts == {("model", "junction"): 1}
     record = moves(log)[0]
-    assert (record["by"], record["proposed"], record["executed"]) == ("model", exits[0], exits[0])
+    assert (record["by"], record["via"], record["proposed"], record["executed"]) == ("model", "junction", exits[0], exits[0])
     assert record["confidence"] == 0.9 and record["latency_ms"] == 120 and 0.2 < record["age_s"] < 1.0
     assert record["late"] is None
 
@@ -48,7 +48,7 @@ def test_a_late_answer_is_booked_as_code_deciding_and_says_why():
     p.tick()  # nothing was asked before he arrived: the rule decides
     record = moves(log)[0]
     assert record["by"] == "code-late" and record["late"] == "seen_too_late"
-    assert p.stats["moves"] == {"code-late": 1}
+    assert p.ledger.counts == {("code-late", "junction"): 1}
 
 
 def test_the_rule_decider_run_is_booked_as_the_control_not_as_the_model():
@@ -57,7 +57,7 @@ def test_the_rule_decider_run_is_booked_as_the_control_not_as_the_model():
     p.was_playing = True  # a new game would clear the plan
     p.plan[(junction, arriving)] = (Decision(exits[0], "rule"), "clear_dots", time.time())
     p.tick()
-    assert p.stats["moves"] == {"rule": 1}
+    assert p.ledger.counts == {("rule", "junction"): 1}
 
 
 def test_a_model_failure_that_the_rule_covered_is_booked_as_code_fallback():
@@ -66,7 +66,7 @@ def test_a_model_failure_that_the_rule_covered_is_booked_as_code_fallback():
     p.was_playing = True  # a new game would clear the plan
     p.plan[(junction, arriving)] = (Decision(exits[0], "fallback", note="model error"), "clear_dots", time.time())
     p.tick()
-    assert p.stats["moves"] == {"code-fallback": 1}
+    assert p.ledger.counts == {("code-fallback", "junction"): 1}
 
 
 def test_a_move_the_reflex_changed_is_booked_as_the_reflex_not_the_model():
@@ -76,9 +76,9 @@ def test_a_move_the_reflex_changed_is_booked_as_the_reflex_not_the_model():
     final = p._go(st, HEADON, (56, 38), "UP", "LEFT", "junction", "model")
     assert final == "DOWN" and p.last_how == "reflex"
     p._book_move(((56, 38), "UP"), Decision("LEFT", "model", 0.9), final)
-    assert p.stats["moves"] == {"reflex-override": 1}
+    assert p.ledger.counts == {("code-override", "reflex"): 1}
     record = moves(log)[0]
-    assert (record["proposed"], record["executed"], record["by"]) == ("LEFT", "DOWN", "reflex-override")
+    assert (record["proposed"], record["executed"], record["by"], record["via"]) == ("LEFT", "DOWN", "code-override", "reflex")
 
 
 def test_every_log_line_carries_the_frame_so_it_lines_up_with_a_recording():

@@ -161,12 +161,8 @@ def main():
     print(f"\ndecisions: {s['on_time']} on time, {s['late_rule']} late (rule filled in), "
           f"{s['queries']} queries ({s.get('chained', 0)} chained), {s.get('revised', 0)} stale answers revised; "
           f"late because {s.get('late_why', {})}; sources {player.sources}")
-    moves = s.get("moves", {})
-    if moves:
-        total = sum(moves.values())
-        print(f"junction decisions by who executed them ({total}): "
-              + ", ".join(f"{k} {v}" for k, v in sorted(moves.items(), key=lambda kv: -kv[1]))
-              + f". The model's own: {100 * moves.get('model', 0) / total:.0f}%.")
+    if hasattr(player, "ledger"):
+        print(player.ledger.summary())
     if args.danger_query:
         print(f"danger queries: {s.get('danger')}")
     if hasattr(player.strategy, "stats"):
