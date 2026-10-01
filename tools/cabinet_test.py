@@ -24,16 +24,20 @@ def remote(ssh, command):
 
 
 def coin_start_actions(remap):
-    values = dict(re.findall(
-        r'^\s*(input_player1_btn_\w+)\s*=\s*"(\d+)"',
-        remap,
-        re.M
-    ))
+    values = dict(
+        re.findall(
+            r'^\s*(input_player1_btn_\w+)\s*=\s*"(\d+)"',
+            remap,
+            re.M
+        )
+    )
+
     select = int(values.get('input_player1_btn_select', '2'))
     start = int(values.get('input_player1_btn_start', '3'))
 
     if (select, start) == (2, 3):
         return 'COIN', 'START'
+
     if (select, start) == (3, 2):
         return 'START', 'COIN'
 
@@ -64,7 +68,11 @@ def launch(read, tap, sleep=time.sleep):
         system = state.get('system', {}).get('name')
         selection = state.get('selection') or {}
 
-        marker = (view, system, selection.get('path'))
+        marker = (
+            view,
+            system,
+            selection.get('path')
+        )
 
         if marker in seen:
             raise RuntimeError(
@@ -78,8 +86,10 @@ def launch(read, tap, sleep=time.sleep):
 
         if system != 'arcade':
             action = 'RIGHT'
+
         elif view == 'system_select':
             action = 'BUTTON_1'
+
         elif (
             selection.get('path') == TARGET
             and selection.get('type') == 'game'
@@ -87,10 +97,17 @@ def launch(read, tap, sleep=time.sleep):
             print('Verified Pac-Man; launching.', flush=True)
             tap('BUTTON_1')
             return
+
         else:
             action = 'DOWN'
 
-        print('ES:', system, selection.get('name', ''), flush=True)
+        print(
+            'ES:',
+            system,
+            selection.get('name', ''),
+            flush=True
+        )
+
         tap(action)
 
         for _ in range(20):
@@ -114,20 +131,34 @@ def launch(read, tap, sleep=time.sleep):
 
 def send_retroarch_command(host, command):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
     try:
-        sock.sendto(command.encode('ascii'), (host, 55355))
+        sock.sendto(
+            command.encode('ascii'),
+            (host, 55355)
+        )
     finally:
         sock.close()
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+
     parser.add_argument(
         'command',
         choices=['pacman', 'reboot', 'controls']
     )
-    parser.add_argument('--host', default='192.168.10.155')
-    parser.add_argument('--user', default='pi')
+
+    parser.add_argument(
+        '--host',
+        default='192.168.10.155'
+    )
+
+    parser.add_argument(
+        '--user',
+        default='pi'
+    )
+
     parser.add_argument(
         '--key',
         default=str(Path.home() / '.ssh/id_rsa')
@@ -163,40 +194,82 @@ def main():
         )
 
         if args.command == 'reboot':
-            remote(ssh, 'sudo -n shutdown -r +1')
+            remote(
+                ssh,
+                'sudo -n shutdown -r +1'
+            )
+
             print('Pi reboot scheduled in one minute.')
 
         elif args.command == 'pacman':
-            launch(lambda: fetch(ssh), tap)
+            launch(
+                lambda: fetch(ssh),
+                tap
+            )
 
         else:
             import msvcrt
 
-            running = remote(ssh, 'pgrep -a retroarch')
+            processes = remote(
+                ssh,
+                "pgrep -a retroarch 2>/dev/null || true; "
+                "pgrep -a mame 2>/dev/null || true"
+            )
 
-            if TARGET not in running or 'mame2003_libretro.so' not in running:
-                raise RuntimeError(
-                    'Launch Pac-Man with lr-mame2003 first.'
+            retroarch_mode = (
+                TARGET in processes
+                and 'mame2003_libretro.so' in processes
+            )
+
+            standalone_mame_mode = (
+                'mame' in processes
+                and 'pacman' in processes
+                and not retroarch_mode
+            )
+
+            if not retroarch_mode and not standalone_mame_mode:
+                raise RuntimeError('Pac-Man is not running.')
+
+            if retroarch_mode:
+                remap = remote(
+                    ssh,
+                    "if [ -f '" + REMAP + "' ]; "
+                    "then cat '" + REMAP + "'; fi"
                 )
 
-            remap = remote(
-                ssh,
-                "if [ -f '" + REMAP + "' ]; "
-                "then cat '" + REMAP + "'; fi"
+                coin, start = coin_start_actions(remap)
+
+                print('Pac-Man emulator: RetroArch / lr-mame2003')
+                print(
+                    'C = coin | 1 = one-player start | '
+                    'WASD/arrows = joystick | P = pause | Q = quit tester'
+                )
+
+            else:
+                coin = 'COIN'
+                start = 'START'
+
+                print('Pac-Man emulator: standalone MAME')
+                print(
+                    'C = coin | 1 = one-player start | '
+                    'WASD/arrows = joystick | Q = quit tester'
+                )
+                print(
+                    'P is not mapped yet for standalone MAME.'
+                )
+
+            print(
+                'Each direction is a short tap; '
+                'hold a key to repeat.'
             )
 
-            coin, start = coin_start_actions(remap)
+            print(
+                'Q closes only this tester; '
+                'it does not exit Pac-Man.'
+            )
 
             print(
-                'C = coin | 1 = one-player start | '
-                'WASD/arrows = joystick | P = pause | Q = quit tester'
-            )
-            print(
-                'Each direction is a short tap; hold a key to repeat. '
-                'Q does not exit the game.'
-            )
-            print(
-                'Effective broker actions: '
+                'Broker actions: '
                 'coin=' + coin + ', start=' + start
             )
 
@@ -223,16 +296,26 @@ def main():
                     break
 
                 if key.lower() == 'p':
-                    send_retroarch_command(
-                        args.host,
-                        'PAUSE_TOGGLE'
-                    )
+                    if retroarch_mode:
+                        send_retroarch_command(
+                            args.host,
+                            'PAUSE_TOGGLE'
+                        )
+                    else:
+                        print(
+                            'Pause is not mapped for standalone MAME.'
+                        )
+
                     continue
 
                 if key in ('\x00', '\xe0'):
-                    action = arrows.get(msvcrt.getwch())
+                    action = arrows.get(
+                        msvcrt.getwch()
+                    )
                 else:
-                    action = keys.get(key.lower())
+                    action = keys.get(
+                        key.lower()
+                    )
 
                 if action:
                     tap(action)
@@ -243,13 +326,17 @@ def main():
         RuntimeError,
         paramiko.SSHException
     ) as exc:
-        print('ERROR:', exc, file=sys.stderr)
+        print('ERROR:', repr(exc), file=sys.stderr)
         return 1
 
     finally:
         if args.command != 'reboot':
             try:
-                send(args.host, 8765, {'op': 'release_all'})
+                send(
+                    args.host,
+                    8765,
+                    {'op': 'release_all'}
+                )
             except OSError:
                 pass
 
