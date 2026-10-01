@@ -3,7 +3,7 @@
 The model never plans routes (a single forward pass can't). Code does the geometry; the model
 makes the judgment call: which way, given the current goal.
 """
-from .goals import GOALS, WEIGHTS  # noqa: F401  (GOALS re-exported for deciders)
+from .goals import GOALS, WEIGHTS, scaled_weights, stance_text  # noqa: F401  (GOALS re-exported for deciders)
 from .maze import ENERGIZER, LOWER_TO_UPPER, MOVES, OPPOSITE, Maze, step
 
 ROOM_RADIUS = 8
@@ -108,7 +108,7 @@ def threat_distance(state, image):
 
 def render_text(facts, goal):
     """Compact text rendering of the facts for a System One model (small context budgets)."""
-    lines = [f"GOAL: {goal} - {GOALS[goal]}",
+    lines = [f"GOAL: {goal} - {GOALS[goal]}", *([facts["stance"]] if facts.get("stance") else []),
              f"Pac-Man heading {facts['arriving']}. Food left {facts['food_left']}. Lives {facts['lives']}."]
     for direction, o in facts["options"].items():
         lines.append(
@@ -155,9 +155,10 @@ def lure_score(option):
     return -1.5 * (HOVER_STEPS + 1 - es)  # too close to eat it yet: hold back, ghosts still on their way
 
 
-def score_option(goal, option):
-    """Heuristic desirability of one option. Shared by the rule decider and the mock model."""
-    w_food, w_threat, w_room, w_edible, w_fruit, w_energizer, w_lure = WEIGHTS[goal]
+def score_option(goal, option, mods=None):
+    """Heuristic desirability of one option. Shared by the rule decider and the mock model.
+    mods: the stance (goals.STANCE levels) set by the slow layer, or None."""
+    w_food, w_threat, w_room, w_edible, w_fruit, w_energizer, w_lure = scaled_weights(goal, mods)
     score = 0.0
     if option["food_steps"] is not None:
         score += w_food * food_pull(option["food_steps"])

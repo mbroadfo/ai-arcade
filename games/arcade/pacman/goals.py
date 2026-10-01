@@ -30,6 +30,41 @@ WEIGHTS = {
     "eat_fruit": (0.3, 1.6, 0.25, 0.0, 4.0, 0.0, 0.0),
 }
 
+# The stance a slow layer can set: named levels, each scaling some of the weights above (indices into the
+# WEIGHTS tuples). A model picks a level by name; it never sees or sets a raw number, and the scale is bounded.
+STANCE = {
+    "caution": {"about": "How careful to be about ghosts that can hurt Pac-Man.", "default": "normal",
+                "levels": {"low": "take risks for points", "normal": "balanced",
+                           "high": "keep well clear of ghosts, even at a cost in points"},
+                "scale": {"low": 0.6, "normal": 1.0, "high": 1.6}, "weights": (1, 2)},
+    "chase": {"about": "How hard to pursue blue (edible) ghosts.", "default": "normal",
+              "levels": {"off": "ignore blue ghosts", "normal": "go for them when convenient",
+                         "hard": "make eating them the priority"},
+              "scale": {"off": 0.3, "normal": 1.0, "hard": 1.6}, "weights": (3,)},
+    "greed": {"about": "How strongly to prefer eating dots.", "default": "normal",
+              "levels": {"low": "dots can wait", "normal": "balanced", "high": "clear dots whenever possible"},
+              "scale": {"low": 0.6, "normal": 1.0, "high": 1.5}, "weights": (0,)},
+}
+
+
+def scaled_weights(goal, mods=None):
+    """The goal's weights with the stance applied. No stance (or all normal) gives the plain table entry."""
+    weights = list(WEIGHTS[goal])
+    for name, level in (mods or {}).items():
+        spec = STANCE.get(name)
+        if spec and level in spec["scale"]:
+            for i in spec["weights"]:
+                weights[i] *= spec["scale"][level]
+    return tuple(weights)
+
+
+def stance_text(mods):
+    """One sentence of the non-default stance, for a prompt; empty when it is all default."""
+    bits = [STANCE[n]["levels"][lv] for n, lv in (mods or {}).items()
+            if n in STANCE and lv != STANCE[n]["default"] and lv in STANCE[n]["levels"]]
+    return ("Stance: " + "; ".join(bits) + ".") if bits else ""
+
+
 # Frames ghosts stay blue after an energizer, by level (Pac-Man Dossier; level 1 measured: 359 frames).
 FRIGHT_FRAMES = {1: 360, 2: 300, 3: 240, 4: 180, 5: 120, 6: 300, 7: 120, 8: 120, 9: 60, 10: 300,
                  11: 120, 12: 60, 13: 60, 14: 180, 15: 60, 16: 60, 17: 0, 18: 60}
@@ -59,6 +94,7 @@ class GoalManager:
         self.mission, self.dwell, self.clock = mission, dwell, clock
         self.goal, self.since = (mission if mission != "auto" else "clear_dots"), clock()
         self.blue_since, self.cooldown_until = None, 0.0
+        self.fright_left = 0  # frames of blue left (0 when no ghost is blue)
 
     def _look(self, state, image, frame):
         maze = Maze(image)
@@ -76,6 +112,7 @@ class GoalManager:
         elif not blue:
             self.blue_since = None
         left = FRIGHT_FRAMES.get(state.level, 0) - (frame - self.blue_since) if blue else 0
+        self.fright_left = max(left, 0)
         reachable = [d for d in blue if d <= 2 or d * FRAMES_PER_TILE <= left * HUNT_MARGIN * stay("hunt_ghosts")]
         reachable = reachable if left > 0 else []  # a ghost two steps away is worth finishing while any window is left
         return {"feast": bool(reachable), "fruit": fruit is not None and fruit <= FRUIT_RANGE * stay("eat_fruit"),

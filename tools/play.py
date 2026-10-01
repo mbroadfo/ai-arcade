@@ -15,6 +15,7 @@ from broker_link import BrokerLink
 from decision_worker import DecisionWorker
 from gamelib import DEFAULT_GAME, ROOT, load_game
 from state_client import StateStream
+from strategist import MockStrategistClient, Strategist
 from systemone import MockSystemOne, OllamaSystemOne
 
 
@@ -42,6 +43,10 @@ def main():
     parser.add_argument("--lookahead", type=int, default=None, help="tiles ahead to query (game default if unset)")
     parser.add_argument("--knowledge", choices=None, help="help rung the game offers, e.g. L0..L3b")
     parser.add_argument("--goal", default="auto", help="standing goal: auto, or pin one (game-specific names)")
+    parser.add_argument("--strategist", choices=("code", "mock", "ollama"), default="code",
+                        help="who sets the goal and stance: the game's own code (default), a mock model that "
+                             "repeats the code's choice after a delay (latency control), or a System One model")
+    parser.add_argument("--strategist-model", default="nimble")
     parser.add_argument("--revise", action="store_true",
                         help="code re-checks stored answers against fresh facts (overrules the decider; off by default)")
     parser.add_argument("--no-reflex", action="store_true", help="turn the survival instinct off (ablation)")
@@ -62,6 +67,7 @@ def main():
     stamp = time.strftime("%Y%m%d-%H%M%S")
     label = "-".join(p for p in (stamp, args.game.replace("/", "_"), args.decider, args.knowledge,
                                  None if args.goal == "auto" else args.goal,
+                                 None if args.strategist == "code" else f"strat-{args.strategist}",
                                  "revise" if args.revise else None, "noreflex" if args.no_reflex else None,
                                  None if args.chain is None else f"chain{args.chain}", args.tag) if p)
     decisions_log = open(out_dir / f"{label}-decisions.jsonl", "w", buffering=1)
@@ -75,7 +81,14 @@ def main():
     extra.update(revise=args.revise, reflex=not args.no_reflex)
     if args.chain is not None:
         extra["chain_depth"] = args.chain
-    player = game.player.Player(stream, broker, worker, game.goals.GoalManager(args.goal), decisions_log,
+    manager = game.goals.GoalManager(args.goal)
+    if args.strategist != "code":
+        if args.goal != "auto":
+            parser.error("--strategist needs --goal auto (a pinned goal leaves nothing to decide)")
+        client = (MockStrategistClient(game.strategy.code_chooser, seed=args.seed) if args.strategist == "mock"
+                  else OllamaSystemOne(model=args.strategist_model, host=args.ollama_host))
+        manager = game.strategy.ModelGoalManager(Strategist(client, game.strategy.SCHEMA), manager)
+    player = game.player.Player(stream, broker, worker, manager, decisions_log,
                                 knowledge=args.knowledge, **extra)
 
     results, deadline = [], time.time() + args.seconds
@@ -118,6 +131,8 @@ def main():
     print(f"\ndecisions: {s['on_time']} on time, {s['late_rule']} late (rule filled in), "
           f"{s['queries']} queries ({s.get('chained', 0)} chained), {s.get('revised', 0)} stale answers revised; "
           f"late because {s.get('late_why', {})}; sources {player.sources}")
+    if hasattr(player.strategy, "stats"):
+        print(f"strategist: {player.strategy.stats}; asked {player.strategy.strategist.stats}")
     if player.latencies:
         print(f"model latency: median {statistics.median(player.latencies):.0f} ms, "
               f"max {max(player.latencies):.0f} ms")

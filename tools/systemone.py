@@ -53,7 +53,8 @@ class MockSystemOne:
             if question["type"] != "choice":
                 raise SystemOneError("mock only answers choice questions")
             options = list(question["criteria"])
-            scores = [self.scorer(hint["goal"], hint["options"][o]) + self.rng.gauss(0, self.noise)
+            extra = (hint["mods"],) if hint.get("mods") else ()  # the stance, for games that have one
+            scores = [self.scorer(hint["goal"], hint["options"][o], *extra) + self.rng.gauss(0, self.noise)
                       for o in options]
             top = max(scores)
             weights = [math.exp((s - top) / self.temperature) for s in scores]

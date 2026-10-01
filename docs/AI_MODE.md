@@ -74,13 +74,35 @@ The switches are written into the run's file names.
 | `--no-reflex` | reflex on | turn the survival instinct off |
 | `--chain N` | 2 | after an answer, also ask about the junction it leads to, N deep (N+2 during the ghost-eaten pause); 0 = off |
 | `--lookahead N` | 8 | start asking about a junction this many tiles ahead |
+| `--strategist code\|mock\|ollama` | code | who sets the goal and stance (below). `mock` repeats the code's choice after a delay, to separate the cost of latency from the model's judgment |
 
-The run summary also says why answers were late: `in_flight` (asked, not back yet), `other_arrival` (answered for
-the junction but under a different arriving direction) or `not_asked`.
+The run summary also says why answers were late: `seen_too_late` (the junction first came into view 0-1 tiles ahead:
+junctions are often 1-3 tiles apart, so no model could have answered in time), `in_flight` (asked, not back yet),
+`other_arrival` (answered under a different arriving direction) or `not_asked`.
 
 Each game's result also carries what the goals are about: `ghosts_eaten`, `fruit_eaten`, `fruit_shown`,
 `energizers`, `feasts` (ghosts eaten per energizer; a full feast is 4, worth 3000), `deaths`, `reflexes` and
 seconds spent per goal.
+
+### The slow layer: goal and stance
+
+`--strategist` lets a System One model pick the goal and a *stance* once a second or so, while code still chooses
+every direction. The stance is three named dials, each with three levels, each level scaling some weights in
+`score_option` (`goals.STANCE`): `caution` (threat and room), `chase` (blue ghosts), `greed` (dots). The model
+never sees or sets a raw number, and the scale is bounded.
+
+- General part: `tools/strategist.py` asks one choice question per goal and per dial, validates the answers, never
+  blocks the control loop, and leaves the previous advice in force on a timeout, nonsense or low confidence.
+- Pac-Man part: `games/arcade/pacman/strategy.py` holds the schema, the situation summary and `ModelGoalManager`.
+  The code's own `GoalManager` keeps running underneath: it is the fallback before the first answer, after an
+  answer has gone 8 s without renewal, and when the model's goal has nothing to aim at (hunt with no blue ghost,
+  fruit with none on screen, ambush with no energizer left). A model goal is held at least 3 s.
+- Every answer is logged as an `advice` event beside the goal the code would have chosen and what became of it
+  (`taken`, `held`, `gated`); the run summary counts them, including how often the model agreed with the code.
+- Survival still overrides everything.
+
+Label results by what the model did: with `--strategist ollama` and the rule decider, the model sets parameters
+and code picks every direction (not the S1M playing); with `--decider ollama` as well, a model does both.
 
 ## What the model is told (ablation rungs)
 
@@ -103,6 +125,7 @@ Print exactly what a model would see: `python -m games.arcade.pacman.knowledge -
 |---|---|
 | `tools/start_pi_game.py` | start MAME, the exporter and the state server for a game |
 | `tools/play.py` | the player loop for any game package |
+| `tools/strategist.py` | the slow layer: asks a model for the goal and stance, validates, never blocks |
 | `tools/state_client.py` | read the stream; `--measure` times stream and control latency |
 | `tools/record_stream.py` | record raw snapshots for offline analysis |
 | `tools/game_profile.py`, `tools/discover_state.py` | build a new game's profile and find its RAM (`docs/GAME_STATE_STRATEGY.md`) |

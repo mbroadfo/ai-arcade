@@ -29,6 +29,7 @@ games/arcade/pacman/
 | `deciders.RuleDecider`, `deciders.SystemOneDecider(client)` | `tools/play.py` |
 | `knowledge.LEVELS`, `knowledge.build_state_text(...)` | the ablation rungs |
 | `goals.GOALS`, `goals.MISSIONS`, `goals.GoalManager(mission)` | `tools/play.py --goal` |
+| `strategy.SCHEMA`, `strategy.ModelGoalManager(strategist, goal_manager)`, `strategy.code_chooser` | `tools/play.py --strategist` (optional: a game without it just has no slow model layer) |
 | `player.Player(stream, broker, worker, goal_manager, log, knowledge=, lookahead=)` | `tools/play.py` |
 
 `Player.tick()` returns a result dict (`game`, `score`, `level`, `seconds`, plus the game's own metrics, for Pac-Man ghosts/fruit eaten, deaths, reflexes) when a game ends.

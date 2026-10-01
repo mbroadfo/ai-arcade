@@ -1,0 +1,140 @@
+"""Pac-Man's slow layer: a model picks the goal and the stance; code still picks every direction.
+
+The schema, the situation summary and the legality gates are Pac-Man's. The asking, validating and
+never-blocking is general (tools/strategist.py). Survival (survival.py) overrides whatever is chosen.
+
+Labelling for the ablation: when this layer is a model, the model sets *parameters* (goal and stance) and
+the scoring code turns them into directions. That is a different rung from a model choosing directions.
+"""
+import time
+
+from .features import ghost_modes
+from .goals import GOALS, STANCE
+from .maze import ENERGIZER, Maze
+
+MODEL_GOALS = ("clear_dots", "hunt_ghosts", "ambush", "eat_fruit")  # pacifist stays a pinned mission only
+ADVICE_TTL = 8.0  # seconds a piece of advice is trusted; after that the code's own goal takes over
+DWELL = 3.0  # a model-chosen goal is held at least this long (a goal whose precondition has vanished is dropped)
+
+SCHEMA = {
+    "instructions": "You advise the strategy of a Pac-Man player. A fast layer steers and a reflex "
+                    "keeps Pac-Man away from danger; you only set the aim and the temperament.",
+    "goals": {g: GOALS[g] for g in MODEL_GOALS},
+    "modifiers": {name: {"about": m["about"], "levels": dict(m["levels"]), "default": m["default"]}
+                  for name, m in STANCE.items()},
+}
+
+
+def situation(state, image):
+    """Steps from Pac-Man to what matters, for the summary and for the legality gates."""
+    maze = Maze(image)
+    here = maze.bfs(tuple(state.pacman.tile))
+    modes = ghost_modes(state)
+    steps = lambda g: here.get(g.tile)  # noqa: E731
+    return {
+        "blue": sorted(d for n, g in state.ghosts.items() if modes[n] == "frightened" and (d := steps(g)) is not None),
+        "normal": sorted(d for n, g in state.ghosts.items() if modes[n] == "normal" and (d := steps(g)) is not None),
+        "energizers": sorted(d for t, d in here.items() if maze.code(t) == ENERGIZER),
+        "fruit": here.get(tuple(state.fruit_tile)) if state.fruit_tile else None,
+        "food_left": maze.food_left(),
+        "ghosts": [(n, modes[n], steps(g)) for n, g in state.ghosts.items()],
+    }
+
+
+def legal(goal, sit):
+    """A goal needs something to aim at. Saying 'hunt' with no blue ghost, or 'fruit' with none on screen, is
+    not a judgment call, it is empty: the code falls back instead of pretending."""
+    if goal == "hunt_ghosts":
+        return bool(sit["blue"])
+    if goal == "eat_fruit":
+        return sit["fruit"] is not None
+    if goal == "ambush":
+        return bool(sit["energizers"])
+    return True
+
+
+def describe(state, sit, goal, mods, seconds_blue_left=None):
+    lines = [f"Pac-Man, level {state.level}, {state.lives} lives, {sit['food_left']} dots left."]
+    for name, mode, steps in sit["ghosts"]:
+        where = "in the ghost house" if steps is None else f"{steps} steps away"
+        lines.append(f"Ghost {name} is {'blue and edible' if mode == 'frightened' else mode}, {where}.")
+    if sit["blue"] and seconds_blue_left is not None:
+        lines.append(f"The ghosts stay blue for about {max(seconds_blue_left, 0):.0f} more seconds.")
+    lines.append(f"Energizer pills left: {len(sit['energizers'])}"
+                 + (f", nearest {sit['energizers'][0]} steps away." if sit["energizers"] else "."))
+    lines.append(f"Bonus fruit: {sit['fruit']} steps away." if sit["fruit"] is not None else "No bonus fruit on screen.")
+    lines.append(f"Current goal: {goal}. Current stance: " + ", ".join(f"{k} {v}" for k, v in mods.items()) + ".")
+    return "\n".join(lines)
+
+
+class ModelGoalManager:
+    """Drop-in for GoalManager: the same choose(state, image, frame), plus .mods (the stance).
+
+    The code's own GoalManager keeps running underneath: it is the fallback before the first answer, after
+    an answer expires, and when the model's goal has nothing to aim at; every answer is logged beside what
+    the code would have chosen, so the two can be compared.
+    """
+
+    mission = "model"
+
+    def __init__(self, strategist, code_manager, interval=1.0, dwell=DWELL, ttl=ADVICE_TTL, clock=time.time):
+        self.strategist, self.code, self.interval, self.dwell, self.ttl, self.clock = (
+            strategist, code_manager, interval, dwell, ttl, clock)
+        self.default_mods = {name: m["default"] for name, m in STANCE.items()}
+        self.mods = dict(self.default_mods)
+        self.goal, self.since, self.asked_at, self.advice_at = code_manager.goal, clock(), -1e9, None
+        self.events = []
+        self.stats = {"advice": 0, "agreed_with_code": 0, "gated": 0, "held": 0, "expired": 0}
+
+    def drain(self):
+        out, self.events = self.events, []
+        return out
+
+    def _apply(self, advice, code_goal, sit, now):
+        self.stats["advice"] += 1
+        self.stats["agreed_with_code"] += advice.goal == code_goal
+        self.advice_at = now
+        record = {"event": "advice", "goal": advice.goal, "code_goal": code_goal, "mods": advice.mods,
+                  "confidence": round(advice.confidence, 2), "latency_ms": round(advice.latency_ms)}
+        self.mods.update(advice.mods)
+        if not legal(advice.goal, sit):
+            self.stats["gated"] += 1
+            record["result"] = "gated: nothing to aim at"
+        elif advice.goal != self.goal and now - self.since < self.dwell and legal(self.goal, sit):
+            self.stats["held"] += 1
+            record["result"] = "held: goal changed too recently"
+        else:
+            if advice.goal != self.goal:
+                self.since = now
+            self.goal = advice.goal
+            record["result"] = "taken"
+        self.events.append(record)
+
+    def choose(self, state, image, frame=None):
+        now = self.clock()
+        code_goal = self.code.choose(state, image, frame)
+        sit = situation(state, image)
+        if now - self.asked_at >= self.interval:
+            left = None
+            if sit["blue"] and self.code.fright_left:
+                left = self.code.fright_left / 50.0  # frames left, emulation runs near 50 per second
+            if self.strategist.request(describe(state, sit, self.goal, self.mods, left),
+                                       hint={"code_goal": code_goal, "mods": dict(self.mods)}):
+                self.asked_at = now
+        advice = self.strategist.take()
+        if advice:
+            self._apply(advice, code_goal, sit, now)
+        if self.advice_at is None or now - self.advice_at > self.ttl:
+            if self.advice_at is not None:
+                self.stats["expired"] += 1
+                self.advice_at = None
+                self.mods = dict(self.default_mods)
+            self.goal = code_goal
+        elif not legal(self.goal, sit):
+            self.goal, self.since = code_goal, now  # what it aimed at has gone
+        return self.goal
+
+
+def code_chooser(hint):
+    """The mock strategist's answer: what the code's own manager chose, with the stance left alone."""
+    return {"goal": hint["code_goal"], **hint["mods"]}

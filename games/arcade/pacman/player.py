@@ -15,6 +15,7 @@ import time
 from .deciders import RuleDecider
 from .events import GameStats
 from .features import GOALS, junction_facts, score_option
+from .goals import stance_text
 from .knowledge import build_state_text
 from .maze import LOWER_TO_UPPER, OPPOSITE, Maze, step
 from .survival import reflex
@@ -45,6 +46,7 @@ class Player:
         self.decisions_log = decisions_log
         self.strategy_interval = strategy_interval
         self.goal, self.goal_at = "clear_dots", 0.0
+        self.mods = {}  # the stance a slow layer has set (goals.STANCE levels); empty = all normal
         self.plan = {}  # (junction tile, arriving direction) -> (Decision, goal, finished_at)
         self.depth = {}  # plan key -> how many answers deep the chain was when it was asked
         self.pause_until, self.prev_score = -1, None
@@ -66,8 +68,9 @@ class Player:
 
     def _facts(self, state, image, tile, arriving):
         facts = junction_facts(state, image, tile=tile, arriving=arriving)
+        facts["mods"], facts["stance"] = dict(self.mods), stance_text(self.mods)
         if self.knowledge:
-            goal_text = f"GOAL: {self.goal} - {GOALS[self.goal]}"
+            goal_text = f"GOAL: {self.goal} - {GOALS[self.goal]} {facts['stance']}".rstrip()
             facts["state_text"] = build_state_text(self.knowledge, state, image, facts, tile, arriving, goal_text)
         return facts
 
@@ -82,8 +85,8 @@ class Player:
         options = facts["options"]
         if chosen not in options:
             return None
-        best = max(options, key=lambda d: score_option(self.goal, options[d]))
-        regret = score_option(self.goal, options[best]) - score_option(self.goal, options[chosen])
+        best = max(options, key=lambda d: score_option(self.goal, options[d], self.mods))
+        regret = score_option(self.goal, options[best], self.mods) - score_option(self.goal, options[chosen], self.mods)
         return best if best != chosen and regret > REVISE_REGRET else None
 
     def _survive(self, state, image, tile, arriving, chosen, where, facts=None):
@@ -221,9 +224,14 @@ class Player:
 
         if time.time() - self.goal_at > self.strategy_interval:
             goal = self.strategy.choose(state, image, frame)
+            mods = dict(getattr(self.strategy, "mods", {}))
             if goal != self.goal:
                 self.log(event="goal", goal=goal)
-            self.goal, self.goal_at = goal, time.time()
+            if mods != self.mods:
+                self.log(event="stance", mods=mods)
+            for record in getattr(self.strategy, "drain", lambda: [])():  # the slow layer's own notes
+                self.log(**record)
+            self.goal, self.mods, self.goal_at = goal, mods, time.time()
 
         self._watch_for_pause(state, frame)
         self._collect(state, image, frame)
@@ -260,6 +268,7 @@ class Player:
         elif junction is not None and steps == 0:
             # At the junction with no answer yet: a rule decides, and we count it as late.
             facts = junction_facts(state, image, tile=junction, arriving=heading)
+            facts["mods"] = dict(self.mods)
             decision = self.rule.decide(facts, self.goal)
             self.plan[key] = (decision, self.goal, time.time())
             self.applied.add(key)

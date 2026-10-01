@@ -20,7 +20,7 @@ class Decision:
 
 class RuleDecider:
     def decide(self, facts, goal):
-        best = max(facts["options"], key=lambda d: score_option(goal, facts["options"][d]))
+        best = max(facts["options"], key=lambda d: score_option(goal, facts["options"][d], facts.get("mods")))
         return Decision(best, "rule")
 
 
