@@ -69,7 +69,9 @@ def stance_text(mods):
 FRIGHT_FRAMES = {1: 360, 2: 300, 3: 240, 4: 180, 5: 120, 6: 300, 7: 120, 8: 120, 9: 60, 10: 300,
                  11: 120, 12: 60, 13: 60, 14: 180, 15: 60, 16: 60, 17: 0, 18: 60}
 FRAMES_PER_TILE = 8  # Pac-Man's pace at level 1 (about 7.6 tiles per second at 60 frames per second)
-HUNT_MARGIN = 0.6  # chase a blue ghost only if it is within this share of the tiles the window allows
+HUNT_MARGIN = 0.8  # chase a lone blue ghost only if it is within this share of the tiles the window allows
+HUNT_MARGIN_PER_GHOST = 0.1  # ... more blue ghosts out of the house make the chase worth more (800, 1600), so a wider share
+HUNT_MARGIN_MAX = 1.0
 FRUIT_RANGE = 40  # go for fruit within this many steps
 AMBUSH_RANGE = 20  # head for an energizer when one is this close
 AMBUSH_CHASERS = 2  # ... and this many normal ghosts are within CHASE_RADIUS steps
@@ -113,7 +115,8 @@ class GoalManager:
             self.blue_since = None
         left = FRIGHT_FRAMES.get(state.level, 0) - (frame - self.blue_since) if blue else 0
         self.fright_left = max(left, 0)
-        reachable = [d for d in blue if d <= 2 or d * FRAMES_PER_TILE <= left * HUNT_MARGIN * stay("hunt_ghosts")]
+        margin = min(HUNT_MARGIN + HUNT_MARGIN_PER_GHOST * (len(blue) - 1), HUNT_MARGIN_MAX) if blue else 0
+        reachable = [d for d in blue if d <= 2 or d * FRAMES_PER_TILE <= left * margin * stay("hunt_ghosts")]
         reachable = reachable if left > 0 else []  # a ghost two steps away is worth finishing while any window is left
         return {"feast": bool(reachable), "fruit": fruit is not None and fruit <= FRUIT_RANGE * stay("eat_fruit"),
                 "ambush": bool(energizers) and min(energizers) <= AMBUSH_RANGE * stay("ambush")

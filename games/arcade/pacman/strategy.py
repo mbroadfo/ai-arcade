@@ -9,7 +9,7 @@ the scoring code turns them into directions. That is a different rung from a mod
 import time
 
 from .features import ghost_modes
-from .goals import GOALS, STANCE
+from .goals import FRAMES_PER_TILE, GOALS, STANCE
 from .maze import ENERGIZER, Maze
 
 MODEL_GOALS = ("clear_dots", "hunt_ghosts", "ambush", "eat_fruit")  # pacifist stays a pinned mission only
@@ -53,13 +53,28 @@ def legal(goal, sit):
     return True
 
 
+def arrangement(blue, seconds_left):
+    """How the edible ghosts are laid out and whether they can be caught: the sums a small model gets wrong."""
+    seconds_to_nearest = blue[0] * FRAMES_PER_TILE / 50.0  # Pac-Man covers a tile in about 8 frames, 50 frames a second
+    spread = blue[-1] - blue[0]
+    text = (f"{len(blue)} edible ghost{'s' if len(blue) > 1 else ''} out of the ghost house, the nearest {blue[0]} steps "
+            f"away (about {seconds_to_nearest:.0f} s to reach)")
+    if len(blue) > 1:
+        text += f", {'close together' if spread <= 8 else 'spread out'} (the farthest {blue[-1]} steps)"
+    if seconds_left is not None:
+        text += f". They stay blue for about {max(seconds_left, 0):.0f} more seconds"
+        text += (": time enough to catch the nearest." if seconds_to_nearest * 1.3 < seconds_left
+                 else ": barely enough time to catch even the nearest.")
+    return text + ("" if text.endswith(".") else ".")
+
+
 def describe(state, sit, goal, mods, seconds_blue_left=None):
     lines = [f"Pac-Man, level {state.level}, {state.lives} lives, {sit['food_left']} dots left."]
     for name, mode, steps in sit["ghosts"]:
         where = "in the ghost house" if steps is None else f"{steps} steps away"
         lines.append(f"Ghost {name} is {'blue and edible' if mode == 'frightened' else mode}, {where}.")
-    if sit["blue"] and seconds_blue_left is not None:
-        lines.append(f"The ghosts stay blue for about {max(seconds_blue_left, 0):.0f} more seconds.")
+    if sit["blue"]:
+        lines.append(arrangement(sit["blue"], seconds_blue_left))
     lines.append(f"Energizer pills left: {len(sit['energizers'])}"
                  + (f", nearest {sit['energizers'][0]} steps away." if sit["energizers"] else "."))
     lines.append(f"Bonus fruit: {sit['fruit']} steps away." if sit["fruit"] is not None else "No bonus fruit on screen.")

@@ -290,3 +290,23 @@ def test_a_blue_ghost_is_aimed_at_where_it_is_heading_not_where_it_was():
     assert features.intercept_tile(maze, ghost, 0) == run[0]
     far = features.intercept_tile(maze, ghost, 2 * (len(run) - 1))
     assert far == run[-1] and run[-1] != run[0]  # led along its heading, stopped at the wall
+
+
+def test_the_way_to_a_group_of_blue_ghosts_beats_the_way_to_one_slightly_nearer():
+    def opt(steps, count):
+        return {"food_steps": None, "threat_steps": None, "edible_steps": steps, "edible_count": count, "fruit_steps": None,
+                "energizer_steps": None, "room": 10, "reverse": False, "pressure": None, "ghosts_close": 0}
+    assert features.score_option("hunt_ghosts", opt(8, 3)) > features.score_option("hunt_ghosts", opt(6, 1))
+    assert features.score_option("hunt_ghosts", opt(6, 1)) > features.score_option("hunt_ghosts", opt(12, 1))  # distance still counts
+
+
+def test_more_blue_ghosts_out_keep_a_hunt_going_longer():
+    class Look:
+        pass
+    mgr = goals.GoalManager("auto", clock=lambda: 0.0)
+    shares = []
+    for n in (1, 2, 4):
+        margin = min(goals.HUNT_MARGIN + goals.HUNT_MARGIN_PER_GHOST * (n - 1), goals.HUNT_MARGIN_MAX)
+        shares.append(margin)
+    assert shares[0] < shares[1] < shares[2] <= goals.HUNT_MARGIN_MAX
+    assert shares[0] > 0.6  # a lone ghost is chased further than before

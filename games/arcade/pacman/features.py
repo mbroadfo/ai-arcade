@@ -47,6 +47,7 @@ def option_facts(maze, state, modes, tile, direction):
     energizers = [d for t, d in dist.items() if maze.code(t) == ENERGIZER]
     fruit = dist.get(tuple(state.fruit_tile)) if state.fruit_tile else None
     return {
+        "edible_count": sum(1 for d in edible if d <= GROUP_REACH),
         "food_steps": min(food) + 1 if food else None,
         "energizer_steps": min(energizers) + 1 if energizers else None,
         "fruit_steps": fruit + 1 if fruit is not None else None,
@@ -129,7 +130,9 @@ LURE_RADIUS = 9  # ambush: eat the energizer when 2+ normal ghosts are this clos
 LURE_PANIC = 4
 HOVER_STEPS = 4  # ambush: wait about this many steps from the energizer until the ghosts have closed in
 FOOD_REACH = 45  # food pull is linear in distance up to this, so far-away dots still attract
+GROUP_REACH = 16  # blue ghosts within this many steps down an exit count as the group that way
 CHASE_REACH = 40  # a blue ghost's pull is linear up to this many steps: every step closer is worth the same
+GROUP_BONUS = 1.5  # per extra blue ghost down an exit (a feast's later ghosts are worth 400, 800, 1600)
 HUNT_TURN_BACK = 1.2  # while hunting, reversing needs a clear gain: dithering between two routes loses the ghost
 
 
@@ -169,6 +172,7 @@ def score_option(goal, option, mods=None):
         score += w_room * min(option["room"], 30) / 30.0 * 3.0
     if option["edible_steps"] is not None:
         score += w_edible * (chase_pull(option["edible_steps"]) if w_edible > 0 else 4.0 / (1 + option["edible_steps"]))
+        score += w_edible * GROUP_BONUS * max(option.get("edible_count", 1) - 1, 0)  # the way to the group beats the way to one
     if option.get("fruit_steps") is not None:
         score += w_fruit * 4.0 / (1 + option["fruit_steps"])
     if w_energizer and option.get("energizer_steps") is not None and option["edible_steps"] is None:

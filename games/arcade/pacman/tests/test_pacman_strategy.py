@@ -133,3 +133,11 @@ def test_the_models_goal_is_dropped_when_what_it_aimed_at_goes_away():
 def test_the_mock_strategist_repeats_the_codes_choice():
     assert strategy.code_chooser({"code_goal": "eat_fruit", "mods": {"caution": "high"}}) == {
         "goal": "eat_fruit", "caution": "high"}
+
+
+def test_the_summary_says_how_the_blue_ghosts_are_laid_out_and_whether_there_is_time():
+    close = strategy.arrangement([5, 7, 9], 5.0)
+    assert "3 edible ghosts" in close and "close together" in close and "time enough" in close
+    far = strategy.arrangement([6, 30], 1.0)
+    assert "spread out" in far and "barely enough time" in far
+    assert "1 edible ghost out" in strategy.arrangement([4], None)
