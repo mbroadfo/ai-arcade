@@ -90,3 +90,4 @@ private-library/
 *.zip
 *.7z
 *.rar
+runs/

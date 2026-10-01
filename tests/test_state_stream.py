@@ -2,6 +2,7 @@ from pathlib import Path
 import struct
 import sys
 import threading
+import time
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools'))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'pi'))
@@ -18,7 +19,13 @@ def write_state(path, frame, **cells):
     body = b"".join(bytes(image[s - ps.BASE:e - ps.BASE + 1]) for s, e, _ in ps.AGENT_REGIONS)
     tmp = Path(str(path) + ".tmp")
     tmp.write_bytes(struct.pack("<I", frame) + body)
-    tmp.replace(path)
+    for _ in range(200):  # Windows refuses to replace a file another thread has open; Linux does not
+        try:
+            tmp.replace(path)
+            return
+        except PermissionError:
+            time.sleep(0.002)
+    raise PermissionError(path)
 
 
 def start_server(tmp_path):
@@ -91,6 +98,30 @@ def test_server_survives_a_client_disconnecting(tmp_path):
         second = state_client.StateStream("127.0.0.1", server.port)
         assert second.next_state()[0] == 2
         second.close()
+    finally:
+        stop.set()
+        thread.join(1)
+        server.close()
+
+
+def test_slow_reader_is_not_dropped_and_sees_fresh_data(tmp_path):
+    server, state_file, stop, thread = start_server(tmp_path)
+    try:
+        stream = state_client.StateStream("127.0.0.1", server.port)
+        stream.next_state()
+        for frame in range(2, 400):  # the reader stalls (no recv) while many snapshots are produced
+            write_state(state_file, frame, a4E6E=frame % 100)
+            time.sleep(0.001)
+        time.sleep(0.4)
+        newest = 0
+        stream.sock.settimeout(0.5)
+        try:
+            while True:
+                newest = stream.next_state()[0]
+        except OSError:
+            pass
+        assert newest > 100, "reader should catch up to recent frames, not be disconnected"
+        stream.close()
     finally:
         stop.set()
         thread.join(1)

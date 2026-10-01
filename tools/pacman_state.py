@@ -45,6 +45,8 @@ class Actor:
     pos: tuple  # raw (l, h) position bytes
     tile: tuple  # raw (l, h) tile bytes
     direction: str
+    next_tile: tuple = None  # ghosts only: the tile the game has already planned to enter next
+    queued: str = None  # ghosts only: the direction the game queued for leaving that tile
 
 
 @dataclass
@@ -62,6 +64,9 @@ class PacmanState:
     frightened: dict
     eyes: dict
     fruit_pos: tuple
+    phase: int = 0  # 4DC1: scatter/chase phase counter; even = scatter, odd = chase (in normal play)
+    substate: int = 0  # 4E04: 3 = normal play
+    elroy: bool = False  # 4DB6: Blinky is Cruise Elroy (chases even in scatter)
 
 
 def decode(buf):
@@ -77,6 +82,8 @@ def decode(buf):
             pos=(b(0x4D00 + 2 * i), b(0x4D01 + 2 * i)),
             tile=(b(0x4D31 + 2 * i), b(0x4D32 + 2 * i)),
             direction=DIRECTIONS.get(b(0x4D28 + i), "?"),
+            next_tile=(b(0x4D0A + 2 * i), b(0x4D0B + 2 * i)),
+            queued=DIRECTIONS.get(b(0x4D2C + i), "?"),
         )
         for i, name in enumerate(GHOSTS)
     }
@@ -98,4 +105,7 @@ def decode(buf):
         frightened={n: bool(b(0x4DA6 + i)) for i, n in enumerate(GHOSTS)},
         eyes={n: bool(b(0x4DAC + i)) for i, n in enumerate(GHOSTS)},
         fruit_pos=(b(0x4DD2), b(0x4DD3)),
+        phase=b(0x4DC1),
+        substate=b(0x4E04),
+        elroy=bool(b(0x4DB6)),
     )

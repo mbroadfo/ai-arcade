@@ -21,7 +21,13 @@ class StateStream:
     """Connects to the Pi and yields decoded snapshots. Game-agnostic until decode() is applied."""
 
     def __init__(self, host, port=DEFAULT_PORT, timeout=5.0):
-        self.sock = socket.create_connection((host, port), timeout=timeout)
+        self.host, self.port, self.timeout = host, port, timeout
+        self.reconnects = 0
+        self._closed = False
+        self._connect()
+
+    def _connect(self):
+        self.sock = socket.create_connection((self.host, self.port), timeout=self.timeout)
         self.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         kind, payload = self._read_message()
         if kind != b"H":
@@ -58,19 +64,31 @@ class StateStream:
     def start_latest(self):
         """Read continuously in a background thread so latest() never returns a stale queue entry."""
         self._latest = None
+        self._closed = False
         self._lock = threading.Lock()
         self._fresh = threading.Condition(self._lock)
 
         def pump():
-            try:
-                while True:
+            backoff = 0.2
+            while not self._closed:
+                try:
                     item = self.next_state()
-                    with self._fresh:
-                        self._latest = item
-                        self._fresh.notify_all()
-            except (OSError, ConnectionError):
+                except (OSError, ConnectionError) as exc:
+                    if self._closed:
+                        return
+                    print(f"[state_client] stream lost ({exc!r}); reconnecting", file=sys.stderr, flush=True)
+                    while not self._closed:
+                        try:
+                            self._connect()
+                            self.reconnects += 1
+                            backoff = 0.2
+                            break
+                        except OSError:
+                            time.sleep(backoff)
+                            backoff = min(backoff * 2, 5.0)
+                    continue
                 with self._fresh:
-                    self._latest = None
+                    self._latest = item
                     self._fresh.notify_all()
 
         threading.Thread(target=pump, daemon=True).start()
@@ -83,6 +101,7 @@ class StateStream:
             return self._latest
 
     def close(self):
+        self._closed = True
         self.sock.close()
 
 
