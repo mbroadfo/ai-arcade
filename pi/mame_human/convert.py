@@ -15,6 +15,7 @@ Commands:
     keep ZIP... --why TEXT    leave these games on their emulator, with the reason
     finish                    pin every game not converted to the emulator it has, then make MAME 0.251 the default
     revert ZIP...             put converted games back on the emulator they had
+    requeue ZIP... --why TEXT check these games again on the next run
     status                    counts, and the games waiting for a decision
 """
 import argparse
@@ -49,6 +50,15 @@ def save(ledger):
     tmp = LEDGER.with_suffix(".tmp")
     tmp.write_text(json.dumps(ledger, indent=1, sort_keys=True))
     tmp.replace(LEDGER)
+
+
+def save_games(ledger, games):
+    """Save only these games' entries, onto the ledger as it is on disk now: a batch runs for minutes, and approvals
+    or other decisions made meanwhile must not be overwritten by its stale copy."""
+    fresh = load()
+    for z in games:
+        fresh[z] = ledger[z]
+    save(fresh)
 
 
 def read_cfg(path):
@@ -126,7 +136,7 @@ def cmd_run(args, ledger):
                 continue
         map_set(z, entry["set"])
         ready.append(z)
-    save(ledger)
+    save_games(ledger, pending)
     if not ready:
         return
     out = CHECKS / time.strftime("%Y%m%d-%H%M%S")
@@ -157,7 +167,7 @@ def cmd_run(args, ledger):
         flag = ("auto-pass" if r["auto_pass"] else "needs a look") + (" (slow recheck)" if r.get("slow_recheck") else "")
         print(f"{z} ({entry['set']}): {flag}  speed {r['speed']}  coin {r['coin_reached_game']}  "
               f"start {r['start_reached_game']}  escape {r['quit_on_escape']}")
-    save(ledger)
+    save_games(ledger, pending)
 
 
 def cmd_approve(args, ledger):
@@ -178,6 +188,21 @@ def cmd_keep(args, ledger):
     for z in args.zips:
         ledger[z].update(status="kept", why=args.why, at=time.strftime("%F %T"))
         print(f"{z}: kept ({args.why})")
+    save(ledger)
+
+
+def cmd_requeue(args, ledger):
+    """Check these games again on the next run (after a fix to the checker, say); converted games are left alone."""
+    for z in args.zips:
+        if ledger[z]["status"] == "converted":
+            print(f"{z}: converted; revert it first")
+            continue
+        if ledger[z]["status"] == "kept" and ledger[z].get("why", "").startswith("rebuild failed"):
+            print(f"{z}: its rebuild failed; not requeued")
+            continue
+        ledger[z].update(status="pending", requeued=args.why, at=time.strftime("%F %T"))
+        ledger[z].pop("why", None)
+        print(f"{z}: pending again ({args.why})")
     save(ledger)
 
 
@@ -232,6 +257,9 @@ def main():
     keep.add_argument("zips", nargs="+")
     keep.add_argument("--why", required=True)
     sub.add_parser("revert").add_argument("zips", nargs="+")
+    requeue = sub.add_parser("requeue")
+    requeue.add_argument("zips", nargs="+")
+    requeue.add_argument("--why", required=True)
     sub.add_parser("finish")
     sub.add_parser("status")
     args = parser.parse_args()

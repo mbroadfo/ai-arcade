@@ -23,9 +23,9 @@ HERE = Path(__file__).resolve().parent
 LAUNCHER = HERE / "mame_human.sh"
 LUA = HERE / "game_check.lua"
 ES_PROCESS = "/emulationstation/emulationstation( |$)"
-BOOT_FRAMES = 600     # 10 s of emulated time before the coin goes in (attract mode, self tests)
+BOOT_SECONDS = 10     # of the game's own time before the coin goes in (attract mode, self tests)
 MIN_SPEED = 95.0      # percent of full speed, median over the run
-BOOT_TIMEOUT = 30     # seconds to reach BOOT_FRAMES, warning screens included
+BOOT_TIMEOUT = 30     # extra real seconds allowed to reach BOOT_SECONDS (warning screens, slow loading)
 STALL = 4             # seconds without a new frame before pressing Space to dismiss a warning screen
 
 
@@ -36,7 +36,7 @@ def tap(keyboard, key, hold=0.15):
 
 
 def read_log(path):
-    facts = {"frames": 0, "speeds": []}
+    facts = {"frames": 0, "game_seconds": 0.0, "speeds": []}
     if not path.exists():
         return facts
     for line in path.read_text(errors="replace").splitlines():
@@ -44,10 +44,12 @@ def read_log(path):
         if word == "START":
             facts["machine"] = rest[0] if rest else None
             facts["description"] = " ".join(rest[1:])
-        elif word == "FRAME" and len(rest) == 2:
+        elif word == "FRAME" and len(rest) >= 2:
             facts["frames"] = int(rest[0])
             if rest[1] != "?":
                 facts["speeds"].append(float(rest[1]))
+            if len(rest) >= 3:
+                facts["game_seconds"] = float(rest[2])
         elif word in ("COIN_SEEN", "START_SEEN", "STOP"):
             facts[word.lower()] = int(rest[0])
         elif word in ("COIN_CHANGE", "START_CHANGE", "IDLE_CHANGE"):
@@ -55,8 +57,8 @@ def read_log(path):
     return facts
 
 
-def wait_frames(log, proc, frames, timeout, keyboard, result):
-    """Wait for the game to run `frames` frames. MAME holds a game on its warning screen ("this machine is not
+def wait_game_time(log, proc, seconds, timeout, keyboard, result):
+    """Wait for `seconds` of the game's own time (its screen may run at 60 or 30 frames a second). MAME holds a game on its warning screen ("this machine is not
     working perfectly... press any key") without running it; when nothing has moved for STALL seconds, Space (a game
     button, harmless before a coin) dismisses it, up to twice. Counted in result["warning_dismissed"]."""
     deadline = time.time() + timeout
@@ -64,9 +66,10 @@ def wait_frames(log, proc, frames, timeout, keyboard, result):
     while time.time() < deadline:
         if proc.poll() is not None:
             return False
-        now = read_log(log)["frames"]
-        if now >= frames:
+        facts = read_log(log)
+        if facts["game_seconds"] >= seconds:
             return True
+        now = facts["frames"]
         if now != last:
             last, moved_at = now, time.time()
         elif time.time() - moved_at > STALL and result["warning_dismissed"] < 2:
@@ -77,7 +80,7 @@ def wait_frames(log, proc, frames, timeout, keyboard, result):
     return False
 
 
-def check(game, keyboard, out, boot_frames=BOOT_FRAMES):
+def check(game, keyboard, out, boot_seconds=BOOT_SECONDS):
     folder = out / game
     folder.mkdir(parents=True, exist_ok=True)
     for old in folder.glob("*"):
@@ -91,7 +94,7 @@ def check(game, keyboard, out, boot_frames=BOOT_FRAMES):
                                 stdout=mame_out, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, env=env,
                                 start_new_session=True)
     result = {"game": game, "warning_dismissed": 0}
-    booted = wait_frames(log, proc, boot_frames, BOOT_TIMEOUT + boot_frames / 60, keyboard, result)
+    booted = wait_game_time(log, proc, boot_seconds, BOOT_TIMEOUT + boot_seconds, keyboard, result)
     if booted:
         tap(keyboard, e.KEY_5)
         time.sleep(2.5)
@@ -130,7 +133,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--out", required=True)
     parser.add_argument("--keep-es-closed", action="store_true", help="leave EmulationStation closed afterwards")
-    parser.add_argument("--boot-seconds", type=float, default=BOOT_FRAMES / 60,
+    parser.add_argument("--boot-seconds", type=float, default=BOOT_SECONDS,
                         help="emulated seconds before the coin (longer for games with slow first-run setup)")
     parser.add_argument("games", nargs="+")
     args = parser.parse_args()
@@ -148,7 +151,7 @@ def main():
     try:
         with open(out / "results.jsonl", "a") as results:
             for game in args.games:
-                result = check(game, keyboard, out, int(args.boot_seconds * 60))
+                result = check(game, keyboard, out, args.boot_seconds)
                 line = json.dumps(result)
                 print(line, flush=True)
                 results.write(line + "\n")
