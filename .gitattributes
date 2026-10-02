@@ -1,0 +1,3 @@
+# Files that run on the Pi keep Unix line endings in every checkout (core.autocrlf is on on the Windows PC).
+*.sh text eol=lf
+*.lua text eol=lf
