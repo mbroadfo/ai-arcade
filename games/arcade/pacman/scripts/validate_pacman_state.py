@@ -1,7 +1,10 @@
-"""Scripted validation of the Pac-Man decoder against live MAME on the Pi.
+"""Scripted validation of a decoder for a game on Pac-Man's board (Pac-Man, Ms. Pac-Man) against live MAME on the Pi.
 
 Launches MAME with the generic state exporter, plays a fixed sequence through the controller
 broker, decodes RAM after each step and checks it against what that action must have done.
+
+    python games/arcade/pacman/scripts/validate_pacman_state.py                       # Pac-Man
+    python games/arcade/pacman/scripts/validate_pacman_state.py --game arcade/mspacman
 """
 import argparse
 import struct
@@ -13,12 +16,14 @@ import paramiko
 
 import _bootstrap  # noqa: F401
 from controller_client import send
-from games.arcade.pacman.state import REGIONS, decode
+from gamelib import load_game, load_profile, split_spec
 from probe_mame_input import MAME_LOG, run
+from state_regions import regions_lua
 
 STATE_FILE = "/dev/shm/ai-arcade-state.bin"
 REMOTE_DIR = "/home/pi/ai-arcade"
 FAILURES = []
+GAME = None  # the game package under test (set in main)
 
 
 def check(label, ok, detail=""):
@@ -31,7 +36,7 @@ def snapshot(ssh):
     _, out, _ = ssh.exec_command(f"cat {STATE_FILE}", timeout=10)
     raw = out.read()
     frame = struct.unpack("<I", raw[:4])[0]
-    return frame, decode(raw[4:])
+    return frame, GAME.decode(raw[4:])
 
 
 def tap(args, control, ms=200):
@@ -53,7 +58,12 @@ def main():
     parser.add_argument("--host", default="192.168.10.155")
     parser.add_argument("--user", default="pi")
     parser.add_argument("--broker-port", type=int, default=8765)
+    parser.add_argument("--game", default="arcade/pacman", help="<system>/<name> of a game on Pac-Man's board")
     args = parser.parse_args()
+    global GAME
+    GAME = load_game(args.game)
+    system, _ = split_spec(args.game)
+    romset = load_profile(args.game)["romset"]
 
     ssh = paramiko.SSHClient()
     ssh.load_system_host_keys()
@@ -66,12 +76,12 @@ def main():
         sftp = ssh.open_sftp()
         sftp.put(str(here / "mame_state_export.lua"), f"{REMOTE_DIR}/mame_state_export.lua")
         with sftp.file(f"{REMOTE_DIR}/regions.lua", "w") as f:
-            f.write("return {" + ", ".join(f"{{0x{a:X}, 0x{b:X}}}" for a, b in REGIONS) + "}\n")
+            f.write(regions_lua(GAME.REGIONS))
         sftp.close()
 
         run(ssh, "pkill -9 -x mame || true")
         run(ssh, f"rm -f {STATE_FILE}")
-        run(ssh, "nohup mame pacman -rompath /home/pi/RetroPie/roms/arcade -sound none "
+        run(ssh, f"nohup mame {romset} -rompath /home/pi/RetroPie/roms/{system} -sound none "
                  "-video accel -nowindow -skip_gameinfo -joystick -joystickprovider sdl "
                  "-ctrlrpath /home/pi/.mame/ctrlr -ctrlr aiarcade "
                  f"-autoboot_script {REMOTE_DIR}/mame_state_export.lua "
