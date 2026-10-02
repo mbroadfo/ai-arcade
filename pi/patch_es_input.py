@@ -14,6 +14,13 @@ INPUTS = [
     ('pageup','button','4','1'), ('pagedown','button','5','1'),
     ('select','button','8','1'), ('start','button','9','1'),
 ]
+# A USB keyboard for human mode: SDL2 key codes. Arrows move, Enter accepts, Backspace goes back, Space opens the
+# menu, Right Shift is select, Page Up/Down page through lists. (In games RetroArch's own keyboard defaults apply.)
+KEYBOARD = [
+    ('up', '1073741906'), ('down', '1073741905'), ('left', '1073741904'), ('right', '1073741903'),
+    ('a', '13'), ('b', '8'), ('start', '32'), ('select', '1073742053'),
+    ('pageup', '1073741899'), ('pagedown', '1073741902'),
+]
 
 def main():
     p = argparse.ArgumentParser()
@@ -34,6 +41,13 @@ def main():
             ET.SubElement(cfg, 'input', {
                 'name': iname, 'type': itype, 'id': iid, 'value': value
             })
+
+    for node in list(root.findall('inputConfig')):
+        if node.get('type') == 'keyboard':
+            root.remove(node)
+    keyboard = ET.SubElement(root, 'inputConfig', {'type': 'keyboard', 'deviceName': 'Keyboard', 'deviceGUID': '-1'})
+    for iname, key in KEYBOARD:
+        ET.SubElement(keyboard, 'input', {'name': iname, 'type': 'key', 'id': key, 'value': '1'})
 
     try:
         ET.indent(tree, space='  ')

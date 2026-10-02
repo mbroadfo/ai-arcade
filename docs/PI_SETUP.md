@@ -35,6 +35,23 @@ defaults to `DEFAULT_PI_HOST` in `tools/gamelib.py` (override with the `ARCADE_P
 5. `python tools/install_pi.py --host <pi>` (the broker, below) and `python tools/configure_mame_controller.py`.
 6. Check: `python tools/start_pi_game.py`, then `python tools/state_client.py --measure`.
 
+### A USB keyboard for human mode
+
+The installer also gives EmulationStation a keyboard (`pi/patch_es_input.py`), and `configure_mame_controller.py` adds
+keys to MAME beside the joystick codes:
+
+| Key | EmulationStation | MAME |
+| --- | --- | --- |
+| Arrows | move | joystick |
+| Enter | accept | start (also `1`) |
+| Backspace | back | |
+| Space | menu | |
+| Right Shift | select | coin (also `5`) |
+| Page Up / Down | page through a list | |
+| Tab / Esc | | MAME menu / quit (MAME's defaults) |
+
+In RetroArch games RetroArch's own keyboard defaults apply (arrows, X/Z, Enter start, Right Shift select).
+
 Measured on the Pi 5 with MAME 0.251: Pac-Man at full speed with the agent export (60.7 emulated frames a second; the
 Pi 3 managed about 51), press to visible effect 66 ms median. The Lua scripts in `tools/` run on both MAME versions.
 

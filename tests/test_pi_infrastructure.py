@@ -97,7 +97,10 @@ def test_mapping_install_is_idempotent(monkeypatch, tmp_path):
     first = path.read_bytes()
     patcher.main()
     assert path.read_bytes() == first
-    assert len(ET.parse(path).getroot().findall('inputConfig')) == 3
+    configs = ET.parse(path).getroot().findall('inputConfig')
+    assert len(configs) == 4  # the existing one, the two AI Arcade players, the keyboard
+    keyboard = [c for c in configs if c.get('type') == 'keyboard']
+    assert len(keyboard) == 1 and {i.get('name') for i in keyboard[0]} >= {'up', 'down', 'left', 'right', 'a', 'b', 'start'}
 
 
 def test_installer_repeats_safely_and_verifies_after_restart(monkeypatch, tmp_path):

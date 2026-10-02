@@ -1,6 +1,8 @@
 """One-time Pi setup: write the MAME controller profile (aiarcade.cfg) that standalone MAME uses in AI mode.
 
-Maps the cabinet pad to COIN1, START1 and the joystick. Safe to re-run. Does not touch human mode.
+Maps the cabinet pad to COIN1, START1 and the joystick, and keeps a USB keyboard working alongside it: arrows move,
+5 or Right Shift inserts a coin, 1 or Enter starts (MAME's own keys, plus RetroArch's). Safe to re-run. Does not touch
+human mode.
 
     python tools/configure_mame_controller.py [--host ADDRESS]
 """
@@ -24,27 +26,27 @@ CFG = """<?xml version="1.0"?>
         <input>
 
             <port type="COIN1">
-                <newseq type="standard">JOYCODE_1_BUTTON9</newseq>
+                <newseq type="standard">JOYCODE_1_BUTTON9 OR KEYCODE_5 OR KEYCODE_RSHIFT</newseq>
             </port>
 
             <port type="START1">
-                <newseq type="standard">JOYCODE_1_BUTTON10</newseq>
+                <newseq type="standard">JOYCODE_1_BUTTON10 OR KEYCODE_1 OR KEYCODE_ENTER</newseq>
             </port>
 
             <port type="P1_JOYSTICK_UP">
-                <newseq type="standard">JOYCODE_1_YAXIS_UP_SWITCH</newseq>
+                <newseq type="standard">JOYCODE_1_YAXIS_UP_SWITCH OR KEYCODE_UP</newseq>
             </port>
 
             <port type="P1_JOYSTICK_DOWN">
-                <newseq type="standard">JOYCODE_1_YAXIS_DOWN_SWITCH</newseq>
+                <newseq type="standard">JOYCODE_1_YAXIS_DOWN_SWITCH OR KEYCODE_DOWN</newseq>
             </port>
 
             <port type="P1_JOYSTICK_LEFT">
-                <newseq type="standard">JOYCODE_1_XAXIS_LEFT_SWITCH</newseq>
+                <newseq type="standard">JOYCODE_1_XAXIS_LEFT_SWITCH OR KEYCODE_LEFT</newseq>
             </port>
 
             <port type="P1_JOYSTICK_RIGHT">
-                <newseq type="standard">JOYCODE_1_XAXIS_RIGHT_SWITCH</newseq>
+                <newseq type="standard">JOYCODE_1_XAXIS_RIGHT_SWITCH OR KEYCODE_RIGHT</newseq>
             </port>
 
         </input>
