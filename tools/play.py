@@ -1,12 +1,13 @@
 """Play a game with an AI: the Pi streams state, a decider chooses, the broker steers. Any game package.
 
+The game's own switches (its experiment.OPTIONS) are added to the command line; see --help with --game.
+
     python tools/play.py --game arcade/pacman --decider rule --games 3
     python tools/play.py --game arcade/pacman --decider mock --latency 90,500 --games 5
     python tools/play.py --game arcade/pacman --decider ollama --model nimble --knowledge L2 --games 5
 """
 import argparse
 import json
-import statistics
 import sys
 import time
 from pathlib import Path
@@ -15,6 +16,8 @@ from gamelib import DEFAULT_GAME, ROOT, load_game  # first: puts the repository 
 
 from arcadekit.decisions import DecisionWorker
 from arcadekit.manifest import build_manifest
+from arcadekit.options import add_arguments, label_parts, values
+from arcadekit.report import summary_lines
 from arcadekit.strategist import MockStrategistClient, Strategist
 from arcadekit.systemone import DEFAULT_HOST, MockSystemOne, OllamaSystemOne
 from broker_link import BrokerLink
@@ -32,7 +35,18 @@ def build_decider(game, args):
     return game.deciders.SystemOneDecider(client, min_confidence=args.min_confidence)
 
 
-def main():
+def chosen_game(argv):
+    """The --game named on the command line (before full parsing: its options shape the parser)."""
+    pre = argparse.ArgumentParser(add_help=False)
+    pre.add_argument("--game", default=DEFAULT_GAME)
+    return pre.parse_known_args(argv)[0].game
+
+
+def main(argv=None):
+    argv = sys.argv[1:] if argv is None else argv
+    game = load_game(chosen_game(argv))
+    experiment = getattr(game, "experiment", None)
+    game_options = experiment.OPTIONS if experiment else ()
     parser = argparse.ArgumentParser()
     parser.add_argument("--game", default=DEFAULT_GAME, help="<system>/<name>")
     parser.add_argument("--host", default="192.168.10.155")
@@ -42,35 +56,19 @@ def main():
     parser.add_argument("--ollama-host", default=DEFAULT_HOST)
     parser.add_argument("--min-confidence", type=float, default=0.0)
     parser.add_argument("--seed", type=int, default=0)
-    parser.add_argument("--lookahead", type=int, default=None, help="tiles ahead to query (game default if unset)")
     parser.add_argument("--knowledge", choices=None, help="help rung the game offers, e.g. L0..L3b")
     parser.add_argument("--goal", default="auto", help="standing goal: auto, or pin one (game-specific names)")
     parser.add_argument("--strategist", choices=("code", "mock", "ollama"), default="code",
                         help="who sets the goal and stance: the game's own code (default), a mock model that "
                              "repeats the code's choice after a delay (latency control), or a System One model")
     parser.add_argument("--strategist-model", default="nimble")
-    parser.add_argument("--revise", action="store_true",
-                        help="code re-checks stored answers against fresh facts (overrules the decider; off by default)")
-    parser.add_argument("--park", action="store_true",
-                        help="ambush: wait against a wall near the energizer instead of pacing back and forth")
-    parser.add_argument("--refuge", action="store_true",
-                        help="hide at the game's safe spot when ghosts are close and he can get there first")
-    parser.add_argument("--danger-query", action="store_true",
-                        help="in a corridor with a ghost close, ask the model carry on or turn back (urgent) and execute it")
-    parser.add_argument("--danger-model", default=None,
-                        help="a separate (fast) model for the danger query, e.g. tev1:0.8b; default: the decider's own")
-    parser.add_argument("--late", choices=("rule", "keep"), default="rule",
-                        help="no answer on arrival at a junction: the rule decides (code-late), or keep: nothing changes "
-                             "and he waits for the model's answer (with --no-reflex, the model alone)")
-    parser.add_argument("--no-reflex", action="store_true", help="turn the survival instinct off (ablation)")
-    parser.add_argument("--chain", type=int, default=None, help="look-ahead chain depth, 0 = off (game default if unset)")
     parser.add_argument("--tag", default="", help="label added to the run files")
     parser.add_argument("--games", type=int, default=1)
     parser.add_argument("--seconds", type=int, default=3600)
     parser.add_argument("--out", default=str(ROOT / "runs"))
-    args = parser.parse_args()
-
-    game = load_game(args.game)
+    add_arguments(parser, game_options, f"{chosen_game(argv)} switches (kind in brackets; docs/GAME_WORKSHOP.md)")
+    args = parser.parse_args(argv)
+    game_values = values(args, game_options)
     if args.knowledge and args.knowledge not in game.knowledge.LEVELS:
         parser.error(f"--knowledge must be one of {game.knowledge.LEVELS}")
     if args.goal not in game.goals.MISSIONS:
@@ -81,14 +79,11 @@ def main():
     label = "-".join(p for p in (stamp, args.game.replace("/", "_"), args.decider, args.knowledge,
                                  None if args.goal == "auto" else args.goal,
                                  None if args.strategist == "code" else f"strat-{args.strategist}",
-                                 "park" if args.park else None, "refuge" if args.refuge else None,
-                                 "danger" if args.danger_query else None, "revise" if args.revise else None, "noreflex" if args.no_reflex else None,
-                                 None if args.late == "rule" else f"late-{args.late}",
-                                 None if args.chain is None else f"chain{args.chain}", args.tag) if p)
+                                 *label_parts(game_values, game_options), args.tag) if p)
     decisions_log = open(out_dir / f"{label}-decisions.jsonl", "w", buffering=1)
     results_path = out_dir / f"{label}-games.jsonl"
     manifest_path = out_dir / f"{label}-manifest.json"
-    manifest = build_manifest(args, label)
+    manifest = build_manifest(args, label, game_options, game_values)
     manifest_path.write_text(json.dumps(manifest, indent=2))
 
     stream = StateStream(args.host, game=game)
@@ -99,20 +94,12 @@ def main():
     manifest_path.write_text(json.dumps(manifest, indent=2))
     broker = BrokerLink(args.host)
     worker = DecisionWorker(build_decider(game, args))
-    extra = {"lookahead": args.lookahead} if args.lookahead is not None else {}
-    extra.update(revise=args.revise, reflex=not args.no_reflex, late=args.late)
-    if args.park:
-        extra["park"] = True
-    if args.refuge:
-        extra["refuge"] = True
-    if args.danger_query:
-        extra["danger_query"] = True
-        if args.danger_model:
-            extra["danger_worker"] = DecisionWorker(game.deciders.SystemOneDecider(
-                OllamaSystemOne(model=args.danger_model, host=args.ollama_host, timeout=2.0),
-                min_confidence=args.min_confidence))
-    if args.chain is not None:
-        extra["chain_depth"] = args.chain
+
+    def new_worker(model):  # for a game switch that names a second model
+        return DecisionWorker(game.deciders.SystemOneDecider(
+            OllamaSystemOne(model=model, host=args.ollama_host, timeout=2.0), min_confidence=args.min_confidence))
+
+    extra = experiment.player_kwargs(game_values, new_worker) if experiment else {}
     manager = game.goals.GoalManager(args.goal)
     if args.strategist != "code":
         if args.goal != "auto":
@@ -161,37 +148,10 @@ def main():
         manifest.update(ended=time.strftime("%Y-%m-%dT%H:%M:%S"), games_completed=len(results))
         manifest_path.write_text(json.dumps(manifest, indent=2))
 
-    s = player.stats
-    print(f"\ndecisions: {s['on_time']} on time, {s['late_rule']} late (rule filled in), "
-          f"{s.get('late_keep', 0)} late (kept going or waited), "
-          f"{s['queries']} queries ({s.get('chained', 0)} chained), {s.get('revised', 0)} stale answers revised; "
-          f"late because {s.get('late_why', {})}; sources {player.sources}")
-    if hasattr(player, "ledger"):
-        print(player.ledger.summary())
-    if args.danger_query:
-        print(f"danger queries: {s.get('danger')}")
-    if hasattr(player.strategy, "stats"):
-        print(f"strategist: {player.strategy.stats}; asked {player.strategy.strategist.stats}")
-    if player.latencies:
-        print(f"model latency: median {statistics.median(player.latencies):.0f} ms, "
-              f"max {max(player.latencies):.0f} ms")
-    if broker.call_ms:
-        print(f"broker calls: {broker.calls}, median {statistics.median(broker.call_ms):.1f} ms")
-    if results:
-        scores = [r["score"] for r in results]
-        print(f"scores: mean {statistics.mean(scores):.0f}, best {max(scores)}, worst {min(scores)}")
-        for key in ("boards_cleared", "dots_total", "ghosts_eaten", "fruit_eaten", "fruit_shown", "energizers", "reflexes", "parks", "parked_seconds",
-                    "park_deaths", "refuges", "refuge_seconds", "refuge_deaths"):
-            if key in results[0]:
-                print(f"{key}: per game {[r[key] for r in results]}")
-        if "lives" in results[0]:
-            for r in results:
-                print(f"game {r['game']} lives (seconds, score earned): "
-                      + ", ".join(f"({l['seconds']}, {l['score']})" for l in r["lives"]))
-        if "feasts" in results[0]:
-            sizes = [n for r in results for n in r["feasts"]]
-            print("ghosts eaten per energizer: " + "  ".join(f"{k}x: {sizes.count(k)}" for k in range(5))
-                  + f"   (of {len(sizes)} energizers)")
+    print()
+    for line in summary_lines(player, results, broker, experiment.METRICS if experiment else (),
+                              experiment.report_lines(player, results) if experiment else ()):
+        print(line)
     return 0
 
 

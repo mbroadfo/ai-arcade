@@ -2,7 +2,7 @@
 
 The manifest says which commit (and whether the working tree had uncommitted changes), which game, which decider and
 model (with the model's digest when an Ollama server answers), which knowledge rung, goal and strategist, every switch
-that lets code help or overrule the decider, the seed, and how many games were asked for.
+the game offers with its value and kind (arcadekit.options), the seed, and how many games were asked for.
 """
 import json
 import platform
@@ -11,11 +11,9 @@ import time
 import urllib.request
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+from .options import describe
 
-# switches that let code help or overrule the decider: a result must say which were on
-SWITCHES = ("revise", "no_reflex", "late", "chain", "lookahead", "park", "refuge", "danger_query", "danger_model",
-            "min_confidence")
+ROOT = Path(__file__).resolve().parent.parent
 
 
 def _git(*args):
@@ -37,9 +35,11 @@ def model_digest(host, model, timeout=3.0):
     return None
 
 
-def build_manifest(args, label):
-    """args: the argparse namespace of tools/play.py."""
+def build_manifest(args, label, game_options=(), game_values=None):
+    """args: the argparse namespace of tools/play.py. game_options/game_values: the game's declared switches
+    (arcadekit.options.Option) and their values in this run."""
     options = vars(args)
+    game_values = game_values or {}
     uses_ollama = options.get("decider") == "ollama" or options.get("strategist") == "ollama"
     models = {}
     if options.get("decider") == "ollama":
@@ -47,6 +47,11 @@ def build_manifest(args, label):
     if options.get("strategist") == "ollama":
         name = options["strategist_model"]
         models["strategist"] = {"model": name, "digest": model_digest(options["ollama_host"], name)}
+    for o in game_options:  # a switch naming a model (e.g. a separate model for one kind of question)
+        if o.model and game_values.get(o.name):
+            uses_ollama = True
+            models[o.name] = {"model": game_values[o.name],
+                              "digest": model_digest(options["ollama_host"], game_values[o.name])}
     status = _git("status", "--porcelain")
     return {
         "label": label,
@@ -59,7 +64,8 @@ def build_manifest(args, label):
         "strategist": options.get("strategist"),
         "knowledge": options.get("knowledge"),
         "goal": options.get("goal"),
-        "switches": {name: options.get(name) for name in SWITCHES},
+        "switches": describe(game_values, game_options),
+        "min_confidence": options.get("min_confidence"),
         "seed": options.get("seed"),
         "games_requested": options.get("games"),
         "seconds_cap": options.get("seconds"),

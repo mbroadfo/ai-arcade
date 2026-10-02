@@ -2,7 +2,8 @@
 
 Status, 2026-10-01: phase 0 done (`0cea045`); phase 1 done (`1dcfc91`, `43f8e04`, `15e08f0`) except `OutcomeStats`,
 which moves with the report in phase 2. `player.py` is 490 lines after phase 1, not the 300 estimated: what remains
-is mostly Pac-Man's own (holds, the danger query, the reflex).
+is mostly Pac-Man's own (holds, the danger query, the reflex). Phase 2 done: `play.py` and the manifest name no game;
+Pac-Man declares its switches in `games/arcade/pacman/experiment.py`; `tools/compare_runs.py` compares runs.
 
 ## Why now
 

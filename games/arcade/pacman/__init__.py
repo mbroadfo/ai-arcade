@@ -9,8 +9,9 @@ What a game package provides:
   goals           GOALS, MISSIONS, GoalManager: what to try to achieve (survival.py can override)
   strategy        SCHEMA, ModelGoalManager: a slow model layer picking the goal and stance (optional)
   player          Player: the play loop (goal manager, deciders, survival reflex, per-game stats)
+  experiment      OPTIONS (the switches an experiment can set, with kinds), METRICS, player_kwargs, report_lines
 Layout: profile.json (ROM, controls), discovered.json (auto-found RAM), RAM_MAP.md, scripts/, tests/.
 """
-from . import deciders, goals, knowledge, player, strategy  # noqa: F401
+from . import deciders, experiment, goals, knowledge, player, strategy  # noqa: F401
 from .features import score_option  # noqa: F401
 from .state import AGENT_REGIONS, REGIONS, decode  # noqa: F401

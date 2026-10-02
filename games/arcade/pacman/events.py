@@ -4,6 +4,8 @@ Detection (checked against a recorded 240 s stream, 9 ghost scores = 9 events): 
 flag rises (about a second after the score jump; the frightened flag is not reliable at that moment). The fruit
 is eaten when it disappears with Pac-Man within 2 tiles of it.
 """
+from arcadekit.outcome import OutcomeStats
+
 from .maze import Maze
 
 GHOSTS = ("red", "pink", "blue", "orange")
@@ -13,14 +15,14 @@ FRUIT_REACH = 2
 class GameStats:
     def __init__(self):
         self.ghosts_eaten = self.fruit_eaten = self.fruit_missed = self.fruit_shown = 0
-        self.energizers = self.deaths = self.reflexes = 0
+        self.energizers = self.reflexes = 0
+        self.outcome = OutcomeStats()  # deaths, a record per life lost, boards finished (arcadekit.outcome)
         self.parks = self.park_deaths = 0  # waits near an energizer, and lives lost while waiting
         self.refuges = self.refuge_deaths = 0  # hides at the safe spot, and lives lost while there or on the way
         self.parked_seconds = self.refuge_seconds = 0.0
         self.feasts, self._feast = [], None  # ghosts eaten per energizer (a full feast is 4 = 3000 points)
         self.goal_seconds = {}
-        self.dots_total = self.boards_cleared = 0  # dots eaten over the whole game; boards finished (level went up)
-        self.life_log, self._life = [], None  # one record per life lost: seconds, score earned, dots eaten
+        self.dots_total = 0  # dots eaten over the whole game (the board's own counter resets each board)
         self._prev, self._energizers_left, self._last_t = None, None, None
 
     def update(self, state, image, goal=None, now=None):
@@ -29,8 +31,6 @@ class GameStats:
             if self._last_t is not None:
                 self.goal_seconds[goal] = self.goal_seconds.get(goal, 0.0) + (now - self._last_t)
             self._last_t = now
-        if self._life is None:
-            self._life = (now, state.score, self.dots_total)
         if prev is None:
             self._energizers_left = Maze(image).energizers_left()  # baseline for counting energizers eaten
         else:
@@ -41,16 +41,6 @@ class GameStats:
                         self._feast += 1
             if state.dots_eaten > prev.dots_eaten:
                 self.dots_total += state.dots_eaten - prev.dots_eaten
-            if state.level > prev.level:
-                self.boards_cleared += 1
-            if state.lives < prev.lives:
-                self.deaths += 1
-                start_t, start_score, start_dots = self._life
-                self.life_log.append({"life": self.deaths,
-                                      "seconds": None if now is None or start_t is None else round(now - start_t),
-                                      "score": state.score - start_score, "dots": self.dots_total - start_dots,
-                                      "score_at_end": state.score})
-                self._life = (now, state.score, self.dots_total)
             if prev.fruit_tile and not state.fruit_tile:
                 near = (abs(prev.pacman.tile[0] - prev.fruit_tile[0]) + abs(prev.pacman.tile[1] - prev.fruit_tile[1])
                         <= FRUIT_REACH)
@@ -68,15 +58,15 @@ class GameStats:
                 self._energizers_left = left
         if state.fruit_tile and (prev is None or not prev.fruit_tile):
             self.fruit_shown += 1
+        self.outcome.update(state.score, state.lives, state.level, now, {"dots": self.dots_total})
         self._prev = state
 
     def summary(self):
         return {"ghosts_eaten": self.ghosts_eaten, "fruit_eaten": self.fruit_eaten,
                 "fruit_shown": self.fruit_shown, "fruit_missed": self.fruit_missed,
                 "energizers": self.energizers, "feasts": self.feasts + ([self._feast] if self._feast is not None else []),
-                "deaths": self.deaths, "reflexes": self.reflexes,
-                "boards_cleared": self.boards_cleared, "dots_total": self.dots_total,
-                "board_dots": None if self._prev is None else self._prev.dots_eaten, "lives": list(self.life_log),
+                "reflexes": self.reflexes, **self.outcome.summary(), "dots_total": self.dots_total,
+                "board_dots": None if self._prev is None else self._prev.dots_eaten,
                 "parks": self.parks, "parked_seconds": round(self.parked_seconds), "park_deaths": self.park_deaths,
                 "refuges": self.refuges, "refuge_seconds": round(self.refuge_seconds),
                 "refuge_deaths": self.refuge_deaths,
