@@ -12,9 +12,9 @@ inventoried. Files added to disk are not recognized until ES loads them.
 From the repository root and activated virtual environment:
 
 ```powershell
-python .\tools\install_pi.py --host 192.168.10.155 --timeout 60 --with-es-state
-python .\tools\es_catalog.py --host 192.168.10.155
-python .\tools\es_catalog.py --host 192.168.10.155 --refresh
+python .\tools\install_pi.py --host 192.168.10.122 --timeout 60 --with-es-state
+python .\tools\es_catalog.py --host 192.168.10.122
+python .\tools\es_catalog.py --host 192.168.10.122 --refresh
 ```
 
 The first catalog command prints counts and the location of a dashboard-ready JSON
@@ -28,9 +28,9 @@ Cached library paths and metadata are excluded from Git through `.manifests/`.
 
 ```powershell
 # Complete cache envelope for a dashboard or another program:
-python .\tools\es_catalog.py --host 192.168.10.155 --json
+python .\tools\es_catalog.py --host 192.168.10.122 --json
 # Explicitly read the saved catalog without contacting the Pi:
-python .\tools\es_catalog.py --host 192.168.10.155 --offline --json
+python .\tools\es_catalog.py --host 192.168.10.122 --offline --json
 ```
 
 Offline results are marked `live_verified: false`; online errors never silently
@@ -86,8 +86,8 @@ invalidate the local cache even if the contents are unchanged.
 Before an AI acts on a chosen `game_id`, check it live:
 
 ```powershell
-python .\tools\es_catalog.py --host 192.168.10.155 --game-id '<game_id from the catalog>'
-python .\tools\es_state.py --host 192.168.10.155
+python .\tools\es_catalog.py --host 192.168.10.122 --game-id '<game_id from the catalog>'
+python .\tools\es_state.py --host 192.168.10.122
 ```
 
 The game-ID check forces a fresh snapshot and returns `recognized`, `visible`,

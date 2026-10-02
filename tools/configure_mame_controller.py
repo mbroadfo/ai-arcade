@@ -8,9 +8,10 @@ import argparse
 import os
 
 import paramiko
+from gamelib import DEFAULT_PI_HOST
 
 parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-parser.add_argument("--host", default="192.168.10.155")
+parser.add_argument("--host", default=DEFAULT_PI_HOST)
 parser.add_argument("--user", default="pi")
 args = parser.parse_args()
 HOST, USER = args.host, args.user

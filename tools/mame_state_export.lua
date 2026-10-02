@@ -6,6 +6,15 @@
 -- Publishes a 4-byte little-endian frame counter followed by every region's latest bytes,
 -- concatenated in list order, to /dev/shm/ai-arcade-state.bin (atomic rename).
 
+-- MAME 0.206 has methods (manager:machine(), machine:system()); 0.227 and later have properties (manager.machine).
+-- get() reads either way, so this runs on the Pi 3 (0.206) and the Pi 5 (0.251).
+local function get(obj, name)
+  local v = obj[name]
+  if type(v) == "function" then return v(obj) end
+  return v
+end
+local on_frame = emu.add_machine_frame_notifier or emu.register_frame
+
 local REGIONS_FILE = "/home/pi/ai-arcade/regions.lua"
 local OUT_FILE = "/dev/shm/ai-arcade-state.bin"
 local TMP_FILE = OUT_FILE .. ".tmp"
@@ -14,7 +23,7 @@ local regions = dofile(REGIONS_FILE)
 local spaces = {}
 for i, r in ipairs(regions) do
   local cpu, space = r[4] or ":maincpu", r[5] or "program"
-  spaces[i] = manager:machine().devices[cpu].spaces[space]
+  spaces[i] = get(manager, "machine").devices[cpu].spaces[space]
 end
 
 local function u32le(n)
@@ -29,7 +38,7 @@ end
 
 local cache = {}
 local frame = 0
-emu.register_frame(function()
+FRAME_NOTIFIER = on_frame(function()  -- kept global: newer MAME drops a notifier that is garbage-collected
   frame = frame + 1
   local chunks = { u32le(frame) }
   for i, r in ipairs(regions) do

@@ -17,6 +17,7 @@ import paramiko
 
 from controller_client import send
 from probe_mame_input import MAME_LOG, run
+from gamelib import DEFAULT_PI_HOST
 
 REMOTE_DIR = "/home/pi/ai-arcade"
 REQ = "/dev/shm/ai-arcade-snap.req"
@@ -224,7 +225,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("romset")
     parser.add_argument("--system", default="arcade", help="EmulationStation system folder (arcade, nes, ...)")
-    parser.add_argument("--host", default="192.168.10.155")
+    parser.add_argument("--host", default=DEFAULT_PI_HOST)
     parser.add_argument("--user", default="pi")
     parser.add_argument("--broker-port", type=int, default=8765)
     parser.add_argument("--start", type=lambda s: int(s, 0), default=0x0000)

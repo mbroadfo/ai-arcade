@@ -17,6 +17,7 @@ from pathlib import Path
 import paramiko
 
 from probe_mame_input import run
+from gamelib import DEFAULT_PI_HOST
 
 PI_HISCORE = "/usr/share/games/mame/plugins/hiscore/hiscore.dat"
 PI_CHEAT = "/opt/retropie/libretrocores/lr-mame2003/metadata/cheat.dat"
@@ -104,7 +105,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("romset")
     parser.add_argument("--system", default="arcade", help="EmulationStation system folder (arcade, nes, ...)")
-    parser.add_argument("--host", default="192.168.10.155")
+    parser.add_argument("--host", default=DEFAULT_PI_HOST)
     parser.add_argument("--user", default="pi")
     args = parser.parse_args()
 

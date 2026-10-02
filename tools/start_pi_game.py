@@ -10,7 +10,7 @@ import time
 
 import paramiko
 
-from gamelib import DEFAULT_GAME, ROOT, load_game, load_profile, split_spec
+from gamelib import DEFAULT_GAME, DEFAULT_PI_HOST, ROOT, load_game, load_profile, split_spec
 from probe_mame_input import MAME_LOG, run
 from state_regions import regions_lua
 
@@ -22,7 +22,7 @@ SERVER_LOG = "/tmp/ai-arcade-state-server.log"
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--game", default=DEFAULT_GAME, help="<system>/<name>, e.g. arcade/pacman")
-    parser.add_argument("--host", default="192.168.10.155")
+    parser.add_argument("--host", default=DEFAULT_PI_HOST)
     parser.add_argument("--user", default="pi")
     parser.add_argument("--state-port", type=int, default=8766)
     parser.add_argument("--speed", type=float, default=1.0,

@@ -5,6 +5,7 @@ from pathlib import Path
 import sys
 import paramiko
 import json
+from gamelib import DEFAULT_PI_HOST
 
 
 def fetch(ssh):
@@ -19,7 +20,7 @@ def fetch(ssh):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--host', default='192.168.10.155')
+    parser.add_argument('--host', default=DEFAULT_PI_HOST)
     parser.add_argument('--user', default='pi')
     parser.add_argument('--key', default=str(Path.home() / '.ssh' / 'id_rsa'))
     parser.add_argument('--port', type=int, default=22)

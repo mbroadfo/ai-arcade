@@ -3,12 +3,12 @@
 Small Windows/Linux client for the AI Arcade Controller Broker.
 
 Examples:
-    python controller_client.py --host 192.168.10.155 ping
-    python controller_client.py --host 192.168.10.155 tap 1 LEFT
-    python controller_client.py --host 192.168.10.155 tap 1 BUTTON_1
-    python controller_client.py --host 192.168.10.155 press 1 RIGHT
-    python controller_client.py --host 192.168.10.155 release 1 RIGHT
-    python controller_client.py --host 192.168.10.155 release-all
+    python controller_client.py ping
+    python controller_client.py tap 1 LEFT
+    python controller_client.py tap 1 BUTTON_1
+    python controller_client.py press 1 RIGHT
+    python controller_client.py release 1 RIGHT
+    python controller_client.py release-all
 """
 
 from __future__ import print_function
@@ -17,6 +17,7 @@ import argparse
 import json
 import socket
 import sys
+from gamelib import DEFAULT_PI_HOST
 
 
 def send(host, port, payload):
@@ -42,7 +43,7 @@ def send(host, port, payload):
 
 def main():
     parser = argparse.ArgumentParser(description="AI Arcade controller client")
-    parser.add_argument("--host", default="192.168.10.155")
+    parser.add_argument("--host", default=DEFAULT_PI_HOST)
     parser.add_argument("--port", type=int, default=8765)
 
     sub = parser.add_subparsers(dest="command")

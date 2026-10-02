@@ -5,11 +5,12 @@ from pathlib import Path
 import sys
 
 import paramiko
+from gamelib import DEFAULT_PI_HOST
 
 
 def main():
     p = argparse.ArgumentParser(description='Verify AI Arcade Pi installation')
-    p.add_argument('--host', default='192.168.10.155')
+    p.add_argument('--host', default=DEFAULT_PI_HOST)
     p.add_argument('--user', default='pi')
     p.add_argument('--key', default=str(Path.home() / '.ssh' / 'id_rsa'))
     p.add_argument('--port', type=int, default=22)

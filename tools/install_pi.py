@@ -6,6 +6,7 @@ import posixpath
 import sys
 
 import paramiko
+from gamelib import DEFAULT_PI_HOST
 
 FILES = [
     'es_state/ArcadeState.h',
@@ -58,7 +59,7 @@ def main():
     if hasattr(sys.stdout, 'reconfigure'):
         sys.stdout.reconfigure(errors='backslashreplace')
     p = argparse.ArgumentParser(description='Install AI Arcade runtime on RetroPie')
-    p.add_argument('--host', default='192.168.10.155')
+    p.add_argument('--host', default=DEFAULT_PI_HOST)
     p.add_argument('--user', default='pi')
     p.add_argument('--key', default=str(Path.home() / '.ssh' / 'id_rsa'))
     p.add_argument('--port', type=int, default=22)

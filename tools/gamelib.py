@@ -9,6 +9,7 @@ and the submodules player, deciders, knowledge. See games/README.md.
 """
 import importlib
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -17,6 +18,8 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 DEFAULT_GAME = "arcade/pacman"
+# The cabinet Pi (Raspberry Pi 5 since 2026-10-02; the Pi 3 at 192.168.10.155 is the spare). Override with ARCADE_PI_HOST.
+DEFAULT_PI_HOST = os.environ.get("ARCADE_PI_HOST", "192.168.10.122")
 
 
 def split_spec(spec):

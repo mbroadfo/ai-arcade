@@ -69,6 +69,7 @@ def stance_text(mods):
 FRIGHT_FRAMES = {1: 360, 2: 300, 3: 240, 4: 180, 5: 120, 6: 300, 7: 120, 8: 120, 9: 60, 10: 300,
                  11: 120, 12: 60, 13: 60, 14: 180, 15: 60, 16: 60, 17: 0, 18: 60}
 FRAMES_PER_TILE = 8  # Pac-Man's pace at level 1 (about 7.6 tiles per second at 60 frames per second)
+GAME_FPS = 60.6  # the arcade's frame rate: frames to game seconds (the Pi 5 runs at full speed; the Pi 3 ran at ~85%)
 HUNT_MARGIN = 0.8  # chase a lone blue ghost only if it is within this share of the tiles the window allows
 HUNT_MARGIN_PER_GHOST = 0.1  # ... more blue ghosts out of the house make the chase worth more (800, 1600), so a wider share
 HUNT_MARGIN_MAX = 1.0
@@ -126,7 +127,7 @@ class GoalManager:
         if self.mission != "auto":
             return self.mission
         now = self.clock()
-        frame = frame if frame is not None else now * 50  # emulation runs near 50 frames per wall second
+        frame = frame if frame is not None else now * GAME_FPS  # no frame counter given: wall time at full speed
         look = self._look(state, image, frame)
         if self.goal == "ambush" and now - self.since > AMBUSH_MAX_SECONDS:
             self.cooldown_until = now + AMBUSH_COOLDOWN

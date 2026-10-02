@@ -12,7 +12,7 @@ import threading
 import time
 
 from controller_client import send
-from gamelib import DEFAULT_GAME, load_game
+from gamelib import DEFAULT_GAME, DEFAULT_PI_HOST, load_game
 from state_regions import expand
 
 DEFAULT_PORT = 8766
@@ -158,7 +158,7 @@ def measure(args):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--host", default="192.168.10.155")
+    parser.add_argument("--host", default=DEFAULT_PI_HOST)
     parser.add_argument("--state-port", type=int, default=DEFAULT_PORT)
     parser.add_argument("--broker-port", type=int, default=8765)
     parser.add_argument("--game", default=DEFAULT_GAME, help="<system>/<name>, e.g. arcade/pacman")

@@ -12,7 +12,7 @@ import sys
 import time
 from pathlib import Path
 
-from gamelib import DEFAULT_GAME, ROOT, load_game  # first: puts the repository root on sys.path
+from gamelib import DEFAULT_GAME, DEFAULT_PI_HOST, ROOT, load_game  # first: puts the repository root on sys.path
 
 from arcadekit.decisions import DecisionWorker
 from arcadekit.manifest import build_manifest
@@ -49,7 +49,7 @@ def main(argv=None):
     game_options = experiment.OPTIONS if experiment else ()
     parser = argparse.ArgumentParser()
     parser.add_argument("--game", default=DEFAULT_GAME, help="<system>/<name>")
-    parser.add_argument("--host", default="192.168.10.155")
+    parser.add_argument("--host", default=DEFAULT_PI_HOST)
     parser.add_argument("--decider", choices=("rule", "mock", "ollama"), default="rule")
     parser.add_argument("--latency", default="90,500", help="mock model latency range in ms")
     parser.add_argument("--model", default="nimble")

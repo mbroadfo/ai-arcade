@@ -14,7 +14,7 @@ import time
 
 import paramiko
 
-from gamelib import DEFAULT_GAME, ROOT, load_game, load_profile, split_spec
+from gamelib import DEFAULT_GAME, DEFAULT_PI_HOST, ROOT, load_game, load_profile, split_spec
 from probe_mame_input import run
 from state_regions import regions_lua
 
@@ -24,7 +24,7 @@ LOG = "/tmp/ai-arcade-speed.log"
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--host", default="192.168.10.155")
+    parser.add_argument("--host", default=DEFAULT_PI_HOST)
     parser.add_argument("--user", default="pi")
     parser.add_argument("--seconds", type=int, default=40)
     parser.add_argument("--game", default=DEFAULT_GAME, help="<system>/<name>")

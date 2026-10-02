@@ -9,7 +9,7 @@ the scoring code turns them into directions. That is a different rung from a mod
 import time
 
 from .features import ghost_modes
-from .goals import FRAMES_PER_TILE, GOALS, STANCE
+from .goals import FRAMES_PER_TILE, GAME_FPS, GOALS, STANCE
 from .maze import ENERGIZER, Maze
 
 MODEL_GOALS = ("clear_dots", "hunt_ghosts", "ambush", "eat_fruit")  # pacifist stays a pinned mission only
@@ -58,7 +58,7 @@ def legal(goal, sit):
 
 def arrangement(blue, seconds_left):
     """How the edible ghosts are laid out and whether they can be caught: the sums a small model gets wrong."""
-    seconds_to_nearest = blue[0] * FRAMES_PER_TILE / 50.0  # Pac-Man covers a tile in about 8 frames, 50 frames a second
+    seconds_to_nearest = blue[0] * FRAMES_PER_TILE / GAME_FPS  # a tile takes about 8 frames
     spread = blue[-1] - blue[0]
     text = (f"{len(blue)} edible ghost{'s' if len(blue) > 1 else ''} out of the ghost house, the nearest {blue[0]} steps "
             f"away (about {seconds_to_nearest:.0f} s to reach)")
@@ -137,7 +137,7 @@ class ModelGoalManager:
         if now - self.asked_at >= self.interval:
             left = None
             if sit["blue"] and self.code.fright_left:
-                left = self.code.fright_left / 50.0  # frames left, emulation runs near 50 per second
+                left = self.code.fright_left / GAME_FPS  # frames of blue left, in game seconds
             if self.strategist.request(describe(state, sit, self.goal, self.mods, left, self.name),
                                        hint={"code_goal": code_goal, "mods": dict(self.mods)}):
                 self.asked_at = now

@@ -43,7 +43,7 @@ Persistent Pi configuration is automated. Do not manually copy service files, ed
 From Windows:
 
 ```powershell
-python .\tools\install_pi.py --host 192.168.10.155
+python .\tools\install_pi.py --host 192.168.10.122
 ```
 
 The deployment tool uploads the repository-controlled Pi bundle, runs the privileged installer, enables the controller broker at boot, installs EmulationStation and RetroArch mappings, and verifies the result. Verification retries readiness for up to 30 seconds; failed installs automatically print service status and the current boot's recent journal. Use `--timeout 60` for a longer retry window.
@@ -51,10 +51,10 @@ The deployment tool uploads the repository-controlled Pi bundle, runs the privil
 After installation, reboot and verify automatic startup (allow SSH to return after reboot):
 
 ```powershell
-ssh pi@192.168.10.155 "sudo reboot"
-python .\tools\verify_pi.py --host 192.168.10.155 --timeout 60
-python .\tools\controller_client.py --host 192.168.10.155 ping
-python .\tools\controller_client.py --host 192.168.10.155 status
+ssh pi@192.168.10.122 "sudo reboot"
+python .\tools\verify_pi.py --host 192.168.10.122 --timeout 60
+python .\tools\controller_client.py --host 192.168.10.122 ping
+python .\tools\controller_client.py --host 192.168.10.122 status
 ```
 
 Systemd starts the broker and creates both controllers on every boot. The Windows commands only verify or send controller requests.
@@ -78,16 +78,16 @@ For Windows testing without an LLM, double-click these files in the repository:
   before opening the other testers.
 
 These use the repository's `.venv` and existing trusted SSH key, defaulting to
-`192.168.10.155`. They also run from PowerShell, for example
+`192.168.10.122`. They also run from PowerShell, for example
 `.\games\arcade\pacman\Start-PacMan.cmd`. Pass `--host ADDRESS` to target a different Pi.
 
 Once the broker is installed and running:
 
 ```powershell
-python .\tools\controller_client.py --host 192.168.10.155 ping
-python .\tools\controller_client.py --host 192.168.10.155 status
-python .\tools\controller_client.py --host 192.168.10.155 tap 1 LEFT
-python .\tools\controller_client.py --host 192.168.10.155 tap 1 BUTTON_1
+python .\tools\controller_client.py --host 192.168.10.122 ping
+python .\tools\controller_client.py --host 192.168.10.122 status
+python .\tools\controller_client.py --host 192.168.10.122 tap 1 LEFT
+python .\tools\controller_client.py --host 192.168.10.122 tap 1 BUTTON_1
 ```
 
 ## Read EmulationStation state
@@ -95,9 +95,9 @@ python .\tools\controller_client.py --host 192.168.10.155 tap 1 BUTTON_1
 Install the pinned ES patch and read its live view/selection as JSON:
 
 ```powershell
-python .\tools\install_pi.py --host 192.168.10.155 --timeout 60 --with-es-state
-python .\tools\es_state.py --host 192.168.10.155
-python .\tools\test_es_navigation.py --host 192.168.10.155
+python .\tools\install_pi.py --host 192.168.10.122 --timeout 60 --with-es-state
+python .\tools\es_state.py --host 192.168.10.122
+python .\tools\test_es_navigation.py --host 192.168.10.122
 ```
 
 The first build compiles ES on the Pi. The navigation test uses only RIGHT and
@@ -108,8 +108,8 @@ rollback, and observation limits.
 Export ES's loaded systems and game lists into a local dashboard cache:
 
 ```powershell
-python .\tools\es_catalog.py --host 192.168.10.155
-python .\tools\es_catalog.py --host 192.168.10.155 --refresh
+python .\tools\es_catalog.py --host 192.168.10.122
+python .\tools\es_catalog.py --host 192.168.10.122 --refresh
 ```
 
 See [ES_CATALOG.md](docs/ES_CATALOG.md) for cache usage, collection deduplication,

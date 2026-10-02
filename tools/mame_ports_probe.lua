@@ -11,10 +11,19 @@ local function attr(obj, name)
   return "?"
 end
 
-local machine = manager:machine()
-out("game\t" .. machine:system().name .. "\t" .. machine:system().description)
+-- MAME 0.206 has methods (manager:machine(), machine:system()); 0.227 and later have properties (manager.machine).
+-- get() reads either way, so this runs on the Pi 3 (0.206) and the Pi 5 (0.251).
+local function get(obj, name)
+  local v = obj[name]
+  if type(v) == "function" then return v(obj) end
+  return v
+end
 
-local ports = machine:ioport().ports
+local machine = get(manager, "machine")
+local system = get(machine, "system")
+out("game\t" .. system.name .. "\t" .. system.description)
+
+local ports = get(machine, "ioport").ports
 for port_tag, port in pairs(ports) do
   for field_name, field in pairs(port.fields) do
     out(string.format("field\t%s\t%s\ttype=%s player=%s analog=%s joy=%s way=%s mask=%s",

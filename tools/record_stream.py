@@ -7,14 +7,14 @@ import pickle
 import sys
 import time
 
-from gamelib import DEFAULT_GAME, load_game
+from gamelib import DEFAULT_GAME, DEFAULT_PI_HOST, load_game
 from state_client import StateStream
 from state_regions import expand
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--host", default="192.168.10.155")
+    parser.add_argument("--host", default=DEFAULT_PI_HOST)
     parser.add_argument("--seconds", type=int, default=240)
     parser.add_argument("--out", required=True)
     parser.add_argument("--game", default=DEFAULT_GAME, help="<system>/<name>: whose IMAGE window to rebuild")

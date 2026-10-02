@@ -7,6 +7,7 @@ import time
 from pathlib import Path
 
 import paramiko
+from gamelib import DEFAULT_PI_HOST
 
 MAME_LOG = "/tmp/ai-arcade-mame.log"
 
@@ -22,7 +23,7 @@ def run(ssh, command):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--host", default="192.168.10.155")
+    parser.add_argument("--host", default=DEFAULT_PI_HOST)
     parser.add_argument("--user", default="pi")
     parser.add_argument("--key", default=None)
     parser.add_argument("--seconds", type=int, default=60)

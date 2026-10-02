@@ -16,7 +16,7 @@ import paramiko
 
 import _bootstrap  # noqa: F401
 from controller_client import send
-from gamelib import load_game, load_profile, split_spec
+from gamelib import DEFAULT_PI_HOST, load_game, load_profile, split_spec
 from probe_mame_input import MAME_LOG, run
 from state_regions import regions_lua
 
@@ -55,7 +55,7 @@ def hold(args, control, seconds, sample=None):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--host", default="192.168.10.155")
+    parser.add_argument("--host", default=DEFAULT_PI_HOST)
     parser.add_argument("--user", default="pi")
     parser.add_argument("--broker-port", type=int, default=8765)
     parser.add_argument("--game", default="arcade/pacman", help="<system>/<name> of a game on Pac-Man's board")

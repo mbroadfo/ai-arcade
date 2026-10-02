@@ -10,6 +10,7 @@ import paramiko
 
 from controller_client import send
 from es_state import fetch
+from gamelib import DEFAULT_PI_HOST
 
 TARGET = '/home/pi/RetroPie/roms/arcade/pacman.zip'
 REMAP = '/opt/retropie/configs/arcade/MAME 2003 (0.78)/MAME 2003 (0.78).rmp'
@@ -151,7 +152,7 @@ def main():
 
     parser.add_argument(
         '--host',
-        default='192.168.10.155'
+        default=DEFAULT_PI_HOST
     )
 
     parser.add_argument(

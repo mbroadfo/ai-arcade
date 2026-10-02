@@ -11,7 +11,7 @@ The same deployment now also exports a separate loaded-library catalog. See
 From the repository root and activated Windows virtual environment:
 
 ```powershell
-python .\tools\install_pi.py --host 192.168.10.155 --timeout 60 --with-es-state
+python .\tools\install_pi.py --host 192.168.10.122 --timeout 60 --with-es-state
 ```
 
 The opt-in flag builds and installs observation support as well as the controller
@@ -43,8 +43,8 @@ live ES state check, with the same readiness retry window as the controller chec
 ## Read and test
 
 ```powershell
-python .\tools\es_state.py --host 192.168.10.155
-python .\tools\test_es_navigation.py --host 192.168.10.155
+python .\tools\es_state.py --host 192.168.10.122
+python .\tools\test_es_navigation.py --host 192.168.10.122
 ```
 
 Both commands support `--user`, `--key`, and `--port` for SSH. They use the same
@@ -90,7 +90,7 @@ to the Pi and the requesting SSH client.
 ## Restore the original frontend
 
 ```powershell
-python .\tools\install_pi.py --host 192.168.10.155 --restore-es
+python .\tools\install_pi.py --host 192.168.10.122 --restore-es
 ```
 
 This automated path restores the saved original ES binary, requests a wrapper
@@ -114,7 +114,7 @@ feature only after confirming the package revision is still supported.
 
 ## Validation on the cabinet
 
-Validated on the Pi at `192.168.10.155` on 2026-09-30:
+Validated on the Pi at `192.168.10.155` on 2026-09-30 (the Pi 3, now the spare):
 
 - Native build and activation succeeded; state reported the Arcade game list and
   highlighted Amidar entry with its path and metadata.
