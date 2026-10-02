@@ -32,6 +32,9 @@ defaults to `DEFAULT_PI_HOST` in `tools/gamelib.py` (override with the `ARCADE_P
    extras the cabinet's ROM folders use (AdvanceMAME, sdltrs, Frotz and the ports: Aleph One, Descent, Doom, Duke 3D,
    Quake, Quake 3, Wolfenstein, Cannonball, Mr. Boom, OpenTyrian). The old Pi's Dreamcast (Reicast) and PC (rpix86)
    launchers and MAME4All are 32-bit Pi 3 programs with no 64-bit build; those folders hold no games.
+   `setup_pi5.sh autostart` boots straight into EmulationStation (console autologin, then ES). Only one program can
+   hold the Pi 5's screen, so `tools/start_pi_game.py` (AI mode) closes ES first, and `python tools/human_mode.py`
+   stops AI mode and brings ES back.
    Sound: the Pi 5 has no headphone jack, so plug in a USB audio adapter (a UGREEN USB-to-3.5 mm, then a 3.5 mm-to-RCA
    cable to the speakers) and run `setup_pi5.sh audio` to make it the default card.
 4. ROMs and BIOS, straight from the old Pi through this PC (nothing is stored in the repository):

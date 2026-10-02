@@ -17,6 +17,8 @@ from state_regions import regions_lua
 REMOTE_DIR = "/home/pi/ai-arcade"
 STATE_FILE = "/dev/shm/ai-arcade-state.bin"
 SERVER_LOG = "/tmp/ai-arcade-state-server.log"
+# The EmulationStation program itself, not its wrapper scripts (process names stop at 15 characters, so match the path)
+ES_PROCESS = "/emulationstation/emulationstation( |$)"
 
 
 def main():
@@ -48,6 +50,10 @@ def main():
 
         run(ssh, "pkill -9 -x mame || true; pkill -f '[p]acman_agent.py' || true; "
                  "pkill -f '[s]tate_server.py' || true")
+        # EmulationStation starts at boot (human mode) and holds the screen; MAME cannot open it until ES has gone.
+        # tools/human_mode.py brings ES back.
+        run(ssh, f"pkill -f '{ES_PROCESS}' || true; "
+                 f"timeout 10 sh -c \"while pgrep -f '{ES_PROCESS}' >/dev/null; do sleep 0.2; done\" || true")
         run(ssh, f"rm -f {STATE_FILE}")
         run(ssh, f"nohup env SDL_AUDIODRIVER=alsa mame {romset} -rompath /home/pi/RetroPie/roms/{system} "
                  "-video accel -nowindow -skip_gameinfo -joystick -joystickprovider sdl "

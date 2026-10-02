@@ -10,6 +10,8 @@
 #   retropie   RetroPie-Setup's basic install: EmulationStation and RetroArch, for human mode
 #   emulators  the extra RetroPie emulators and ports the cabinet's ROM folders use (after retropie); a module that
 #              fails is reported and the rest carry on
+#   autostart  boot straight into EmulationStation (console autologin on the screen, then ES); AI mode closes it
+#              (tools/start_pi_game.py) and tools/human_mode.py brings it back
 #   audio      sound through a USB audio adapter (the Pi 5 has no headphone jack): it becomes the default ALSA card
 # ROMs and BIOS files are copied separately from the old cabinet (docs/PI_SETUP.md); this repository holds none.
 set -eu
@@ -59,6 +61,13 @@ step_emulators() {
     echo "emulators finished; any failures are marked FAILED above"
 }
 
+step_autostart() {
+    cd "$HOME/RetroPie-Setup"
+    sudo __nodialog=1 ./retropie_packages.sh autostart enable
+    cat /opt/retropie/configs/all/autostart.sh
+    echo "EmulationStation starts at boot; to start it now without rebooting: sudo systemctl restart getty@tty1"
+}
+
 step_audio() {
     card=$(sed -n 's/^ *[0-9]* \[\([^ ]*\) *\]: USB-Audio.*/\1/p' /proc/asound/cards | head -n 1)
     if [ -z "$card" ]; then
@@ -77,6 +86,7 @@ case "${1:-}" in
     mame) step_mame ;;
     retropie) step_retropie ;;
     emulators) step_emulators ;;
+    autostart) step_autostart ;;
     audio) step_audio ;;
-    *) echo "usage: $0 mame|retropie|emulators|audio" >&2; exit 2 ;;
+    *) echo "usage: $0 mame|retropie|emulators|autostart|audio" >&2; exit 2 ;;
 esac
