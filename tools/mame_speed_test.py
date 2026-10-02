@@ -1,31 +1,25 @@
-"""Measure standalone MAME's emulation speed on the Pi with each state-export variant.
+"""Measure standalone MAME's emulation speed on the Pi with each state-export variant. Any game.
 
-Runs Pac-Man in attract mode for a fixed time per variant and reads the "Average speed" line MAME
-prints on clean exit (100% = full speed). Do not run while an agent game is in progress.
+    python tools/mame_speed_test.py --game arcade/pacman
+
+Runs the game in attract mode for a fixed time per variant (no script, the game's full REGIONS if it has them, its
+AGENT_REGIONS) and reads the "Average speed" line MAME prints on clean exit (100% = full speed). This is the first
+feasibility check for a new game (docs/GAME_WORKSHOP.md, stage 0). Do not run while an agent game is in progress:
+it stops MAME.
 """
 import argparse
 import re
 import sys
 import time
-from pathlib import Path
 
 import paramiko
 
-import _bootstrap  # noqa: F401
-from games.arcade.pacman.state import AGENT_REGIONS, REGIONS
+from gamelib import DEFAULT_GAME, ROOT, load_game, load_profile, split_spec
 from probe_mame_input import run
+from state_regions import regions_lua
 
 REMOTE_DIR = "/home/pi/ai-arcade"
 LOG = "/tmp/ai-arcade-speed.log"
-ROOT = _bootstrap.ROOT
-
-
-def regions_lua(regions):
-    rows = []
-    for r in regions:
-        every = r[2] if len(r) > 2 else 1
-        rows.append(f"{{0x{r[0]:X}, 0x{r[1]:X}, {every}}}")
-    return "return {" + ", ".join(rows) + "}\n"
 
 
 def main():
@@ -33,18 +27,20 @@ def main():
     parser.add_argument("--host", default="192.168.10.155")
     parser.add_argument("--user", default="pi")
     parser.add_argument("--seconds", type=int, default=40)
+    parser.add_argument("--game", default=DEFAULT_GAME, help="<system>/<name>")
     args = parser.parse_args()
+    game, (system, _) = load_game(args.game), split_spec(args.game)
+    romset = load_profile(args.game)["romset"]
 
     ssh = paramiko.SSHClient()
     ssh.load_system_host_keys()
     ssh.set_missing_host_key_policy(paramiko.RejectPolicy())
     ssh.connect(hostname=args.host, username=args.user, timeout=10)
 
-    variants = [
-        ("no script", None),
-        ("full export (4096 B/frame)", REGIONS),
-        ("light export (agent regions)", AGENT_REGIONS),
-    ]
+    variants = [("no script", None)]
+    if getattr(game, "REGIONS", None):
+        variants.append(("full export (REGIONS)", game.REGIONS))
+    variants.append(("light export (AGENT_REGIONS)", game.AGENT_REGIONS))
     try:
         run(ssh, f"mkdir -p {REMOTE_DIR}")
         sftp = ssh.open_sftp()
@@ -60,7 +56,7 @@ def main():
                 sftp.close()
             script = f"-autoboot_script {REMOTE_DIR}/mame_state_export.lua " if regions else ""
             run(ssh, f"rm -f {LOG}")
-            run(ssh, "nohup mame pacman -rompath /home/pi/RetroPie/roms/arcade -sound none "
+            run(ssh, f"nohup mame {romset} -rompath /home/pi/RetroPie/roms/{system} -sound none "
                      "-video accel -nowindow -skip_gameinfo -joystick -joystickprovider sdl "
                      f"-seconds_to_run {args.seconds} {script}> {LOG} 2>&1 < /dev/null &")
             time.sleep(5)

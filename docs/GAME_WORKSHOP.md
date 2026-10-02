@@ -64,7 +64,7 @@ decisions on state that was never validated.
 
 Questions: does the game run at full speed on the Pi 3 under MAME 0.206, and how fast must a player decide?
 
-- Run the speed test (`games/arcade/pacman/scripts/mame_speed_test.py`; moves to `tools/` in phase 3).
+- Run the speed test: `python tools/mame_speed_test.py --game <system>/<name>` (stops MAME; not during a game).
 - Estimate the decision cadence: how often a real choice comes up, and how much warning there is. Compare it with the
   model's latency: about 80 ms for `tev1:0.8b`, about 250 ms for `nimble` (v13 medians, one request at a time on our
   Ollama server, port 11435).

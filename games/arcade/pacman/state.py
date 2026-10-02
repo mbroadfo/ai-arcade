@@ -2,6 +2,7 @@
 from dataclasses import dataclass
 
 BASE = 0x4000
+IMAGE = (BASE, 0x1000)  # the RAM window decode() reads: (base address, size); the streamed regions are placed in it
 REGIONS = [(0x4000, 0x4FFF)]  # everything, every frame (validation and discovery use this)
 
 # Light export for the live agent: (start, end, refresh every N frames). Roughly 10x fewer reads

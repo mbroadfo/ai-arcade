@@ -4,7 +4,7 @@ EmulationStation system folder name (arcade, nes, atari2600, ...).
     game = load_game("arcade/pacman")
 
 Importing this module also puts the repository root on sys.path so `games.*` can be imported.
-A game package must provide: AGENT_REGIONS, decode(image), score_option (for the mock model),
+A game package must provide: AGENT_REGIONS, IMAGE, decode(image), score_option (for the mock model),
 and the submodules player, deciders, knowledge. See games/README.md.
 """
 import importlib

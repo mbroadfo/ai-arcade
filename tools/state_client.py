@@ -58,9 +58,9 @@ class StateStream:
         return struct.unpack("<I", payload[:4])[0], payload[4:]
 
     def next_state(self):
-        """Block for the next snapshot; returns (frame, decoded game state, 4096-byte RAM image)."""
+        """Block for the next snapshot; returns (frame, decoded game state, RAM image of the game's IMAGE window)."""
         frame, body = self.next_raw()
-        image = expand(body, self.regions)
+        image = expand(body, self.regions, *self.game.IMAGE)
         return frame, self.game.decode(image), image
 
     def start_latest(self):

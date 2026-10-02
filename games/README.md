@@ -24,7 +24,8 @@ games/arcade/pacman/
 
 | Name | Used by |
 |---|---|
-| `AGENT_REGIONS` | `tools/start_pi_game.py` (what the Pi exports and streams) |
+| `AGENT_REGIONS`: `(start, end, every [, cpu, space])` | `tools/start_pi_game.py`, `tools/mame_speed_test.py` (what the Pi exports and streams; cpu/space default `:maincpu`/`program`) |
+| `IMAGE`: `(base, size)` | `tools/state_client.py`, `tools/record_stream.py` (the RAM window the streamed regions are placed in) |
 | `decode(image)` | `tools/state_client.py` |
 | `score_option(goal, option)` | the mock model in `arcadekit/systemone.py` |
 | `deciders.RuleDecider`, `deciders.SystemOneDecider(client)` (built on `arcadekit.decisions.ChoiceDecider`) | `tools/play.py` |

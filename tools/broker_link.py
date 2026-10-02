@@ -6,7 +6,8 @@ import time
 
 class BrokerLink:
     def __init__(self, host, port=8765):
-        self.host, self.port, self.sock, self.held = host, port, None, None
+        self.host, self.port, self.sock = host, port, None
+        self.holding = frozenset()  # the actions held down now
         self.calls = 0
         self.call_ms = []
 
@@ -37,16 +38,25 @@ class BrokerLink:
     def tap(self, action, ms=200):
         self.send({"op": "tap", "player": 1, "action": action, "ms": ms})
 
+    @property
+    def held(self):
+        """The one action held, or None (for games that hold one direction at a time)."""
+        return next(iter(self.holding)) if len(self.holding) == 1 else None
+
+    def hold(self, actions):
+        """Hold exactly these actions (directions and buttons together, e.g. {"LEFT", "BUTTON_1"}): release what is
+        no longer wanted first, then press what is new. Holding the same set again sends nothing."""
+        actions = frozenset(a for a in actions if a)
+        for action in sorted(self.holding - actions):
+            self.send({"op": "release", "player": 1, "action": action})
+        for action in sorted(actions - self.holding):
+            self.send({"op": "press", "player": 1, "action": action})
+        self.holding = actions
+
     def steer(self, direction):
-        """Hold exactly one direction (4-way gate): release the old one first."""
-        if direction == self.held:
-            return
-        if self.held:
-            self.send({"op": "release", "player": 1, "action": self.held})
-        if direction:
-            self.send({"op": "press", "player": 1, "action": direction})
-        self.held = direction
+        """Hold exactly one direction (a 4-way stick), or nothing for None."""
+        self.hold({direction} if direction else set())
 
     def release_all(self):
         self.send({"op": "release_all"})
-        self.held = None
+        self.holding = frozenset()

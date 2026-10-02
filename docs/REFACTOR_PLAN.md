@@ -4,6 +4,9 @@ Status, 2026-10-01: phase 0 done (`0cea045`); phase 1 done (`1dcfc91`, `43f8e04`
 which moves with the report in phase 2. `player.py` is 490 lines after phase 1, not the 300 estimated: what remains
 is mostly Pac-Man's own (holds, the danger query, the reflex). Phase 2 done: `play.py` and the manifest name no game;
 Pac-Man declares its switches in `games/arcade/pacman/experiment.py`; `tools/compare_runs.py` compares runs.
+Phase 3 done on the PC side: the game's `IMAGE` window, regions with cpu/space, `BrokerLink.hold(set)` built on the
+broker's existing press/release (no Pi change), `tools/mame_speed_test.py`. The broker's second stick for Battlezone
+is a Pi change and waits for Battlezone. The snapshot service used by discovery still scans `:maincpu` by design.
 
 ## Why now
 
@@ -197,10 +200,9 @@ Done when: `play.py` contains no Pac-Man names; the v13/v14 runs can be compared
    The exporter and snapshot service read per region.
 2. The RAM image window comes from the game (`IMAGE = (base, size)`), not from `expand()`'s defaults. The defaults are
    removed so a game that forgets fails loudly.
-3. The broker gets a held-set operation (`{"op": "hold", "actions": [...]}`: press exactly these, release the rest).
-   `BrokerLink.hold(set)` replaces `steer()` in shared code; Pac-Man's single direction becomes `hold({d})`.
-   This changes the Pi: it goes through `tools/install_pi.py`, per the README's development rule, and needs your
-   go-ahead before it is deployed.
+3. `BrokerLink.hold(set)`: hold exactly these actions, built on the broker's existing press and release, so the Pi
+   is unchanged; `steer(d)` is `hold({d})`. What does change the Pi is a second stick for games like Battlezone: it
+   goes through `tools/install_pi.py`, per the README's development rule, with your go-ahead, when Battlezone needs it.
 4. `mame_speed_test.py` moves from `games/arcade/pacman/scripts/` to `tools/`: any game's emulation speed on the
    Pi 3 under MAME 0.206 is the first feasibility check.
 

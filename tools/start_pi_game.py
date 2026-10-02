@@ -12,6 +12,7 @@ import paramiko
 
 from gamelib import DEFAULT_GAME, ROOT, load_game, load_profile, split_spec
 from probe_mame_input import MAME_LOG, run
+from state_regions import regions_lua
 
 REMOTE_DIR = "/home/pi/ai-arcade"
 STATE_FILE = "/dev/shm/ai-arcade-state.bin"
@@ -42,7 +43,7 @@ def main():
         sftp.put(str(ROOT / "tools" / "mame_state_export.lua"), f"{REMOTE_DIR}/mame_state_export.lua")
         sftp.put(str(ROOT / "pi" / "state_server.py"), f"{REMOTE_DIR}/state_server.py")
         with sftp.file(f"{REMOTE_DIR}/regions.lua", "w") as f:
-            f.write("return {" + ", ".join(f"{{0x{a:X}, 0x{b:X}, {n}}}" for a, b, n in AGENT_REGIONS) + "}\n")
+            f.write(regions_lua(AGENT_REGIONS))
         sftp.close()
 
         run(ssh, "pkill -9 -x mame || true; pkill -f '[p]acman_agent.py' || true; "
