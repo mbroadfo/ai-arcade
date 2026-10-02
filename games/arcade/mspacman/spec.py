@@ -36,6 +36,7 @@ def in_tunnel(maze, tile):
 SPEC = Spec(
     name="Ms. Pac-Man",
     pronoun="she",
+    orders_example="Go for the bonus fruit when no ghost is near it.",
     ghost_labels={"red": "Red (Blinky)", "pink": "Pink (Pinky)", "blue": "Blue (Inky)", "orange": "Orange (Sue)"},
     rules_l1=RULES_L1,
     ghost_behaviour_l3a=GHOST_BEHAVIOUR_L3A,

@@ -57,7 +57,26 @@ reconnects to the Pi. `--listen 0.0.0.0` lets a phone or another PC on the LAN w
   drops lines when no dashboard is listening. Five times a second it also sends a `status` line (the player's
   `observe()`: facts read from the stream, with screen positions from the kit's `screen.py`; it decides nothing).
   `--observatory none` sends nothing.
-- The dashboard decides nothing and knows no game: it shows the standard events whatever the game.
+- The dashboard decides nothing and knows no game: it shows the standard events whatever the game. What it shows of a
+  game (the facts, the lines over time, the marks on the screen) comes from that game's `observe()` (games/README.md);
+  a test keeps game words out of the page, the server and the shared modules.
+- Game state: the facts the game picks (Pac-Man: phase, blue ghosts, food and energizers left, Cruise Elroy, fruit),
+  60-second lines (nearest ghost with an alarm under 8 steps, nearest blue ghost, score; and from the answers, the
+  model's confidence and latency) and who is where.
+- What the model was asked: the last request of each asker exactly as it was sent (standing orders, question, options
+  with the answer marked, then the state text), captured where it is sent. "hold" freezes it to read.
+
+### Standing orders
+
+Plain words from the operator, put in front of every question a model is asked (`arcadekit/orders.py`): set at the start
+with `--orders "..."` (repeat for several) or typed into the Observatory during the run (it shows the game's own example,
+`ORDERS_EXAMPLE`). No code reads them; whether the model follows them, and whether that helps, is what a run measures.
+A rule decider or a mock model never sees text, so the page says when no model reads them.
+
+Every change is an `orders` event with a version; each `decision`, `move` and `advice` record carries the version it was
+asked under; the manifest has the history and how many questions went out under each version. Measured 2 October 2026
+(nimble, L2): an order changed from the page took effect within the run (19 answers under version 1, then 23 under 2).
+Whether `nimble` follows a given order is not yet measured: compare runs with and without it.
 
 ## Goals and survival
 

@@ -320,3 +320,11 @@ def test_observe_reports_what_is_on_screen_without_deciding():
     assert all(0 <= m["x"] <= 224 and 0 <= m["y"] <= 288 for m in seen["marks"])
     json.dumps(seen)  # it goes over the wire as JSON
     assert p.decisions_log.getvalue() == ""  # observing logs nothing
+
+
+def test_pacman_tiles_map_onto_the_upright_screen():
+    from arcadekit.kits.pacman_board import screen
+    # tile (0x20, 0x20) is the playfield's top-right cell: column 27, row 2 (the score rows are above it)
+    assert screen.apply(screen.TILE_TO_PX, (0x20, 0x20)) == (27 * 8 + 4, 2 * 8 + 4)
+    # h rises leftward: tile 0x3B is column 0
+    assert screen.apply(screen.TILE_TO_PX, (0x20, 0x3B))[0] == 4

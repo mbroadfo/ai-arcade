@@ -116,6 +116,8 @@ class ModelGoalManager:
         self.advice_at = now
         record = {"event": "advice", "goal": advice.goal, "code_goal": code_goal, "mods": advice.mods,
                   "confidence": round(advice.confidence, 2), "latency_ms": round(advice.latency_ms)}
+        if advice.orders is not None:
+            record["orders"] = advice.orders
         self.mods.update(advice.mods)
         if not legal(advice.goal, sit):
             self.stats["gated"] += 1

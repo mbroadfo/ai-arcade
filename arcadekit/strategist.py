@@ -23,6 +23,7 @@ class Advice:
     confidence: float = 1.0  # the goal answer's
     latency_ms: float = 0.0
     finished_at: float = 0.0
+    orders: int = None  # the standing orders' version the question was asked under (arcadekit.orders), if any
 
 
 def build_questions(schema):
@@ -47,7 +48,8 @@ def parse_reply(reply, schema):
             mods[name] = choice
         else:
             problems.append(f"{name} {choice!r} is not a level")
-    return Advice(goal["choice"], mods, goal.get("confidence", 1.0), reply.get("latency_ms", 0.0), time.time()), problems
+    return Advice(goal["choice"], mods, goal.get("confidence", 1.0), reply.get("latency_ms", 0.0), time.time(),
+                  reply.get("orders_version")), problems
 
 
 class Strategist:

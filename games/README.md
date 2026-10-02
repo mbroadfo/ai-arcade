@@ -36,6 +36,8 @@ games/arcade/pacman/
 | `strategy.SCHEMA`, `strategy.ModelGoalManager(strategist, goal_manager)`, `strategy.code_chooser` | `tools/play.py --strategist` (optional: a game without it just has no slow model layer) |
 | `player.Player(stream, broker, worker, goal_manager, log, knowledge=, **switches)` with `.stats`, `.ledger` (`arcadekit.ledger`), `.latencies` | `tools/play.py` |
 | `experiment.OPTIONS` (switches, each an `arcadekit.options.Option` with a kind), `experiment.METRICS`, `experiment.player_kwargs(values, new_worker)`, `experiment.report_lines(player, results)` | `tools/play.py` builds its game switches, run label, manifest and summary from these (optional: without it a game has no switches) |
+| `ORDERS_EXAMPLE` (text) | the example standing order the Observatory shows for this game (optional) |
+| `player.Player.observe()` -> a `status` record: `title`, `game`, `playing`, `score`, `level`, `lives`, `goal`, `stance`, `held`, `moves`; `facts` [{label, value, tone}], `series` [{key, label, value, unit, worse, alarm, colour}], `marks` [{label, kind: player/threat/target/neutral, x, y, steps, note, alert, colour}], `screen` {size, tile_to_px} | the Observatory (`tools/observatory.py`), which knows no game and draws what these say (optional: without it the page shows video, events and moves only). Display only: nothing reads it to decide |
 
 `Player.tick()` returns a result dict when a game ends: `game`, `score`, `level`, `seconds`, the outcome block every
 game shares (`arcadekit.outcome.OutcomeStats`: `deaths`, `boards_cleared`, `lives`), and the game's own metrics (for

@@ -1,4 +1,5 @@
 import io
+import re
 import json
 import socket
 import struct
@@ -34,7 +35,7 @@ def test_compressed_frame_decodes_to_the_same_upright_image():
 
 
 def test_a_rot90_machine_is_turned_clockwise():
-    # Pac-Man's bitmap is wider than tall and the machine is rot90: upright, the top-left pixel ends at the top right
+    # a bitmap wider than tall on a rot90 machine: upright, the top-left pixel ends at the top right
     _, image = observatory.decode_frame(frame_server.compress(frame_file_bytes(1, 4, 2, 1, red_top_left)))
     assert image.size == (2, 4)
     assert image.getpixel((1, 0)) == (255, 0, 0)
@@ -141,13 +142,15 @@ def test_hub_remembers_the_run_for_pages_opened_later():
     hub.add_event({"event": "run", "label": "x"})
     for i in range(observatory.KEEP_EVENTS + 5):
         hub.add_event({"event": "move", "i": i})
-    assert hub.run == {"event": "run", "label": "x"}
+    assert hub.sticky["run"] == {"event": "run", "label": "x"}
     assert all(r["event"] == "move" for _, r in hub.events)  # the run event itself has scrolled out
 
 
-def test_pacman_tiles_map_onto_the_upright_screen():
-    from arcadekit.kits.pacman_board import screen
-    # tile (0x20, 0x20) is the playfield's top-right cell: column 27, row 2 (the score rows are above it)
-    assert screen.apply(screen.TILE_TO_PX, (0x20, 0x20)) == (27 * 8 + 4, 2 * 8 + 4)
-    # h rises leftward: tile 0x3B is column 0
-    assert screen.apply(screen.TILE_TO_PX, (0x20, 0x3B))[0] == 4
+def test_the_observatory_names_no_game_of_its_own():
+    import arcadekit.observatory
+    import arcadekit.orders
+    for module in (observatory.PAGE, observatory.__file__, arcadekit.observatory.__file__, arcadekit.orders.__file__):
+        source = open(module, encoding="utf-8").read().lower()
+        for word in ("pac-man", "pacman", "ghost", "maze", "junction", "energizer", "fruit", "blinky", "eyes", "prey",
+                     "danger"):
+            assert not re.search(rf"\b{word}", source), (module, word)

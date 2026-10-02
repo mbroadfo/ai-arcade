@@ -20,6 +20,7 @@ class Decision:
     latency_ms: float = 0.0
     probabilities: dict = field(default_factory=dict)
     note: str = ""
+    orders: int = None  # the standing orders' version the model was asked under (arcadekit.orders), if any
 
 
 class ChoiceDecider:
@@ -44,8 +45,12 @@ class ChoiceDecider:
             return self._fallback(facts, goal, f"model error: {exc}")
         answer = reply["answers"][self.name]
         if answer["confidence"] < self.min_confidence:
-            return self._fallback(facts, goal, f"low confidence {answer['confidence']:.2f}", reply["latency_ms"])
-        return Decision(answer["choice"], "model", answer["confidence"], reply["latency_ms"], answer["probabilities"])
+            decision = self._fallback(facts, goal, f"low confidence {answer['confidence']:.2f}", reply["latency_ms"])
+        else:
+            decision = Decision(answer["choice"], "model", answer["confidence"], reply["latency_ms"],
+                                answer["probabilities"])
+        decision.orders = reply.get("orders_version")
+        return decision
 
 
 class DecisionWorker:

@@ -25,7 +25,7 @@ from .features import GOALS, LURE_RADIUS, junction_facts, ready_to_eat, score_op
 from .goals import stance_text
 from .knowledge import build_state_text
 from .maze import LOWER_TO_UPPER, OPPOSITE, Maze, step
-from . import screen
+from . import observe as observing, screen
 from .park import (HOVER_MAX, HOVER_MIN, HOVER_SECONDS, REFUGE_CLEAR, REFUGE_SECONDS, all_out, gathered,
                    is_stop, nearest_energizer, nearest_normal, refuge_move)
 from .survival import reflex
@@ -120,7 +120,8 @@ class Player:
             lines.append([self.spec.ghost_labels.get(name, name), f"{steps} steps  {mode}" if steps is not None else mode])
         if state.fruit_tile:
             lines.append(["fruit", f"{tuple(state.fruit_tile)} {here.get(state.fruit_tile, '?')} steps"])
-        record.update(score=state.score, level=state.level, lives=state.lives, dots=state.dots_eaten, lines=lines)
+        record.update(score=state.score, level=state.level, lives=state.lives, dots=state.dots_eaten, lines=lines,
+                      facts=observing.facts(state, self.last_image, here), series=observing.series(state, here))
         return record
 
     def _facts(self, state, image, tile, arriving):
@@ -308,7 +309,9 @@ class Player:
         age = None if answered_at is None else round(self.clock() - answered_at, 2)
         self.ledger.book(by, via, tile=list(key[0]), arriving=key[1], goal=self.goal, mods=dict(self.mods),
                          proposed=decision.choice, source=decision.source, confidence=round(decision.confidence, 2),
-                         latency_ms=round(decision.latency_ms), age_s=age, executed=final, late=late, **extra)
+                         latency_ms=round(decision.latency_ms), age_s=age, executed=final, late=late,
+                         **({"orders": decision.orders} if getattr(decision, "orders", None) is not None else {}),
+                         **extra)
 
     def _late_keep(self, state, image, junction, heading, key, why):
         """late="keep": no answer on arrival and nothing changes. He carries on if his way goes on (booked code-late via
@@ -365,7 +368,8 @@ class Player:
             self.log(event="decision", tile=list(key[0]), arriving=key[1], goal=goal,
                      direction=decision.choice, source=decision.source,
                      confidence=round(decision.confidence, 3), latency_ms=round(decision.latency_ms),
-                     probabilities=decision.probabilities, note=decision.note, chain=depth)
+                     probabilities=decision.probabilities, note=decision.note, chain=depth,
+                     **({"orders": decision.orders} if decision.orders is not None else {}))
             if depth >= limit:
                 continue
             nxt = step(key[0], decision.choice)

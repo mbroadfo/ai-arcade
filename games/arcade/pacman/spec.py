@@ -34,6 +34,7 @@ def in_tunnel(maze, tile):
 SPEC = Spec(
     name="Pac-Man",
     pronoun="he",
+    orders_example="Only eat the red ghost while the ghosts are blue.",
     ghost_labels={"red": "Red (Blinky)", "pink": "Pink (Pinky)", "blue": "Blue (Inky)", "orange": "Orange (Clyde)"},
     rules_l1=RULES_L1,
     ghost_behaviour_l3a=GHOST_BEHAVIOUR_L3A,

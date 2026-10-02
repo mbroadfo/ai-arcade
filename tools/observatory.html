@@ -11,7 +11,7 @@
   :root {
     --bg: #06070b; --panel: #0d1018; --panel-2: #121623; --line: #1d2333; --line-2: #2a3247;
     --text: #e8ebf3; --dim: #7d869b; --faint: #4a5266;
-    --pac: #ffe600; --model: #2ef2ff; --rule: #a78bfa; --code: #ff7a1a; --ok: #3ddc97; --bad: #ff3d6e;
+    --accent: #ffe600; --model: #2ef2ff; --rule: #a78bfa; --code: #ff7a1a; --ok: #3ddc97; --bad: #ff3d6e;
     --pixel: "Press Start 2P", ui-monospace, monospace;
     --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
     --sans: Inter, system-ui, sans-serif;
@@ -27,7 +27,7 @@
   header { height: var(--head); display: flex; align-items: center; gap: 22px; padding: 0 20px;
            border-bottom: 1px solid var(--line); background: #090b12cc; backdrop-filter: blur(6px); }
   .brand { display: flex; flex-direction: column; line-height: 1.15; }
-  .brand b { font-family: var(--pixel); font-size: 13px; color: var(--pac); letter-spacing: .06em;
+  .brand b { font-family: var(--pixel); font-size: 13px; color: var(--accent); letter-spacing: .06em;
              text-shadow: 0 0 12px #ffe60066; }
   .brand span { font-size: 10px; letter-spacing: .32em; color: var(--dim); margin-top: 4px; }
   .pill { font: 600 11px var(--mono); letter-spacing: .12em; padding: 4px 10px; border-radius: 99px;
@@ -35,13 +35,13 @@
   .pill i { width: 7px; height: 7px; border-radius: 50%; background: var(--faint); }
   .pill.live { color: var(--ok); border-color: #3ddc9755; } .pill.live i { background: var(--ok); animation: pulse 1.4s infinite; }
   .pill.ended { color: var(--bad); border-color: #ff3d6e55; } .pill.ended i { background: var(--bad); }
-  .pill.between { color: var(--pac); border-color: #ffe60055; } .pill.between i { background: var(--pac); }
+  .pill.between { color: var(--accent); border-color: #ffe60055; } .pill.between i { background: var(--accent); }
   @keyframes pulse { 50% { opacity: .25; } }
   .score { display: flex; gap: 26px; margin-left: 6px; }
   .score div { display: flex; flex-direction: column; gap: 5px; }
   .score small { font-size: 9px; letter-spacing: .22em; color: var(--dim); }
   .score b { font: 13px var(--pixel); color: var(--text); }
-  .score .lives b { color: var(--pac); letter-spacing: 3px; }
+  .score .lives b { color: var(--accent); letter-spacing: 3px; }
   .runinfo { margin-left: auto; display: flex; gap: 8px; align-items: center; }
   .chip { font: 500 12px var(--mono); padding: 3px 9px; border-radius: 6px; background: var(--panel-2);
           border: 1px solid var(--line); color: #c9cfdc; white-space: nowrap; }
@@ -70,15 +70,35 @@
   .stage .empty { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 30px;
                   font: 11px/2 var(--pixel); color: var(--faint); }
   .stage .banner { position: absolute; left: 50%; top: 14px; transform: translateX(-50%); font: 10px var(--pixel);
-                   padding: 8px 12px; border-radius: 8px; background: #000c; border: 1px solid var(--line-2); color: var(--pac); }
+                   padding: 8px 12px; border-radius: 8px; background: #000c; border: 1px solid var(--line-2); color: var(--accent); }
   .toggles { display: flex; gap: 14px; font: 12px var(--mono); color: var(--dim); align-items: center; height: 24px; }
   .toggles label { display: flex; gap: 6px; align-items: center; cursor: pointer; }
-  .toggles input { accent-color: var(--pac); }
+  .toggles input { accent-color: var(--accent); }
 
   /* ---------- intent ---------- */
-  .goal { font: 18px/1.3 var(--pixel); color: var(--pac); text-shadow: 0 0 18px #ffe60055; word-break: break-word; }
+  .goal { font: 18px/1.3 var(--pixel); color: var(--accent); text-shadow: 0 0 18px #ffe60055; word-break: break-word; }
   .goaltext { color: var(--dim); margin-top: 6px; font-size: 13px; }
   .stances { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+
+  /* ---------- standing orders ---------- */
+  .orders-card { border-color: #ffe60033; background: linear-gradient(180deg, #15140a 0, #0b0e15 100%); }
+  .order { display: grid; grid-template-columns: 18px 1fr auto; gap: 8px; align-items: start; padding: 8px 10px;
+           border-radius: 8px; background: #0a0d14; border: 1px solid var(--line); margin-bottom: 6px; font-size: 14px; }
+  .order .star { color: var(--accent); }
+  .order button { background: none; border: 0; color: var(--faint); cursor: pointer; font-size: 14px; padding: 0 2px; }
+  .order button:hover { color: var(--bad); }
+  .order-new { display: flex; gap: 8px; margin-top: 8px; }
+  .order-new input { flex: 1; min-width: 0; background: #07090f; border: 1px solid var(--line-2); border-radius: 8px;
+                     color: var(--text); font: 14px var(--sans); padding: 9px 11px; outline: none; }
+  .order-new input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px #ffe60022; }
+  .btn { background: var(--accent); color: #06070b; border: 0; border-radius: 8px; font: 700 12px var(--sans);
+         letter-spacing: .08em; padding: 0 14px; cursor: pointer; }
+  .btn.quiet { background: none; color: var(--dim); border: 1px solid var(--line-2); }
+  .btn:disabled { opacity: .4; cursor: default; }
+  .orders-foot { display: flex; justify-content: space-between; gap: 10px; margin-top: 10px; font: 11px var(--mono);
+                 color: var(--dim); flex-wrap: wrap; }
+  .orders-foot .warn { color: var(--code); }
+  .orders-foot .err { color: var(--bad); }
 
   /* ---------- decision compass ---------- */
   .decision { display: grid; grid-template-columns: 210px 1fr; gap: 18px; align-items: center; }
@@ -90,14 +110,14 @@
   .compass .d .arrow { font-size: 20px; position: relative; }
   .compass .d .p { font: 600 12px var(--mono); position: relative; color: var(--text); }
   .compass .d.open { border-color: var(--line-2); color: #c9cfdc; }
-  .compass .d.exec { border-color: var(--pac); box-shadow: 0 0 16px #ffe60044, inset 0 0 0 1px var(--pac); color: var(--pac); }
+  .compass .d.exec { border-color: var(--accent); box-shadow: 0 0 16px #ffe60044, inset 0 0 0 1px var(--accent); color: var(--accent); }
   .compass .d.exec .fill { background: #ffe60033; }
   .compass .d.overruled { border-color: var(--bad); border-style: dashed; }
   .compass .d.overruled::after { content: "proposed"; position: absolute; bottom: 3px; font: 9px var(--mono); color: var(--bad); }
   .compass .hub { display: flex; align-items: center; justify-content: center; }
   .compass .hub .stick { width: 26px; height: 26px; border-radius: 50%; background: #1a2030; border: 2px solid var(--line-2);
                          transition: transform .12s; box-shadow: 0 0 10px #000; }
-  .compass .hub .stick.on { background: var(--pac); border-color: #fff6; }
+  .compass .hub .stick.on { background: var(--accent); border-color: #fff6; }
   .facts { display: grid; grid-template-columns: max-content 1fr; gap: 5px 14px; font: 13px var(--mono); }
   .facts .k { color: var(--dim); }
   .by { display: inline-flex; align-items: center; gap: 6px; font: 700 12px var(--mono); padding: 3px 10px;
@@ -123,13 +143,41 @@
   .actor b { display: block; font-weight: 600; color: var(--text); }
   .actor span { color: var(--dim); }
   .actor.near { border-color: #ff3d6e88; box-shadow: inset 0 0 0 1px #ff3d6e44; }
-  .actor.prey { border-color: #3b5bff88; }
+  .actor.target { border-color: #3b5bff88; }
+
+  /* ---------- game state ---------- */
+  .facts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; margin-bottom: 12px; }
+  .fact { padding: 8px 10px; border-radius: 10px; background: #0a0d14; border: 1px solid var(--line); }
+  .fact small { display: block; font: 600 9px var(--sans); letter-spacing: .18em; color: var(--dim); text-transform: uppercase; }
+  .fact b { font: 600 15px var(--mono); }
+  .fact.bad { border-color: #ff3d6e66; } .fact.bad b { color: var(--bad); }
+  .fact.good { border-color: #3ddc9766; } .fact.good b { color: var(--ok); }
+  .fact.warn { border-color: #ff7a1a55; } .fact.warn b { color: var(--code); }
+  .spark { display: grid; grid-template-columns: 128px 1fr 64px; gap: 10px; align-items: center; padding: 4px 0; }
+  .spark span { font: 12px var(--mono); color: var(--dim); }
+  .spark span:last-child { text-align: right; color: var(--text); font-weight: 600; }
+  .spark canvas { width: 100%; height: 30px; display: block; }
+  .subhead { font: 600 9px var(--sans); letter-spacing: .2em; color: var(--faint); margin: 12px 0 6px; }
+
+  /* ---------- what the model was asked ---------- */
+  .asked { flex: none; max-height: 48%; display: flex; flex-direction: column; }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+  .tab { font: 600 11px var(--mono); padding: 3px 10px; border-radius: 99px; border: 1px solid var(--line-2);
+         color: var(--dim); background: none; cursor: pointer; }
+  .tab.on { color: #06070b; background: var(--model); border-color: var(--model); }
+  .asked-body { overflow-y: auto; min-height: 0; font: 12px/1.5 var(--mono); }
+  .asked-body pre { margin: 0 0 10px; white-space: pre-wrap; word-break: break-word; color: #c9cfdc; font: inherit; }
+  .asked-body .lbl { font: 600 9px var(--sans); letter-spacing: .2em; color: var(--faint); margin: 8px 0 4px; }
+  .asked-body .orders-text { color: var(--accent); border-left: 2px solid var(--accent); padding-left: 8px; }
+  .asked-body .opt { display: grid; grid-template-columns: 64px 1fr; gap: 8px; padding: 3px 0; border-bottom: 1px solid #151a26; }
+  .asked-body .opt.chosen b { color: var(--accent); }
+  .asked-meta { font: 11px var(--mono); color: var(--dim); margin-bottom: 8px; }
 
   /* ---------- timeline ---------- */
   .timeline { flex: 1; min-height: 0; display: flex; flex-direction: column; }
   .tl-filters { display: flex; gap: 12px; font: 11px var(--mono); color: var(--dim); margin-bottom: 8px; }
   .tl-filters label { display: flex; gap: 5px; align-items: center; cursor: pointer; }
-  .tl-filters input { accent-color: var(--pac); }
+  .tl-filters input { accent-color: var(--accent); }
   #timeline { overflow-y: auto; flex: 1; min-height: 0; font: 12px/1.35 var(--mono); margin-right: -8px; padding-right: 8px; }
   .row { display: grid; grid-template-columns: 44px 1fr; gap: 10px; padding: 7px 0; border-bottom: 1px solid #151a26;
          animation: in .25s ease-out; }
@@ -138,7 +186,7 @@
   .row .what { min-width: 0; }
   .row .what b { font-weight: 700; margin-right: 6px; letter-spacing: .04em; }
   .row .what span { color: #b8bfcd; word-break: break-word; }
-  .row.r-goal { background: linear-gradient(90deg, #ffe60014, transparent); } .row.r-goal b { color: var(--pac); }
+  .row.r-goal { background: linear-gradient(90deg, #ffe60014, transparent); } .row.r-goal b { color: var(--accent); }
   .row.r-over { background: linear-gradient(90deg, #ff3d6e1c, transparent); } .row.r-over b { color: var(--bad); }
   .row.r-run b { color: var(--ok); } .row.r-code b { color: var(--code); } .row.r-answer b { color: var(--model); }
   .row.r-move b { color: var(--dim); } .row.r-dim span { color: var(--dim); }
@@ -148,7 +196,7 @@
   .games th { text-align: left; font: 600 10px var(--sans); letter-spacing: .18em; color: var(--dim); padding: 0 0 6px; }
   .games td { padding: 5px 0; border-top: 1px solid #151a26; }
   .games td:not(:first-child), .games th:not(:first-child) { text-align: right; }
-  .games tr.now td { color: var(--pac); }
+  .games tr.now td { color: var(--accent); }
 
   .muted { color: var(--dim); }
   .hidden { display: none !important; }
@@ -190,17 +238,33 @@
       <div class="banner hidden" id="banner"></div>
     </div>
     <div class="toggles">
-      <label><input type="checkbox" id="o-ghosts" checked> distances</label>
+      <label><input type="checkbox" id="o-marks" checked> distances</label>
       <label><input type="checkbox" id="o-choice" checked> choices</label>
       <label><input type="checkbox" id="o-ahead" checked> answers ahead</label>
     </div>
   </section>
 
   <section class="col">
+    <div class="card orders-card">
+      <h2>STANDING ORDERS <em id="orders-version"></em></h2>
+      <div id="orders"><span class="muted">None. The model plays on its own judgement.</span></div>
+      <form class="order-new" id="order-form" autocomplete="off">
+        <input id="order-text" maxlength="300" placeholder="Tell the player in plain words">
+        <button class="btn" type="submit">ADD</button>
+      </form>
+      <div class="orders-foot"><span id="orders-reach"></span><span id="orders-state"></span></div>
+    </div>
     <div class="card">
       <h2>ACTIVE INTENT <em id="intent-age"></em></h2>
       <div class="goal" id="goal">–</div>
       <div class="stances" id="stances"></div>
+    </div>
+    <div class="card">
+      <h2>GAME STATE <em>last 60 s</em></h2>
+      <div class="facts-grid" id="facts-now"></div>
+      <div id="sparks"><span class="muted">Not playing.</span></div>
+      <div class="subhead">ON THE BOARD</div>
+      <div class="actors" id="actors"><span class="muted">Not playing.</span></div>
     </div>
     <div class="card">
       <h2>LAST DECISION <em id="move-at"></em></h2>
@@ -213,7 +277,7 @@
           <div></div><div class="d" data-d="DOWN"><div class="fill"></div><span class="arrow">▼</span><span class="p"></span></div><div></div>
         </div>
         <div>
-          <div style="margin-bottom:12px" id="who"><span class="muted">No junction decided yet.</span></div>
+          <div style="margin-bottom:12px" id="who"><span class="muted">No decision yet.</span></div>
           <div class="facts" id="facts"></div>
         </div>
       </div>
@@ -233,13 +297,14 @@
       <table class="games"><thead><tr><th>GAME</th><th>SCORE</th><th>LEVEL</th><th>MOVES</th><th>MODEL'S OWN</th></tr></thead>
         <tbody id="games"><tr><td colspan="5" class="muted">No game finished yet.</td></tr></tbody></table>
     </div>
-    <div class="card">
-      <h2>ON THE BOARD</h2>
-      <div class="actors" id="actors"><span class="muted">Not playing.</span></div>
-    </div>
   </section>
 
   <section class="col">
+    <div class="card asked">
+      <h2>WHAT THE MODEL WAS ASKED <em><label style="cursor:pointer"><input type="checkbox" id="freeze"> hold</label></em></h2>
+      <div class="tabs" id="asked-tabs"></div>
+      <div class="asked-body" id="asked-body"><span class="muted">No model has been asked anything in this run.</span></div>
+    </div>
     <div class="card timeline">
       <h2>TIMELINE <em id="tl-count"></em></h2>
       <div class="tl-filters">
@@ -319,6 +384,9 @@ function onStatus(s) {
   stick.style.transform = `translate(${v[0] * 9}px, ${v[1] * 9}px)`;
   showShare(s.moves);
   showActors(s);
+  showFacts(s);
+  showSparksSoon();
+  showAsked(s.asked);
   view.lastMoves = s.moves;
   runState();
 }
@@ -339,12 +407,11 @@ function showShare(moves) {
 function showActors(s) {
   if (!s.playing || !s.marks) { $("actors").innerHTML = '<span class="muted">Not playing.</span>'; return; }
   $("actors").innerHTML = s.marks.map(m => {
-    const near = m.kind === "threat" && m.steps != null && m.steps <= 8;
+    const near = !!m.alert;
     const what = m.kind === "player" ? (s.held ? `holding ${s.held}` : "")
-               : m.kind === "eyes" ? "eyes, going home"
-               : (m.steps != null ? `${m.steps} steps` : "in the house") + (m.kind === "prey" ? " · blue" : "");
-    return `<div class="actor ${near ? "near" : ""} ${m.kind === "prey" ? "prey" : ""}">
-      <div class="sw ${m.kind === "player" ? "player" : ""}" style="background:${m.kind === "eyes" ? "transparent;border:2px solid #fff" : m.colour}"></div>
+               : [m.steps != null ? `${m.steps} steps` : null, m.note].filter(Boolean).join(" · ") || "out of reach";
+    return `<div class="actor ${near ? "near" : ""} ${m.kind === "target" ? "target" : ""}">
+      <div class="sw ${m.kind === "player" ? "player" : ""}" style="background:${m.kind === "neutral" ? "transparent;border:2px solid " + m.colour : m.colour}"></div>
       <div><b>${esc(m.label)}</b><span>${esc(what)}</span></div></div>`;
   }).join("");
 }
@@ -363,7 +430,8 @@ function showMove(m) {
   }
   $("who").innerHTML = `${byTag(m.by)} <span class="muted">via ${esc(m.via)}</span>` +
     (m.proposed !== m.executed ? ` <span style="color:var(--bad)">· proposed ${esc(m.proposed)}, executed ${esc(m.executed)}</span>` : "");
-  const facts = [["junction", `${m.tile} · arriving ${m.arriving}`], ["answer from", m.source],
+  const facts = [["where", [m.tile, m.arriving && `arriving ${m.arriving}`].filter(Boolean).join(" · ") || "–"],
+                 ["answer from", m.source],
                  ["confidence", m.confidence != null ? `${Math.round(100 * m.confidence)}%` : "–"],
                  ["latency", m.latency_ms ? `${m.latency_ms} ms` : "–"], ["answer age", m.age_s != null ? `${m.age_s} s` : "–"]];
   if (m.late) facts.push(["late", m.late]);
@@ -371,6 +439,127 @@ function showMove(m) {
   $("facts").innerHTML = facts.map(([k, v]) => `<span class="k">${k}</span><span>${esc(v)}</span>`).join("");
   $("move-at").textContent = m.frame != null ? `frame ${m.frame}` : "";
 }
+
+/* ---------- game state over time ---------- */
+const WINDOW = 60;  // seconds of history in the strip charts
+const series = {};  // key -> {label, unit, worse, points: [[t, value]]}
+function addPoint(key, meta, t, value) {
+  const s = series[key] || (series[key] = { ...meta, points: [] });
+  Object.assign(s, meta);
+  s.points.push([t, value]);
+  while (s.points.length && s.points[0][0] < t - WINDOW) s.points.shift();
+}
+function drawSpark(canvas, s, now) {
+  const dpr = window.devicePixelRatio || 1, w = canvas.clientWidth, h = canvas.clientHeight;
+  if (canvas.width !== Math.round(w * dpr)) { canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr); }
+  const c = canvas.getContext("2d");
+  c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, w, h);
+  const vals = s.points.map(p => p[1]).filter(v => v != null);
+  if (!vals.length) return;
+  let lo = Math.min(...vals), hi = Math.max(...vals);
+  if (s.unit === "%") { lo = 0; hi = 100; }
+  if (hi === lo) { hi += 1; lo -= 1; }
+  const x = t => w * (1 - (now - t) / WINDOW), y = v => h - 3 - (h - 6) * (v - lo) / (hi - lo);
+  c.strokeStyle = "#1d2333"; c.lineWidth = 1; c.beginPath(); c.moveTo(0, h - 0.5); c.lineTo(w, h - 0.5); c.stroke();
+  c.lineWidth = 1.6; c.lineJoin = "round";
+  let drawing = false;
+  for (const [t, v] of s.points) {
+    if (v == null) { if (drawing) c.stroke(); drawing = false; continue; }
+    const alarmed = s.alarm != null && (s.worse === "low" ? v <= s.alarm : v >= s.alarm);
+    if (!drawing) { c.beginPath(); c.strokeStyle = s.colour || "#2ef2ff"; c.moveTo(x(t), y(v)); drawing = true; }
+    else c.lineTo(x(t), y(v));
+    if (alarmed) { c.stroke(); c.fillStyle = "#ff3d6e"; c.fillRect(x(t) - 1, y(v) - 1, 2, 2); c.beginPath(); c.moveTo(x(t), y(v)); }
+  }
+  if (drawing) c.stroke();
+}
+function showSparks() {
+  const keys = Object.keys(series);
+  const box = $("sparks");
+  if (!keys.length) return;
+  if (box.dataset.keys !== keys.join()) {
+    box.dataset.keys = keys.join();
+    box.innerHTML = keys.map(k => `<div class="spark"><span>${esc(series[k].label)}</span><canvas data-k="${esc(k)}"></canvas><span id="sv-${esc(k)}"></span></div>`).join("");
+  }
+  const now = playerNow();
+  for (const canvas of box.querySelectorAll("canvas")) {
+    const s = series[canvas.dataset.k];
+    drawSpark(canvas, s, now);
+    const last = [...s.points].reverse().find(p => p[1] != null);
+    $("sv-" + canvas.dataset.k).textContent = last ? `${Math.round(last[1]).toLocaleString()}${s.unit === "%" ? "%" : s.unit === "ms" ? " ms" : ""}` : "–";
+  }
+}
+let sparksAt = 0;
+function showSparksSoon() { if (Date.now() - sparksAt > 200) { sparksAt = Date.now(); showSparks(); } }
+function showFacts(s) {
+  $("facts-now").innerHTML = s.playing && s.facts ? s.facts.map(f =>
+    `<div class="fact ${f.tone || ""}"><small>${esc(f.label)}</small><b>${esc(f.value)}</b></div>`).join("") : "";
+  if (s.playing && s.series && s.t) for (const p of s.series) addPoint(p.key, { label: p.label, unit: p.unit, worse: p.worse, alarm: p.alarm, colour: p.colour || "#2ef2ff" }, s.t, p.value);
+}
+
+/* ---------- what the model was asked ---------- */
+let askedTab = null, askedLast = null;
+function showAsked(list) {
+  if (!list || !list.length || $("freeze").checked) return;
+  askedLast = list;
+  if (!askedTab || !list.some(r => r.asker === askedTab)) askedTab = list[0].asker;
+  $("asked-tabs").innerHTML = list.map(r => `<button class="tab ${r.asker === askedTab ? "on" : ""}" data-a="${esc(r.asker)}">${esc(r.asker)}</button>`).join("");
+  const r = list.find(x => x.asker === askedTab);
+  const [name, q] = Object.entries(r.questions)[0] || [];
+  const answer = r.answer && r.answer[name];
+  const parts = (q?.instructions || "").split("\n\n");
+  const ordersText = parts[0].startsWith("Standing orders") ? parts.shift() : null;
+  const age = playerNow() - r.t;
+  $("asked-body").innerHTML =
+    `<div class="asked-meta">${age >= 0 ? age.toFixed(1) + " s ago" : "just now"} · orders ${r.orders ? "v" + r.orders : "none"}` +
+    (answer ? ` · answer <b style="color:var(--accent)">${esc(answer.choice)}</b> ${Math.round(100 * (answer.confidence || 0))}% in ${r.latency_ms} ms` : " · waiting for the answer") + `</div>` +
+    (ordersText ? `<div class="lbl">STANDING ORDERS</div><pre class="orders-text">${esc(ordersText)}</pre>` : "") +
+    `<div class="lbl">QUESTION</div><pre>${esc(parts.join("\n\n"))}</pre>` +
+    `<div class="lbl">OPTIONS</div>` + Object.entries(q?.criteria || {}).map(([k, v]) =>
+      `<div class="opt ${answer && answer.choice === k ? "chosen" : ""}"><b>${esc(k)}</b><span>${esc(v)}</span></div>`).join("") +
+    `<div class="lbl">STATE (${(r.state || "").length.toLocaleString()} characters)</div><pre>${esc(r.state)}</pre>`;
+}
+$("asked-tabs").addEventListener("click", e => { if (e.target.dataset.a) { askedTab = e.target.dataset.a; const f = $("freeze").checked; $("freeze").checked = false; showAsked(askedLast); $("freeze").checked = f; } });
+
+/* ---------- standing orders ---------- */
+const orders = { items: [], version: null, sending: false, reach: [] };
+function showOrders() {
+  $("orders").innerHTML = orders.items.length ? orders.items.map((text, i) =>
+    `<div class="order"><span class="star">★</span><span>${esc(text)}</span><button title="Withdraw this order" data-i="${i}">✕</button></div>`).join("")
+    : '<span class="muted">None. The model plays on its own judgement.</span>';
+  $("orders-version").textContent = orders.version ? `version ${orders.version}` : "";
+  $("orders-reach").innerHTML = !view.run ? ""
+    : orders.reach.length ? `read by: ${esc(orders.reach.join(", "))}`
+    : `<span class="warn">no model reads them in this run (${esc(view.run.decider)} decider${view.run.strategist !== "ollama" ? ", code sets the goal" : ""})</span>`;
+}
+async function sendOrders(items) {
+  const state = $("orders-state");
+  state.className = ""; state.textContent = "sending…"; orders.sending = true;
+  try {
+    const r = await fetch("/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orders: items }) });
+    if (r.status === 409) { state.className = "err"; state.textContent = "no player connected"; orders.sending = false; }
+    else if (!r.ok) { state.className = "err"; state.textContent = `refused (${r.status})`; orders.sending = false; }
+    else state.textContent = "waiting for the player…";
+  } catch (e) { state.className = "err"; state.textContent = "the Observatory is not answering"; orders.sending = false; }
+}
+function onOrders(r) {
+  orders.items = r.orders || []; orders.version = r.version; orders.reach = r.reaches || orders.reach;
+  orders.sending = false;
+  const state = $("orders-state");
+  state.className = "";
+  state.textContent = r.source === "operator" ? "in force from now" : r.source === "start" ? "set at the start" : "";
+  showOrders();
+}
+$("order-form").addEventListener("submit", e => {
+  e.preventDefault();
+  const text = $("order-text").value.trim();
+  if (!text) return;
+  $("order-text").value = "";
+  sendOrders([...orders.items, text]);
+});
+$("orders").addEventListener("click", e => {
+  const i = e.target.dataset?.i;
+  if (i !== undefined) sendOrders(orders.items.filter((_, k) => k !== Number(i)));
+});
 
 /* ---------- games ---------- */
 function totals(moves) {
@@ -407,18 +596,17 @@ function rowFor(r) {
     case "move": return ["move", ARROW[r.executed] || "·", `${r.executed} at ${r.tile} · <span style="color:${BY_COLOUR[r.by]}">${esc(r.by)}</span>` +
                          (r.proposed !== r.executed ? ` · proposed ${esc(r.proposed)}` : "") + (r.latency_ms ? ` · ${r.latency_ms} ms` : ""), "move", true];
     case "decision": return ["answer", "ANSWER", `${r.direction} for ${r.tile} · ${Math.round(100 * r.confidence)}% · ${r.latency_ms} ms · ${r.source}${r.chain ? " · chain " + r.chain : ""}`, "answer"];
-    case "reflex": return ["code", "REFLEX", `${r.chosen} → ${r.override} (ghost ${r.threat} steps)`, "other"];
-    case "reverse": return ["code", "REVERSE", `${r.heading} → ${r.to} · why ${r.why}`, "other"];
-    case "revise": return ["code", "REVISE", `${r.was} → ${r.now}`, "other"];
-    case "late": return ["code", "LATE", `${r.tile} · ${r.why}${r.direction ? " · rule took " + r.direction : ""}`, "other"];
-    case "pause": return ["dim", "PAUSE", `ghost eaten, +${r.score}`, "other"];
+    case "orders": return r.source === "current" || r.source === "unchanged" ? null
+                        : ["goal", `ORDERS v${r.version}`, (r.orders || []).length ? r.orders.map(x => "★ " + x).join("  ") : "withdrawn: none", "other"];
   }
   const rest = Object.entries(r).filter(([k]) => !["event", "t", "frame"].includes(k));
   return ["dim", String(r.event).toUpperCase(), rest.map(([k, v]) => `${k}=${typeof v === "object" ? JSON.stringify(v) : v}`).join(" "), "other"];
 }
 
 function addRow(r) {
-  const [cls, label, text, group, html] = rowFor(r);
+  const row_ = rowFor(r);
+  if (!row_) return;
+  const [cls, label, text, group, html] = row_;
   if (!filters[group]) return;
   const row = document.createElement("div");
   row.className = "row r-" + cls;
@@ -433,10 +621,22 @@ function onEvent(r) {
   if (r.event === "run") {
     view.run = r; view.ended = false; view.runStart = r.t; view.answers = []; view.move = null; view.rows = 0;
     view.games = []; view.gameMoves = {};
-    $("timeline").innerHTML = ""; showRun(r); showGames();
+    for (const k of Object.keys(series)) delete series[k];
+    $("sparks").dataset.keys = ""; $("sparks").innerHTML = '<span class="muted">Not playing.</span>';
+    askedTab = null; $("asked-tabs").innerHTML = "";
+    $("asked-body").innerHTML = '<span class="muted">No model has been asked anything in this run.</span>';
+    $("timeline").innerHTML = ""; showRun(r); showGames(); showOrders();
+    $("order-text").placeholder = r.orders_example ? `Tell the player, e.g. ${r.orders_example}` : "Tell the player in plain words";
   }
   if (r.event === "run_end") view.ended = true;
-  if (r.event === "decision") { view.answers.push(r); if (view.answers.length > 60) view.answers.shift(); }
+  if (r.event === "orders") onOrders(r);
+  if (r.event === "decision") {
+    view.answers.push(r); if (view.answers.length > 60) view.answers.shift();
+    if (r.source === "model" && r.t) {
+      addPoint("confidence", { label: "model confidence", unit: "%", worse: null, colour: "#ffe600" }, r.t, 100 * r.confidence);
+      addPoint("latency", { label: "model latency", unit: "ms", worse: "high", colour: "#a78bfa" }, r.t, r.latency_ms);
+    }
+  }
   if (r.event === "game_over") showGame(r);
   if (r.event === "move") showMove(r);
   addRow(r);
@@ -465,11 +665,11 @@ function draw() {
   if (!s || !s.playing || !s.marks || Date.now() - view.statusAt > 3000 || view.ended) return;
   const player = s.marks.find(m => m.kind === "player");
   ctx.lineCap = "round";
-  if ($("o-ghosts").checked && player) {
+  if ($("o-marks").checked && player) {
     for (const m of s.marks) {
-      if (m.kind === "player" || m.kind === "eyes") continue;
-      const near = m.steps != null && m.steps <= 8;
-      ctx.setLineDash(m.kind === "prey" ? [3, 3] : []);
+      if (m.kind === "player" || m.kind === "neutral") continue;
+      const near = !!m.alert;
+      ctx.setLineDash(m.kind === "target" ? [3, 3] : []);
       ctx.globalAlpha = m.steps == null ? 0.15 : near ? 0.9 : 0.4;
       ctx.strokeStyle = m.colour; ctx.lineWidth = near ? 1.6 : 0.9;
       ctx.beginPath(); ctx.moveTo(player.x, player.y); ctx.lineTo(m.x, m.y); ctx.stroke();
@@ -489,7 +689,7 @@ function draw() {
   ctx.globalAlpha = 1;
   const now = playerNow();
   const moveAge = view.move ? 1000 * (now - view.move.t) : Infinity;
-  if ($("o-ahead").checked) {  // answers waiting at junctions ahead: the look-ahead at work
+  if ($("o-ahead").checked) {  // answers already waiting at decision points ahead
     for (const a of view.answers) {
       const age = 1000 * (now - a.t);
       if (age < 0 || age > 1600 || (view.move && String(view.move.tile) === String(a.tile) && moveAge < 1600)) continue;
@@ -499,7 +699,7 @@ function draw() {
       drawArrow(p[0], p[1], a.direction, 10, "#2ef2ff", 1.4);
     }
   }
-  if ($("o-choice").checked && view.move) {  // the junction just decided: every option, sized by probability
+  if ($("o-choice").checked && view.move) {  // the decision point just decided: every option, sized by probability
     const age = moveAge;
     if (age >= 0 && age < 2200) {
       const m = view.move, p = tilePx(m.tile);

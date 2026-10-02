@@ -8,6 +8,10 @@ The game's own switches (its experiment.OPTIONS) are added to the command line; 
 
 Every logged event, and a status line five times a second, also goes to the Observatory dashboard when one is running
 (python tools/observatory.py; --observatory none to not send).
+
+Standing orders (arcadekit/orders.py): text put in front of every question a model is asked. Set them at the start with
+--orders (repeat for several) and change them during the run from the Observatory. Every change is logged.
+    python tools/play.py --game arcade/pacman --decider ollama --knowledge L2 --orders "Play safe: a life matters more than points."
 """
 import argparse
 import json
@@ -20,6 +24,7 @@ from gamelib import DEFAULT_GAME, DEFAULT_PI_HOST, ROOT, load_game  # first: put
 from arcadekit.decisions import DecisionWorker
 from arcadekit.manifest import build_manifest
 from arcadekit.observatory import DEFAULT_ADDRESS, EventSink, LiveSink
+from arcadekit.orders import Orders, OrderedClient
 from arcadekit.options import add_arguments, label_parts, values
 from arcadekit.report import summary_lines
 from arcadekit.strategist import MockStrategistClient, Strategist
@@ -28,7 +33,7 @@ from broker_link import BrokerLink
 from state_client import StateStream
 
 
-def build_decider(game, args):
+def build_decider(game, args, orders):
     if args.decider == "rule":
         return game.deciders.RuleDecider()
     if args.decider == "mock":
@@ -36,7 +41,8 @@ def build_decider(game, args):
         client = MockSystemOne(game.score_option, latency_ms=(lo, hi), seed=args.seed)
     else:
         client = OllamaSystemOne(model=args.model, host=args.ollama_host)
-    return game.deciders.SystemOneDecider(client, min_confidence=args.min_confidence)
+    return game.deciders.SystemOneDecider(OrderedClient(client, orders, "decisions"),
+                                          min_confidence=args.min_confidence)
 
 
 def chosen_game(argv):
@@ -70,6 +76,9 @@ def main(argv=None):
     parser.add_argument("--games", type=int, default=1)
     parser.add_argument("--seconds", type=int, default=3600)
     parser.add_argument("--out", default=str(ROOT / "runs"))
+    parser.add_argument("--orders", action="append", default=[], metavar="TEXT",
+                        help="a standing order for the model, in plain words (repeat for several); "
+                             "the Observatory can change them during the run")
     parser.add_argument("--observatory", default="%s:%d" % DEFAULT_ADDRESS,
                         help="HOST:PORT of the Observatory dashboard (tools/observatory.py), or none")
     add_arguments(parser, game_options, f"{chosen_game(argv)} switches (kind in brackets; docs/GAME_WORKSHOP.md)")
@@ -85,12 +94,33 @@ def main(argv=None):
     label = "-".join(p for p in (stamp, args.game.replace("/", "_"), args.decider, args.knowledge,
                                  None if args.goal == "auto" else args.goal,
                                  None if args.strategist == "code" else f"strat-{args.strategist}",
-                                 *label_parts(game_values, game_options), args.tag) if p)
+                                 *label_parts(game_values, game_options), "orders" if args.orders else None,
+                                 args.tag) if p)
     decisions_log = open(out_dir / f"{label}-decisions.jsonl", "w", buffering=1)
+    orders = Orders(args.orders)
+    # who reads the orders: only questions a real model answers (a rule decider and a mock model never see text)
+    orders_reach = ((["decisions"] if args.decider == "ollama" else [])
+                    + (["goal and stance"] if args.strategist == "ollama" else []))
+    run_record = {"event": "run", "label": label, "game": args.game, "decider": args.decider,
+                  "model": None if args.decider == "rule" else args.model, "knowledge": args.knowledge,
+                  "goal": args.goal, "strategist": args.strategist, "games": args.games,
+                  "orders_example": getattr(game, "ORDERS_EXAMPLE", ""), "t": round(time.time(), 3)}
+
+    def orders_record(source):
+        version, items = orders.snapshot()
+        return {"event": "orders", "version": version, "orders": items, "source": source,
+                "reaches": orders_reach, "t": round(time.time(), 3)}
+
+    def command(message):  # from the Observatory
+        if message.get("op") == "orders" and isinstance(message.get("orders"), list):
+            if orders.set(message["orders"], source="operator") is None:
+                live.send(orders_record("unchanged"))  # still confirm, so the page stops waiting
+
     live = None
     if args.observatory != "none":
         host, _, port = args.observatory.rpartition(":")
-        live = LiveSink((host, int(port)))
+        live = LiveSink((host, int(port)), on_command=command,
+                        hello=lambda: [run_record, orders_record("current")])
         decisions_log = EventSink(decisions_log, live)
     results_path = out_dir / f"{label}-games.jsonl"
     manifest_path = out_dir / f"{label}-manifest.json"
@@ -104,11 +134,14 @@ def main(argv=None):
     manifest["emulated_fps"] = round((stream.latest()[0] - first) / (time.time() - t0), 1)
     manifest_path.write_text(json.dumps(manifest, indent=2))
     broker = BrokerLink(args.host)
-    worker = DecisionWorker(build_decider(game, args))
+    worker = DecisionWorker(build_decider(game, args, orders))
 
     def new_worker(model):  # for a game switch that names a second model
+        orders_reach.append(f"{model} questions")
         return DecisionWorker(game.deciders.SystemOneDecider(
-            OllamaSystemOne(model=model, host=args.ollama_host, timeout=2.0), min_confidence=args.min_confidence))
+            OrderedClient(OllamaSystemOne(model=model, host=args.ollama_host, timeout=2.0), orders,
+                          f"{model} questions"),
+            min_confidence=args.min_confidence))
 
     extra = experiment.player_kwargs(game_values, new_worker) if experiment else {}
     manager = game.goals.GoalManager(args.goal)
@@ -116,14 +149,13 @@ def main(argv=None):
         if args.goal != "auto":
             parser.error("--strategist needs --goal auto (a pinned goal leaves nothing to decide)")
         client = (MockStrategistClient(game.strategy.code_chooser, seed=args.seed) if args.strategist == "mock"
-                  else OllamaSystemOne(model=args.strategist_model, host=args.ollama_host))
+                  else OrderedClient(OllamaSystemOne(model=args.strategist_model, host=args.ollama_host), orders,
+                                     "goal and stance"))
         manager = game.strategy.ModelGoalManager(Strategist(client, game.strategy.SCHEMA), manager)
     player = game.player.Player(stream, broker, worker, manager, decisions_log,
                                 knowledge=args.knowledge, **extra)
-    if live:
-        live.send({"event": "run", "label": label, "game": args.game, "decider": args.decider,
-                   "model": None if args.decider == "rule" else args.model, "knowledge": args.knowledge,
-                   "goal": args.goal, "strategist": args.strategist, "games": args.games, "t": round(time.time(), 3)})
+    orders.log = player.log
+    player.log(event="orders", version=orders.version, orders=orders.items, source="start", reaches=orders_reach)
     observe = getattr(player, "observe", None) if live else None
     observed_at = 0.0
 
@@ -138,7 +170,7 @@ def main(argv=None):
                 last_good = time.time()
                 if observe and last_good - observed_at >= 0.2:
                     observed_at = last_good
-                    live.send({**observe(), "t": round(last_good, 3)})
+                    live.send({**observe(), "asked": orders.latest(), "t": round(last_good, 3)})
             except TimeoutError:
                 if time.time() - last_good > 10:
                     print(f"WARNING: no game state for {time.time() - last_good:.0f} s "
@@ -167,7 +199,8 @@ def main(argv=None):
             live.send({"event": "run_end", "label": label, "games_completed": len(results), "t": round(time.time(), 3)})
         decisions_log.close()
         stream.close()
-        manifest.update(ended=time.strftime("%Y-%m-%dT%H:%M:%S"), games_completed=len(results))
+        manifest.update(ended=time.strftime("%Y-%m-%dT%H:%M:%S"), games_completed=len(results),
+                        orders={**orders.summary(), "reaches": orders_reach})
         manifest_path.write_text(json.dumps(manifest, indent=2))
 
     print()

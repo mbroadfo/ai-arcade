@@ -5,6 +5,9 @@ Three inputs, each independent of the others:
   events   play.py's logged events and status lines (arcadekit/observatory.py sends them here, port 8770)
   browser  http://localhost:8780/ (the page is tools/observatory.html; it reads /events, a server-sent event stream)
 
+One thing goes the other way: the operator's standing orders (arcadekit/orders.py). The page POSTs them to /orders and
+they go down the connected player's event connection; the player confirms with an `orders` event.
+
 It decides nothing and knows no game: it relays the video and whatever standard events arrive. It can run before,
 during and between runs; play.py reconnects to it and the video reconnects to the Pi.
 
@@ -60,7 +63,8 @@ class Hub:
         self.events = collections.deque(maxlen=KEEP_EVENTS)
         self.seq = 0
         self.status, self.status_seq = None, 0
-        self.run = None  # the current run's opening event, given to every page that opens
+        self.sticky = {}  # the run's opening event and the orders now: every page that opens is given them
+        self.players = []  # the connections of running players (play.py), for the operator's commands
         self.frame, self.frame_seq = None, 0
         self.video = {"connected": False, "frame": None, "fps": None}
         self.video_seq = 0
@@ -72,10 +76,26 @@ class Hub:
             else:
                 if record.get("event") == "run":
                     self.events.clear()  # a new run starts the page's timeline afresh
-                    self.run = record
+                    self.sticky = {}
+                if record.get("event") in ("run", "orders"):
+                    self.sticky[record["event"]] = record
                 self.seq += 1
                 self.events.append((self.seq, record))
             self.cond.notify_all()
+
+    def command(self, message):
+        """Send a command to every connected player. Returns how many got it."""
+        line = (json.dumps(message) + "\n").encode()
+        sent = 0
+        with self.cond:
+            players = list(self.players)
+        for conn in players:
+            try:
+                conn.sendall(line)
+                sent += 1
+            except OSError:
+                pass
+        return sent
 
     def set_frame(self, png):
         with self.cond:
@@ -131,12 +151,20 @@ def events_loop(hub, address):
     listener.listen(4)
 
     def serve(conn):
-        with conn, conn.makefile("r", encoding="utf-8", errors="replace") as lines:
-            for line in lines:
-                try:
-                    hub.add_event(json.loads(line))
-                except json.JSONDecodeError:
-                    continue
+        with hub.cond:
+            hub.players.append(conn)
+        try:
+            with conn, conn.makefile("r", encoding="utf-8", errors="replace") as lines:
+                for line in lines:
+                    try:
+                        hub.add_event(json.loads(line))
+                    except json.JSONDecodeError:
+                        continue
+        except OSError:
+            pass
+        finally:
+            with hub.cond:
+                hub.players.remove(conn)
 
     while True:
         conn, _ = listener.accept()
@@ -161,6 +189,26 @@ def make_handler(hub):
             else:
                 self.send_error(404)
 
+        def do_POST(self):
+            if self.path != "/orders":
+                self.send_error(404)
+                return
+            try:
+                body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))))
+                items = body["orders"]
+                if not isinstance(items, list) or not all(isinstance(x, str) for x in items):
+                    raise ValueError
+            except (ValueError, KeyError, TypeError):
+                self.send_error(400, "expected {\"orders\": [text, ...]}")
+                return
+            sent = hub.command({"op": "orders", "orders": items})
+            reply = json.dumps({"players": sent}).encode()
+            self.send_response(200 if sent else 409)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(reply)))
+            self.end_headers()
+            self.wfile.write(reply)
+
         def send(self, kind, data):
             text = data if isinstance(data, str) else json.dumps(data)
             self.wfile.write(f"event: {kind}\ndata: {text}\n\n".encode())
@@ -172,9 +220,9 @@ def make_handler(hub):
             self.end_headers()
             seen, status_seen, frame_seen, video_seen = 0, 0, 0, -1
             with hub.cond:
-                run = hub.run
-                if run is not None and not any(r is run for _, r in hub.events):
-                    self.send("event", run)  # the run began more events ago than are kept
+                for record in hub.sticky.values():  # the run and the orders, if they are older than the events kept
+                    if not any(r is record for _, r in hub.events):
+                        self.send("event", record)
             try:
                 while True:
                     with hub.cond:

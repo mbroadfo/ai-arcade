@@ -31,6 +31,7 @@ def bind(spec):
     options = tuple(o for o in experiment.OPTIONS if o.name != "refuge" or spec.safe_spot is not None)
     return SimpleNamespace(
         spec=spec,
+        ORDERS_EXAMPLE=spec.orders_example,
         AGENT_REGIONS=state.AGENT_REGIONS, IMAGE=state.IMAGE, REGIONS=state.REGIONS, decode=state.decode,
         score_option=features.score_option,
         player=_module(player, Player=Player),

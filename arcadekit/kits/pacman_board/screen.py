@@ -11,6 +11,7 @@ TILE_TO_PX = [[0, -CELL, (0x3B * CELL) + CELL // 2], [CELL, 0, (2 - 0x20) * CELL
 POS_TO_PX = [[0, -1, 241], [1, 0, 16]]
 COLOURS = {"red": "#ff2a2a", "pink": "#ffb8ff", "blue": "#2ef2ff", "orange": "#ffb852"}
 FRIGHTENED = "#3b5bff"
+NEAR = 8  # steps: a normal ghost this close is marked alert (the page highlights it; nothing acts on it)
 
 
 def apply(matrix, pair):
@@ -19,12 +20,19 @@ def apply(matrix, pair):
 
 
 def marks(state, steps, name, labels):
-    """Screen marks for the player and each ghost. steps: tile -> path steps from the player (only reachable tiles)."""
+    """Screen marks for the player and each ghost, in the Observatory's game-neutral kinds: player, threat, target
+    (something worth going for) and neutral. steps: tile -> path steps from the player (reachable tiles only)."""
     x, y = apply(POS_TO_PX, state.pacman.pos)
     out = [{"label": name, "kind": "player", "x": x, "y": y, "colour": "#ffe600"}]
     for key, ghost in state.ghosts.items():
-        kind = "eyes" if state.eyes[key] else "prey" if state.frightened[key] else "threat"
         x, y = apply(POS_TO_PX, ghost.pos)
-        out.append({"label": labels.get(key, key), "kind": kind, "x": x, "y": y, "steps": steps.get(ghost.tile),
-                    "colour": FRIGHTENED if kind == "prey" else COLOURS.get(key, "#ffffff")})
+        n = steps.get(ghost.tile)
+        if state.eyes[key]:
+            kind, note, colour = "neutral", "eyes, going home", "#ffffff"
+        elif state.frightened[key]:
+            kind, note, colour = "target", "blue: can be eaten", FRIGHTENED
+        else:
+            kind, note, colour = "threat", None if n is not None else "in the house", COLOURS.get(key, "#ffffff")
+        out.append({"label": labels.get(key, key), "kind": kind, "x": x, "y": y, "steps": n, "note": note,
+                    "colour": colour, "alert": kind == "threat" and n is not None and n <= NEAR})
     return out
