@@ -23,8 +23,10 @@ HERE = Path(__file__).resolve().parent
 LAUNCHER = HERE / "mame_human.sh"
 LUA = HERE / "game_check.lua"
 ES_PROCESS = "/emulationstation/emulationstation( |$)"
-BOOT_FRAMES = 600     # 10 s of emulated time before the coin goes in (attract mode, self tests)
+BOOT_FRAMES = 1200    # 20 s of emulated time before the coin goes in (attract mode, self tests)
 MIN_SPEED = 95.0      # percent of full speed, median over the run
+BOOT_TIMEOUT = 30     # seconds to reach BOOT_FRAMES, warning screens included
+STALL = 4             # seconds without a new frame before pressing Space to dismiss a warning screen
 
 
 def tap(keyboard, key, hold=0.15):
@@ -53,18 +55,29 @@ def read_log(path):
     return facts
 
 
-def wait_frames(log, proc, frames, timeout):
+def wait_frames(log, proc, frames, timeout, keyboard, result):
+    """Wait for the game to run `frames` frames. MAME holds a game on its warning screen ("this machine is not
+    working perfectly... press any key") without running it; when nothing has moved for STALL seconds, Space (a game
+    button, harmless before a coin) dismisses it, up to twice. Counted in result["warning_dismissed"]."""
     deadline = time.time() + timeout
+    last, moved_at = -1, time.time()
     while time.time() < deadline:
         if proc.poll() is not None:
             return False
-        if read_log(log)["frames"] >= frames:
+        now = read_log(log)["frames"]
+        if now >= frames:
             return True
+        if now != last:
+            last, moved_at = now, time.time()
+        elif time.time() - moved_at > STALL and result["warning_dismissed"] < 2:
+            tap(keyboard, e.KEY_SPACE)
+            result["warning_dismissed"] += 1
+            moved_at = time.time()
         time.sleep(0.25)
     return False
 
 
-def check(game, keyboard, out):
+def check(game, keyboard, out, boot_frames=BOOT_FRAMES):
     folder = out / game
     folder.mkdir(parents=True, exist_ok=True)
     for old in folder.glob("*"):
@@ -77,8 +90,8 @@ def check(game, keyboard, out):
         proc = subprocess.Popen([str(LAUNCHER), game, "-autoboot_script", str(LUA), "-snapshot_directory", str(folder)],
                                 stdout=mame_out, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, env=env,
                                 start_new_session=True)
-    result = {"game": game}
-    booted = wait_frames(log, proc, BOOT_FRAMES, 60)
+    result = {"game": game, "warning_dismissed": 0}
+    booted = wait_frames(log, proc, boot_frames, BOOT_TIMEOUT + boot_frames / 60, keyboard, result)
     if booted:
         tap(keyboard, e.KEY_5)
         time.sleep(2.5)
@@ -90,7 +103,7 @@ def check(game, keyboard, out):
         exited = True
     except subprocess.TimeoutExpired:
         exited = False
-        proc.kill()
+        os.killpg(proc.pid, 9)  # MAME on a warning screen ignores a polite stop
         proc.wait()
     facts = read_log(log)
     speeds = facts.pop("speeds")
@@ -117,6 +130,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--out", required=True)
     parser.add_argument("--keep-es-closed", action="store_true", help="leave EmulationStation closed afterwards")
+    parser.add_argument("--boot-seconds", type=float, default=BOOT_FRAMES / 60,
+                        help="emulated seconds before the coin (longer for games with slow first-run setup)")
     parser.add_argument("games", nargs="+")
     args = parser.parse_args()
     out = Path(args.out)
@@ -128,12 +143,12 @@ def main():
         time.sleep(60)
     subprocess.run(["pkill", "-f", ES_PROCESS])
     subprocess.run(["timeout", "10", "sh", "-c", f"while pgrep -f '{ES_PROCESS}' >/dev/null; do sleep 0.2; done"])
-    keyboard = UInput({e.EV_KEY: [e.KEY_5, e.KEY_1, e.KEY_ESC]}, name="AI Arcade check keyboard")
+    keyboard = UInput({e.EV_KEY: [e.KEY_5, e.KEY_1, e.KEY_ESC, e.KEY_SPACE]}, name="AI Arcade check keyboard")
     time.sleep(1)  # let udev announce it before MAME enumerates keyboards
     try:
         with open(out / "results.jsonl", "a") as results:
             for game in args.games:
-                result = check(game, keyboard, out)
+                result = check(game, keyboard, out, int(args.boot_seconds * 60))
                 line = json.dumps(result)
                 print(line, flush=True)
                 results.write(line + "\n")
