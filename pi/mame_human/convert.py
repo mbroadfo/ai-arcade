@@ -36,6 +36,7 @@ CHECKS = CONFIG / "checks"
 ARCADE_CFG = Path("/opt/retropie/configs/arcade/emulators.cfg")
 GAMES_CFG = Path("/opt/retropie/configs/all/emulators.cfg")
 EMULATOR = "mame-0.251"
+SLOW_BOOT = 45  # seconds of start-up for the recheck of games that fail the normal check
 LAUNCH = f'{EMULATOR} = "{HERE}/mame_human.sh %BASENAME%"'
 LINE = re.compile(r'^\s*([^=\s]+)\s*=\s*"(.*)"\s*$')
 
@@ -129,18 +130,31 @@ def cmd_run(args, ledger):
     if not ready:
         return
     out = CHECKS / time.strftime("%Y%m%d-%H%M%S")
-    proc = subprocess.run([sys.executable, str(HERE / "game_check.py"), "--out", str(out)] + ready,
-                          capture_output=True, text=True)
-    results = {json.loads(l)["game"]: json.loads(l) for l in proc.stdout.splitlines() if l.startswith("{")}
+    def check(games, folder, extra=()):
+        p = subprocess.run([sys.executable, str(HERE / "game_check.py"), "--out", str(folder), *extra] + games,
+                           capture_output=True, text=True)
+        found = {json.loads(l)["game"]: json.loads(l) for l in p.stdout.splitlines() if l.startswith("{")}
+        for game, r in found.items():
+            r["folder"] = str(folder / game)
+        return p, found
+
+    # Normal mode (10 s start-up) for the batch; whatever fails is checked again in slow mode, for games whose
+    # first-run set-up or power-on test takes longer.
+    proc, results = check(ready, out)
+    slow = [z for z in ready if z in results and not results[z]["auto_pass"]]
+    if slow:
+        _, again = check(slow, out.with_name(out.name + "-slow"), ("--boot-seconds", str(SLOW_BOOT)))
+        for z, r in again.items():
+            r["slow_recheck"] = True
+            results[z] = r
     for z in ready:
         r = results.get(z)
         entry = ledger[z]
         if r is None:
             entry.update(status="pending", last_error=proc.stderr[-500:])
             continue
-        r["folder"] = str(out / z)
         entry.update(status="checked", check=r, at=time.strftime("%F %T"))
-        flag = "auto-pass" if r["auto_pass"] else "needs a look"
+        flag = ("auto-pass" if r["auto_pass"] else "needs a look") + (" (slow recheck)" if r.get("slow_recheck") else "")
         print(f"{z} ({entry['set']}): {flag}  speed {r['speed']}  coin {r['coin_reached_game']}  "
               f"start {r['start_reached_game']}  escape {r['quit_on_escape']}")
     save(ledger)
