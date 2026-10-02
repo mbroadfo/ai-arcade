@@ -9,7 +9,9 @@
 #   mame       standalone MAME from Raspberry Pi OS (0.251 on Bookworm), for AI mode (tools/start_pi_game.py)
 #   retropie   RetroPie-Setup's basic install: EmulationStation and RetroArch, for human mode
 #   emulators  the extra RetroPie emulators and ports the cabinet's ROM folders use (after retropie); a module that
-#              fails is reported and the rest carry on
+#              fails is reported and the rest carry on; one already installed is skipped. lr-mame2000 stands in for
+#              the Pi 3's MAME4All (the same 0.37b5 ROM sets; MAME4All has no 64-bit build).
+#              Then tools/migrate_pi_settings.py brings over the old cabinet's emulator choices.
 #   autostart  boot straight into EmulationStation (console autologin on the screen, then ES); AI mode closes it
 #              (tools/start_pi_game.py) and tools/human_mode.py brings it back
 #   audio      sound through a USB audio adapter (the Pi 5 has no headphone jack): it becomes the default ALSA card
@@ -18,6 +20,8 @@ set -eu
 
 # RetroPie module, then the ROM folder it serves
 EMULATORS="
+lr-mame2000  arcade,mame-mame4all
+lr-quicknes  nes
 advmame      mame-advmame
 sdltrs       trs-80
 frotz        zmachine
@@ -51,6 +55,10 @@ step_emulators() {
     cd "$HOME/RetroPie-Setup"
     echo "$EMULATORS" | while read -r module folder; do
         [ -n "$module" ] || continue
+        if ls -d /opt/retropie/*/"$module" >/dev/null 2>&1; then
+            echo "=== $module already installed"
+            continue
+        fi
         echo "=== $module ($folder)"
         if sudo __nodialog=1 ./retropie_packages.sh "$module"; then
             echo "=== $module installed"

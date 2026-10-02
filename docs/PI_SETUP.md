@@ -44,20 +44,26 @@ defaults to `DEFAULT_PI_HOST` in `tools/gamelib.py` (override with the `ARCADE_P
 
 ### A USB keyboard for human mode
 
-The installer also gives EmulationStation a keyboard (`pi/patch_es_input.py`), and `configure_mame_controller.py` adds
-keys to MAME beside the joystick codes:
+The installer gives EmulationStation the keyboard as a whole controller, in the old cabinet's layout
+(`pi/patch_es_input.py`), and runs RetroPie's own `inputconfiguration.sh` on it, which writes the same keys into
+RetroArch and the other emulators that take a keyboard:
 
-| Key | EmulationStation | MAME |
-| --- | --- | --- |
-| Arrows | move | joystick |
-| Enter | accept | start (also `1`) |
-| Backspace | back | |
-| Space | menu | |
-| Right Shift | select | coin (also `5`) |
-| Page Up / Down | page through a list | |
-| Tab / Esc | | MAME menu / quit (MAME's defaults) |
+| Controller | Key | | Controller | Key |
+| --- | --- | --- | --- | --- |
+| D-pad | arrows | | L / R shoulder | Q / W |
+| A / B | A / S | | L2 / R2 trigger | E / R |
+| X / Y | D / F | | L3 / R3 thumb | T / Y |
+| Start | Enter | | Left stick | U I O P (up down left right) |
+| Select | ' (quote) | | Right stick | [ ] \ Delete |
+| Hotkey | Escape | | | |
 
-In RetroArch games RetroArch's own keyboard defaults apply (arrows, X/Z, Enter start, Right Shift select).
+In RetroArch games, hold Escape with: Enter to quit the game, D for RetroArch's menu, Q / W to load / save state,
+S to reset, left / right to change the state slot. Zork (Frotz) runs in the text console and reads the whole keyboard.
+For standalone MAME (AI mode), `configure_mame_controller.py` adds the arrows, `1` / Enter (start) and `5` / Right
+Shift (coin) beside the joystick codes.
+
+`python tools/migrate_pi_settings.py` copies the old cabinet's emulator choices (each system's default and the
+per-game ones), translating the Pi 3's MAME4All to lr-mame2000 and its AdvanceMAME versions to AdvanceMAME 3.
 
 Measured on the Pi 5 with MAME 0.251: Pac-Man at full speed with the agent export (60.7 emulated frames a second; the
 Pi 3 managed about 51), press to visible effect 66 ms median. The Lua scripts in `tools/` run on both MAME versions.

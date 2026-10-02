@@ -16,6 +16,7 @@ SERVICE_NAME = 'ai-arcade-controller.service'
 SERVICE_DST = Path('/etc/systemd/system') / SERVICE_NAME
 MODULES_FILE = Path('/etc/modules-load.d/ai-arcade.conf')
 RA_CFG = Path('/opt/retropie/configs/all/retroarch.cfg')
+INPUT_SCRIPT = Path('/opt/retropie/supplementary/emulationstation/scripts/inputconfiguration.sh')
 
 
 def run(*args, check=True):
@@ -85,6 +86,26 @@ def set_retroarch_setting(path, key, value):
     path.write_text('\n'.join(output) + '\n')
 
 
+def configure_keyboard(source):
+    """Give the keyboard to RetroPie's own input configuration, as if it had been set up in EmulationStation's
+    menu: inputconfiguration.sh writes the same keys into RetroArch (and the other emulators that take a keyboard)."""
+    if not INPUT_SCRIPT.exists():
+        print('+ RetroPie input configuration not installed; keyboard left to EmulationStation only')
+        return
+    user = ES_CFG.owner()
+    temp = Path(os.path.expanduser('~' + user)) / '.emulationstation' / 'es_temporaryinput.cfg'
+    if not temp.parent.exists():
+        temp.parent.mkdir()
+        shutil.chown(str(temp.parent), user, user)
+    run(sys.executable, str(source / 'patch_es_input.py'), str(temp), '--keyboard-only')
+    try:
+        # Its exit status is whatever its last check returned (often 1, "this emulator has no finishing step"), as
+        # EmulationStation, which ignores it, expects; the written configuration is what verify.py checks.
+        run('sudo', '-u', user, 'bash', str(INPUT_SCRIPT), check=False)
+    finally:
+        temp.unlink()
+
+
 def require_root():
     geteuid = getattr(os, 'geteuid', None)
     if geteuid is None:
@@ -146,6 +167,7 @@ def main():
         shutil.copy2(str(source / 'retropie' / name), str(RA_DIR / name))
 
     run(sys.executable, str(source / 'patch_es_input.py'), str(ES_CFG))
+    configure_keyboard(source)
     shutil.copy2(str(source / 'systemd' / SERVICE_NAME), str(SERVICE_DST))
 
     run('systemctl', 'daemon-reload')
