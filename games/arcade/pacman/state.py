@@ -101,7 +101,7 @@ def decode(buf):
         ),
         pacman_wanted=DIRECTIONS.get(b(0x4D3C), "?"),
         ghosts=ghosts,
-        frightened={n: bool(b(0x4DA6 + i)) for i, n in enumerate(GHOSTS)},
+        frightened={n: bool(b(0x4DA7 + i)) for i, n in enumerate(GHOSTS)},  # 4DA6 is "an energizer is active"
         eyes={n: bool(b(0x4DAC + i)) for i, n in enumerate(GHOSTS)},
         fruit_pos=(b(0x4DD2), b(0x4DD3)),
         phase=b(0x4DC1),

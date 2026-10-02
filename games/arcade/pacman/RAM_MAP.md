@@ -8,6 +8,7 @@ Address space read from standalone MAME 0.206 via Lua: `:maincpu` program space.
 - `ablackett82/pacman` (<https://github.com/ablackett82/pacman>): reimplementation traced routine-by-routine from that
   disassembly and differential-tested against the original ROM; used here to confirm what each variable *does*
   (`src/game/actors.js`, `play.js`, `modes.js`, `core.js`).
+- Ms. Pac-Man disassembly (same code base at `0000-3FFF`, same RAM variables): <https://github.com/BleuLlama/GameDocs/blob/master/disassemble/mspac.asm>
 - Chris Lomont, *Pac-Man Emulation Guide*: <https://www.lomont.org/software/games/pacman/PacmanEmulation.pdf>
   (hardware map: `4000-43FF` video RAM, `4400-47FF` colour RAM, `4C00-4FEF` work RAM, `4FF0-4FFF` sprite regs).
 - Pac-Man Dossier: <https://pacman.holenet.info/> (behavioural reference).
@@ -40,7 +41,8 @@ Address space read from standalone MAME 0.206 via Lua: `:maincpu` program space.
 | `4D28-4D2B` | Ghost current direction | source |
 | `4D30` | Pac-Man current direction | validated (left/right/up/down) |
 | `4D3C` | Pac-Man wanted direction; only valid while the joystick is held | validated mid-hold |
-| `4DA6-4DA9` | Ghost frightened (blue) flags | source |
+| `4DA6` | An energizer is active (any ghost blue) | validated on the v3/v4 recordings; Ms. Pac-Man disassembly |
+| `4DA7-4DAA` | Ghost frightened (blue) flags: red, pink, blue, orange. A flag clears when that ghost, eaten, gets home | validated: 29 of 29 single clears were the ghost whose eyes had just reached home (until 2026-10-01 the decoder read `4DA6-4DA9`, one off) |
 | `4DAC-4DAF` | Ghost "eyes" (eaten, returning home) flags. Rises about 1 s after the +200/400/800 score jump; the frightened flag may already be clear then | observed (9 ghost scores = 9 rises) |
 | `4DD2-4DD3` | Fruit position in pixels (l,h); spawns at (0x94, 0x80) = tile (50, 46), zeroed when it leaves or is eaten. Pixel to tile: `(p >> 3) + (32, 30)` | observed (240 s recording: 4 appearances, at 70 and 170 dots, all timed out after about 6 s) |
 | `4DD4` | Fruit code on screen (6 on level 1), 0 = none; stays set a little after the fruit vanishes | observed |
