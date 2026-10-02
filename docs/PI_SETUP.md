@@ -67,6 +67,21 @@ per-game ones), translating the Pi 3's MAME4All to lr-mame2000 and its AdvanceMA
 games that would land on lr-mame2000 go to lr-mame2003 instead, drawn at 1440x1080 and antialiased (lr-mame2000 draws
 them small, and a 1080p screen stretches them jagged).
 
+### Arcade games in MAME 0.251 (human mode)
+
+Arcade games EmulationStation runs in standalone MAME 0.251, the same emulator as AI mode, go through
+`pi/mame_human/mame_human.sh` with their own settings (`/opt/retropie/configs/mame-0251/`). Install or update it with
+`python tools/install_mame_human.py`. Games were moved one at a time by `pi/mame_human/convert.py`, each only after
+`game_check.py` showed it launching, taking a coin (5) and start (1), and quitting on Escape at full speed, and its
+screenshots (`python tools/mame_human_review.py OUTDIR`) had been looked at. Sets that 0.251 names differently were
+rebuilt from the collection into `~/RetroPie/mame-0251/roms` (the cabinet's zips are not touched) and kept only if MAME
+verified them. The ledger (`/opt/retropie/configs/mame-0251/ledger.json`, `python3 convert.py status`) records each
+game's result, its previous emulator (`convert.py revert`), and why any game stayed where it was.
+
+On 2 October 2026: 116 of the 233 arcade games run in MAME 0.251; the rest are pinned to the emulator they had (missing
+chip dumps, a rebuild MAME rejected, or a fault in 0.251 such as Donkey Kong freezing or Galaxian's sound crashing), and
+MAME 0.251 is the arcade default for games added later. Some games open on a MAME warning screen; press any key.
+
 Measured on the Pi 5 with MAME 0.251: Pac-Man at full speed with the agent export (60.7 emulated frames a second; the
 Pi 3 managed about 51), press to visible effect 66 ms median. The Lua scripts in `tools/` run on both MAME versions.
 
