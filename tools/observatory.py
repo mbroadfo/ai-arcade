@@ -60,6 +60,7 @@ class Hub:
         self.events = collections.deque(maxlen=KEEP_EVENTS)
         self.seq = 0
         self.status, self.status_seq = None, 0
+        self.run = None  # the current run's opening event, given to every page that opens
         self.frame, self.frame_seq = None, 0
         self.video = {"connected": False, "frame": None, "fps": None}
         self.video_seq = 0
@@ -71,6 +72,7 @@ class Hub:
             else:
                 if record.get("event") == "run":
                     self.events.clear()  # a new run starts the page's timeline afresh
+                    self.run = record
                 self.seq += 1
                 self.events.append((self.seq, record))
             self.cond.notify_all()
@@ -169,6 +171,10 @@ def make_handler(hub):
             self.send_header("Cache-Control", "no-cache")
             self.end_headers()
             seen, status_seen, frame_seen, video_seen = 0, 0, 0, -1
+            with hub.cond:
+                run = hub.run
+                if run is not None and not any(r is run for _, r in hub.events):
+                    self.send("event", run)  # the run began more events ago than are kept
             try:
                 while True:
                     with hub.cond:

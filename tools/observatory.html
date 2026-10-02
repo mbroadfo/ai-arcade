@@ -4,207 +4,523 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AI Arcade Observatory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0b0d12; --panel: #141821; --line: #252b38; --text: #e6e9ef; --dim: #8a93a6;
-    --accent: #ffd23f; --model: #4cc9f0; --code: #f77f00; --rule: #b388eb; --ok: #57cc99; --bad: #ef476f;
-    --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    --bg: #06070b; --panel: #0d1018; --panel-2: #121623; --line: #1d2333; --line-2: #2a3247;
+    --text: #e8ebf3; --dim: #7d869b; --faint: #4a5266;
+    --pac: #ffe600; --model: #2ef2ff; --rule: #a78bfa; --code: #ff7a1a; --ok: #3ddc97; --bad: #ff3d6e;
+    --pixel: "Press Start 2P", ui-monospace, monospace;
+    --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+    --sans: Inter, system-ui, sans-serif;
+    --head: 64px;
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.4 system-ui, sans-serif; }
-  header { display: flex; flex-wrap: wrap; gap: 6px 28px; align-items: baseline; padding: 10px 16px;
-           border-bottom: 1px solid var(--line); background: var(--panel); }
-  header .brand { font-weight: 700; letter-spacing: .12em; color: var(--accent); }
-  header .item { font-family: var(--mono); color: var(--dim); }
-  header .item b { color: var(--text); font-weight: 600; }
-  #conn { margin-left: auto; font-family: var(--mono); font-size: 12px; }
-  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--bad); margin-right: 5px; }
-  .dot.on { background: var(--ok); }
-  main { display: grid; grid-template-columns: minmax(260px, 520px) minmax(300px, 1fr); gap: 12px; padding: 12px 16px; }
-  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; min-width: 0; }
-  .panel h2 { margin: 0 0 8px; font-size: 11px; letter-spacing: .14em; color: var(--dim); font-weight: 600; }
-  #screen { display: flex; justify-content: center; align-items: center; background: #000; border-radius: 6px;
-            aspect-ratio: 224 / 288; overflow: hidden; }
-  #screen img { width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; }
-  #screen .none { color: var(--dim); font-family: var(--mono); padding: 20px; text-align: center; }
-  .side { display: grid; gap: 12px; align-content: start; min-width: 0; }
-  .kv { display: grid; grid-template-columns: max-content 1fr; gap: 3px 14px; font-family: var(--mono); }
-  .kv .k { color: var(--dim); }
-  .goal { font-size: 22px; font-weight: 700; color: var(--accent); font-family: var(--mono); }
-  .stance { color: var(--dim); font-family: var(--mono); margin-top: 2px; }
-  .bars { display: grid; gap: 4px; margin-top: 8px; font-family: var(--mono); }
-  .bar { display: grid; grid-template-columns: 56px 1fr 52px; gap: 8px; align-items: center; }
-  .bar .track { height: 12px; background: #0e1118; border-radius: 3px; overflow: hidden; }
-  .bar .fill { height: 100%; background: var(--model); }
-  .bar.sel .fill { background: var(--accent); }
-  .bar.sel span:first-child { color: var(--accent); font-weight: 700; }
-  .bar span:last-child { text-align: right; color: var(--dim); }
-  .who { margin-top: 8px; font-family: var(--mono); }
-  .tag { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 12px; font-weight: 600; color: #0b0d12; }
-  .tag.model { background: var(--model); } .tag.rule { background: var(--rule); } .tag.code { background: var(--code); }
-  .share { display: flex; height: 14px; border-radius: 4px; overflow: hidden; background: #0e1118; margin: 6px 0 8px; }
-  .share div { height: 100%; }
-  .legend { display: grid; gap: 2px; font-family: var(--mono); font-size: 12px; }
-  .legend div { display: flex; justify-content: space-between; gap: 10px; }
-  .pad { display: grid; grid-template-columns: repeat(3, 34px); grid-template-rows: repeat(3, 34px); gap: 4px; }
-  .pad div { border: 1px solid var(--line); border-radius: 6px; display: flex; align-items: center;
-             justify-content: center; color: var(--dim); font-size: 16px; }
-  .pad .on { background: var(--accent); color: #0b0d12; border-color: var(--accent); }
-  .controls { display: flex; gap: 18px; align-items: center; }
-  .wide { grid-column: 1 / -1; }
-  #timeline { font-family: var(--mono); font-size: 12px; max-height: 300px; overflow-y: auto; }
-  #timeline div { display: grid; grid-template-columns: 70px 78px 1fr; gap: 10px; padding: 2px 0;
-                  border-bottom: 1px solid #1b202b; }
-  #timeline .f { color: var(--dim); text-align: right; }
-  #timeline .e { font-weight: 600; text-transform: uppercase; }
-  #timeline .x { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #c4c9d4; }
-  .e.goal, .e.stance, .e.advice { color: var(--accent); } .e.decision { color: var(--model); }
-  .e.move { color: var(--dim); } .e.reflex, .e.reverse, .e.revise { color: var(--code); }
-  .e.game_over, .e.late { color: var(--bad); } .e.run { color: var(--ok); }
-  .filters { display: flex; gap: 12px; font-size: 12px; color: var(--dim); margin-bottom: 6px; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 var(--sans); overflow: hidden;
+         background-image: radial-gradient(circle at 20% -10%, #14204a55 0, transparent 45%),
+                           radial-gradient(circle at 110% 110%, #3a0f4a44 0, transparent 40%); }
+
+  /* ---------- header ---------- */
+  header { height: var(--head); display: flex; align-items: center; gap: 22px; padding: 0 20px;
+           border-bottom: 1px solid var(--line); background: #090b12cc; backdrop-filter: blur(6px); }
+  .brand { display: flex; flex-direction: column; line-height: 1.15; }
+  .brand b { font-family: var(--pixel); font-size: 13px; color: var(--pac); letter-spacing: .06em;
+             text-shadow: 0 0 12px #ffe60066; }
+  .brand span { font-size: 10px; letter-spacing: .32em; color: var(--dim); margin-top: 4px; }
+  .pill { font: 600 11px var(--mono); letter-spacing: .12em; padding: 4px 10px; border-radius: 99px;
+          border: 1px solid var(--line-2); color: var(--dim); display: inline-flex; align-items: center; gap: 7px; }
+  .pill i { width: 7px; height: 7px; border-radius: 50%; background: var(--faint); }
+  .pill.live { color: var(--ok); border-color: #3ddc9755; } .pill.live i { background: var(--ok); animation: pulse 1.4s infinite; }
+  .pill.ended { color: var(--bad); border-color: #ff3d6e55; } .pill.ended i { background: var(--bad); }
+  .pill.between { color: var(--pac); border-color: #ffe60055; } .pill.between i { background: var(--pac); }
+  @keyframes pulse { 50% { opacity: .25; } }
+  .score { display: flex; gap: 26px; margin-left: 6px; }
+  .score div { display: flex; flex-direction: column; gap: 5px; }
+  .score small { font-size: 9px; letter-spacing: .22em; color: var(--dim); }
+  .score b { font: 13px var(--pixel); color: var(--text); }
+  .score .lives b { color: var(--pac); letter-spacing: 3px; }
+  .runinfo { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+  .chip { font: 500 12px var(--mono); padding: 3px 9px; border-radius: 6px; background: var(--panel-2);
+          border: 1px solid var(--line); color: #c9cfdc; white-space: nowrap; }
+  .chip.k { color: var(--dim); }
+  .links { display: flex; gap: 10px; font: 11px var(--mono); color: var(--dim); }
+  .links i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--bad); margin-right: 5px; }
+  .links i.on { background: var(--ok); }
+
+  /* ---------- layout ---------- */
+  main { height: calc(100vh - var(--head)); display: grid; gap: 14px; padding: 14px 20px;
+         grid-template-columns: auto minmax(360px, 1fr) minmax(320px, 27vw); }
+  .col { min-height: 0; min-width: 0; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; }
+  .card { background: linear-gradient(180deg, var(--panel) 0, #0b0e15 100%); border: 1px solid var(--line);
+          border-radius: 12px; padding: 14px 16px; }
+  .card h2 { margin: 0 0 10px; font: 600 10px var(--sans); letter-spacing: .24em; color: var(--dim);
+             display: flex; justify-content: space-between; align-items: center; }
+  .card h2 em { font-style: normal; letter-spacing: .05em; color: var(--faint); font-family: var(--mono); }
+
+  /* ---------- the game ---------- */
+  .stagecol { display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+  .stage { position: relative; height: calc(100% - 34px); aspect-ratio: 224 / 288; max-width: 46vw;
+           border-radius: 14px; overflow: hidden; background: #000;
+           box-shadow: 0 0 0 1px var(--line-2), 0 0 40px #2e5bff22, inset 0 0 60px #000; }
+  .stage img, .stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .stage img { image-rendering: pixelated; object-fit: contain; }
+  .stage .empty { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 30px;
+                  font: 11px/2 var(--pixel); color: var(--faint); }
+  .stage .banner { position: absolute; left: 50%; top: 14px; transform: translateX(-50%); font: 10px var(--pixel);
+                   padding: 8px 12px; border-radius: 8px; background: #000c; border: 1px solid var(--line-2); color: var(--pac); }
+  .toggles { display: flex; gap: 14px; font: 12px var(--mono); color: var(--dim); align-items: center; height: 24px; }
+  .toggles label { display: flex; gap: 6px; align-items: center; cursor: pointer; }
+  .toggles input { accent-color: var(--pac); }
+
+  /* ---------- intent ---------- */
+  .goal { font: 18px/1.3 var(--pixel); color: var(--pac); text-shadow: 0 0 18px #ffe60055; word-break: break-word; }
+  .goaltext { color: var(--dim); margin-top: 6px; font-size: 13px; }
+  .stances { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+
+  /* ---------- decision compass ---------- */
+  .decision { display: grid; grid-template-columns: 210px 1fr; gap: 18px; align-items: center; }
+  .compass { display: grid; grid-template-columns: repeat(3, 66px); grid-template-rows: repeat(3, 66px); gap: 6px; }
+  .compass .d { position: relative; border-radius: 10px; border: 1px solid var(--line); background: #0a0d14;
+                display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden;
+                color: var(--faint); }
+  .compass .d .fill { position: absolute; inset: auto 0 0 0; background: #2ef2ff2e; height: 0%; transition: height .25s; }
+  .compass .d .arrow { font-size: 20px; position: relative; }
+  .compass .d .p { font: 600 12px var(--mono); position: relative; color: var(--text); }
+  .compass .d.open { border-color: var(--line-2); color: #c9cfdc; }
+  .compass .d.exec { border-color: var(--pac); box-shadow: 0 0 16px #ffe60044, inset 0 0 0 1px var(--pac); color: var(--pac); }
+  .compass .d.exec .fill { background: #ffe60033; }
+  .compass .d.overruled { border-color: var(--bad); border-style: dashed; }
+  .compass .d.overruled::after { content: "proposed"; position: absolute; bottom: 3px; font: 9px var(--mono); color: var(--bad); }
+  .compass .hub { display: flex; align-items: center; justify-content: center; }
+  .compass .hub .stick { width: 26px; height: 26px; border-radius: 50%; background: #1a2030; border: 2px solid var(--line-2);
+                         transition: transform .12s; box-shadow: 0 0 10px #000; }
+  .compass .hub .stick.on { background: var(--pac); border-color: #fff6; }
+  .facts { display: grid; grid-template-columns: max-content 1fr; gap: 5px 14px; font: 13px var(--mono); }
+  .facts .k { color: var(--dim); }
+  .by { display: inline-flex; align-items: center; gap: 6px; font: 700 12px var(--mono); padding: 3px 10px;
+        border-radius: 99px; color: #06070b; }
+
+  /* ---------- provenance ---------- */
+  .prov { display: grid; grid-template-columns: auto 1fr; gap: 18px; align-items: center; }
+  .big { font: 26px var(--pixel); color: var(--model); text-shadow: 0 0 18px #2ef2ff44; }
+  .big small { display: block; font: 600 10px var(--sans); letter-spacing: .2em; color: var(--dim); margin-top: 8px; text-shadow: none; }
+  .share { display: flex; height: 12px; border-radius: 99px; overflow: hidden; background: #0a0d14; border: 1px solid var(--line); }
+  .share div { height: 100%; transition: width .3s; }
+  .legend { display: grid; gap: 3px; margin-top: 10px; font: 12px var(--mono); }
+  .legend div { display: grid; grid-template-columns: 10px 1fr auto; gap: 8px; align-items: center; }
+  .legend i { width: 8px; height: 8px; border-radius: 2px; }
+  .legend span:last-child { color: var(--dim); }
+
+  /* ---------- actors ---------- */
+  .actors { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  .actor { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px;
+           background: #0a0d14; border: 1px solid var(--line); font: 12px var(--mono); }
+  .actor .sw { width: 14px; height: 14px; border-radius: 50% 50% 3px 3px; flex: none; }
+  .actor .sw.player { border-radius: 50%; }
+  .actor b { display: block; font-weight: 600; color: var(--text); }
+  .actor span { color: var(--dim); }
+  .actor.near { border-color: #ff3d6e88; box-shadow: inset 0 0 0 1px #ff3d6e44; }
+  .actor.prey { border-color: #3b5bff88; }
+
+  /* ---------- timeline ---------- */
+  .timeline { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .tl-filters { display: flex; gap: 12px; font: 11px var(--mono); color: var(--dim); margin-bottom: 8px; }
+  .tl-filters label { display: flex; gap: 5px; align-items: center; cursor: pointer; }
+  .tl-filters input { accent-color: var(--pac); }
+  #timeline { overflow-y: auto; flex: 1; min-height: 0; font: 12px/1.35 var(--mono); margin-right: -8px; padding-right: 8px; }
+  .row { display: grid; grid-template-columns: 44px 1fr; gap: 10px; padding: 7px 0; border-bottom: 1px solid #151a26;
+         animation: in .25s ease-out; }
+  @keyframes in { from { opacity: 0; transform: translateY(-4px); } }
+  .row .t { color: var(--faint); text-align: right; font-size: 11px; padding-top: 1px; }
+  .row .what { min-width: 0; }
+  .row .what b { font-weight: 700; margin-right: 6px; letter-spacing: .04em; }
+  .row .what span { color: #b8bfcd; word-break: break-word; }
+  .row.r-goal { background: linear-gradient(90deg, #ffe60014, transparent); } .row.r-goal b { color: var(--pac); }
+  .row.r-over { background: linear-gradient(90deg, #ff3d6e1c, transparent); } .row.r-over b { color: var(--bad); }
+  .row.r-run b { color: var(--ok); } .row.r-code b { color: var(--code); } .row.r-answer b { color: var(--model); }
+  .row.r-move b { color: var(--dim); } .row.r-dim span { color: var(--dim); }
+
+  /* ---------- games ---------- */
+  .games { width: 100%; border-collapse: collapse; font: 13px var(--mono); }
+  .games th { text-align: left; font: 600 10px var(--sans); letter-spacing: .18em; color: var(--dim); padding: 0 0 6px; }
+  .games td { padding: 5px 0; border-top: 1px solid #151a26; }
+  .games td:not(:first-child), .games th:not(:first-child) { text-align: right; }
+  .games tr.now td { color: var(--pac); }
+
   .muted { color: var(--dim); }
-  @media (max-width: 760px) { main { grid-template-columns: 1fr; padding: 12px 16px; } #screen { max-width: 420px; margin: 0 auto; } }
+  .hidden { display: none !important; }
+
+  @media (max-width: 1100px) {
+    body { overflow: auto; }
+    header { height: auto; flex-wrap: wrap; padding: 10px 16px; gap: 12px; }
+    .runinfo { margin-left: 0; flex-wrap: wrap; }
+    main { height: auto; grid-template-columns: minmax(0, 1fr); padding: 12px 16px; }
+    body { overflow-x: hidden; }
+    .prov { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+    .col { overflow: visible; }
+    .stage { height: auto; width: 100%; max-width: 480px; margin: 0 auto; }
+    .timeline { max-height: 70vh; }
+    .decision { grid-template-columns: 1fr; justify-items: center; }
+  }
 </style>
 </head>
 <body>
 <header>
-  <span class="brand">AI ARCADE</span>
-  <span class="item" id="h-title"><b>—</b></span>
-  <span class="item">GAME <b id="h-game">—</b></span>
-  <span class="item">SCORE <b id="h-score">—</b></span>
-  <span class="item">LEVEL <b id="h-level">—</b></span>
-  <span class="item">LIVES <b id="h-lives">—</b></span>
-  <span class="item" id="h-run"></span>
-  <span id="conn"><span class="dot" id="d-page"></span>page <span class="dot" id="d-video"></span>video <span id="fps" class="muted"></span></span>
-</header>
-<main>
-  <section class="panel">
-    <h2>LIVE GAME</h2>
-    <div id="screen"><div class="none" id="novideo">No video yet.<br>Start a game with tools/start_pi_game.py.</div><img id="frame" alt="" hidden></div>
-  </section>
-  <div class="side">
-    <section class="panel">
-      <h2>ACTIVE INTENT</h2>
-      <div class="goal" id="goal">—</div>
-      <div class="stance" id="stance"></div>
-    </section>
-    <section class="panel">
-      <h2>LAST MOVE</h2>
-      <div class="kv" id="move-kv"><span class="k">waiting</span><span class="muted">no junction yet</span></div>
-      <div class="bars" id="bars"></div>
-      <div class="who" id="who"></div>
-    </section>
-    <section class="panel">
-      <h2>WHO MADE THE MOVES (THIS RUN)</h2>
-      <div class="share" id="share"></div>
-      <div class="legend" id="legend"><span class="muted">no booked moves yet</span></div>
-    </section>
-    <section class="panel">
-      <h2>CURRENT STATE</h2>
-      <div class="kv" id="state"><span class="k">—</span><span></span></div>
-    </section>
-    <section class="panel controls">
-      <div><h2>CONTROLS</h2>
-        <div class="pad"><div></div><div id="k-UP">▲</div><div></div><div id="k-LEFT">◀</div><div></div><div id="k-RIGHT">▶</div><div></div><div id="k-DOWN">▼</div><div></div></div>
-      </div>
-      <div class="kv"><span class="k">held</span><span id="held">none</span></div>
-    </section>
+  <div class="brand"><b>AI ARCADE</b><span>OBSERVATORY</span></div>
+  <span class="pill" id="runstate"><i></i><span>WAITING</span></span>
+  <div class="score">
+    <div><small>GAME</small><b id="h-game">–</b></div>
+    <div><small>SCORE</small><b id="h-score">–</b></div>
+    <div><small>LEVEL</small><b id="h-level">–</b></div>
+    <div class="lives"><small>LIVES</small><b id="h-lives">–</b></div>
   </div>
-  <section class="panel wide">
-    <h2>EVENT TIMELINE</h2>
-    <div class="filters">
-      <label><input type="checkbox" id="f-move"> moves</label>
-      <label><input type="checkbox" id="f-decision"> answers</label>
+  <div class="runinfo" id="runinfo"></div>
+  <div class="links"><span><i id="d-page"></i>page</span><span><i id="d-video"></i>video <span id="fps"></span></span></div>
+</header>
+
+<main>
+  <section class="stagecol">
+    <div class="stage" id="stage">
+      <div class="empty" id="novideo">NO SIGNAL<br><span style="font-family:var(--mono);font-size:12px">python tools/start_pi_game.py</span></div>
+      <img id="frame" alt="" class="hidden">
+      <canvas id="overlay"></canvas>
+      <div class="banner hidden" id="banner"></div>
     </div>
-    <div id="timeline"></div>
+    <div class="toggles">
+      <label><input type="checkbox" id="o-ghosts" checked> distances</label>
+      <label><input type="checkbox" id="o-choice" checked> choices</label>
+      <label><input type="checkbox" id="o-ahead" checked> answers ahead</label>
+    </div>
+  </section>
+
+  <section class="col">
+    <div class="card">
+      <h2>ACTIVE INTENT <em id="intent-age"></em></h2>
+      <div class="goal" id="goal">–</div>
+      <div class="stances" id="stances"></div>
+    </div>
+    <div class="card">
+      <h2>LAST DECISION <em id="move-at"></em></h2>
+      <div class="decision">
+        <div class="compass" id="compass">
+          <div></div><div class="d" data-d="UP"><div class="fill"></div><span class="arrow">▲</span><span class="p"></span></div><div></div>
+          <div class="d" data-d="LEFT"><div class="fill"></div><span class="arrow">◀</span><span class="p"></span></div>
+          <div class="hub"><div class="stick" id="stick"></div></div>
+          <div class="d" data-d="RIGHT"><div class="fill"></div><span class="arrow">▶</span><span class="p"></span></div>
+          <div></div><div class="d" data-d="DOWN"><div class="fill"></div><span class="arrow">▼</span><span class="p"></span></div><div></div>
+        </div>
+        <div>
+          <div style="margin-bottom:12px" id="who"><span class="muted">No junction decided yet.</span></div>
+          <div class="facts" id="facts"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>WHO MADE THE MOVES <em>this run</em></h2>
+      <div class="prov">
+        <div class="big" id="share-model">–<small>MODEL'S OWN</small></div>
+        <div>
+          <div class="share" id="share"></div>
+          <div class="legend" id="legend"><span class="muted">No booked moves yet.</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>GAMES <em>this run</em></h2>
+      <table class="games"><thead><tr><th>GAME</th><th>SCORE</th><th>LEVEL</th><th>MOVES</th><th>MODEL'S OWN</th></tr></thead>
+        <tbody id="games"><tr><td colspan="5" class="muted">No game finished yet.</td></tr></tbody></table>
+    </div>
+    <div class="card">
+      <h2>ON THE BOARD</h2>
+      <div class="actors" id="actors"><span class="muted">Not playing.</span></div>
+    </div>
+  </section>
+
+  <section class="col">
+    <div class="card timeline">
+      <h2>TIMELINE <em id="tl-count"></em></h2>
+      <div class="tl-filters">
+        <label><input type="checkbox" id="f-move" checked> moves</label>
+        <label><input type="checkbox" id="f-answer"> answers</label>
+        <label><input type="checkbox" id="f-other" checked> everything else</label>
+      </div>
+      <div id="timeline"></div>
+    </div>
   </section>
 </main>
+
 <script>
 const $ = id => document.getElementById(id);
-const BY_COLOR = { "model": "var(--model)", "rule": "var(--rule)", "code-late": "#f77f00", "code-fallback": "#e85d04",
-                   "code-override": "#dc2f02", "code-skill": "#ffba08" };
-const recentDecisions = [];   // answers, to find the one a move used (same tile and arriving direction)
-const filters = { move: false, decision: false };
-let moves = {};               // by -> count, rebuilt from status lines (the player's own ledger)
-let lastFrame = null;
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const BY_COLOUR = { "model": "#2ef2ff", "rule": "#a78bfa", "code-late": "#ff7a1a", "code-fallback": "#ff5a36",
+                    "code-override": "#ff3d6e", "code-skill": "#ffb020" };
+const VEC = { UP: [0, -1], DOWN: [0, 1], LEFT: [-1, 0], RIGHT: [1, 0] };
+const ARROW = { UP: "▲", DOWN: "▼", LEFT: "◀", RIGHT: "▶" };
 
-function tagFor(by) {
-  const cls = by === "model" ? "model" : by === "rule" ? "rule" : "code";
-  return `<span class="tag ${cls}">${by}</span>`;
+const view = {
+  run: null, ended: false, status: null, statusAt: 0, screen: { size: [224, 288], tile_to_px: null },
+  move: null, answers: [], runStart: null, rows: 0, title: null,
+  now: 0, nowAt: 0,  // the player's clock (status t) and when it was received: event ages are on the player's clock
+  games: [], gameMoves: {},
+};
+const filters = { move: true, answer: false, other: true };
+
+function tilePx(tile) {
+  const m = view.screen.tile_to_px;
+  if (!m || !tile) return null;
+  return [m[0][0] * tile[0] + m[0][1] * tile[1] + m[0][2], m[1][0] * tile[0] + m[1][1] * tile[1] + m[1][2]];
 }
-function esc(s) { return String(s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]); }
+function byTag(by) { return `<span class="by" style="background:${BY_COLOUR[by] || "#888"}">${esc(by)}</span>`; }
+function rel(t) { return view.runStart && t ? Math.max(0, t - view.runStart).toFixed(0) + "s" : ""; }
 
-function describe(r) {
-  const skip = new Set(["event", "t", "frame"]);
-  switch (r.event) {
-    case "goal": return `goal → ${r.goal}`;
-    case "stance": return `stance ${JSON.stringify(r.mods)}`;
-    case "decision": return `${r.direction} at ${r.tile} (${Math.round(100 * r.confidence)}%, ${r.latency_ms} ms, ${r.source})`;
-    case "move": return `${r.executed} at ${r.tile} by ${r.by} (${r.via})` + (r.proposed !== r.executed ? `, proposed ${r.proposed}` : "");
-    case "run": return `${r.game} decider=${r.decider}${r.model ? " " + r.model : ""} knowledge=${r.knowledge || "-"} goal=${r.goal}`;
-    case "game_over": return `game ${r.game} over: score ${r.score}, level ${r.level}`;
+/* ---------- header and run state ---------- */
+function runState() {
+  const pill = $("runstate"), label = pill.querySelector("span");
+  pill.className = "pill";
+  const fresh = Date.now() - view.statusAt < 3000;
+  if (view.ended) { pill.classList.add("ended"); label.textContent = "RUN ENDED"; }
+  else if (fresh && view.status?.playing) { pill.classList.add("live"); label.textContent = "LIVE"; }
+  else if (fresh) { pill.classList.add("between"); label.textContent = "BETWEEN GAMES"; }
+  else label.textContent = view.run ? "NO PLAYER" : "WAITING";
+  const banner = $("banner");
+  const text = view.ended ? "RUN ENDED" : (fresh && view.status && !view.status.playing) ? "BETWEEN GAMES" : "";
+  banner.textContent = text; banner.classList.toggle("hidden", !text);
+}
+setInterval(runState, 500);
+
+function showRun(r) {
+  const parts = [["", view.title || r.game], ["decider", r.decider], ["model", r.model], ["knowledge", r.knowledge], ["goal", r.goal],
+                 ["strategist", r.strategist !== "code" ? r.strategist : null], ["games", r.games]];
+  $("runinfo").innerHTML = parts.filter(([, v]) => v != null && v !== "").map(([k, v]) =>
+    `<span class="chip">${k ? `<span class="muted">${k}</span> ` : ""}${esc(v)}</span>`).join("");
+}
+
+/* ---------- status ---------- */
+function playerNow() { return view.now ? view.now + (Date.now() - view.nowAt) / 1000 : 0; }
+function onStatus(s) {
+  view.status = s; view.statusAt = Date.now();
+  if (s.t) { view.now = s.t; view.nowAt = Date.now(); }
+  if (s.screen) view.screen = s.screen;
+  view.title = s.title;
+  $("h-game").textContent = s.game ?? "–";
+  $("h-score").textContent = s.score != null ? s.score.toLocaleString() : "–";
+  $("h-level").textContent = s.level ?? "–";
+  $("h-lives").textContent = s.lives != null ? "●".repeat(Math.max(0, s.lives)) || "0" : "–";
+  $("goal").textContent = s.goal ? s.goal.replace(/_/g, " ").toUpperCase() : "–";
+  const stance = (s.stance || "").trim();
+  $("stances").innerHTML = stance ? stance.split(/[,;]\s*|\s{2,}/).filter(Boolean).map(x => `<span class="chip">${esc(x)}</span>`).join("")
+                                  : '<span class="chip k">stance: all normal</span>';
+  const stick = $("stick");
+  stick.classList.toggle("on", !!s.held);
+  const v = VEC[s.held] || [0, 0];
+  stick.style.transform = `translate(${v[0] * 9}px, ${v[1] * 9}px)`;
+  showShare(s.moves);
+  showActors(s);
+  view.lastMoves = s.moves;
+  runState();
+}
+
+function showShare(moves) {
+  const by = {};
+  for (const [label, n] of Object.entries(moves || {})) { const b = label.split(" (")[0]; by[b] = (by[b] || 0) + n; }
+  const total = Object.values(by).reduce((a, b) => a + b, 0);
+  if (!total) { $("share").innerHTML = ""; $("legend").innerHTML = '<span class="muted">No booked moves yet.</span>';
+                $("share-model").firstChild.textContent = "–"; return; }
+  $("share-model").firstChild.textContent = Math.round(100 * (by.model || 0) / total) + "%";
+  $("share").innerHTML = Object.entries(by).sort((a, b) => b[1] - a[1]).map(([b, n]) =>
+    `<div style="width:${100 * n / total}%;background:${BY_COLOUR[b] || "#888"}" title="${esc(b)} ${n}"></div>`).join("");
+  $("legend").innerHTML = Object.entries(moves).sort((a, b) => b[1] - a[1]).map(([label, n]) =>
+    `<div><i style="background:${BY_COLOUR[label.split(" (")[0]] || "#888"}"></i><span>${esc(label)}</span><span>${n} · ${Math.round(100 * n / total)}%</span></div>`).join("");
+}
+
+function showActors(s) {
+  if (!s.playing || !s.marks) { $("actors").innerHTML = '<span class="muted">Not playing.</span>'; return; }
+  $("actors").innerHTML = s.marks.map(m => {
+    const near = m.kind === "threat" && m.steps != null && m.steps <= 8;
+    const what = m.kind === "player" ? (s.held ? `holding ${s.held}` : "")
+               : m.kind === "eyes" ? "eyes, going home"
+               : (m.steps != null ? `${m.steps} steps` : "in the house") + (m.kind === "prey" ? " · blue" : "");
+    return `<div class="actor ${near ? "near" : ""} ${m.kind === "prey" ? "prey" : ""}">
+      <div class="sw ${m.kind === "player" ? "player" : ""}" style="background:${m.kind === "eyes" ? "transparent;border:2px solid #fff" : m.colour}"></div>
+      <div><b>${esc(m.label)}</b><span>${esc(what)}</span></div></div>`;
+  }).join("");
+}
+
+/* ---------- decisions ---------- */
+function showMove(m) {
+  view.move = m;
+  const answer = [...view.answers].reverse().find(a => String(a.tile) === String(m.tile) && a.arriving === m.arriving && a.direction === m.proposed);
+  const probs = answer?.probabilities || null;
+  for (const cell of document.querySelectorAll("#compass .d")) {
+    const d = cell.dataset.d, p = probs ? probs[d] : undefined;
+    cell.className = "d" + (p !== undefined || d === m.executed || d === m.proposed ? " open" : "")
+                   + (d === m.executed ? " exec" : "") + (d === m.proposed && m.proposed !== m.executed ? " overruled" : "");
+    cell.querySelector(".fill").style.height = p !== undefined ? `${(100 * p).toFixed(0)}%` : "0%";
+    cell.querySelector(".p").textContent = p !== undefined ? `${Math.round(100 * p)}%` : "";
   }
-  return Object.entries(r).filter(([k]) => !skip.has(k)).map(([k, v]) => `${k}=${typeof v === "object" ? JSON.stringify(v) : v}`).join(" ");
+  $("who").innerHTML = `${byTag(m.by)} <span class="muted">via ${esc(m.via)}</span>` +
+    (m.proposed !== m.executed ? ` <span style="color:var(--bad)">· proposed ${esc(m.proposed)}, executed ${esc(m.executed)}</span>` : "");
+  const facts = [["junction", `${m.tile} · arriving ${m.arriving}`], ["answer from", m.source],
+                 ["confidence", m.confidence != null ? `${Math.round(100 * m.confidence)}%` : "–"],
+                 ["latency", m.latency_ms ? `${m.latency_ms} ms` : "–"], ["answer age", m.age_s != null ? `${m.age_s} s` : "–"]];
+  if (m.late) facts.push(["late", m.late]);
+  if (m.waited_s) facts.push(["waited", `${m.waited_s} s`]);
+  $("facts").innerHTML = facts.map(([k, v]) => `<span class="k">${k}</span><span>${esc(v)}</span>`).join("");
+  $("move-at").textContent = m.frame != null ? `frame ${m.frame}` : "";
 }
 
-function addTimeline(r) {
-  if ((r.event === "move" && !filters.move) || (r.event === "decision" && !filters.decision)) return;
+/* ---------- games ---------- */
+function totals(moves) {
+  const by = {};
+  for (const [label, n] of Object.entries(moves || {})) { const b = label.split(" (")[0]; by[b] = (by[b] || 0) + n; }
+  return by;
+}
+function showGame(r) {  // a finished game: its own moves are the run's counts now minus those when it began
+  const now = totals(view.lastMoves), before = view.gameMoves;
+  const mine = {};
+  for (const [b, n] of Object.entries(now)) mine[b] = n - (before[b] || 0);
+  view.gameMoves = now;
+  view.games.push({ game: r.game, score: r.score, level: r.level, moves: mine });
+  showGames();
+}
+function showGames() {
+  if (!view.games.length) { $("games").innerHTML = '<tr><td colspan="5" class="muted">No game finished yet.</td></tr>'; return; }
+  $("games").innerHTML = view.games.map(g => {
+    const total = Object.values(g.moves).reduce((a, b) => a + b, 0);
+    const own = total ? Math.round(100 * (g.moves.model || 0) / total) + "%" : "–";
+    return `<tr><td>${g.game}</td><td>${Number(g.score).toLocaleString()}</td><td>${g.level}</td><td>${total || "–"}</td><td>${own}</td></tr>`;
+  }).join("");
+}
+
+/* ---------- timeline ---------- */
+function rowFor(r) {
+  switch (r.event) {
+    case "run": return ["run", "RUN", `${r.game} · ${r.decider}${r.model ? " " + r.model : ""} · knowledge ${r.knowledge || "-"}`, "other"];
+    case "run_end": return ["over", "RUN ENDED", `${r.games_completed} game(s) completed`, "other"];
+    case "goal": return ["goal", "GOAL", (r.goal || "").replace(/_/g, " "), "other"];
+    case "stance": return ["goal", "STANCE", Object.entries(r.mods || {}).map(([k, v]) => `${k} ${v}`).join(", ") || "all normal", "other"];
+    case "advice": return ["goal", "ADVICE", Object.entries(r).filter(([k]) => !["event", "t", "frame"].includes(k)).map(([k, v]) => `${k}=${typeof v === "object" ? JSON.stringify(v) : v}`).join(" "), "other"];
+    case "game_over": return ["over", "GAME OVER", `game ${r.game} · score ${Number(r.score).toLocaleString()} · level ${r.level}`, "other"];
+    case "move": return ["move", ARROW[r.executed] || "·", `${r.executed} at ${r.tile} · <span style="color:${BY_COLOUR[r.by]}">${esc(r.by)}</span>` +
+                         (r.proposed !== r.executed ? ` · proposed ${esc(r.proposed)}` : "") + (r.latency_ms ? ` · ${r.latency_ms} ms` : ""), "move", true];
+    case "decision": return ["answer", "ANSWER", `${r.direction} for ${r.tile} · ${Math.round(100 * r.confidence)}% · ${r.latency_ms} ms · ${r.source}${r.chain ? " · chain " + r.chain : ""}`, "answer"];
+    case "reflex": return ["code", "REFLEX", `${r.chosen} → ${r.override} (ghost ${r.threat} steps)`, "other"];
+    case "reverse": return ["code", "REVERSE", `${r.heading} → ${r.to} · why ${r.why}`, "other"];
+    case "revise": return ["code", "REVISE", `${r.was} → ${r.now}`, "other"];
+    case "late": return ["code", "LATE", `${r.tile} · ${r.why}${r.direction ? " · rule took " + r.direction : ""}`, "other"];
+    case "pause": return ["dim", "PAUSE", `ghost eaten, +${r.score}`, "other"];
+  }
+  const rest = Object.entries(r).filter(([k]) => !["event", "t", "frame"].includes(k));
+  return ["dim", String(r.event).toUpperCase(), rest.map(([k, v]) => `${k}=${typeof v === "object" ? JSON.stringify(v) : v}`).join(" "), "other"];
+}
+
+function addRow(r) {
+  const [cls, label, text, group, html] = rowFor(r);
+  if (!filters[group]) return;
   const row = document.createElement("div");
-  row.innerHTML = `<span class="f">${r.frame ?? ""}</span><span class="e ${esc(r.event)}">${esc(r.event)}</span><span class="x" title="${esc(describe(r))}">${esc(describe(r))}</span>`;
+  row.className = "row r-" + cls;
+  row.innerHTML = `<span class="t">${rel(r.t)}</span><div class="what"><b>${esc(label)}</b><span>${html ? text : esc(text)}</span></div>`;
   const tl = $("timeline");
   tl.prepend(row);
-  while (tl.children.length > 200) tl.lastChild.remove();
-}
-
-function showMove(m) {
-  const d = [...recentDecisions].reverse().find(x => String(x.tile) === String(m.tile) && x.arriving === m.arriving);
-  const kv = [["junction", `${m.tile} arriving ${m.arriving}`], ["goal", m.goal],
-              ["proposed", `${m.proposed} (${m.source})`], ["executed", m.executed],
-              ["latency", m.latency_ms ? `${m.latency_ms} ms` : "—"], ["answer age", m.age_s != null ? `${m.age_s} s` : "—"]];
-  if (m.late) kv.push(["late", m.late]);
-  $("move-kv").innerHTML = kv.map(([k, v]) => `<span class="k">${k}</span><span>${esc(v)}</span>`).join("");
-  const probs = d && d.direction === m.proposed && d.probabilities ? d.probabilities : null;
-  $("bars").innerHTML = probs ? Object.entries(probs).sort((a, b) => b[1] - a[1]).map(([dir, p]) =>
-    `<div class="bar${dir === m.executed ? " sel" : ""}"><span>${dir}</span><div class="track"><div class="fill" style="width:${(100 * p).toFixed(1)}%"></div></div><span>${p.toFixed(2)}</span></div>`).join("") : "";
-  $("who").innerHTML = `executed by ${tagFor(m.by)} <span class="muted">via ${esc(m.via)}</span>`;
-}
-
-function showShare(movesByVia) {
-  const by = {};
-  for (const [label, n] of Object.entries(movesByVia || {})) { const b = label.split(" (")[0]; by[b] = (by[b] || 0) + n; }
-  const total = Object.values(by).reduce((a, b) => a + b, 0);
-  if (!total) { $("share").innerHTML = ""; $("legend").innerHTML = '<span class="muted">no booked moves yet</span>'; return; }
-  const entries = Object.entries(by).sort((a, b) => b[1] - a[1]);
-  $("share").innerHTML = entries.map(([b, n]) => `<div style="width:${100 * n / total}%;background:${BY_COLOR[b] || "#888"}" title="${b} ${n}"></div>`).join("");
-  $("legend").innerHTML = Object.entries(movesByVia).sort((a, b) => b[1] - a[1]).map(([label, n]) =>
-    `<div><span><span class="dot on" style="background:${BY_COLOR[label.split(" (")[0]] || "#888"}"></span>${esc(label)}</span><span>${n} · ${Math.round(100 * n / total)}%</span></div>`).join("");
-}
-
-function onStatus(s) {
-  $("h-title").innerHTML = `<b>${esc(s.title || "—")}</b>`;
-  $("h-game").textContent = s.game ?? "—";
-  $("h-score").textContent = s.score != null ? s.score.toLocaleString() : "—";
-  $("h-level").textContent = s.level ?? "—";
-  $("h-lives").textContent = s.lives ?? "—";
-  $("goal").textContent = s.goal ? s.goal.toUpperCase() : "—";
-  $("stance").textContent = s.stance || "";
-  $("held").textContent = s.held || "none";
-  for (const d of ["UP", "DOWN", "LEFT", "RIGHT"]) $("k-" + d).classList.toggle("on", s.held === d);
-  $("state").innerHTML = s.playing && s.lines ? s.lines.map(([k, v]) => `<span class="k">${esc(k)}</span><span>${esc(v)}</span>`).join("")
-                                               : '<span class="k">not playing</span><span class="muted">attract or coin screen</span>';
-  if (s.moves) showShare(s.moves);
+  while (tl.children.length > 250) tl.lastChild.remove();
+  $("tl-count").textContent = `${++view.rows} events`;
 }
 
 function onEvent(r) {
   if (r.event === "run") {
-    $("timeline").innerHTML = ""; recentDecisions.length = 0;
-    $("h-run").innerHTML = `<b>${esc(r.decider)}</b>${r.model ? " " + esc(r.model) : ""} · ${esc(r.knowledge || "-")}`;
+    view.run = r; view.ended = false; view.runStart = r.t; view.answers = []; view.move = null; view.rows = 0;
+    view.games = []; view.gameMoves = {};
+    $("timeline").innerHTML = ""; showRun(r); showGames();
   }
-  if (r.event === "decision") { recentDecisions.push(r); if (recentDecisions.length > 40) recentDecisions.shift(); }
+  if (r.event === "run_end") view.ended = true;
+  if (r.event === "decision") { view.answers.push(r); if (view.answers.length > 60) view.answers.shift(); }
+  if (r.event === "game_over") showGame(r);
   if (r.event === "move") showMove(r);
-  addTimeline(r);
+  addRow(r);
 }
 
+/* ---------- overlay on the game ---------- */
+const canvas = $("overlay"), ctx = canvas.getContext("2d");
+function drawArrow(x, y, dir, len, colour, width) {
+  const [vx, vy] = VEC[dir];
+  const ex = x + vx * len, ey = y + vy * len;
+  ctx.strokeStyle = colour; ctx.fillStyle = colour; ctx.lineWidth = width;
+  ctx.beginPath(); ctx.moveTo(x + vx * 4, y + vy * 4); ctx.lineTo(ex, ey); ctx.stroke();
+  const h = 2 + width * 1.2;
+  ctx.beginPath(); ctx.moveTo(ex + vx * h, ey + vy * h);
+  ctx.lineTo(ex - vy * h, ey + vx * h); ctx.lineTo(ex + vy * h, ey - vx * h); ctx.closePath(); ctx.fill();
+}
+function draw() {
+  requestAnimationFrame(draw);
+  const rect = canvas.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  if (canvas.width !== Math.round(rect.width * dpr)) { canvas.width = Math.round(rect.width * dpr); canvas.height = Math.round(rect.height * dpr); }
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const [w, h] = view.screen.size, k = Math.min(canvas.width / w, canvas.height / h);
+  ctx.setTransform(k, 0, 0, k, (canvas.width - w * k) / 2, (canvas.height - h * k) / 2);
+  const s = view.status;
+  if (!s || !s.playing || !s.marks || Date.now() - view.statusAt > 3000 || view.ended) return;
+  const player = s.marks.find(m => m.kind === "player");
+  ctx.lineCap = "round";
+  if ($("o-ghosts").checked && player) {
+    for (const m of s.marks) {
+      if (m.kind === "player" || m.kind === "eyes") continue;
+      const near = m.steps != null && m.steps <= 8;
+      ctx.setLineDash(m.kind === "prey" ? [3, 3] : []);
+      ctx.globalAlpha = m.steps == null ? 0.15 : near ? 0.9 : 0.4;
+      ctx.strokeStyle = m.colour; ctx.lineWidth = near ? 1.6 : 0.9;
+      ctx.beginPath(); ctx.moveTo(player.x, player.y); ctx.lineTo(m.x, m.y); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.beginPath(); ctx.arc(m.x, m.y, 9, 0, Math.PI * 2); ctx.stroke();
+      if (m.steps != null) {
+        const lx = (player.x + m.x) / 2, ly = (player.y + m.y) / 2;
+        ctx.globalAlpha = near ? 1 : 0.7;
+        ctx.fillStyle = "#000c"; ctx.fillRect(lx - 7, ly - 5, 14, 10);
+        ctx.fillStyle = m.colour; ctx.font = "600 7px JetBrains Mono, monospace"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillText(String(m.steps), lx, ly + 0.5);
+      }
+    }
+    ctx.globalAlpha = 0.9; ctx.strokeStyle = "#ffe600"; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(player.x, player.y, 10, 0, Math.PI * 2); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+  const now = playerNow();
+  const moveAge = view.move ? 1000 * (now - view.move.t) : Infinity;
+  if ($("o-ahead").checked) {  // answers waiting at junctions ahead: the look-ahead at work
+    for (const a of view.answers) {
+      const age = 1000 * (now - a.t);
+      if (age < 0 || age > 1600 || (view.move && String(view.move.tile) === String(a.tile) && moveAge < 1600)) continue;
+      const p = tilePx(a.tile); if (!p || !VEC[a.direction]) continue;
+      ctx.globalAlpha = 0.85 * (1 - age / 1600);
+      ctx.fillStyle = "#2ef2ff33"; ctx.fillRect(p[0] - 4, p[1] - 4, 8, 8);
+      drawArrow(p[0], p[1], a.direction, 10, "#2ef2ff", 1.4);
+    }
+  }
+  if ($("o-choice").checked && view.move) {  // the junction just decided: every option, sized by probability
+    const age = moveAge;
+    if (age >= 0 && age < 2200) {
+      const m = view.move, p = tilePx(m.tile);
+      const answer = [...view.answers].reverse().find(a => String(a.tile) === String(m.tile) && a.arriving === m.arriving && a.direction === m.proposed);
+      if (p) {
+        ctx.globalAlpha = Math.min(1, 1.6 * (1 - age / 2200));
+        for (const [dir, prob] of Object.entries(answer?.probabilities || {})) {
+          if (dir !== m.executed) drawArrow(p[0], p[1], dir, 6 + 14 * prob, "#ffffff88", 1.2);
+        }
+        if (m.proposed !== m.executed && VEC[m.proposed]) drawArrow(p[0], p[1], m.proposed, 12, "#ff3d6e", 1.6);
+        if (VEC[m.executed]) drawArrow(p[0], p[1], m.executed, 18, BY_COLOUR[m.by] || "#ffe600", 2.4);
+        ctx.strokeStyle = BY_COLOUR[m.by] || "#ffe600"; ctx.lineWidth = 1;
+        ctx.strokeRect(p[0] - 4.5, p[1] - 4.5, 9, 9);
+      }
+    }
+  }
+  ctx.globalAlpha = 1;
+}
+requestAnimationFrame(draw);
+
+/* ---------- connection ---------- */
 function connect() {
   const es = new EventSource("/events");
   es.onopen = () => $("d-page").classList.add("on");
@@ -217,12 +533,15 @@ function connect() {
     $("fps").textContent = v.connected && v.fps ? `${v.fps} fps` : "";
   });
   es.addEventListener("frame", e => {
-    lastFrame = e.data;
     const img = $("frame");
     img.src = "data:image/png;base64," + e.data;
-    img.hidden = false; $("novideo").hidden = true;
+    img.classList.remove("hidden"); $("novideo").classList.add("hidden");
   });
 }
+$("frame").addEventListener("load", e => {
+  const img = e.target;
+  if (img.naturalWidth) $("stage").style.aspectRatio = `${img.naturalWidth} / ${img.naturalHeight}`;
+});
 for (const k of Object.keys(filters)) $("f-" + k).addEventListener("change", e => { filters[k] = e.target.checked; });
 connect();
 </script>

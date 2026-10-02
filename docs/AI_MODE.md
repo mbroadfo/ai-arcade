@@ -38,10 +38,12 @@ python tools/play.py --game arcade/pacman --decider ollama --model nimble --know
 
 ## The Observatory (dashboard)
 
-`python tools/observatory.py`, then open http://localhost:8780/: the game's video beside what the player is doing. It
-shows the goal and stance, the last junction move (proposed, executed, by whom, the model's probabilities, latency and
-answer age), who made the run's moves (the ledger's by/via shares), Pac-Man and the ghosts' distances, the direction held,
-and a timeline of the logged events. Start it before or after `play.py`; each reconnects to the other, and the video
+`python tools/observatory.py`, then open http://localhost:8780/: the game's video beside what the player is doing.
+Drawn over the video: a line from Pac-Man to each ghost with its distance in steps along the maze, the junction just
+decided (every option sized by the model's probability, the executed way in the colour of who made the move, a
+proposal code overruled in red), and the answers already waiting at junctions ahead. Beside it: the goal and stance,
+the last decision as a compass with the joystick, who made the run's moves (the model's own share first), each finished
+game, and a timeline of the logged events. The header says whether the run is live, between games or ended. Start it before or after `play.py`; each reconnects to the other, and the video
 reconnects to the Pi. `--listen 0.0.0.0` lets a phone or another PC on the LAN watch.
 
 - Video: `start_pi_game.py` loads `tools/mame_video_export.lua` beside the state exporter (through `autoboot.lua`). It
@@ -53,7 +55,8 @@ reconnects to the Pi. `--listen 0.0.0.0` lets a phone or another PC on the LAN w
 - Events: `play.py` hands the player an `arcadekit.observatory.EventSink` as its decisions log. Every line still goes
   to the file; a copy goes to the dashboard (port 8770) from a background thread that never blocks the player and
   drops lines when no dashboard is listening. Five times a second it also sends a `status` line (the player's
-  `observe()`: facts read from the stream; it decides nothing). `--observatory none` sends nothing.
+  `observe()`: facts read from the stream, with screen positions from the kit's `screen.py`; it decides nothing).
+  `--observatory none` sends nothing.
 - The dashboard decides nothing and knows no game: it shows the standard events whatever the game.
 
 ## Goals and survival

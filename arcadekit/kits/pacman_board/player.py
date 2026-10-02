@@ -25,6 +25,7 @@ from .features import GOALS, LURE_RADIUS, junction_facts, ready_to_eat, score_op
 from .goals import stance_text
 from .knowledge import build_state_text
 from .maze import LOWER_TO_UPPER, OPPOSITE, Maze, step
+from . import screen
 from .park import (HOVER_MAX, HOVER_MIN, HOVER_SECONDS, REFUGE_CLEAR, REFUGE_SECONDS, all_out, gathered,
                    is_stop, nearest_energizer, nearest_normal, refuge_move)
 from .survival import reflex
@@ -106,10 +107,12 @@ class Player:
         state, frame = self.last_state, self.last_frame
         record = {"event": "status", "frame": frame, "title": self.spec.name, "game": self.finished + 1,
                   "playing": self.was_playing, "goal": self.goal, "stance": stance_text(self.mods),
-                  "held": self.broker.held}
+                  "held": self.broker.held, "screen": {"size": screen.SIZE, "tile_to_px": screen.TILE_TO_PX},
+                  "moves": {f"{by} ({via})": n for (by, via), n in self.ledger.counts.items()}}
         if state is None or not self.was_playing:
             return record
         here = Maze(self.last_image).bfs(tuple(state.pacman.tile))
+        record["marks"] = screen.marks(state, here, self.spec.name, self.spec.ghost_labels)
         lines = [[self.spec.name, f"{tuple(state.pacman.tile)} {LOWER_TO_UPPER.get(state.pacman.direction) or '-'}"]]
         for name, ghost in state.ghosts.items():
             mode = "EYES" if state.eyes[name] else "BLUE" if state.frightened[name] else "normal"
@@ -117,8 +120,7 @@ class Player:
             lines.append([self.spec.ghost_labels.get(name, name), f"{steps} steps  {mode}" if steps is not None else mode])
         if state.fruit_tile:
             lines.append(["fruit", f"{tuple(state.fruit_tile)} {here.get(state.fruit_tile, '?')} steps"])
-        record.update(score=state.score, level=state.level, lives=state.lives, dots=state.dots_eaten, lines=lines,
-                      moves={f"{by} ({via})": n for (by, via), n in self.ledger.counts.items()})
+        record.update(score=state.score, level=state.level, lives=state.lives, dots=state.dots_eaten, lines=lines)
         return record
 
     def _facts(self, state, image, tile, arriving):

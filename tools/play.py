@@ -163,6 +163,8 @@ def main(argv=None):
             broker.release_all()
         except OSError:
             pass
+        if live:
+            live.send({"event": "run_end", "label": label, "games_completed": len(results), "t": round(time.time(), 3)})
         decisions_log.close()
         stream.close()
         manifest.update(ended=time.strftime("%Y-%m-%dT%H:%M:%S"), games_completed=len(results))

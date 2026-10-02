@@ -316,5 +316,7 @@ def test_observe_reports_what_is_on_screen_without_deciding():
     assert seen["event"] == "status" and seen["frame"] == 42 and seen["held"] == "LEFT"
     assert seen["score"] == STATE.score and seen["lives"] == STATE.lives and seen["goal"] == "clear_dots"
     assert seen["lines"][0][0] == "Pac-Man" and len(seen["lines"]) >= 5  # Pac-Man, then the four ghosts
+    assert [m["kind"] for m in seen["marks"]][0] == "player" and len(seen["marks"]) == 5
+    assert all(0 <= m["x"] <= 224 and 0 <= m["y"] <= 288 for m in seen["marks"])
     json.dumps(seen)  # it goes over the wire as JSON
     assert p.decisions_log.getvalue() == ""  # observing logs nothing

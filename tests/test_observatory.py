@@ -134,3 +134,20 @@ def test_page_exists_and_reads_the_event_stream():
     assert 'new EventSource("/events")' in page
     for kind in ("event", "status", "frame", "video"):
         assert f'addEventListener("{kind}"' in page
+
+
+def test_hub_remembers_the_run_for_pages_opened_later():
+    hub = observatory.Hub()
+    hub.add_event({"event": "run", "label": "x"})
+    for i in range(observatory.KEEP_EVENTS + 5):
+        hub.add_event({"event": "move", "i": i})
+    assert hub.run == {"event": "run", "label": "x"}
+    assert all(r["event"] == "move" for _, r in hub.events)  # the run event itself has scrolled out
+
+
+def test_pacman_tiles_map_onto_the_upright_screen():
+    from arcadekit.kits.pacman_board import screen
+    # tile (0x20, 0x20) is the playfield's top-right cell: column 27, row 2 (the score rows are above it)
+    assert screen.apply(screen.TILE_TO_PX, (0x20, 0x20)) == (27 * 8 + 4, 2 * 8 + 4)
+    # h rises leftward: tile 0x3B is column 0
+    assert screen.apply(screen.TILE_TO_PX, (0x20, 0x3B))[0] == 4
