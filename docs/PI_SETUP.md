@@ -28,8 +28,12 @@ defaults to `DEFAULT_PI_HOST` in `tools/gamelib.py` (override with the `ARCADE_P
 2. `scp pi/setup_pi5.sh pi@<pi>:~` then `ssh pi@<pi> 'sh ~/setup_pi5.sh mame'`: standalone MAME from the OS (0.251 on
    Bookworm), git, python3-evdev.
 3. `ssh pi@<pi> 'nohup sh ~/setup_pi5.sh retropie > ~/setup_retropie.log 2>&1 &'`: RetroPie's basic install for human
-   mode (EmulationStation, RetroArch, the core libretro emulators). Optional emulators the old Pi had (AdvanceMAME,
-   MAME4All, Amiberry, Frotz, sdltrs, ScummVM) are not part of the basic install.
+   mode (EmulationStation, RetroArch, the core libretro emulators). Then, the same way, `setup_pi5.sh emulators`: the
+   extras the cabinet's ROM folders use (AdvanceMAME, sdltrs, Frotz and the ports: Aleph One, Descent, Doom, Duke 3D,
+   Quake, Quake 3, Wolfenstein, Cannonball, Mr. Boom, OpenTyrian). The old Pi's Dreamcast (Reicast) and PC (rpix86)
+   launchers and MAME4All are 32-bit Pi 3 programs with no 64-bit build; those folders hold no games.
+   Sound: the Pi 5 has no headphone jack, so plug in a USB audio adapter (a UGREEN USB-to-3.5 mm, then a 3.5 mm-to-RCA
+   cable to the speakers) and run `setup_pi5.sh audio` to make it the default card.
 4. ROMs and BIOS, straight from the old Pi through this PC (nothing is stored in the repository):
    `ssh pi@<old> 'tar cf - -C ~/RetroPie roms BIOS' | ssh pi@<pi> 'tar xf - -C ~/RetroPie'`.
 5. `python tools/install_pi.py --host <pi>` (the broker, below) and `python tools/configure_mame_controller.py`.

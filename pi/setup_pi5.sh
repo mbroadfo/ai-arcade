@@ -8,8 +8,28 @@
 # Steps (each can be run on its own, and again):
 #   mame       standalone MAME from Raspberry Pi OS (0.251 on Bookworm), for AI mode (tools/start_pi_game.py)
 #   retropie   RetroPie-Setup's basic install: EmulationStation and RetroArch, for human mode
+#   emulators  the extra RetroPie emulators and ports the cabinet's ROM folders use (after retropie); a module that
+#              fails is reported and the rest carry on
+#   audio      sound through a USB audio adapter (the Pi 5 has no headphone jack): it becomes the default ALSA card
 # ROMs and BIOS files are copied separately from the old cabinet (docs/PI_SETUP.md); this repository holds none.
 set -eu
+
+# RetroPie module, then the ROM folder it serves
+EMULATORS="
+advmame      mame-advmame
+sdltrs       trs-80
+frotz        zmachine
+alephone     ports/alephone
+dxx-rebirth  ports/descent1-2
+lr-prboom    ports/doom
+eduke32      ports/duke3d
+lr-tyrquake  ports/quake
+ioquake3     ports/quake3
+wolf4sdl     ports/wolf3d
+cannonball   ports/cannonball
+lr-mrboom    ports/mrboom
+opentyrian   ports/opentyrian
+"
 
 step_mame() {
     sudo apt-get update
@@ -25,8 +45,38 @@ step_retropie() {
     echo "retropie basic install finished"
 }
 
+step_emulators() {
+    cd "$HOME/RetroPie-Setup"
+    echo "$EMULATORS" | while read -r module folder; do
+        [ -n "$module" ] || continue
+        echo "=== $module ($folder)"
+        if sudo __nodialog=1 ./retropie_packages.sh "$module"; then
+            echo "=== $module installed"
+        else
+            echo "=== $module FAILED"
+        fi
+    done
+    echo "emulators finished; any failures are marked FAILED above"
+}
+
+step_audio() {
+    card=$(sed -n 's/^ *[0-9]* \[\([^ ]*\) *\]: USB-Audio.*/\1/p' /proc/asound/cards | head -n 1)
+    if [ -z "$card" ]; then
+        echo "no USB audio adapter found; plug it in and run this step again" >&2
+        cat /proc/asound/cards >&2
+        exit 1
+    fi
+    printf 'defaults.pcm.card %s\ndefaults.ctl.card %s\n' "$card" "$card" | sudo tee /etc/asound.conf
+    for control in PCM Speaker Headphone; do
+        amixer -q -c "$card" sset "$control" 90% unmute 2>/dev/null || true
+    done
+    echo "default sound card is now $card; test with: speaker-test -c 2 -t sine -l 1"
+}
+
 case "${1:-}" in
     mame) step_mame ;;
     retropie) step_retropie ;;
-    *) echo "usage: $0 mame|retropie" >&2; exit 2 ;;
+    emulators) step_emulators ;;
+    audio) step_audio ;;
+    *) echo "usage: $0 mame|retropie|emulators|audio" >&2; exit 2 ;;
 esac
