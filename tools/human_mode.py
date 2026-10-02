@@ -27,7 +27,7 @@ def main():
     ssh.connect(hostname=args.host, username=args.user, timeout=10)
     try:
         run(ssh, "pkill -9 -x mame || true; pkill -f '[p]acman_agent.py' || true; "
-                 "pkill -f '[s]tate_server.py' || true")
+                 "pkill -f '[s]tate_server.py' || true; pkill -f '[f]rame_server.py' || true")
         run(ssh, "sudo systemctl restart getty@tty1")
         up = run(ssh, f"timeout 8 sh -c \"until pgrep -f '{ES_PROCESS}' >/dev/null; do sleep 0.5; done\" "
                       "&& echo up || echo down").strip()

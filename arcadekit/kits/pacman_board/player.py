@@ -85,7 +85,7 @@ class Player:
         self.commit = None  # (junction tile, direction): the decision made on this visit to a junction tile
         self.applied = set()  # junctions already counted, so stats are per junction, not per tick
         self.last_frame, self.last_start_attempt = -1, 0.0
-        self.was_playing, self.game_started, self.last_state = False, 0.0, None
+        self.was_playing, self.game_started, self.last_state, self.last_image = False, 0.0, None, None
         self.finished = 0
         self.game = GameStats()  # what happened in the current game
         self.last_reflex = (None, 0.0)
@@ -100,6 +100,26 @@ class Player:
         record["t"] = round(self.clock(), 3)
         record.setdefault("frame", self.last_frame)  # lines up the log with a recording of the stream
         self.decisions_log.write(json.dumps(record) + "\n")
+
+    def observe(self):
+        """What is on screen now, for the Observatory's `status` line: facts read from the stream, nothing decided."""
+        state, frame = self.last_state, self.last_frame
+        record = {"event": "status", "frame": frame, "title": self.spec.name, "game": self.finished + 1,
+                  "playing": self.was_playing, "goal": self.goal, "stance": stance_text(self.mods),
+                  "held": self.broker.held}
+        if state is None or not self.was_playing:
+            return record
+        here = Maze(self.last_image).bfs(tuple(state.pacman.tile))
+        lines = [[self.spec.name, f"{tuple(state.pacman.tile)} {LOWER_TO_UPPER.get(state.pacman.direction) or '-'}"]]
+        for name, ghost in state.ghosts.items():
+            mode = "EYES" if state.eyes[name] else "BLUE" if state.frightened[name] else "normal"
+            steps = here.get(ghost.tile)
+            lines.append([self.spec.ghost_labels.get(name, name), f"{steps} steps  {mode}" if steps is not None else mode])
+        if state.fruit_tile:
+            lines.append(["fruit", f"{tuple(state.fruit_tile)} {here.get(state.fruit_tile, '?')} steps"])
+        record.update(score=state.score, level=state.level, lives=state.lives, dots=state.dots_eaten, lines=lines,
+                      moves={f"{by} ({via})": n for (by, via), n in self.ledger.counts.items()})
+        return record
 
     def _facts(self, state, image, tile, arriving):
         facts = junction_facts(state, image, tile=tile, arriving=arriving, park=self.park)
@@ -436,7 +456,7 @@ class Player:
             self.game_started, self.game, self.commit, self.waiting = self.clock(), GameStats(), None, None
             self.book.forget()
             self.book.clear_queued()
-        self.was_playing, self.last_state = True, state
+        self.was_playing, self.last_state, self.last_image = True, state, image
         self.game.update(state, image, self.goal, self.clock())
 
         if image[0x4E04 - 0x4000] != 3:  # READY screen, death animation, level transition

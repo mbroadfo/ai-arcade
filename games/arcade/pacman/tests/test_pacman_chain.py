@@ -303,3 +303,18 @@ def test_the_commitment_ends_when_pacman_leaves_the_junction():
     assert p.commit and p.commit[0] == junction
     p.tick()
     assert p.commit is None or p.commit[0] != junction
+
+
+def test_observe_reports_what_is_on_screen_without_deciding():
+    class Broker:
+        held = "LEFT"
+
+    p = player.Player(None, Broker(), FakeWorker(), goals.GoalManager("clear_dots"), io.StringIO())
+    assert p.observe()["playing"] is False and "lines" not in p.observe()
+    p.was_playing, p.last_state, p.last_image, p.last_frame = True, STATE, IMAGE, 42
+    seen = p.observe()
+    assert seen["event"] == "status" and seen["frame"] == 42 and seen["held"] == "LEFT"
+    assert seen["score"] == STATE.score and seen["lives"] == STATE.lives and seen["goal"] == "clear_dots"
+    assert seen["lines"][0][0] == "Pac-Man" and len(seen["lines"]) >= 5  # Pac-Man, then the four ghosts
+    json.dumps(seen)  # it goes over the wire as JSON
+    assert p.decisions_log.getvalue() == ""  # observing logs nothing

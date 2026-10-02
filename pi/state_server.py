@@ -68,9 +68,12 @@ class Client(object):
 
 
 class StateServer(object):
-    def __init__(self, state_file, regions, port=DEFAULT_PORT, host="0.0.0.0", poll=0.004):
+    def __init__(self, state_file, regions, port=DEFAULT_PORT, host="0.0.0.0", poll=0.004, hello=None, encode=None):
+        """hello: the JSON sent on connect (default {"regions": regions}). encode: applied to each new snapshot before
+        it is sent (default: none, the file's bytes as they are); pi/frame_server.py compresses video frames with it."""
         self.state_file = state_file
-        self.hello = message(b"H", json.dumps({"regions": regions}).encode())
+        self.hello = message(b"H", json.dumps({"regions": regions} if hello is None else hello).encode())
+        self.encode = encode or (lambda raw: raw)
         self.poll = poll
         self.listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -115,7 +118,7 @@ class StateServer(object):
             frame = struct.unpack("<I", raw[:4])[0]
             if frame != self.last_frame:
                 self.last_frame = frame
-                self.latest = message(b"S", raw)
+                self.latest = message(b"S", self.encode(raw))
                 for client in self.clients:
                     client.offer(self.latest)
                 published = True

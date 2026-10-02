@@ -11,6 +11,8 @@ Pi (only runs the game)                         PC (all the thinking)
   pi/state_server.py                              games/<system>/<game>/  decode, features, knowledge
   pi/controller_broker.py  <------controls-----   tools/broker_link.py    port 8765, tap/press/release
                                                   tools/systemone.py      fast model (Ollama /v1/systemone) or mock
+  tools/mame_video_export.lua --video-->          tools/observatory.py    port 8767, the dashboard (see below)
+  pi/frame_server.py
 ```
 
 - The Pi decides nothing. It exports a small set of RAM regions each frame and accepts controls.
@@ -33,6 +35,26 @@ python tools/play.py --game arcade/pacman --decider ollama --model nimble --know
 
 `--decider` is `rule` (control), `mock` (simulated model latency) or `ollama`. Each run writes
 `runs/<time>-<game>-<decider>-<knowledge>-decisions.jsonl` and `...-games.jsonl` (git-ignored).
+
+## The Observatory (dashboard)
+
+`python tools/observatory.py`, then open http://localhost:8780/: the game's video beside what the player is doing. It
+shows the goal and stance, the last junction move (proposed, executed, by whom, the model's probabilities, latency and
+answer age), who made the run's moves (the ledger's by/via shares), Pac-Man and the ghosts' distances, the direction held,
+and a timeline of the logged events. Start it before or after `play.py`; each reconnects to the other, and the video
+reconnects to the Pi. `--listen 0.0.0.0` lets a phone or another PC on the LAN watch.
+
+- Video: `start_pi_game.py` loads `tools/mame_video_export.lua` beside the state exporter (through `autoboot.lua`). It
+  copies MAME's screen bitmap 15 times a second (`--video-fps`) to `/dev/shm`, and `pi/frame_server.py` (port 8767)
+  sends each frame zlib-compressed: a Pac-Man frame is 252 KB raw, a few KB on the wire. The PC turns frames upright and
+  into PNGs; the Pi encodes nothing. `--no-video` leaves it out.
+- Measured on the Pi 5 (2 October 2026): a capture costs 0.4 ms of MAME's frame; with video streaming, Pac-Man runs at
+  60.7 emulated frames a second and press-to-effect is 69 ms median (66 ms without).
+- Events: `play.py` hands the player an `arcadekit.observatory.EventSink` as its decisions log. Every line still goes
+  to the file; a copy goes to the dashboard (port 8770) from a background thread that never blocks the player and
+  drops lines when no dashboard is listening. Five times a second it also sends a `status` line (the player's
+  `observe()`: facts read from the stream; it decides nothing). `--observatory none` sends nothing.
+- The dashboard decides nothing and knows no game: it shows the standard events whatever the game.
 
 ## Goals and survival
 
@@ -191,6 +213,7 @@ Print exactly what a model would see: `python tools/show_prompt.py --game arcade
 |---|---|
 | `tools/start_pi_game.py` | start MAME, the exporter and the state server for a game |
 | `tools/play.py` | the player loop for any game package |
+| `tools/observatory.py` | the dashboard: video, intent, moves and events in the browser |
 | `tools/strategist.py` | the slow layer: asks a model for the goal and stance, validates, never blocks |
 | `tools/state_client.py` | read the stream; `--measure` times stream and control latency |
 | `tools/record_stream.py` | record raw snapshots for offline analysis |

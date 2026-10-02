@@ -1,7 +1,8 @@
 """Start the Pi in 'dumb cabinet' mode: MAME + light state exporter + state server. No agent.
 
 The Pi only runs the game, streams its state (port 8766), and accepts controls (broker, port 8765).
-A decision-maker on the PC does the rest. Leaves everything running.
+A decision-maker on the PC does the rest. Unless --no-video, it also streams the game's video for the Observatory
+(port 8767; tools/observatory.py). Leaves everything running.
 """
 import argparse
 import json
@@ -17,6 +18,8 @@ from state_regions import regions_lua
 REMOTE_DIR = "/home/pi/ai-arcade"
 STATE_FILE = "/dev/shm/ai-arcade-state.bin"
 SERVER_LOG = "/tmp/ai-arcade-state-server.log"
+FRAME_FILE = "/dev/shm/ai-arcade-frame.bin"
+FRAME_LOG = "/tmp/ai-arcade-frame-server.log"
 # The EmulationStation program itself, not its wrapper scripts (process names stop at 15 characters, so match the path)
 ES_PROCESS = "/emulationstation/emulationstation( |$)"
 
@@ -30,6 +33,10 @@ def main():
     parser.add_argument("--speed", type=float, default=1.0,
                         help="emulation speed relative to real time (MAME -speed), e.g. 0.5 gives the decider twice the "
                              "time per decision; wall-clock seconds in the results stretch by the same factor")
+    parser.add_argument("--video-fps", type=int, default=15,
+                        help="video frames a second for the Observatory (of the game's 60)")
+    parser.add_argument("--video-port", type=int, default=8767)
+    parser.add_argument("--no-video", action="store_true", help="no video stream: the state exporter alone")
     args = parser.parse_args()
     system, _ = split_spec(args.game)
     romset = load_profile(args.game)["romset"]
@@ -44,22 +51,29 @@ def main():
         sftp = ssh.open_sftp()
         sftp.put(str(ROOT / "tools" / "mame_state_export.lua"), f"{REMOTE_DIR}/mame_state_export.lua")
         sftp.put(str(ROOT / "pi" / "state_server.py"), f"{REMOTE_DIR}/state_server.py")
+        sftp.put(str(ROOT / "tools" / "mame_video_export.lua"), f"{REMOTE_DIR}/mame_video_export.lua")
+        sftp.put(str(ROOT / "pi" / "frame_server.py"), f"{REMOTE_DIR}/frame_server.py")
+        scripts = ["mame_state_export.lua"] + ([] if args.no_video else ["mame_video_export.lua"])
+        with sftp.file(f"{REMOTE_DIR}/autoboot.lua", "w") as f:  # MAME takes one script: it loads the others
+            f.write("".join(f'dofile("{REMOTE_DIR}/{name}")\n' for name in scripts))
         with sftp.file(f"{REMOTE_DIR}/regions.lua", "w") as f:
             f.write(regions_lua(AGENT_REGIONS))
         sftp.close()
 
         run(ssh, "pkill -9 -x mame || true; pkill -f '[p]acman_agent.py' || true; "
-                 "pkill -f '[s]tate_server.py' || true")
+                 "pkill -f '[s]tate_server.py' || true; pkill -f '[f]rame_server.py' || true")
         # EmulationStation starts at boot (human mode) and holds the screen; MAME cannot open it until ES has gone.
         # tools/human_mode.py brings ES back.
         run(ssh, f"pkill -f '{ES_PROCESS}' || true; "
                  f"timeout 10 sh -c \"while pgrep -f '{ES_PROCESS}' >/dev/null; do sleep 0.2; done\" || true")
-        run(ssh, f"rm -f {STATE_FILE}")
-        run(ssh, f"nohup env SDL_AUDIODRIVER=alsa mame {romset} -rompath /home/pi/RetroPie/roms/{system} "
+        run(ssh, f"rm -f {STATE_FILE} {FRAME_FILE}")
+        every = max(1, round(60 / max(1, args.video_fps)))
+        run(ssh, f"nohup env SDL_AUDIODRIVER=alsa AI_ARCADE_VIDEO_EVERY={every} "
+                 f"mame {romset} -rompath /home/pi/RetroPie/roms/{system} "
                  "-video accel -nowindow -skip_gameinfo -joystick -joystickprovider sdl "
                  "-ctrlrpath /home/pi/.mame/ctrlr -ctrlr aiarcade "
                  + (f"-speed {args.speed} " if args.speed != 1.0 else "") +
-                 f"-autoboot_script {REMOTE_DIR}/mame_state_export.lua "
+                 f"-autoboot_script {REMOTE_DIR}/autoboot.lua "
                  f"> {MAME_LOG} 2>&1 < /dev/null &")
         for _ in range(40):
             time.sleep(1)
@@ -72,9 +86,13 @@ def main():
         regions = json.dumps([list(r) for r in AGENT_REGIONS])
         run(ssh, f"nohup python3 {REMOTE_DIR}/state_server.py --port {args.state_port} "
                  f"--regions '{regions}' > {SERVER_LOG} 2>&1 < /dev/null &")
+        if not args.no_video:
+            run(ssh, f"nohup python3 {REMOTE_DIR}/frame_server.py --port {args.video_port} "
+                     f"> {FRAME_LOG} 2>&1 < /dev/null &")
         time.sleep(1)
-        print(run(ssh, f"pgrep -af '[s]tate_server.py'").strip())
-        print(f"\nPi ready: state stream on {args.host}:{args.state_port}, controls on {args.host}:8765")
+        print(run(ssh, f"pgrep -af '[s]tate_server.py|[f]rame_server.py'").strip())
+        print(f"\nPi ready: state stream on {args.host}:{args.state_port}, controls on {args.host}:8765"
+              + ("" if args.no_video else f", video on {args.host}:{args.video_port}"))
     finally:
         ssh.close()
     return 0

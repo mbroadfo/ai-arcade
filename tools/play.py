@@ -5,6 +5,9 @@ The game's own switches (its experiment.OPTIONS) are added to the command line; 
     python tools/play.py --game arcade/pacman --decider rule --games 3
     python tools/play.py --game arcade/pacman --decider mock --latency 90,500 --games 5
     python tools/play.py --game arcade/pacman --decider ollama --model nimble --knowledge L2 --games 5
+
+Every logged event, and a status line five times a second, also goes to the Observatory dashboard when one is running
+(python tools/observatory.py; --observatory none to not send).
 """
 import argparse
 import json
@@ -16,6 +19,7 @@ from gamelib import DEFAULT_GAME, DEFAULT_PI_HOST, ROOT, load_game  # first: put
 
 from arcadekit.decisions import DecisionWorker
 from arcadekit.manifest import build_manifest
+from arcadekit.observatory import DEFAULT_ADDRESS, EventSink, LiveSink
 from arcadekit.options import add_arguments, label_parts, values
 from arcadekit.report import summary_lines
 from arcadekit.strategist import MockStrategistClient, Strategist
@@ -66,6 +70,8 @@ def main(argv=None):
     parser.add_argument("--games", type=int, default=1)
     parser.add_argument("--seconds", type=int, default=3600)
     parser.add_argument("--out", default=str(ROOT / "runs"))
+    parser.add_argument("--observatory", default="%s:%d" % DEFAULT_ADDRESS,
+                        help="HOST:PORT of the Observatory dashboard (tools/observatory.py), or none")
     add_arguments(parser, game_options, f"{chosen_game(argv)} switches (kind in brackets; docs/GAME_WORKSHOP.md)")
     args = parser.parse_args(argv)
     game_values = values(args, game_options)
@@ -81,6 +87,11 @@ def main(argv=None):
                                  None if args.strategist == "code" else f"strat-{args.strategist}",
                                  *label_parts(game_values, game_options), args.tag) if p)
     decisions_log = open(out_dir / f"{label}-decisions.jsonl", "w", buffering=1)
+    live = None
+    if args.observatory != "none":
+        host, _, port = args.observatory.rpartition(":")
+        live = LiveSink((host, int(port)))
+        decisions_log = EventSink(decisions_log, live)
     results_path = out_dir / f"{label}-games.jsonl"
     manifest_path = out_dir / f"{label}-manifest.json"
     manifest = build_manifest(args, label, game_options, game_values)
@@ -109,6 +120,12 @@ def main(argv=None):
         manager = game.strategy.ModelGoalManager(Strategist(client, game.strategy.SCHEMA), manager)
     player = game.player.Player(stream, broker, worker, manager, decisions_log,
                                 knowledge=args.knowledge, **extra)
+    if live:
+        live.send({"event": "run", "label": label, "game": args.game, "decider": args.decider,
+                   "model": None if args.decider == "rule" else args.model, "knowledge": args.knowledge,
+                   "goal": args.goal, "strategist": args.strategist, "games": args.games, "t": round(time.time(), 3)})
+    observe = getattr(player, "observe", None) if live else None
+    observed_at = 0.0
 
     results, deadline = [], time.time() + args.seconds
     last_good = time.time()
@@ -119,6 +136,9 @@ def main(argv=None):
             try:
                 result = player.tick()
                 last_good = time.time()
+                if observe and last_good - observed_at >= 0.2:
+                    observed_at = last_good
+                    live.send({**observe(), "t": round(last_good, 3)})
             except TimeoutError:
                 if time.time() - last_good > 10:
                     print(f"WARNING: no game state for {time.time() - last_good:.0f} s "
