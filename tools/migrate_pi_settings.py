@@ -23,6 +23,13 @@ TRANSLATE = {
     "advmame-0.94": "advmame",
     "lr-snes9x2010": "lr-snes9x",
 }
+# Vector games: lr-mame2000 (the MAME4All stand-in) draws them at a small fixed size that a 1080p screen stretches into
+# jagged lines; lr-mame2003 draws them at the screen's height, antialiased. Each of these loads its ROM there (checked
+# on the Pi 5); the Cinematronics ones have no sound samples on either cabinet. A game the old cabinet gave another
+# emulator (AdvanceMAME, lr-mame2003) keeps it.
+VECTOR_GAMES = ("asteroid astdelux barrier boxingb bradley bwidow demon elim2 esb gravitar llander mhavoc redbaron "
+                "ripoff spacduel spacewar spacfury speedfrk starhawk starwars tailg warrior wotw").split()
+VECTOR_OPTIONS = {"mame2003_vector_resolution": "1440x1080", "mame2003_vector_antialias": "enabled"}
 LINE = re.compile(r'^\s*([^=\s]+)\s*=\s*"(.*)"\s*$')
 
 
@@ -35,7 +42,16 @@ def connect(host):
 
 
 def parse(text):
-    return [m.groups() for m in map(LINE.match, text.splitlines()) if m]
+    return [(m.group(1), m.group(2)) for m in map(LINE.match, text.splitlines()) if m]
+
+
+def set_options(ssh, sftp, options):
+    """Set libretro core options, leaving the others as they are."""
+    path = f"{CONFIGS}/all/retroarch-core-options.cfg"
+    current = dict(parse(run(ssh, f"cat {path} 2>/dev/null || true")))
+    current.update(options)
+    with sftp.file(path, "w") as f:
+        f.write("".join(f'{k} = "{v}"\n' for k, v in current.items()))
 
 
 def main():
@@ -70,16 +86,22 @@ def main():
                 f.write("\n".join(lines + [f'default = "{emulator}"']) + "\n")
             print(f"  {system}: {emulator}")
 
-        games = []
+        games = {}
         for key, emulator in parse(run(old, f"cat {CONFIGS}/all/emulators.cfg 2>/dev/null || true")):
             system = key.split("_", 1)[0]
             emulator = TRANSLATE.get(emulator, emulator)
             if emulator in offers(system):
-                games.append(f'{key} = "{emulator}"')
+                games[key] = emulator
             else:
                 skipped.append(f"{key} {emulator}")
+        arcade_default = dict(parse(run(new, f"cat {CONFIGS}/arcade/emulators.cfg"))).get("default")
+        moved = [g for g in VECTOR_GAMES if games.get(f"arcade_{g}", arcade_default) == "lr-mame2000"]
+        if moved and "lr-mame2003" in offers("arcade"):
+            games.update({f"arcade_{g}": "lr-mame2003" for g in moved})
+            set_options(new, sftp, VECTOR_OPTIONS)
+            print(f"Vector games moved to lr-mame2003 ({VECTOR_OPTIONS['mame2003_vector_resolution']}): {' '.join(moved)}")
         with sftp.file(f"{CONFIGS}/all/emulators.cfg", "w") as f:
-            f.write("\n".join(games) + "\n")
+            f.write("\n".join(f'{k} = "{v}"' for k, v in games.items()) + "\n")
         print(f"Per-game choices: {len(games)} written")
         sftp.close()
 

@@ -104,6 +104,9 @@ def configure_keyboard(source):
         run('sudo', '-u', user, 'bash', str(INPUT_SCRIPT), check=False)
     finally:
         temp.unlink()
+    # Escape is the hotkey; making it the quit key too lets Escape alone leave a game, as it did on the old cabinet's
+    # MAME4All, while Escape+D/Q/W/S still reach the menu, states and reset.
+    set_retroarch_setting(RA_CFG, 'input_exit_emulator', 'escape')
 
 
 def require_root():

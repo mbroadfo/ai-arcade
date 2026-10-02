@@ -57,13 +57,15 @@ RetroArch and the other emulators that take a keyboard:
 | Select | ' (quote) | | Right stick | [ ] \ Delete |
 | Hotkey | Escape | | | |
 
-In RetroArch games, hold Escape with: Enter to quit the game, D for RetroArch's menu, Q / W to load / save state,
+In RetroArch games Escape on its own quits the game; hold it with D for RetroArch's menu, Q / W to load / save state,
 S to reset, left / right to change the state slot. Zork (Frotz) runs in the text console and reads the whole keyboard.
 For standalone MAME (AI mode), `configure_mame_controller.py` adds the arrows, `1` / Enter (start) and `5` / Right
 Shift (coin) beside the joystick codes.
 
 `python tools/migrate_pi_settings.py` copies the old cabinet's emulator choices (each system's default and the
-per-game ones), translating the Pi 3's MAME4All to lr-mame2000 and its AdvanceMAME versions to AdvanceMAME 3.
+per-game ones), translating the Pi 3's MAME4All to lr-mame2000 and its AdvanceMAME versions to AdvanceMAME 3. Vector
+games that would land on lr-mame2000 go to lr-mame2003 instead, drawn at 1440x1080 and antialiased (lr-mame2000 draws
+them small, and a 1080p screen stretches them jagged).
 
 Measured on the Pi 5 with MAME 0.251: Pac-Man at full speed with the agent export (60.7 emulated frames a second; the
 Pi 3 managed about 51), press to visible effect 66 ms median. The Lua scripts in `tools/` run on both MAME versions.
