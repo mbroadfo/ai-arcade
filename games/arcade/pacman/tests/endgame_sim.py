@@ -6,8 +6,11 @@ import random
 from dataclasses import replace
 from pathlib import Path
 
-from games.arcade.pacman.deciders import RuleDecider
-from games.arcade.pacman.features import junction_facts
+from games.arcade.pacman import deciders as _deciders
+
+RuleDecider = _deciders.RuleDecider
+from games.arcade.pacman import features as _features
+junction_facts = _features.junction_facts
 from games.arcade.pacman.maze import BLANK, DOT, ENERGIZER, LOWER_TO_UPPER, Maze, step
 from games.arcade.pacman.state import decode
 

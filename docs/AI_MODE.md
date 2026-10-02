@@ -36,7 +36,7 @@ python tools/play.py --game arcade/pacman --decider ollama --model nimble --know
 
 ## Goals and survival
 
-A **goal** is a standing objective, chosen slowly and held. Pac-Man's goals (`games/arcade/pacman/goals.py`):
+A **goal** is a standing objective, chosen slowly and held. Pac-Man's goals (`arcadekit/kits/pacman_board/goals.py`, shared with Ms. Pac-Man):
 
 | Goal | Try to |
 |---|---|
@@ -153,7 +153,7 @@ never sees or sets a raw number, and the scale is bounded.
 
 - General part: `tools/strategist.py` asks one choice question per goal and per dial, validates the answers, never
   blocks the control loop, and leaves the previous advice in force on a timeout, nonsense or low confidence.
-- Pac-Man part: `games/arcade/pacman/strategy.py` holds the schema, the situation summary and `ModelGoalManager`.
+- Pac-Man part: `arcadekit/kits/pacman_board/strategy.py` holds the schema, the situation summary and `ModelGoalManager` (shared by the games on Pac-Man's board; the player's name comes from the game's spec).
   The code's own `GoalManager` keeps running underneath: it is the fallback before the first answer, after an
   answer has gone 8 s without renewal, and when the model's goal has nothing to aim at (hunt with no blue ghost,
   fruit with none on screen, ambush with no energizer left). A model goal is held at least 3 s.
@@ -183,7 +183,7 @@ Set with `--knowledge`. Each rung is cumulative, so a result can be labelled by 
 | L3b | each ghost's current target and its route |
 | L4 | code picks the action: the rule decider, the control (not a rung) |
 
-Print exactly what a model would see: `python -m games.arcade.pacman.knowledge --level L3b`.
+Print exactly what a model would see: `python tools/show_prompt.py --game arcade/pacman --level L3b --image games/arcade/pacman/tests/fixtures/pacman_play_ram.bin`.
 
 ## Tools
 

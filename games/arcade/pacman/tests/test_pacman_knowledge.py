@@ -5,7 +5,8 @@ import sys
 import pytest
 
 from games.arcade.pacman import knowledge as pk
-from games.arcade.pacman.features import junction_facts
+from games.arcade.pacman import features as _features
+junction_facts = _features.junction_facts
 from games.arcade.pacman.state import decode
 
 IMAGE = (Path(__file__).parent / 'fixtures' / 'pacman_play_ram.bin').read_bytes()

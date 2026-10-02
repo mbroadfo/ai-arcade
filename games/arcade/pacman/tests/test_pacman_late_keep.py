@@ -5,7 +5,8 @@ import json
 import pytest
 
 from games.arcade.pacman import goals, player
-from games.arcade.pacman.deciders import Decision
+from games.arcade.pacman import deciders as _deciders
+Decision = _deciders.Decision
 from games.arcade.pacman.maze import OPPOSITE, Maze, step
 from games.arcade.pacman.tests.test_pacman_chain import IMAGE, Steer, Stream, at, junction_starts
 

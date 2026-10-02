@@ -1,4 +1,7 @@
-"""Pac-Man player: reads the streamed state, asks a decider for a direction at each junction, steers.
+"""The player for games on Pac-Man's board: reads the streamed state, asks a decider at each junction, steers.
+
+The game's own facts (its name in the texts, ghost knowledge, the safe spot) come in a spec.Spec; a game binds this
+module to its spec (bind.py), so Pac-Man and Ms. Pac-Man share every line of it.
 
 Tiers (after Sean Goedecke's "tiered goals"): a slow strategy loop picks a goal from a fixed set;
 a fast decider (rule, mock model, or a System One model) picks a direction at each junction given
@@ -22,7 +25,7 @@ from .features import GOALS, LURE_RADIUS, junction_facts, ready_to_eat, score_op
 from .goals import stance_text
 from .knowledge import build_state_text
 from .maze import LOWER_TO_UPPER, OPPOSITE, Maze, step
-from .park import (HOVER_MAX, HOVER_MIN, HOVER_SECONDS, REFUGE_CLEAR, REFUGE_SECONDS, SAFE_SPOT, all_out, gathered,
+from .park import (HOVER_MAX, HOVER_MIN, HOVER_SECONDS, REFUGE_CLEAR, REFUGE_SECONDS, all_out, gathered,
                    is_stop, nearest_energizer, nearest_normal, refuge_move)
 from .survival import reflex
 
@@ -42,10 +45,13 @@ class Player:
     def __init__(self, stream, broker, worker, strategy, decisions_log, strategy_interval=0.5,
                  lookahead=LOOKAHEAD_STEPS, knowledge=None, revise=False, reflex=True,
                  chain_depth=CHAIN_DEPTH, park=False, refuge=False, danger_query=False,
-                 danger_worker=None, clock=time.time, late="rule"):
+                 danger_worker=None, clock=time.time, late="rule", *, spec):
         # Ablation switches. revise: code re-checks each stored answer against fresh facts (code overruling the
         # decider, so off by default). reflex: the survival instinct. chain_depth: look-ahead chain, 0 = off.
         self.clock = clock  # wall-clock seconds; a replay passes recorded time
+        self.spec = spec  # the game's own facts (spec.Spec)
+        if refuge and spec.safe_spot is None:
+            raise ValueError(f"{spec.name} has no safe spot: --refuge does not apply")
         self.revise, self.reflex, self.chain_depth = revise, reflex, chain_depth
         # park: ambush waits against a wall near the energizer instead of pacing. refuge: hide at the safe spot when a
         # ghost is close and he can get there first. Both off by default (park.py); neither lets the reflex steer while held.
@@ -100,7 +106,8 @@ class Player:
         facts["mods"], facts["stance"] = dict(self.mods), stance_text(self.mods)
         if self.knowledge:
             goal_text = f"GOAL: {self.goal} - {GOALS[self.goal]} {facts['stance']}".rstrip()
-            facts["state_text"] = build_state_text(self.knowledge, state, image, facts, tile, arriving, goal_text)
+            facts["state_text"] = build_state_text(self.knowledge, state, image, facts, tile, arriving, goal_text,
+                                                   spec=self.spec)
         return facts
 
     def _near_threat(self, state):
@@ -230,7 +237,7 @@ class Player:
             return False
         here, kind = maze.bfs(tile), None
         near = nearest_normal(state, here)
-        if self.refuge and tile == SAFE_SPOT and all_out(state, here) and self.goal != "hunt_ghosts":
+        if self.refuge and tile == self.spec.safe_spot and all_out(state, here) and self.goal != "hunt_ghosts":
             if near is not None and near <= REFUGE_CLEAR:
                 kind = "refuge"
         if kind is None and self.park and self.goal == "ambush" and is_stop(maze, tile, heading):
@@ -254,7 +261,7 @@ class Player:
         """A ghost is close and the safe spot can be reached first: go there. True if it steered."""
         if not self.refuge or self.goal == "hunt_ghosts" or self.clock() < self.refuge_cooldown:
             return False
-        direction = refuge_move(state, Maze(image), me)
+        direction = refuge_move(state, Maze(image), me, self.spec.safe_spot)
         if direction is None:
             return False
         if self.clock() - self.refuge_ran_at > 2.0:

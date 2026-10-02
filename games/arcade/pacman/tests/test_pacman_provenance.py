@@ -5,8 +5,10 @@ import time
 from dataclasses import replace
 
 from games.arcade.pacman import goals, player
-from games.arcade.pacman.deciders import Decision
-from games.arcade.pacman.events import GameStats
+from games.arcade.pacman import deciders as _deciders
+Decision = _deciders.Decision
+from games.arcade.pacman import events as _events
+GameStats = _events.GameStats
 from games.arcade.pacman.maze import Maze
 from games.arcade.pacman.tests.test_pacman_chain import (HEADON, IMAGE, STATE, FakeWorker, Steer, Stream, at,
                                                          junction_starts)

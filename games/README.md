@@ -15,7 +15,9 @@ games/arcade/pacman/
   profile.json      ROM set, controls, hiscore/cheat RAM (tools/game_profile.py writes it)
   discovered.json   RAM found automatically (tools/discover_state.py writes it)
   RAM_MAP.md        hand-validated notes
-  state.py maze.py ghosts.py features.py knowledge.py deciders.py player.py experiment.py
+  spec.py           the game's own facts; the player, features, knowledge and the rest are shared by the games on
+                    Pac-Man's board (arcadekit/kits/pacman_board) and bound to the spec in __init__.py
+  state.py maze.py  thin re-exports of the shared decoder and maze reader
   scripts/          one-off tools for this game (validation, Pi experiments); import _bootstrap first
   tests/            unit tests and fixtures; pytest runs them with the rest
 ```

@@ -115,10 +115,10 @@ def threat_distance(state, image):
     return min(steps) if steps else None
 
 
-def render_text(facts, goal):
-    """Compact text rendering of the facts for a System One model (small context budgets)."""
+def render_text(facts, goal, name):
+    """Compact text rendering of the facts for a System One model (small context budgets). name: the player's."""
     lines = [f"GOAL: {goal} - {GOALS[goal]}", *([facts["stance"]] if facts.get("stance") else []),
-             f"Pac-Man heading {facts['arriving']}. Food left {facts['food_left']}. Lives {facts['lives']}."]
+             f"{name} heading {facts['arriving']}. Food left {facts['food_left']}. Lives {facts['lives']}."]
     for direction, o in facts["options"].items():
         lines.append(
             f"{direction}{' (reverse)' if o['reverse'] else ''}: "

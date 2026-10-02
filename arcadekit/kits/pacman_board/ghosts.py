@@ -11,17 +11,15 @@ Simplifications, all listed so nobody mistakes this for a full simulator:
 - Ghosts inside the house are not forecast.
 - Ghost-house exit and re-entry (around the door tile) are not modelled; paths through there are unreliable.
 
-Special tiles (found by comparing this module with ~3,000 recorded ghost decisions, then matching the
-ROM's behaviour): ghosts may not turn UP on four tiles near the house and Pac-Man's start, and make no
-choice in the tunnel row (they go straight).
+Special tiles (found on Pac-Man by comparing this module with ~3,000 recorded ghost decisions, then matching the
+ROM's behaviour): ghosts may not turn UP on a few tiles near the house and the start, and make no choice in the
+tunnels (they go straight). These, the corner targets and the door are the game's own: spec.Spec.
 """
 from .maze import MOVES, step
 
 ORDER = ("RIGHT", "DOWN", "LEFT", "UP")  # ROM direction numbers 0..3; ties go to the LATER one
 # Direction vectors as the ROM's 16-bit (h << 8 | l) words: right (0,-1), down (1,0), left (0,1), up (-1,0)
 VECTOR_WORD = {"RIGHT": 0xFF00, "DOWN": 0x0001, "LEFT": 0x0100, "UP": 0x00FF}
-SCATTER_TARGETS = {"red": (0x1D, 0x22), "pink": (0x1D, 0x39), "blue": (0x40, 0x20), "orange": (0x40, 0x3B)}
-DOOR_TARGET = (0x2C, 0x2E)  # where eaten ghosts (eyes) head
 GHOST_NAMES = ("red", "pink", "blue", "orange")
 OPPOSITE = {"RIGHT": "LEFT", "LEFT": "RIGHT", "UP": "DOWN", "DOWN": "UP"}
 LOWER = {"right": "RIGHT", "down": "DOWN", "left": "LEFT", "up": "UP"}
@@ -48,7 +46,7 @@ def is_scatter(state):
     return state.phase % 2 == 0 and state.substate == 3
 
 
-def targets(state):
+def targets(state, *, spec):
     """Each ghost's target tile under the ROM's rules, from the current state."""
     pac = state.pacman.tile
     heading = pacman_heading(state)
@@ -63,32 +61,24 @@ def targets(state):
     )
     clyde_near = sq_dist(pac, state.ghosts["orange"].next_tile) < 0x40  # within 8 tiles
 
+    corner = spec.scatter_targets
     return {
-        "red": SCATTER_TARGETS["red"] if scatter and not state.elroy else pac,
-        "pink": SCATTER_TARGETS["pink"] if scatter else from_word(pinky_word),
-        "blue": SCATTER_TARGETS["blue"] if scatter else inky,
-        "orange": SCATTER_TARGETS["orange"] if scatter or clyde_near else pac,
+        "red": corner["red"] if scatter and not state.elroy else pac,
+        "pink": corner["pink"] if scatter else from_word(pinky_word),
+        "blue": corner["blue"] if scatter else inky,
+        "orange": corner["orange"] if scatter or clyde_near else pac,
     }
 
 
-# Ghosts in chase/scatter mode may not turn up here: two tiles above the house, two above Pac-Man's start.
-NO_UP_TILES = {(44, 44), (44, 47), (56, 44), (56, 47)}
-
-
-def in_tunnel(tile):
-    """The wrap-around tunnel row (l = 47) toward either edge: ghosts make no choices here."""
-    return tile[0] == 47 and (tile[1] >= 0x3B or tile[1] <= 0x20)
-
-
-def choose_exit(maze, tile, arriving, target):
+def choose_exit(maze, tile, arriving, target, *, spec):
     """The ROM's direction choice at `tile` for a ghost that arrived heading `arriving`."""
-    if in_tunnel(tile) and arriving:
+    if spec.in_tunnel(maze, tile) and arriving:
         return arriving
     best, best_dist = None, None
     for direction in ORDER:
         if direction == OPPOSITE.get(arriving):
             continue
-        if direction == "UP" and tile in NO_UP_TILES:
+        if direction == "UP" and tile in spec.no_up_tiles:
             continue
         neighbour = step(tile, direction)
         if not maze.passable(neighbour):
@@ -106,19 +96,19 @@ def direction_between(a, b):
     return None
 
 
-def forecast(state, maze, steps=12):
+def forecast(state, maze, steps=12, *, spec):
     """Predicted tile sequence for each ghost, starting with the tile it enters next.
 
     Returns {name: [tiles] or None}. None for ghosts that are frightened (random) or that sit in the house.
     """
-    aim = targets(state)
+    aim = targets(state, spec=spec)
     paths = {}
     for name in GHOST_NAMES:
         ghost = state.ghosts[name]
         if state.frightened[name]:
             paths[name] = None
             continue
-        target = DOOR_TARGET if state.eyes[name] else aim[name]
+        target = spec.door_target if state.eyes[name] else aim[name]
         here, nxt = tuple(ghost.tile), tuple(ghost.next_tile)
         if not maze.passable(here) or not maze.passable(nxt):
             paths[name] = None
@@ -126,7 +116,7 @@ def forecast(state, maze, steps=12):
         arriving = direction_between(here, nxt) or LOWER.get(ghost.direction)
         tiles, tile = [nxt], nxt
         for _ in range(steps - 1):
-            exit_dir = choose_exit(maze, tile, arriving, target)
+            exit_dir = choose_exit(maze, tile, arriving, target, spec=spec)
             if exit_dir is None:
                 break
             tile = step(tile, exit_dir)

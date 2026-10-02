@@ -5,7 +5,9 @@ import time
 from dataclasses import replace
 
 from games.arcade.pacman import danger, features, goals, player
-from games.arcade.pacman.deciders import Decision, SystemOneDecider
+from games.arcade.pacman import deciders as _deciders
+Decision = _deciders.Decision
+SystemOneDecider = _deciders.SystemOneDecider
 from games.arcade.pacman.maze import MOVES, OPPOSITE, Maze, step
 from games.arcade.pacman.tests.test_pacman_chain import IMAGE, STATE, FakeWorker, Steer, Stream
 

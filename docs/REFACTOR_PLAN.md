@@ -3,10 +3,15 @@
 Status, 2026-10-01: phase 0 done (`0cea045`); phase 1 done (`1dcfc91`, `43f8e04`, `15e08f0`) except `OutcomeStats`,
 which moves with the report in phase 2. `player.py` is 490 lines after phase 1, not the 300 estimated: what remains
 is mostly Pac-Man's own (holds, the danger query, the reflex). Phase 2 done: `play.py` and the manifest name no game;
-Pac-Man declares its switches in `games/arcade/pacman/experiment.py`; `tools/compare_runs.py` compares runs.
+Pac-Man declares its switches in `experiment.py` (now in the family kit); `tools/compare_runs.py` compares runs.
 Phase 3 done on the PC side: the game's `IMAGE` window, regions with cpu/space, `BrokerLink.hold(set)` built on the
 broker's existing press/release (no Pi change), `tools/mame_speed_test.py`. The broker's second stick for Battlezone
 is a Pi change and waits for Battlezone. The snapshot service used by discovery still scans `:maincpu` by design.
+Phase 4 under way: Ms. Pac-Man (stages 0-2 done, played by Pac-Man's player with no new code: rule 3,907, nimble
+6,033). The player, features, knowledge, goals and the rest now live in `arcadekit/kits/pacman_board/`, shared by both
+games; each game supplies only `spec.py` (name, ghost knowledge, corner targets, tunnels, safe spot) and binds the
+kit to it (`bind.py`). A sibling game's own code is now one spec file. The generic grid (maze games on other
+hardware) is still not extracted: no such game yet.
 
 ## Why now
 

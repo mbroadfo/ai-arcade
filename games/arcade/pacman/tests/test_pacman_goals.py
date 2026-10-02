@@ -176,7 +176,8 @@ def test_unknown_mission_is_rejected():
 
 
 def test_player_reports_the_game_in_progress_when_stopped():
-    from games.arcade.pacman.player import Player
+    from games.arcade.pacman import player as _player
+    Player = _player.Player
     player = Player(None, None, None, goals.GoalManager("pacifist"), None)
     assert player.partial_result() is None  # nothing playing yet
     player.was_playing, player.last_state, player.game_started = True, STATE, 0.0
@@ -241,7 +242,9 @@ def test_a_turn_back_is_logged_with_its_reason_and_what_was_around():
         def steer(self, direction):
             self.steered = direction
 
-    from games.arcade.pacman.player import Player
+    from games.arcade.pacman import player as _player
+
+    Player = _player.Player
     log, broker = io.StringIO(), Broker()
     player = Player(None, broker, None, goals.GoalManager("hunt_ghosts"), log)
     player.goal = "hunt_ghosts"

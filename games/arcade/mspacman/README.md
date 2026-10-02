@@ -14,5 +14,5 @@ most of Pac-Man should carry over, and what does not is what the shared code mus
 
 ## Cost so far
 
-New code: this package's `__init__.py` (one import). Moved to be shared: Pac-Man's decoder and maze reader
-(`arcadekit/kits/pacman_board`). Found on the way: Pac-Man's blue flags were read one ghost off (fixed in `99d9bbb`).
+New code: `spec.py` (the name, ghost knowledge and tunnels; about 60 lines, mostly the L1/L3a texts) and the binding
+in `__init__.py`. Moved to be shared: everything else Pac-Man had, into `arcadekit/kits/pacman_board`. Found on the way: Pac-Man's blue flags were read one ghost off (fixed in `99d9bbb`).

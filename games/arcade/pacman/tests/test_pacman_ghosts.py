@@ -3,6 +3,7 @@ from pathlib import Path
 import sys
 
 from games.arcade.pacman import ghosts as pg
+from games.arcade.pacman.spec import SPEC
 from games.arcade.pacman.maze import Maze
 from games.arcade.pacman.state import decode
 
@@ -24,7 +25,7 @@ def test_blinky_targets_pacmans_tile_in_chase():
 
 def test_scatter_targets_are_the_corners():
     st = state(phase=0)
-    assert pg.targets(st) == pg.SCATTER_TARGETS
+    assert pg.targets(st) == SPEC.scatter_targets
 
 
 def test_elroy_blinky_chases_during_scatter():
@@ -46,7 +47,7 @@ def test_pinky_overflow_when_pacman_faces_up():
 
 def test_clyde_flees_to_his_corner_when_within_eight_tiles():
     near = with_pacman(state(phase=1), (47, 46), "left")  # orange next tile is about (47, 44)
-    assert pg.targets(near)["orange"] == pg.SCATTER_TARGETS["orange"]
+    assert pg.targets(near)["orange"] == SPEC.scatter_targets["orange"]
     far = with_pacman(state(phase=1), (34, 36), "left")
     assert pg.targets(far)["orange"] == (34, 36)
 
@@ -85,7 +86,7 @@ def test_collision_step_finds_a_shared_tile_within_tolerance():
 
 def test_ghosts_cannot_turn_up_on_the_four_restricted_tiles():
     maze = Maze(IMAGE)
-    for tile in pg.NO_UP_TILES:
+    for tile in SPEC.no_up_tiles:
         # target far above so UP would normally win; the rule forbids it
         assert pg.choose_exit(maze, tile, "LEFT", target=(0x1D, tile[1])) != "UP"
 
@@ -93,5 +94,5 @@ def test_ghosts_cannot_turn_up_on_the_four_restricted_tiles():
 def test_ghosts_go_straight_in_the_tunnel():
     maze = Maze(IMAGE)
     tile = (47, 60)
-    assert pg.in_tunnel(tile)
+    assert SPEC.in_tunnel(maze, tile)
     assert pg.choose_exit(maze, tile, "LEFT", target=(0x1D, 60)) == "LEFT"

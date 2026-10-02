@@ -6,8 +6,11 @@ from dataclasses import replace
 from pathlib import Path
 
 from games.arcade.pacman import goals, player
-from games.arcade.pacman.deciders import RuleDecider
-from games.arcade.pacman.features import junction_facts, score_option as features_score
+from games.arcade.pacman import deciders as _deciders
+RuleDecider = _deciders.RuleDecider
+from games.arcade.pacman import features as _features
+junction_facts = _features.junction_facts
+features_score = _features.score_option
 from games.arcade.pacman.maze import Maze, step
 from games.arcade.pacman.state import decode
 

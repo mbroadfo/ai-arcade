@@ -21,7 +21,8 @@ import time
 from pathlib import Path
 
 from games.arcade.pacman import goals, player
-from games.arcade.pacman.deciders import RuleDecider
+from games.arcade.pacman import deciders as _deciders
+RuleDecider = _deciders.RuleDecider
 from games.arcade.pacman.state import AGENT_REGIONS, BASE, decode
 
 FIXTURES = Path(__file__).parent / "fixtures"

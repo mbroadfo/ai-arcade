@@ -1,7 +1,7 @@
 """Deciders: given junction facts and a goal, choose a direction.
 
 RuleDecider is the deterministic algorithmic reference (same features, no model).
-SystemOneDecider asks a System One model (arcadekit.decisions.ChoiceDecider with Pac-Man's question) and falls back to
+SystemOneDecider asks a System One model (arcadekit.decisions.ChoiceDecider with the game's question) and falls back to
 the rule when it is unsure or fails.
 """
 from arcadekit.decisions import ChoiceDecider, Decision
@@ -32,14 +32,15 @@ def describe_option(o):
     return ", ".join(parts)
 
 
-def question(facts, goal):
-    """Pac-Man's choice question: (state text, instructions, {direction: what lies that way})."""
-    where = ("Pac-Man is in a corridor and a ghost is close: he can carry on or turn back."
-             if facts.get("danger") else "Pac-Man is at a junction.")
-    instructions = f"{where} Goal: {goal} - {GOALS[goal]} Which direction should Pac-Man take?"
+def question(facts, goal, *, spec):
+    """The choice question: (state text, instructions, {direction: what lies that way})."""
+    where = (f"{spec.name} is in a corridor and a ghost is close: {spec.pronoun} can carry on or turn back."
+             if facts.get("danger") else f"{spec.name} is at a junction.")
+    instructions = f"{where} Goal: {goal} - {GOALS[goal]} Which direction should {spec.name} take?"
     criteria = {d: describe_option(o) for d, o in facts["options"].items()}
-    return facts.get("state_text") or render_text(facts, goal), instructions, criteria
+    return facts.get("state_text") or render_text(facts, goal, spec.name), instructions, criteria
 
 
-def SystemOneDecider(client, fallback=None, min_confidence=0.0):  # noqa: N802 (kept: the name the adapter contract uses)
-    return ChoiceDecider(client, question, fallback or RuleDecider(), min_confidence, name="direction")
+def SystemOneDecider(client, fallback=None, min_confidence=0.0, *, spec):  # noqa: N802 (the adapter contract's name)
+    return ChoiceDecider(client, lambda facts, goal: question(facts, goal, spec=spec), fallback or RuleDecider(),
+                         min_confidence, name="direction")

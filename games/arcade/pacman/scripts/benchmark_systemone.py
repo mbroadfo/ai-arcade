@@ -18,8 +18,13 @@ import urllib.request
 from pathlib import Path
 
 import _bootstrap  # noqa: F401
-from games.arcade.pacman.deciders import RuleDecider, describe_option
-from games.arcade.pacman.features import GOALS, junction_facts, render_text
+from games.arcade.pacman import deciders as _deciders
+RuleDecider = _deciders.RuleDecider
+describe_option = _deciders.describe_option
+from games.arcade.pacman import features as _features
+GOALS = _features.GOALS
+junction_facts = _features.junction_facts
+render_text = _features.render_text
 from games.arcade.pacman.state import decode
 from arcadekit.systemone import DEFAULT_HOST
 

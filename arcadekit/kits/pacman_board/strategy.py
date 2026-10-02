@@ -1,6 +1,6 @@
-"""Pac-Man's slow layer: a model picks the goal and the stance; code still picks every direction.
+"""The slow layer for games on Pac-Man's board: a model picks the goal and the stance; code still picks every direction.
 
-The schema, the situation summary and the legality gates are Pac-Man's. The asking, validating and
+The schema, the situation summary and the legality gates are this family's (the player's name comes from the game). The asking, validating and
 never-blocking is general (tools/strategist.py). Survival (survival.py) overrides whatever is chosen.
 
 Labelling for the ablation: when this layer is a model, the model sets *parameters* (goal and stance) and
@@ -16,13 +16,16 @@ MODEL_GOALS = ("clear_dots", "hunt_ghosts", "ambush", "eat_fruit")  # pacifist s
 ADVICE_TTL = 8.0  # seconds a piece of advice is trusted; after that the code's own goal takes over
 DWELL = 3.0  # a model-chosen goal is held at least this long (a goal whose precondition has vanished is dropped)
 
-SCHEMA = {
-    "instructions": "You advise the strategy of a Pac-Man player. A fast layer steers and a reflex "
-                    "keeps Pac-Man away from danger; you only set the aim and the temperament.",
-    "goals": {g: GOALS[g] for g in MODEL_GOALS},
-    "modifiers": {name: {"about": m["about"], "levels": dict(m["levels"]), "default": m["default"]}
-                  for name, m in STANCE.items()},
-}
+
+def schema(name):
+    """The slow layer's questions for a game whose player is called `name`."""
+    return {
+        "instructions": f"You advise the strategy of a {name} player. A fast layer steers and a reflex "
+                        f"keeps {name} away from danger; you only set the aim and the temperament.",
+        "goals": {g: GOALS[g] for g in MODEL_GOALS},
+        "modifiers": {key: {"about": m["about"], "levels": dict(m["levels"]), "default": m["default"]}
+                      for key, m in STANCE.items()},
+    }
 
 
 def situation(state, image):
@@ -68,8 +71,8 @@ def arrangement(blue, seconds_left):
     return text + ("" if text.endswith(".") else ".")
 
 
-def describe(state, sit, goal, mods, seconds_blue_left=None):
-    lines = [f"Pac-Man, level {state.level}, {state.lives} lives, {sit['food_left']} dots left."]
+def describe(state, sit, goal, mods, seconds_blue_left=None, name="the player"):
+    lines = [f"{name}, level {state.level}, {state.lives} lives, {sit['food_left']} dots left."]
     for name, mode, steps in sit["ghosts"]:
         where = "in the ghost house" if steps is None else f"{steps} steps away"
         lines.append(f"Ghost {name} is {'blue and edible' if mode == 'frightened' else mode}, {where}.")
@@ -92,7 +95,9 @@ class ModelGoalManager:
 
     mission = "model"
 
-    def __init__(self, strategist, code_manager, interval=1.0, dwell=DWELL, ttl=ADVICE_TTL, clock=time.time):
+    def __init__(self, strategist, code_manager, interval=1.0, dwell=DWELL, ttl=ADVICE_TTL, clock=time.time,
+                 name="the player"):
+        self.name = name  # the player's name, for the situation summary
         self.strategist, self.code, self.interval, self.dwell, self.ttl, self.clock = (
             strategist, code_manager, interval, dwell, ttl, clock)
         self.default_mods = {name: m["default"] for name, m in STANCE.items()}
@@ -133,7 +138,7 @@ class ModelGoalManager:
             left = None
             if sit["blue"] and self.code.fright_left:
                 left = self.code.fright_left / 50.0  # frames left, emulation runs near 50 per second
-            if self.strategist.request(describe(state, sit, self.goal, self.mods, left),
+            if self.strategist.request(describe(state, sit, self.goal, self.mods, left, self.name),
                                        hint={"code_goal": code_goal, "mods": dict(self.mods)}):
                 self.asked_at = now
         advice = self.strategist.take()

@@ -1,4 +1,4 @@
-"""Standing goals for the Pac-Man player, and the manager that holds one for a while.
+"""Standing goals for a player on Pac-Man's board, and the manager that holds one for a while.
 
 A goal says what to try to achieve; it is chosen slowly (a pinned `--goal`, or `auto`, later a slow
 LLM) and held for a minimum time. It is NOT the survival instinct: survival.py can override any goal
@@ -33,7 +33,7 @@ WEIGHTS = {
 # The stance a slow layer can set: named levels, each scaling some of the weights above (indices into the
 # WEIGHTS tuples). A model picks a level by name; it never sees or sets a raw number, and the scale is bounded.
 STANCE = {
-    "caution": {"about": "How careful to be about ghosts that can hurt Pac-Man.", "default": "normal",
+    "caution": {"about": "How careful to be about ghosts that can catch you.", "default": "normal",
                 "levels": {"low": "take risks for points", "normal": "balanced",
                            "high": "keep well clear of ghosts, even at a cost in points"},
                 "scale": {"low": 0.6, "normal": 1.0, "high": 1.6}, "weights": (1, 2)},

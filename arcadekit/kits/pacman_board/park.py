@@ -7,10 +7,10 @@ Pac-Man stops only when his heading runs into a wall; holding that heading keeps
    near the pellet, losing time and nearness. Instead he goes to a wall-stop tile a few steps from the pellet and holds
    there, then goes and eats it once ghosts have gathered (the usual ambush rule).
 
-2. The refuge (`--refuge`, any goal). With all four ghosts out of the house there is a tile where he can hide: the top
-   of the stub to the right of the block above his start, tile (53, 44), pushing UP into the wall. It earns nothing; it is
-   a quick hideaway when ghosts are close. He runs there if he can get there first, waits until the ghosts have gone
-   away, and leaves. The tile was named by the player; the refuge counters say whether it holds up.
+2. The refuge (`--refuge`, any goal), for a game whose spec names a safe spot (Pac-Man: the top of the stub to the
+   right of the block above his start, tile (53, 44), pushing UP into the wall). With all four ghosts out of the house it
+   is a quick hideaway when ghosts are close; it earns nothing. He runs there if he can get there first, waits until the
+   ghosts have gone away, and leaves. The tile was named by the player; the refuge counters say whether it holds up.
 
 The survival reflex does not steer while he is parked: the point of both is to stay put. The log says what happened.
 """
@@ -21,7 +21,6 @@ HOVER_MIN, HOVER_MAX = 3, 8  # a stop this many steps from the pellet (near enou
 HOVER_SECONDS = 10.0  # give up waiting for the ghosts after this long
 
 # --- the refuge
-SAFE_SPOT = (53, 44)  # tile (l, h): a corner with a wall above and to the left; hold UP (or LEFT) to stay
 REFUGE_TRIGGER = 8  # a normal ghost this close (steps) sends him there ...
 REFUGE_RANGE = 12  # ... if the spot is no further than this
 REFUGE_MARGIN = 2  # ... and no ghost can be on his route or at the spot within this many steps of when he is
@@ -71,10 +70,11 @@ def hover_stop(maze, energizer):
     return None if best is None else (best[1], best[2])
 
 
-def refuge_move(state, maze, me):
-    """The direction to take toward the refuge, or None (not needed, too far, or a ghost would get there first)."""
+def refuge_move(state, maze, me, safe_spot):
+    """The direction to take toward the refuge at `safe_spot`, or None (not needed, too far, or a ghost would get
+    there first)."""
     me = tuple(me)
-    if me == SAFE_SPOT:
+    if me == safe_spot:
         return None
     here = maze.bfs(me)
     if not all_out(state, here):
@@ -82,11 +82,11 @@ def refuge_move(state, maze, me):
     near = nearest_normal(state, here)
     if near is None or near > REFUGE_TRIGGER:
         return None
-    to_spot = maze.bfs(SAFE_SPOT)
+    to_spot = maze.bfs(safe_spot)
     if to_spot.get(me, 99) > REFUGE_RANGE:
         return None
     route, tile = [], me  # walk downhill to the spot: the shortest way
-    while tile != SAFE_SPOT:
+    while tile != safe_spot:
         tile = min((step(tile, d) for d in MOVES if maze.passable(step(tile, d))), key=lambda t: to_spot.get(t, 99))
         route.append(tile)
     for ghost in normal_ghosts(state):  # nobody may be on the route, or at the spot, when he gets there

@@ -154,7 +154,7 @@ The rungs are the same for every game; their content is the game's own.
 Knowledge is information. It is not a goal and not a decision.
 
 Exit: the exact text the model receives at each rung can be printed for a recorded state
-(`python -m games.arcade.pacman.knowledge`).
+(`python tools/show_prompt.py --game <system>/<name> --level L3b --image <ram image>`).
 
 ### Stage 5: the control player
 

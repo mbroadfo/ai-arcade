@@ -5,6 +5,7 @@ import time
 from dataclasses import replace
 from pathlib import Path
 
+from games.arcade.pacman.spec import SPEC
 from games.arcade.pacman import features, goals, park, player
 from games.arcade.pacman.maze import MOVES, Maze, step
 from games.arcade.pacman.state import decode
@@ -143,7 +144,7 @@ def test_a_life_lost_while_parked_is_counted():
 
 # ---------------------------------------------------------------- the refuge
 
-SPOT = park.SAFE_SPOT
+SPOT = SPEC.safe_spot
 START = (56, 44)  # three steps from the spot, in the corridor under the block above his start
 
 
@@ -158,7 +159,7 @@ def test_a_close_ghost_with_every_ghost_out_sends_him_to_the_refuge_when_he_gets
     for tile in (t for t, d in MAZE.bfs(START).items() if 5 <= d <= 8):  # every place the close ghost could be
         ghosts = {n: replace(STATE.ghosts[n], tile=t, next_tile=t) for n, t in zip(NAMES, [tile] + others)}
         st = replace(snapshot(START, "right", (30, 31, 32, 33)), ghosts=ghosts)
-        results[tile] = park.refuge_move(st, MAZE, START)
+        results[tile] = park.refuge_move(st, MAZE, START, SPOT)
     assert "UP" in results.values()  # some positions leave the way up the stub clear
     assert None in results.values()  # and some do not (the ghost would be there first)
 
@@ -168,11 +169,11 @@ def test_a_ghost_on_the_way_or_not_yet_out_or_not_close_keeps_him_from_running()
     on_route = replace(snapshot(START, "right", (30,) + far), ghosts={
         **snapshot(START, "right", (30,) + far).ghosts,
         "red": replace(STATE.ghosts["red"], tile=(54, 44), next_tile=(54, 44))})
-    assert park.refuge_move(on_route, MAZE, START) is None  # it is already up the stub
+    assert park.refuge_move(on_route, MAZE, START, SPOT) is None  # it is already up the stub
     house = snapshot(START, "right", (6, 30, 31, None))
-    assert park.refuge_move(house, MAZE, START) is None  # a ghost is still in the house
-    assert park.refuge_move(snapshot(START, "right", (20, 30, 31, 32)), MAZE, START) is None  # nobody close
-    assert park.refuge_move(snapshot(SPOT, "up", (6, 30, 31, 32)), MAZE, SPOT) is None  # already there
+    assert park.refuge_move(house, MAZE, START, SPOT) is None  # a ghost is still in the house
+    assert park.refuge_move(snapshot(START, "right", (20, 30, 31, 32)), MAZE, START, SPOT) is None  # nobody close
+    assert park.refuge_move(snapshot(SPOT, "up", (6, 30, 31, 32)), MAZE, SPOT, SPOT) is None  # already there
 
 
 def test_he_holds_at_the_refuge_while_ghosts_are_near_and_counts_it():

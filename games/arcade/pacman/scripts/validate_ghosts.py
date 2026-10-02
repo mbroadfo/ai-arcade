@@ -10,7 +10,13 @@ import pickle
 import sys
 
 import _bootstrap  # noqa: F401
-from games.arcade.pacman.ghosts import GHOST_NAMES, LOWER, choose_exit, direction_between, is_scatter, targets
+from games.arcade.pacman import ghosts as _ghosts
+GHOST_NAMES = _ghosts.GHOST_NAMES
+LOWER = _ghosts.LOWER
+choose_exit = _ghosts.choose_exit
+direction_between = _ghosts.direction_between
+is_scatter = _ghosts.is_scatter
+targets = _ghosts.targets
 from games.arcade.pacman.maze import Maze
 from games.arcade.pacman.state import decode
 
