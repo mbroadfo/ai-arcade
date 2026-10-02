@@ -7,10 +7,10 @@ most of Pac-Man should carry over, and what does not is what the shared code mus
 
 | Stage | Status |
 |---|---|
-| 0 Feasibility | 99.55% speed with no exporter on the Pi 3 (with the exporter: running) |
+| 0 Feasibility | done: 99.55% speed with no exporter, 91.07% with the agent export, 42.79% with the full 4 KB export (Pi 3, MAME 0.206) |
 | 1 Controls | `profile.json` written: 4-way stick, coin, start, as Pac-Man; cheat.dat names lives, dots and the four blue flags |
-| 2 State | decoder shared with Pac-Man (`arcadekit/kits/pacman_board`), per the disassembly; to run: `python games/arcade/pacman/scripts/validate_pacman_state.py --game arcade/mspacman`, then the checks in RAM_MAP.md |
-| 3-8 | after stage 2. First probe: Pac-Man's own player on Ms. Pac-Man with no new code (`start_pi_game.py --game arcade/mspacman`, then `play.py --game arcade/pacman`), to see what carries over |
+| 2 State | done for maze 1: Pac-Man's decoder passes all 16 validation checks (`validate_pacman_state.py --game arcade/mspacman`); maze 1 reads with Pac-Man's tile codes (220 dots + 4 energizers, 36 junctions). Mazes 2-4, the tunnels and the wandering fruit still to check (RAM_MAP.md) |
+| 3-8 | first probe (v20): Pac-Man's own player on Ms. Pac-Man with no new code. Rule decider: mean 3,907 (2,550-5,350), level 2 twice. nimble L2: 4,900 and 7,110 in the first two games, level 2 both. Next: move the player, features and knowledge into a family kit; Ms. Pac-Man supplies ghost behaviour, mazes, tunnels and knowledge text |
 
 ## Cost so far
 

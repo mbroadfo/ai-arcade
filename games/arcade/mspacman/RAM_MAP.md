@@ -47,9 +47,9 @@ The disassembly gives these the same meaning as in Pac-Man; the decoder is the s
 
 | Question | How |
 |---|---|
-| Same dot, energizer and blank tile codes (`0x10`, `0x14`, `0x40`) in all four mazes | read video RAM on each maze; the maze reader assumes them |
+| Same dot, energizer and blank tile codes (`0x10`, `0x14`, `0x40`) in all four mazes | maze 1: yes (v20 attract recording, 220 dots + 4 energizers); mazes 2-4 to check |
 | Walls: `(code & 0xC0) == 0xC0` as in Pac-Man | same |
 | Dots per maze (`4E0E` at a cleared board) | play or use the level-skip cheat (`4E0E`) |
-| Tunnel rows per maze | the maze reader's passable tiles at the edges |
+| Tunnel rows per maze | maze 1 has two tunnel rows; the shared maze reader does not join tunnels across the screen edge (true for Pac-Man too), so tunnel ends look like dead ends: to fix in the family kit |
 | The fruit: does `4DD2-4DD3` follow it while it wanders | record a stream with the fruit on screen |
 | Which level shows which maze | community: maze 1 on levels 1-2, maze 2 on 3-5, then 3 and 4 (verify) |
