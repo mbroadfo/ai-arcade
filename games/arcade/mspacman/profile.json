@@ -1,0 +1,353 @@
+{
+  "romset": "mspacman",
+  "description": "Ms. Pac-Man",
+  "controls": {
+    "player2": [
+      "DOWN",
+      "LEFT",
+      "RIGHT",
+      "UP"
+    ],
+    "player1": [
+      "DOWN",
+      "LEFT",
+      "RIGHT",
+      "UP"
+    ],
+    "start_buttons": [
+      1,
+      2
+    ],
+    "coin_slots": [
+      1,
+      2
+    ]
+  },
+  "analog_inputs": [],
+  "other_inputs": [
+    "Lives",
+    "Coinage",
+    "Bonus Life",
+    "Difficulty",
+    "Cabinet",
+    "Service Mode",
+    "Rack Test (Cheat)",
+    "Service 1"
+  ],
+  "score_ram": [
+    {
+      "cpu": "maincpu",
+      "space": "program",
+      "address": 20104,
+      "length": 4
+    },
+    {
+      "cpu": "maincpu",
+      "space": "program",
+      "address": 17389,
+      "length": 6
+    },
+    {
+      "cpu": "maincpu",
+      "space": "program",
+      "address": 17361,
+      "length": 1
+    }
+  ],
+  "named_ram": [
+    {
+      "cpu": 0,
+      "address": 19988,
+      "value": 6,
+      "description": "Infinite Lives"
+    },
+    {
+      "cpu": 0,
+      "address": 19989,
+      "value": 5,
+      "description": "Infinite Lives (2/2)"
+    },
+    {
+      "cpu": 0,
+      "address": 19982,
+      "value": 244,
+      "description": "Finish this Level Now!"
+    },
+    {
+      "cpu": 0,
+      "address": 19978,
+      "value": 126,
+      "description": "Start at Strawberry"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 1,
+      "description": "Start at Strawberry (2/2)"
+    },
+    {
+      "cpu": 0,
+      "address": 19978,
+      "value": 127,
+      "description": "Start at Orange"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 2,
+      "description": "Start at Orange (2/2)"
+    },
+    {
+      "cpu": 0,
+      "address": 19978,
+      "value": 128,
+      "description": "Start at Pretzel"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 3,
+      "description": "Start at Pretzel (2/2)"
+    },
+    {
+      "cpu": 0,
+      "address": 19978,
+      "value": 129,
+      "description": "Start at Apple"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 4,
+      "description": "Start at Apple (2/2)"
+    },
+    {
+      "cpu": 0,
+      "address": 19978,
+      "value": 130,
+      "description": "Start at Pear"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 5,
+      "description": "Start at Pear (2/2)"
+    },
+    {
+      "cpu": 0,
+      "address": 19978,
+      "value": 131,
+      "description": "Start at Banana"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 6,
+      "description": "Start at Banana (2/2)"
+    },
+    {
+      "cpu": 0,
+      "address": 19978,
+      "value": 132,
+      "description": "Start at Multifruit 1a"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 7,
+      "description": "Start at Multifruit 1a (2/2)"
+    },
+    {
+      "cpu": 0,
+      "address": 19978,
+      "value": 133,
+      "description": "Start at Multifruit 1b"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 8,
+      "description": "Start at Multifruit 1b (2/2)"
+    },
+    {
+      "cpu": 0,
+      "address": 19978,
+      "value": 134,
+      "description": "Start at Multifruit 2"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 9,
+      "description": "Start at Multifruit 2 (2/2)"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 0,
+      "description": "Practice Cherry"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 1,
+      "description": "Practice Strawberry"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 2,
+      "description": "Practice Orange"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 3,
+      "description": "Practice Pretzel"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 4,
+      "description": "Practice Apple"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 5,
+      "description": "Practice Pear"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 6,
+      "description": "Practice Banana"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 7,
+      "description": "Practice Multifruit (board 1)"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 9,
+      "description": "Practice Multifruit (board 2)"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 255,
+      "description": "Split-Screen (Unplayable)"
+    },
+    {
+      "cpu": 0,
+      "address": 19987,
+      "value": 254,
+      "description": "No maze or dots(Unfinishable)"
+    },
+    {
+      "cpu": 0,
+      "address": 19901,
+      "value": 0,
+      "description": "Stay blue until eaten"
+    },
+    {
+      "cpu": 0,
+      "address": 19902,
+      "value": 0,
+      "description": "Stay blue until eaten (2/2)"
+    },
+    {
+      "cpu": 0,
+      "address": 19901,
+      "value": 88,
+      "description": "Slow changeback"
+    },
+    {
+      "cpu": 0,
+      "address": 19902,
+      "value": 2,
+      "description": "Slow changeback (2/2)"
+    },
+    {
+      "cpu": 0,
+      "address": 19901,
+      "value": 104,
+      "description": "Moderate changeback"
+    },
+    {
+      "cpu": 0,
+      "address": 19902,
+      "value": 1,
+      "description": "Moderate changeback (2/2)"
+    },
+    {
+      "cpu": 0,
+      "address": 19901,
+      "value": 240,
+      "description": "Quick changeback"
+    },
+    {
+      "cpu": 0,
+      "address": 19902,
+      "value": 0,
+      "description": "Quick changeback (2/2)"
+    },
+    {
+      "cpu": 0,
+      "address": 19901,
+      "value": 120,
+      "description": "Lightning changeback"
+    },
+    {
+      "cpu": 0,
+      "address": 19902,
+      "value": 0,
+      "description": "Lightning changeback (2/2)"
+    },
+    {
+      "cpu": 0,
+      "address": 19901,
+      "value": 1,
+      "description": "No change to blue"
+    },
+    {
+      "cpu": 0,
+      "address": 19902,
+      "value": 0,
+      "description": "No change to blue (2/2)"
+    },
+    {
+      "cpu": 0,
+      "address": 19879,
+      "value": 1,
+      "description": "Red always blue"
+    },
+    {
+      "cpu": 0,
+      "address": 19880,
+      "value": 1,
+      "description": "Pink always blue"
+    },
+    {
+      "cpu": 0,
+      "address": 19881,
+      "value": 1,
+      "description": "Green always blue"
+    },
+    {
+      "cpu": 0,
+      "address": 19882,
+      "value": 1,
+      "description": "Orange always blue"
+    },
+    {
+      "cpu": 0,
+      "address": 19877,
+      "value": 0,
+      "description": "Ghosts Always Edible (No Pts)"
+    }
+  ]
+}

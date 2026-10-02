@@ -6,6 +6,7 @@ Read from standalone MAME 0.206 via Lua: `:maincpu` program space, like Pac-Man.
 
 - Commented Ms. Pac-Man disassembly (Scott Lawrence): <https://github.com/BleuLlama/GameDocs/blob/master/disassemble/mspac.asm>.
   Ms. Pac-Man keeps Pac-Man's code at `0000-3FFF`; its additions sit on an auxiliary board at `8000-9FFF`.
+- MAME's cheat.dat, via `profile.json` (`tools/game_profile.py`): named addresses for lives, dots and the blue flags.
 - Pac-Man's map, `games/arcade/pacman/RAM_MAP.md`, for what has been validated on Pac-Man.
 - Behaviour (community): two of the ghosts move semi-randomly for the first seconds of a level instead of heading for
   their corners; four mazes rotate across levels; the bonus fruit enters through a tunnel and wanders the maze.
@@ -25,10 +26,10 @@ The disassembly gives these the same meaning as in Pac-Man; the decoder is the s
 | `4E00` | Game mode: 0 init, 1 demo, 2 coin inserted, 3 playing | source |
 | `4E04` | Sub-state while playing; `3` = normal play | source (Pac-Man) |
 | `4E6E` | Credits (BCD; `FF` free play) | source |
-| `4E14` | Lives remaining | source |
+| `4E14` | Lives remaining | source; cheat.dat "Infinite Lives" |
 | `4E80-4E82` | P1 score, 6 BCD digits, least-significant byte first | source |
 | `4E88-4E8A` | High score | source |
-| `4E0E` | Dots eaten this level | source; total per maze differs from Pac-Man's 244 (verify per maze) |
+| `4E0E` | Dots eaten this level | source; cheat.dat "Finish this Level"; total per maze differs from Pac-Man's 244 (verify per maze) |
 | `4E13` | Level counter (0-based) | source |
 | `4D00-4D07` | Ghost positions (l,h): red, pink, blue, orange | source |
 | `4D08-4D09` | Ms. Pac-Man position (l,h) | source |
@@ -37,7 +38,7 @@ The disassembly gives these the same meaning as in Pac-Man; the decoder is the s
 | `4D30` | Ms. Pac-Man orientation | source |
 | `4D31-4D3A` | Ghost and Ms. Pac-Man tiles (l,h) | source |
 | `4DA6` | An energizer is active | source; validated on Pac-Man |
-| `4DA7-4DAA` | Ghost blue flags: red, pink, blue, orange | source; validated on Pac-Man |
+| `4DA7-4DAA` | Ghost blue flags: red, pink, blue, orange | source; validated on Pac-Man; cheat.dat "Red/Pink/Green/Orange always blue" at `4DA7`/`4DA8`/`4DA9`/`4DAA` |
 | `4DAC-4DAF` | Ghost state (eyes when eaten) | source |
 | `4DD2-4DD3` | Fruit position ("sometimes for other sprite") | source; the fruit moves in Ms. Pac-Man (verify) |
 | `4DD4` | Fruit points entry, 0 = no fruit | source |
