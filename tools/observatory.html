@@ -46,7 +46,7 @@
   .chip { font: 500 12px var(--mono); padding: 3px 9px; border-radius: 6px; background: var(--panel-2);
           border: 1px solid var(--line); color: #c9cfdc; white-space: nowrap; }
   .chip.k { color: var(--dim); }
-  .links { display: flex; gap: 10px; font: 11px var(--mono); color: var(--dim); }
+  .links { display: flex; gap: 10px; font: 11px var(--mono); color: var(--dim); white-space: nowrap; }
   .links i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--bad); margin-right: 5px; }
   .links i.on { background: var(--ok); }
 
@@ -74,7 +74,8 @@
   .toggles { display: flex; gap: 14px; font: 12px var(--mono); color: var(--dim); align-items: center; height: 24px; }
   .toggles label { display: flex; gap: 6px; align-items: center; cursor: pointer; }
   .toggles input { accent-color: var(--accent); }
-  .speed { display: flex; align-items: center; gap: 8px; margin-left: auto; font: 12px var(--mono); color: var(--dim); }
+  .speed { display: flex; align-items: center; gap: 8px; font: 600 11px var(--mono); letter-spacing: .1em; color: var(--dim);
+           padding: 6px 10px; border: 1px solid var(--line-2); border-radius: 9px; background: var(--panel-2); }
   .speed input[type=range] { width: 130px; accent-color: var(--accent); }
   .speed b { color: var(--text); min-width: 40px; text-align: right; }
   .rangefield { display: grid; grid-template-columns: 1fr 56px; gap: 12px; align-items: center; }
@@ -333,6 +334,8 @@
   </div>
   <div class="runinfo ai-only" id="runinfo"></div>
   <div class="actions control-only" id="actions">
+    <label class="speed hidden" id="speedbox" title="How fast the game runs. Slower gives the model more time per decision; the run logs every change.">
+      SPEED <input type="range" id="speed" min="0.3" max="1" step="0.05" value="0.85"><b id="speed-v">85%</b></label>
     <button class="hbtn" id="b-games">☰ GAMES</button>
     <button class="hbtn hidden" id="b-again">RUN AGAIN</button>
     <button class="hbtn warnbtn hidden" id="b-stop">STOP</button>
@@ -353,8 +356,6 @@
       <label><input type="checkbox" id="o-marks" checked> distances</label>
       <label><input type="checkbox" id="o-choice" checked> choices</label>
       <label><input type="checkbox" id="o-ahead" checked> answers ahead</label>
-      <label class="speed hidden" id="speedbox" title="How fast the game runs. Slower gives the model more time per decision; the run logs every change.">
-        SPEED <input type="range" id="speed" min="0.3" max="1" step="0.05" value="0.85"><b id="speed-v">85%</b></label>
     </div>
   </section>
 
@@ -498,7 +499,8 @@ setInterval(runState, 500);
 
 function showRun(r) {
   const parts = [["", view.title || r.game], ["decider", r.decider], ["model", r.model], ["knowledge", r.knowledge], ["goal", r.goal],
-                 ["strategist", r.strategist !== "code" ? r.strategist : null], ["games", r.games]];
+                 ["strategist", r.strategist !== "code" ? r.strategist : null],
+                 ["timing", r.strategist !== "code" ? (r.switches?.strategy_timing ?? null) : null], ["games", r.games]];
   $("runinfo").innerHTML = parts.filter(([, v]) => v != null && v !== "").map(([k, v]) =>
     `<span class="chip">${k ? `<span class="muted">${k}</span> ` : ""}${esc(v)}</span>`).join("");
 }
