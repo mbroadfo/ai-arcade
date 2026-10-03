@@ -9,7 +9,7 @@ snapshot), so a person can see whether the RAM map is right:
   faces; the radar shows only a blip), and its shell while on screen, with an arrow along its path on the radar. No
   mark shows more than a player can see, and none shows while the enemy explodes.
 - in the window: where the enemy tank should be drawn while it is on screen (within $16 of the heading). The
-  horizontal scale is an estimate from the screen's width, not yet calibrated.
+  horizontal scale (VIEW_PX) was measured from obstacles on the fixed map: two of them gave 564 and 574.
 """
 import math
 
@@ -18,7 +18,7 @@ from .facts import IN_VIEW, in_view, wrap16
 SIZE = (640, 480)
 RADAR_CENTRE, RADAR_PX = (317.8, 50.0), 38.4 / 32768  # pixels per world unit
 SIGHT = (318, 240)  # the gun sight's centre
-VIEW_PX = 280 / math.tan(IN_VIEW * math.pi / 128)  # estimate: the edge of view at the edge of the window (verify)
+VIEW_PX = 570  # pixels per unit of left/ahead: measured 3 October 2026 (obstacles at known places, tank standing still)
 
 
 def offsets(state, point):
@@ -100,6 +100,10 @@ def status(state, facts, frame, held, why, kills):
          if facts.shell_miss is None else
          f"passes {abs(facts.shell_miss)} {'left' if facts.shell_miss >= 0 else 'right'} in {facts.shell_arrives_s:.2f} s",
          "tone": "bad" if facts.shell_miss is not None else None},
+        {"label": "path ahead", "value": "blocked" if facts.blocked else "clear" if facts.obstacle_ahead is None else
+         f"obstacle in {facts.obstacle_ahead}", "tone": "bad" if facts.blocked else
+         "warn" if facts.obstacle_ahead is not None and facts.obstacle_ahead < 2500 else None},
+        {"label": "cover", "value": facts.cover or "none", "tone": "good" if facts.cover else None},
         {"label": "kills", "value": kills, "tone": None},
     ]
     record["series"] = [

@@ -44,7 +44,7 @@ def lab_policies():
 LAB_GROUPS = ("Targeting baselines", "Movement", "Observation / weapons")
 # What a lab run reports when it ends (scripts/summarize.py), shown in the setup panel
 LAB_MEASURES = ["Score", "Kills", "Lives lost", "Survival time", "Shots fired", "Distance moved",
-                "Time stationary while the enemy may fire", "Enemy shots survived"]
+                "Time stationary while the enemy may fire", "Enemy shots survived", "Time blocked by obstacles"]
 
 
 def lab_main(argv):

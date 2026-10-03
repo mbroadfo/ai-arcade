@@ -36,7 +36,7 @@ def digest(state):
             "dying": state.dying, "angle": state.tank.angle, "x": state.tank.x, "y": state.tank.y,
             "enemy": [state.enemy.x, state.enemy.y, state.enemy.angle], "enemy_distance": state.enemy_distance,
             "enemy_in_range": state.enemy_in_range, "missile": state.missile, "saucer": state.saucer,
-            "enemy_fire": state.enemy.fire, "enemy_shell": list(state.enemy.shell), "enemy_timer": state.enemy_timer,
+            "blocked": state.blocked, "enemy_fire": state.enemy.fire, "enemy_shell": list(state.enemy.shell), "enemy_timer": state.enemy_timer,
             # where the flying shell's path passes the tank, seen or not: for scoring dodges afterwards, never shown
             "shell_true": list(shell_pass(state, seen_only=False))}
 
@@ -234,7 +234,8 @@ def main(argv=None):
         if live:
             words = {"score": "score", "kills": "kills", "deaths": "lives lost", "seconds": "survived (s)",
                      "shots": "shots fired", "distance": "distance moved", "still_threatened_s":
-                     "still while the enemy may fire (s)", "enemy_shots_survived": "enemy shots survived"}
+                     "still while the enemy may fire (s)", "enemy_shots_survived": "enemy shots survived",
+                     "blocked_s": "blocked by obstacles (s)"}
             live.send({"event": "lab", "what": "measured: " + ", ".join(
                 f"{w} {result.get(k)}" + (f" of {result.get('enemy_shots')}" if k == "enemy_shots_survived" else "")
                 for k, w in words.items() if k in result), "t": round(time.time(), 3)})

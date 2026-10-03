@@ -15,6 +15,7 @@ TPOSX, TPOSY = 0x2D, 0x31  # 2 bytes each: tank at +0, enemy at +2
 FIRECT = 0x24  # shell state: 0 none, 1-$7F in flight (counts down), $80 and up exploding; tank +0, enemy +2
 SHELLX, SHELLY = 0xA8, 0xAC
 SINCX, SINCY = 0xB0, 0xB4  # the shell's step (world units an update), set when it is fired
+OBJCOL = 0xC8  # the player's tank ran into an obstacle and is held there (set by a blocked move, cleared by a pivot)
 COLFLG = 0x12  # "blown up": the tank at +0, the enemy at +2; set by a shell hit, cleared when the explosion ends
 FTIMER = 0xD1  # counts up from 0 when an enemy appears, stops at $FF; the enemy holds fire below $20 (FIREIT)
 HITS = 0xB8  # 2 bytes each: the score in thousands (BCD) at +0, the enemy's hits on the tank at +2
@@ -73,6 +74,7 @@ class BattlezoneState:
     game_turn: int  # PTURN: the game's own size of the enemy's bearing from the heading (to check facts.py against)
     enemy_timer: int  # FTIMER: game frames since this enemy appeared, up to 255
     enemy_destroyed: bool  # COLFLG+2: the enemy was hit and is exploding; its position is stale until the next one
+    blocked: bool  # OBJCOL: the last move ran into an obstacle and was undone (the "boing")
     entering_initials: bool  # GOVER bit 7: the high-score screen is waiting for initials (START is ignored)
     initials: tuple  # the three letter codes on it (LETTERS)
     initial_index: int  # which of them the stick changes now
@@ -90,5 +92,5 @@ def decode(image):
         saucer_pos=(s16(image, SAPOSX), s16(image, SAPOSY)), tank=tank, enemy=enemy,
         enemy_distance=image[TDIST], angle9=image[TANGLE] << 1 | image[LANGLE] >> 7, frame=image[FRAME],
         game_turn=image[PTURN], enemy_timer=image[FTIMER], enemy_destroyed=bool(image[COLFLG + 2]),
-        entering_initials=bool(image[GOVER] & 0x80), initials=tuple(image[STINTL:STINTL + 3]),
+        blocked=bool(image[OBJCOL]), entering_initials=bool(image[GOVER] & 0x80), initials=tuple(image[STINTL:STINTL + 3]),
         initial_index=image[LETR])

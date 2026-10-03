@@ -47,6 +47,8 @@ def summarize(path):
             "distance": round(moved), "still_threatened_s": round(still / run["hz"], 1) if any(
                 "enemy_holds_fire" in r["facts"] for r in ticks) else None,
             "enemy_shots": len(fired), "enemy_shots_survived": survived,
+            "blocked_s": round(sum(1 for r in alive if r["state"].get("blocked")) / run["hz"], 1)
+            if any("blocked" in r["state"] for r in ticks) else None,
             "on_target_share": round(sum(bool(r["facts"].get("on_target")) for r in radar) / len(radar), 2) if radar else None,
             "miss_median": round(statistics.median(misses)) if misses else None,
             "radar_share": round(len(radar) / len(alive), 2) if alive else None,

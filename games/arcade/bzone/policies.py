@@ -145,6 +145,13 @@ DODGED_S = 0.6  # after a heard shot, dodge this long; then its shell is past or
 
 
 def flank_and_fire(state, facts, t, last):
+    """See _flank_and_fire; every move kept clear of obstacles (skills.steer_clear)."""
+    from .skills import steer_clear
+    names, why = _flank_and_fire(state, facts, t, last)
+    return steer_clear(facts, names, why) if not facts.dying else (names, why)
+
+
+def _flank_and_fire(state, facts, t, last):
     """The doctrine as code: dodge a heard shot first (drive across its line, or pivot a few degrees and reverse when
     it comes from near the nose); flank toward a point beside the enemy, keeping it off the nose; once close, pivot
     onto it and fire. The enemy has one shell (FIREIT fires only when FIRECT+2 is 0): once a heard shot has been

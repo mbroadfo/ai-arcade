@@ -83,3 +83,24 @@ def dodge(state, facts, style="turn_reverse"):
     if since < DODGE_TURN_S:
         return (TURN_RIGHT if left else TURN_LEFT), f"dodge: enemy near the nose, pivot away ({since:.2f} s)"
     return REVERSE, f"dodge: enemy near the nose, reverse off the line ({since:.2f} s)"
+
+
+AVOID = 2500  # an obstacle this close in the path: steer around it
+TOUCHING = 400  # this close (or blocked): pivot away, a move forward would go nowhere
+BACK_ROOM = 1500  # reversing needs this much room behind
+
+
+def steer_clear(facts, names, why):
+    """Keep a move from running into an obstacle (the fixed map, obstacles.py): a drive or arc toward one within
+    AVOID becomes an arc away from it, a blocked tank pivots away, a reverse with no room behind drives forward.
+    (In the first comparisons a quarter of the moving policies' moves went nowhere, pinned on obstacles.)"""
+    treads, fire = names - {"FIRE"}, names & {"FIRE"}
+    if treads in (DRIVE, ARC_LEFT, ARC_RIGHT):
+        left = (facts.obstacle_ahead_left or 0) > 0  # the obstacle's centre is left of the path
+        if facts.blocked or (facts.obstacle_ahead is not None and facts.obstacle_ahead < TOUCHING):
+            return (TURN_RIGHT if left else TURN_LEFT) | fire, why + "; blocked: pivot away from the obstacle"
+        if facts.obstacle_ahead is not None and facts.obstacle_ahead < AVOID and treads != (ARC_RIGHT if left else ARC_LEFT):
+            return (ARC_RIGHT if left else ARC_LEFT) | fire, why + f"; obstacle in {facts.obstacle_ahead}: steer around it"
+    if treads == REVERSE and (facts.blocked or (facts.obstacle_behind is not None and facts.obstacle_behind < BACK_ROOM)):
+        return DRIVE | fire, why + "; no room behind: drive forward instead"
+    return names, why

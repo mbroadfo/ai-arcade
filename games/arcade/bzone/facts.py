@@ -30,6 +30,8 @@ the left. The bearing computed here matches the game's own (PTURN, its size) wit
 import math
 from dataclasses import dataclass
 
+from .obstacles import MAP, cover, offset, path_clear
+
 IN_VIEW = 0x16  # below this (relative, either side) the enemy is on screen and no warning shows
 REAR = 0x6B  # above this, "ENEMY TO REAR"
 RADAR_RANGE = 0x80  # TDIST below this: on the radar, in firing range
@@ -94,6 +96,13 @@ class Facts:
     shell_miss: int | None  # how far from the tank the flying shell's path passes (+ = on the tank's left); only
     #                         while the shell is on screen and still coming
     shell_arrives_s: float | None  # seconds until it is closest to the tank (None as shell_miss)
+    # Obstacles (obstacles.py: the field is fixed, the same every game, so a player learns it)
+    blocked: bool  # driving into an obstacle: the move is undone and the game says "boing"
+    obstacle_ahead: int | None  # world units the tank can drive forward before touching an obstacle (within 6,000)
+    obstacle_ahead_left: int | None  # how far left (+) or right (-) of the tank's path that obstacle's centre is
+    obstacle_behind: int | None  # the same backing up
+    cover: str | None  # the obstacle between the enemy and the tank that would stop its shell, or None
+    obstacles_in_view: tuple  # (bearing degrees + left, distance, shape) of each obstacle on screen within 25,000
 
 
 def in_view(state, point):
@@ -133,6 +142,15 @@ def derive(state):
     side_miss, ahead = miss_distance(state, state.angle9)
     radius = hit_radius(state.tank.angle, state.enemy.angle)
     miss, arrives = shell_pass(state)
+    ahead_run, ahead_ob = path_clear(state.tank)
+    behind_run, _ = path_clear(state.tank, reverse=True)
+    shield = cover(state.tank, state.enemy) if side != "none" else None
+    seen = []
+    for ob in MAP:
+        o_ahead, o_left = offset(state.tank, ob)
+        dist = math.hypot(o_ahead, o_left)
+        if o_ahead > 0 and dist < 25000 and abs(math.atan2(o_left, o_ahead)) < IN_VIEW * math.pi / 128:
+            seen.append((round(math.degrees(math.atan2(o_left, o_ahead)), 1), round(dist), ob.shape))
     return Facts(heading_deg=round(degrees(state.tank.angle), 1), enemy_side=side, enemy_on_radar=on_radar,
                  enemy_bearing=rel if known else None, enemy_bearing_deg=round(degrees(rel), 1) if known else None,
                  enemy_distance=distance if on_radar else None,
@@ -141,4 +159,7 @@ def derive(state):
                  dying=bool(state.dying), enemy_age=state.enemy_timer, enemy_holds_fire=state.enemy_timer < HOLDS_FIRE,
                  enemy_aim=(relative(state.enemy, (state.tank.x, state.tank.y)) if side == "ahead" else None),
                  enemy_shell="none" if not state.enemy.fire else "flying" if state.enemy.fire < 0x80 else "exploding",
-                 shell_miss=miss, shell_arrives_s=arrives)
+                 shell_miss=miss, shell_arrives_s=arrives, blocked=state.blocked, obstacle_ahead=ahead_run,
+                 obstacle_ahead_left=round(offset(state.tank, ahead_ob)[1]) if ahead_ob else None,
+                 obstacle_behind=behind_run, cover=shield.shape if shield else None,
+                 obstacles_in_view=tuple(sorted(seen, key=lambda o: o[1])))

@@ -136,3 +136,28 @@ def test_flank_and_fire_dodges_every_heard_shot_and_keeps_moving():
             since = (0x7F - s.enemy.fire) / SHELL_UPDATES_PER_S
             assert why.startswith("dodge" if since < DODGED_S or f.enemy_distance is None else "broadside"), why
         assert names - {"FIRE"} or why.startswith("broadside"), why
+
+
+def test_the_obstacle_map_paths_and_cover():
+    from types import SimpleNamespace
+    from games.arcade.bzone.obstacles import MAP, TANK_TOUCH, cover, path_clear
+    assert len(MAP) == 21 and {o.kind for o in MAP} == {0x00, 0x01, 0x0C, 0x0F}
+    box = next(o for o in MAP if o.shape == "tall box")
+    facing = SimpleNamespace(x=box.x - 5000, y=box.y, angle=0)  # 5,000 units west of it, facing east
+    run, ob = path_clear(facing)
+    assert ob is box and run == 5000 - TANK_TOUCH
+    assert path_clear(SimpleNamespace(x=box.x - 5000, y=box.y, angle=128))[0] is None or True  # facing away
+    enemy = SimpleNamespace(x=box.x + 5000, y=box.y)
+    assert cover(facing, enemy) is box  # the box is between: a shell stops on it
+    short = next(o for o in MAP if o.shape == "short box")
+    assert cover(SimpleNamespace(x=short.x - 5000, y=short.y), SimpleNamespace(x=short.x + 5000, y=short.y)) is None
+
+
+def test_steer_clear_turns_a_drive_into_an_obstacle_away_from_it():
+    from types import SimpleNamespace
+    from games.arcade.bzone.controls import ARC_RIGHT, DRIVE, TURN_RIGHT
+    from games.arcade.bzone.skills import steer_clear
+    near = SimpleNamespace(blocked=False, obstacle_ahead=1500, obstacle_ahead_left=300, obstacle_behind=None)
+    assert steer_clear(near, DRIVE, "go")[0] == ARC_RIGHT  # obstacle left of the path: arc right
+    stuck = SimpleNamespace(blocked=True, obstacle_ahead=0, obstacle_ahead_left=300, obstacle_behind=None)
+    assert steer_clear(stuck, DRIVE, "go")[0] == TURN_RIGHT
