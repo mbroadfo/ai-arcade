@@ -77,6 +77,33 @@ Adding Flank & Fire (skills.py: flank 30 degrees off the enemy's line, dodge, tu
   fixed: 21 positions in ROM (`PTBLX1`/`PTBLY1`, types at `$3FCC`).
 - The pivot-and-reverse dodge (from near the nose) and the arc away both survived 5-6 of 10, untested in open ground.
 
+With the obstacle map and skills.steer_clear (Flank & Fire only), 3 October 2026, 3 games each, alternating:
+
+| | Track & Fire | Mobile Track & Fire (no avoidance) | Flank & Fire (avoids) |
+|---|---|---|---|
+| Score | 17,000 / 5,000 / 7,000 | 3,000 / 20,000 / 5,000 | 6,000 / 7,000 / 14,000 |
+| Survived (s) | 143 / 52 / 53 | 45 / 215 / 52 | 70 / 89 / 94 |
+| Blocked by obstacles (s) | 0 | 4 / 62 / 18 | 0 / 0 / 0 |
+| Enemy shots survived | 2 of 12 | 10 of 17 | 7 of 14 |
+
+Shots by where they came from (scripts/dodges.py), all nine games:
+
+| Response | Shots | Survived |
+|---|---|---|
+| From off the nose: drive forward across the line | 11 | 10 |
+| From near the nose: pivot away ~0.3 s, then reverse (the suggested dodge) | 11 | 5 |
+| From near the nose: arc away | 9 | 2 |
+| From near the nose: no dodge (Track & Fire, aiming) | 12 | 2 |
+
+- Steering clear works: Flank & Fire was never blocked; Mobile Track & Fire (which does not avoid) was blocked up to
+  62 s in a game.
+- Driving across the line beats a shot almost every time; a shot from near the nose is the dangerous one, and the
+  pivot-and-reverse dodge survives it more than twice as often as arcing or not dodging.
+- Most shots come from near the nose. The source says why: until the player has 2,000 points the enemy fires only
+  when it is on the player's screen and close (FIREIT, the "rookie" rule), and later whenever it is aimed. Turning in
+  to fire puts the enemy on the nose: that is when to have the dodge ready.
+- Scores are too noisy at 3 games each to rank the policies.
+
 ## Getting the ROM
 
 The collection's `bzone.zip` matches an older MAME and lacks 8 lookup chips. A newer `bzone.zip` was added with
