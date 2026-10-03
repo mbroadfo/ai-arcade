@@ -91,6 +91,7 @@ class StateStream:
                     continue
                 with self._fresh:
                     self._latest = item
+                    self.latest_at = time.time()  # when it arrived: how old an observation is when acted on
                     self._fresh.notify_all()
 
         threading.Thread(target=pump, daemon=True).start()
@@ -101,6 +102,13 @@ class StateStream:
             if not self._fresh.wait_for(lambda: self._latest and self._latest[0] > newer_than, timeout):
                 raise TimeoutError("no newer snapshot from the Pi")
             return self._latest
+
+    def latest_timed(self, newer_than=-1, timeout=2.0):
+        """As latest(), with the time (time.time()) that snapshot arrived, read together."""
+        with self._fresh:
+            if not self._fresh.wait_for(lambda: self._latest and self._latest[0] > newer_than, timeout):
+                raise TimeoutError("no newer snapshot from the Pi")
+            return self._latest, self.latest_at
 
     def close(self):
         self._closed = True

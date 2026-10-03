@@ -28,6 +28,17 @@ def test_holding_a_set_releases_what_is_no_longer_wanted_then_presses_what_is_ne
     assert link.sent == []
 
 
+def test_a_held_set_can_include_another_players_controls():
+    link = Link()
+    sent = []
+    link.send = lambda payload: sent.append((payload["op"], payload["player"], payload["action"]))
+    link.hold({(1, "UP"), (2, "UP")})
+    assert sorted(sent) == [("press", 1, "UP"), ("press", 2, "UP")]
+    sent.clear()
+    link.hold({(1, "UP"), (2, "DOWN")})
+    assert sent == [("release", 2, "UP"), ("press", 2, "DOWN")]
+
+
 def test_steer_is_one_direction_held_exactly_as_before():
     link = Link()
     link.steer("LEFT")

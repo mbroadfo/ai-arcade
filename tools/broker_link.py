@@ -45,13 +45,19 @@ class BrokerLink:
 
     def hold(self, actions):
         """Hold exactly these actions (directions and buttons together, e.g. {"LEFT", "BUTTON_1"}): release what is
-        no longer wanted first, then press what is new. Holding the same set again sends nothing."""
+        no longer wanted first, then press what is new. Holding the same set again sends nothing. An action is player
+        1's, or a (player, action) pair for another player's controls (a game played with two sticks at once)."""
         actions = frozenset(a for a in actions if a)
-        for action in sorted(self.holding - actions):
-            self.send({"op": "release", "player": 1, "action": action})
-        for action in sorted(actions - self.holding):
-            self.send({"op": "press", "player": 1, "action": action})
+        for action in sorted(self.holding - actions, key=str):
+            self.send({"op": "release", **self._who(action)})
+        for action in sorted(actions - self.holding, key=str):
+            self.send({"op": "press", **self._who(action)})
         self.holding = actions
+
+    @staticmethod
+    def _who(action):
+        player, name = action if isinstance(action, tuple) else (1, action)
+        return {"player": player, "action": name}
 
     def steer(self, direction):
         """Hold exactly one direction (a 4-way stick), or nothing for None."""
