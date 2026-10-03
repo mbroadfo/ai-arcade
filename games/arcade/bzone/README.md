@@ -60,6 +60,23 @@ Track & Fire against Mobile Track & Fire, 3 October 2026 (3 games each, alternat
 - One death was a shell fired by an enemy that was then destroyed (the policy ignored the shell once it saw no
   enemy: fixed); three deaths in all were the homing missile (`R2D3FL` = `FF`), which neither policy handles.
 
+Adding Flank & Fire (skills.py: flank 30 degrees off the enemy's line, dodge, turn in while its one shell is busy),
+3 October 2026, 3 games each, alternating:
+
+| | Track & Fire | Mobile Track & Fire | Flank & Fire |
+|---|---|---|---|
+| Score | 10,000 / 7,000 / 14,000 | 11,000 / 7,000 / 6,000 | 5,000 / 7,000 / 7,000 |
+| Survived (s) | 112 / 78 / 123 | 123 / 73 / 96 | 99 / 73 / 90 |
+| Enemy shots survived | 9 of 15 | 9 of 16 | 10 of 17 |
+| Moves that went nowhere | (hardly moves) | 26 % | 16 % |
+
+- No policy dodged better: about 60 % of shots were survived whatever was done. `scripts/dodges.py` shows why: the
+  "dodging" tank was often pinned against an obstacle (driving, position unchanged for the whole flight), and the
+  shells it survived mostly exploded on that obstacle. A quarter of the mobile policies' moves went nowhere.
+- So obstacles come before any dodge can be judged: they block the tank and they block shells (cover). They are
+  fixed: 21 positions in ROM (`PTBLX1`/`PTBLY1`, types at `$3FCC`).
+- The pivot-and-reverse dodge (from near the nose) and the arc away both survived 5-6 of 10, untested in open ground.
+
 ## Getting the ROM
 
 The collection's `bzone.zip` matches an older MAME and lacks 8 lookup chips. A newer `bzone.zip` was added with
