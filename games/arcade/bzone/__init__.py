@@ -28,9 +28,23 @@ LAB = {"default_policy": "track_and_fire", "default_hz": 10, "hz_range": (1, 40)
 
 
 def lab_policies():
-    """{name: what it does} for the AI setup panel."""
-    from .policies import POLICIES
-    return {name: (f.__doc__ or name.replace("_", " ")).strip().splitlines()[0] for name, f in POLICIES.items()}
+    """The policies for the setup panel, grouped, each with what it does and (for baselines) what it is for."""
+    from .policies import POLICIES, POLICY_INFO
+    out = []
+    for name, f in POLICIES.items():
+        info = POLICY_INFO.get(name, {})
+        out.append({"value": name, "label": info.get("label", name.replace("_", " ")),
+                    "group": info.get("group", "Other"), "tag": info.get("tag"),
+                    "help": (f.__doc__ or name).strip().splitlines()[0],
+                    "purpose": info.get("purpose"), "limitation": info.get("limitation")})
+    return out
+
+
+# The setup panel shows the baselines a player is measured against first, then the diagnostics
+LAB_GROUPS = ("Targeting baselines", "Movement", "Observation / weapons")
+# What a lab run reports when it ends (scripts/summarize.py), shown in the setup panel
+LAB_MEASURES = ["Score", "Kills", "Lives lost", "Survival time", "Shots fired", "Distance moved",
+                "Time stationary while the enemy may fire", "Enemy shots survived"]
 
 
 def lab_main(argv):

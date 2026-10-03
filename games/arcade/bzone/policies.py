@@ -78,5 +78,24 @@ def track_and_fire(state, facts, t, last):
     return names, why
 
 
+# For the setup panel: what each policy is for, grouped. Movement and observation policies test the loop and the
+# decoder; the targeting ones are baselines a player is measured against.
+POLICY_INFO = {
+    "rotate_left": {"group": "Movement", "label": "Rotate left"},
+    "rotate_right": {"group": "Movement", "label": "Rotate right"},
+    "drive": {"group": "Movement", "label": "Drive"},
+    "pattern": {"group": "Movement", "label": "Pattern"},
+    "idle": {"group": "Observation / weapons", "label": "Idle"},
+    "fire_pulse": {"group": "Observation / weapons", "label": "Fire pulse"},
+    "turn_toward": {"group": "Targeting baselines", "label": "Turn toward",
+                    "purpose": "Aiming test: turns until a shot would hit, and never fires.",
+                    "limitation": "Never fires; pivots in place."},
+    "track_and_fire": {"group": "Targeting baselines", "label": "Track & Fire", "tag": "baseline",
+                       "purpose": "Stationary targeting baseline: turns toward the enemy and fires when a shot would "
+                                  "pass within the hit radius.",
+                       "limitation": "Pivots in place: never moves or evades. All three deaths of its 3 October game "
+                                     "came standing still, each from a shot aimed 0-1 units off."},
+}
+
 POLICIES = {"idle": idle, "rotate_left": rotate_left, "rotate_right": rotate_right, "drive": drive,
             "pattern": pattern, "fire_pulse": fire_pulse, "turn_toward": turn_toward, "track_and_fire": track_and_fire}

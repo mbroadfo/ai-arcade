@@ -223,7 +223,19 @@ def main(argv=None):
                    "t": time.time()}
         log.write(json.dumps(summary) + "\n")
         log.close()
+        try:
+            from games.arcade.bzone.scripts.summarize import summarize
+            result = summarize(path) or {}
+        except Exception as exc:  # the measures are a report: a failure here must not lose the run's end
+            result = {"error": repr(exc)}
+        print("measured: " + json.dumps(result))
         if live:
+            words = {"score": "score", "kills": "kills", "deaths": "lives lost", "seconds": "survived (s)",
+                     "shots": "shots fired", "distance": "distance moved", "still_threatened_s":
+                     "still while the enemy may fire (s)", "enemy_shots_survived": "enemy shots survived"}
+            live.send({"event": "lab", "what": "measured: " + ", ".join(
+                f"{w} {result.get(k)}" + (f" of {result.get('enemy_shots')}" if k == "enemy_shots_survived" else "")
+                for k, w in words.items() if k in result), "t": round(time.time(), 3)})
             live.send({"event": "run_end", "label": label, "games_completed": int(bool(previous and not previous.playing)), "t": time.time()})
             live.close(2.0)
         stream.close()

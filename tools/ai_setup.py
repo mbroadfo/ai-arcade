@@ -60,13 +60,19 @@ def lab_schema(spec, game):
     lo, hi = lab["hz_range"]
     return {
         "game": spec, "kind": "lab", "title": load_profile(spec).get("description", spec),
-        "note": "No model plays this game yet. A lab run is code choosing every move (a diagnostic policy), on a "
-                "fixed-rate clock that logs every tick: it is never reported as AI play.",
-        "policies": [{"value": n, "label": n.replace("_", " "), "help": h} for n, h in game.lab_policies().items()],
+        "run_types": [
+            {"value": "manual", "label": "Manual", "help": "A person plays on the cabinet."},
+            {"value": "lab", "label": "Lab policy", "help": "Code plays: a fixed policy on a fixed-rate clock, every "
+                                                         "tick logged. Never reported as AI play."},
+            {"value": "ai", "label": "AI player", "help": "Not available yet: no model plays this game.",
+             "disabled": True}],
+        "policies": list(game.lab_policies()),
+        "groups": list(getattr(game, "LAB_GROUPS", ())) or None,  # in this order (the baselines first)
         "default_policy": lab["default_policy"],
+        "measures": list(getattr(game, "LAB_MEASURES", [])),
         "hz": {"default": lab["default_hz"], "min": lo, "max": hi,
-               "help": "Decisions a second: the clock observes, decides and sets the controls this often."},
-        "seconds": {"default": 300, "min": 10, "max": 3600, "help": "Longest run; it also ends when the game ends."},
+               "help": "How often the policy reads the game and sets the controls."},
+        "seconds": {"default": 300, "min": 10, "max": 3600, "help": "The run also ends when the game ends."},
         "speed": {"default": 1.0, "min": 0.3, "max": 1.0, "help": "How fast the game runs. Timing work runs at 100 %."},
     }
 

@@ -112,3 +112,11 @@ def test_the_game_speed_stays_between_a_fifth_and_full(value):
 def test_the_setup_offers_the_speed_and_refuses_one_outside_it():
     s = ai_setup.schema("arcade/pacman")["speed"]
     assert s["default"] == 0.85 and s["min"] < s["default"] <= s["max"] == 1.0
+
+
+def test_a_lab_setup_leads_with_the_run_type_and_the_baselines():
+    s = ai_setup.schema("arcade/bzone")
+    assert [t["value"] for t in s["run_types"]] == ["manual", "lab", "ai"] and s["run_types"][2]["disabled"]
+    assert s["groups"][0] == "Targeting baselines" and {p["group"] for p in s["policies"]} == set(s["groups"])
+    baseline = next(p for p in s["policies"] if p["value"] == "track_and_fire")
+    assert baseline["tag"] == "baseline" and baseline["limitation"] and s["measures"]

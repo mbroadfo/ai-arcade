@@ -287,6 +287,29 @@
   .opt2:has(input:checked) { border-color: var(--accent); background: #ffe6000d; }
   .opt2 input { accent-color: var(--accent); margin-top: 3px; }
   .opt2 b { font-weight: 600; } .opt2 small { display: block; color: var(--dim); font-size: 12px; margin-top: 2px; }
+  /* the lab setup: run type, grouped policies, the chosen one's card, settings, measures */
+  .seg { display: flex; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; }
+  .seg label { flex: 1; text-align: center; padding: 9px 6px; cursor: pointer; font-weight: 600; font-size: 13px; border-left: 1px solid var(--line); }
+  .seg label:first-child { border-left: 0; }
+  .seg label:has(input:checked) { background: var(--accent); color: #06070b; }
+  .seg label.off { color: var(--dim); cursor: not-allowed; opacity: .55; }
+  .seg label small { display: block; font-weight: 400; font-size: 10px; }
+  .seg input { display: none; }
+  .pgroup { margin: 10px 0 4px; font: 600 10px var(--sans); letter-spacing: .14em; color: var(--dim); text-transform: uppercase; }
+  .pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+  .opt3 { display: flex; gap: 8px; align-items: center; padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; cursor: pointer; font-size: 13px; }
+  .opt3:has(input:checked) { border-color: var(--accent); background: #ffe6000d; }
+  .opt3 input { accent-color: var(--accent); margin: 0; }
+  .ptag { margin-left: auto; font: 600 9px var(--mono); letter-spacing: .1em; color: var(--accent); border: 1px solid #ffe60066; border-radius: 4px; padding: 1px 4px; }
+  .pcard { border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 9px; padding: 12px 14px; background: #ffffff05; }
+  .pcard h4 { margin: 0 0 6px; font: 700 13px var(--sans); letter-spacing: .08em; display: flex; gap: 8px; align-items: center; }
+  .pcard p { margin: 6px 0 0; font-size: 13px; } .pcard .lim { color: var(--code); }
+  .pcard small { display: block; font: 600 9px var(--sans); letter-spacing: .16em; color: var(--dim); margin-top: 10px; }
+  .settings { display: grid; grid-template-columns: auto 1fr; gap: 8px 14px; align-items: center; font-size: 13px; }
+  .settings input[type=number] { width: 90px !important; display: inline-block; }
+  .settings .help { grid-column: 2; margin-top: -4px; }
+  .measures { columns: 2; font-size: 13px; margin: 0; padding-left: 18px; }
+  .cmdbox { flex: 1; min-width: 0; } .cmdbox summary { cursor: pointer; font-size: 11px; color: var(--dim); }
   .drawer select, .drawer input[type=number], .drawer input[type=text], .drawer textarea {
     background: #07090f; border: 1px solid var(--line-2); border-radius: 8px; color: var(--text); font: 14px var(--sans);
     padding: 8px 10px; outline: none; width: 100%; }
@@ -451,7 +474,7 @@
 <aside class="drawer right" id="setup" aria-label="AI setup">
   <header><h3 id="s-title">AI SETUP</h3><button class="x" data-close>✕</button></header>
   <div class="body" id="s-body"></div>
-  <div class="foot"><div class="cmd" id="s-cmd"></div><button class="hbtn primary" id="s-start">START</button></div>
+  <div class="foot"><details class="cmdbox"><summary>Command preview</summary><div class="cmd" id="s-cmd"></div></details><button class="hbtn primary" id="s-start">START</button></div>
 </aside>
 <div class="toast hidden" id="toast"></div>
 
@@ -1079,22 +1102,41 @@ function modelSelect(name, value, blank) {
 }
 function renderLab() {
   const s = ctl.setup, d = ctl.draft, g = gameByAi(s.game);
-  $("s-title").textContent = "LAB SETUP · " + (g ? g.name : s.title).toUpperCase();
-  $("s-body").innerHTML = `
-    <div class="field"><div class="help">${esc(s.note)}</div></div>
-    <div class="field"><span class="lbl2">POLICY (CODE)</span>${radios("policy", s.policies, d.policy)}</div>
-    <div class="field"><label>DECISIONS A SECOND</label><input type="number" name="hz" min="${s.hz.min}" max="${s.hz.max}" step="1" value="${esc(d.hz)}">
-      <div class="help">${esc(s.hz.help)}</div></div>
-    <div class="field"><label>LONGEST RUN (SECONDS)</label><input type="number" name="seconds" min="${s.seconds.min}" max="${s.seconds.max}" value="${esc(d.seconds)}">
-      <div class="help">${esc(s.seconds.help)}</div></div>
-    <div class="field"><label>GAME SPEED</label><div class="rangefield"><input type="range" name="speed" min="${s.speed.min}" max="${s.speed.max}" step="0.05" value="${esc(d.speed)}"><b id="s-speed-v">${Math.round(100 * d.speed)}%</b></div>
-      <div class="help">${esc(s.speed.help)}</div></div>`;
+  d.runtype = d.runtype || "lab";
+  $("s-title").textContent = "SETUP · " + (s.title || g?.name || s.game).toUpperCase();  // the set AI mode runs
+  const types = `<div class="field"><span class="lbl2">RUN TYPE</span><div class="seg">${s.run_types.map(t =>
+    `<label class="${t.disabled ? "off" : ""}" title="${esc(t.help)}"><input type="radio" name="runtype" value="${esc(t.value)}" ${t.value === d.runtype ? "checked" : ""} ${t.disabled ? "disabled" : ""}>
+      ${esc(t.label)}${t.disabled ? "<small>not available yet</small>" : ""}</label>`).join("")}</div>
+    <div class="help">${esc(s.run_types.find(t => t.value === d.runtype)?.help || "")}</div></div>`;
+  $("s-start").textContent = d.runtype === "manual" ? "PLAY" : "START RUN";
+  if (d.runtype === "manual") {
+    $("s-body").innerHTML = types + `<div class="field"><div class="help">The game starts on the cabinet for you to play with the sticks and buttons. The page shows the cabinet, not the game's insides: the video and the facts are for lab and AI runs.</div></div>`;
+    $("s-cmd").textContent = `cabinet: launch ${g ? g.system + " " + g.path : s.game}`;
+    return;
+  }
+  const groups = s.groups || [...new Set(s.policies.map(p => p.group))];
+  const p = s.policies.find(x => x.value === d.policy) || s.policies[0];
+  const option = x => `<label class="opt3"><input type="radio" name="policy" value="${esc(x.value)}" ${x.value === p.value ? "checked" : ""}>${esc(x.label)}${x.tag ? `<span class="ptag">${esc(x.tag.toUpperCase())}</span>` : ""}</label>`;
+  $("s-body").innerHTML = types + `
+    <div class="field"><span class="lbl2">LAB POLICY</span>${groups.map(gr =>
+      `<div class="pgroup">${esc(gr)}</div><div class="pgrid">${s.policies.filter(x => x.group === gr).map(option).join("")}</div>`).join("")}</div>
+    <div class="field"><div class="pcard"><h4>${esc(p.label.toUpperCase())}${p.tag ? `<span class="ptag">${esc(p.tag.toUpperCase())}</span>` : ""}</h4>
+      <p>${esc(p.purpose || p.help)}</p>${p.limitation ? `<small>KNOWN LIMITATION</small><p class="lim">${esc(p.limitation)}</p>` : ""}</div></div>
+    <div class="field"><span class="lbl2">RUN SETTINGS</span><div class="settings">
+      <span>Control rate</span><span><input type="number" name="hz" min="${s.hz.min}" max="${s.hz.max}" step="1" value="${esc(d.hz)}"> Hz</span>
+      <div class="help">${esc(s.hz.help)}</div>
+      <span>Maximum run</span><span><input type="number" name="seconds" min="${s.seconds.min}" max="${s.seconds.max}" value="${esc(d.seconds)}"> s</span>
+      <div class="help">${esc(s.seconds.help)}</div>
+      <span>Game speed</span><div class="rangefield"><input type="range" name="speed" min="${s.speed.min}" max="${s.speed.max}" step="0.05" value="${esc(d.speed)}"><b id="s-speed-v">${Math.round(100 * d.speed)}%</b></div>
+    </div></div>
+    ${s.measures?.length ? `<div class="field"><span class="lbl2">MEASURED (REPORTED WHEN THE RUN ENDS)</span><ul class="measures">${s.measures.map(m => `<li>${esc(m)}</li>`).join("")}</ul></div>` : ""}`;
   showCommand();
 }
 function renderSetup() {
   if (ctl.setup.kind === "lab") return renderLab();
   const s = ctl.setup, d = ctl.draft, g = gameByAi(s.game);
   $("s-title").textContent = "AI SETUP · " + (g ? g.name : s.title).toUpperCase();
+  $("s-start").textContent = "START";
   const model = d.decider === "ollama";
   const kinds = ["facts", "timing", "override", "skill"];
   const sw = f => {
@@ -1128,6 +1170,7 @@ function readSetup() {
   const body = $("s-body"), d = ctl.draft, s = ctl.setup;
   const val = n => body.querySelector(`[name="${n}"]:checked`)?.value ?? body.querySelector(`[name="${n}"]`)?.value;
   if (s.kind === "lab") {
+    d.runtype = val("runtype") || d.runtype;
     d.policy = val("policy") || d.policy;
     d.hz = Number(val("hz") || s.hz.default);
     d.seconds = Number(val("seconds") || s.seconds.default);
@@ -1173,9 +1216,10 @@ function showCommand() {
   $("s-cmd").textContent = parts.filter(Boolean).join(" ");
 }
 $("s-body").addEventListener("change", e => {
-  const before = JSON.stringify([ctl.draft.decider, ctl.draft.goal, ctl.draft.strategist]);
+  const key = () => JSON.stringify([ctl.draft.decider, ctl.draft.goal, ctl.draft.strategist, ctl.draft.runtype, ctl.draft.policy]);
+  const before = key();
   readSetup();
-  if (JSON.stringify([ctl.draft.decider, ctl.draft.goal, ctl.draft.strategist]) !== before) renderSetup(); else showCommand();
+  if (key() !== before) renderSetup(); else showCommand();
 });
 $("s-body").addEventListener("input", e => { if (e.target.tagName === "TEXTAREA" || e.target.type === "number" || e.target.type === "range") { readSetup(); showCommand(); } });
 async function startAi(game, answers) {
@@ -1186,6 +1230,12 @@ async function startAi(game, answers) {
 $("s-start").addEventListener("click", () => {
   const d = readSetup(), a = answersOf(d);
   remember(ctl.setup.game, d);
+  if (ctl.setup.kind === "lab" && d.runtype === "manual") {  // a person plays: the cabinet launches it, no run
+    const g = gameByAi(ctl.setup.game);
+    if (!g) { toast("This game is not in the cabinet's list"); return; }
+    act("/api/play", { system: g.system, path: g.path }).then(r => { if (r) { openDrawer(null); toast(`Starting ${g.name}…`, "info"); } });
+    return;
+  }
   startAi(ctl.setup.game, a);
 });
 

@@ -3,8 +3,13 @@
     python games/arcade/bzone/scripts/summarize.py runs/*arcade_bzone-lab*.jsonl
 """
 import json
+import math
 import statistics
 import sys
+
+
+def wrap16(v):
+    return (v + 0x8000) % 0x10000 - 0x8000
 
 
 def summarize(path):
@@ -22,8 +27,26 @@ def summarize(path):
     shots = sum(1 for r in ticks if ["1", "BUTTON_1"] in [list(map(str, p)) for p in r["pressed"]])
     misses = [abs(r["facts"]["miss_by"]) for r in radar if r["facts"].get("miss_by") is not None]
     clock = summary.get("clock", {})
+    # Movement: distance driven while alive (a respawn's jump is not driving), and time standing still while an enemy
+    # that may fire is there (the exposure the doctrine says to avoid)
+    moved, still = 0.0, 0
+    for a, b in zip(ticks, ticks[1:]):
+        if b not in alive or a not in alive:
+            continue
+        step = math.hypot(wrap16(b["state"]["x"] - a["state"]["x"]), wrap16(b["state"]["y"] - a["state"]["y"]))
+        if step < 5000:
+            moved += step
+        f = b["facts"]
+        if step == 0 and f.get("enemy_side") not in (None, "none") and f.get("enemy_holds_fire") is False:
+            still += 1
+    fired = [r["t"] for r in ticks if "enemy fired" in r["changes"]]
+    lost = [r["t"] for r in ticks if "life lost" in r["changes"]]
+    survived = sum(not any(0 <= d - f <= 3 for d in lost) for f in fired)  # no life lost within 3 s of the shot
     return {"run": run["label"], "policy": run["policy"], "hz": run["hz"], "seconds": ticks[-1]["t"],
-            "kills": kills, "deaths": deaths, "shots": shots,
+            "score": ticks[-1]["state"].get("score"), "kills": kills, "deaths": deaths, "shots": shots,
+            "distance": round(moved), "still_threatened_s": round(still / run["hz"], 1) if any(
+                "enemy_holds_fire" in r["facts"] for r in ticks) else None,
+            "enemy_shots": len(fired), "enemy_shots_survived": survived,
             "on_target_share": round(sum(bool(r["facts"].get("on_target")) for r in radar) / len(radar), 2) if radar else None,
             "miss_median": round(statistics.median(misses)) if misses else None,
             "radar_share": round(len(radar) / len(alive), 2) if alive else None,
