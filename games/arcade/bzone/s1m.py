@@ -95,6 +95,53 @@ def tactics_now(facts):
     return ["flank_left", "flank_right", "attack"]
 
 
+def turn_words(deg):
+    return "no turn needed" if abs(deg) < 3 else f"a {abs(deg):.0f}-degree turn {'left' if deg > 0 else 'right'}"
+
+
+def describe_tactics(f):
+    """Each possible tactic, described for this moment: what it would take and what it risks. (A small model reads
+    the options closely: the first live game, told only the general idea of each, chose "flank left" 51 times in 54 and
+    never attacked, even with the enemy unable to fire back.)"""
+    from .skills import flank_point
+    out = {}
+    safe = f.enemy_kind == "tank" and (f.enemy_holds_fire or f.enemy_shell != "none")
+    why_safe = "it has just appeared" if f.enemy_holds_fire else "its shell is still in the air"
+    for t in tactics_now(f):
+        if t == "patrol":
+            out[t] = TACTICS[t]
+        elif t == "attack":
+            if f.enemy_bearing_deg is None:
+                text = f"Turn toward it (it is {f.enemy_side}) and fire once lined up"
+            elif f.on_target:
+                text = "Fire now: a shot fired now would hit"
+            else:
+                text = f"Turn in and fire: {turn_words(f.enemy_bearing_deg)} brings it onto the nose"
+            if f.enemy_kind == "missile":
+                text += (". The missile is low enough to hit." if f.missile_low else
+                         f". The missile is at height {f.missile_height}: shells pass under it until it is below 512.")
+            elif safe:
+                text += f". SAFE NOW: it cannot fire back ({why_safe})."
+            else:
+                text += ". RISK: it can fire, and a shot from straight ahead is the hardest to dodge."
+            out[t] = text
+        elif t == "missile_defense":
+            out[t] = ("Back up, keep the missile on the nose, fire when it is low enough. " +
+                      ("It is low enough now." if f.missile_low else f"It is at height {f.missile_height}, too high to "
+                                                                      "hit yet."))
+        else:
+            side = 1 if t == "flank_left" else -1
+            point = flank_point(f, side)
+            name = "left" if side > 0 else "right"
+            if point is None:
+                text = f"Head for its {name} side (it is beyond the radar: distance unknown)"
+            else:
+                text = f"Head for a point beside it on the {name}: {turn_words(point[0] * UNIT)}"
+            out[t] = text + (". Keeps it off the nose, so its shots aimed at the tank miss; no shot of your own "
+                             "until you turn in.")
+    return out
+
+
 def fallback_order(facts):
     """Code's choice when the model has not answered or failed (labelled "fallback"): Flank & Fire's rules."""
     tactics = tactics_now(facts)
@@ -131,7 +178,7 @@ class S1MDecider:
         tactics = tactics_now(f)
         fallback = fallback_order(f)
         questions = {"tactic": {"type": "choice", "instructions": KNOWLEDGE + " Which tactic now?",
-                                "criteria": {t: TACTICS[t] for t in tactics}},
+                                "criteria": describe_tactics(f)},
                      "if_fired": {"type": "choice", "instructions": "If the enemy fires at the tank before you are "
                                   "asked again, what should it do at once?", "criteria": dict(IF_FIRED)}}
         if len(tactics) == 1:

@@ -104,6 +104,28 @@ Shots by where they came from (scripts/dodges.py), all nine games:
   to fire puts the enemy on the nose: that is when to have the dodge ready.
 - Scores are too noisy at 3 games each to rank the policies.
 
+## The S1M player (s1m.py)
+
+The model (System One, `nimble`) chooses; code skills carry it out. On game events (and at least every 3 s) it is
+asked two choice questions in one request: the tactic (flank left / right, attack, missile defense, patrol: only those
+possible now) and what to do if fired on (drive across, pivot and reverse, arc away: a standing order carried out at
+once when a shot is heard). Code's choice, labelled fallback, stands in before the first answer and when it fails;
+every tick says whose order it was. Run it from the Observatory (Battle Zone, run type AI player) or
+`lab.py --policy s1m --model nimble`.
+
+First games, 3 October 2026 (about 0.85 s an answer):
+
+| | Options described in general | Options described for the moment |
+|---|---|---|
+| Score | 0 (never fired) | 6,000 (5 kills), 188 s |
+| Tactics chosen | flank left 51 of 54 | flank left 35, right 27, attack 7, missile defense 6, patrol 9 |
+| Ticks by whose order | model 99 %, fallback 1 % | model 90 %, fallback 5 %, no choice 5 % |
+
+Told only the general idea of each tactic, the model flanked left almost every time and never attacked, even when
+told the enemy could not fire back. Described for the moment ("SAFE NOW: it cannot fire back (its shell is still in
+the air)", "a 60-degree turn left"), it attacked in 3 of 3 safe situations taken from the log (0 of 3 before) and
+flanked toward the side the enemy was on. The descriptions state facts and consequences; the choice is the model's.
+
 ## Getting the ROM
 
 The collection's `bzone.zip` matches an older MAME and lacks 8 lookup chips. A newer `bzone.zip` was added with
