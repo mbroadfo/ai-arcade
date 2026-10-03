@@ -21,8 +21,11 @@ class FakeStrategist:
     def __init__(self):
         self.asked, self.advice, self.stats = [], None, {}
 
-    def request(self, text, hint=None):
+    def request(self, text, hint=None, only=None):
         self.asked.append((text, hint))
+        self.only = getattr(self, "only_log", [])
+        self.only.append(only)
+        self.only_log = self.only
         return True
 
     def take(self):
@@ -141,3 +144,46 @@ def test_the_summary_says_how_the_blue_ghosts_are_laid_out_and_whether_there_is_
     far = strategy.arrangement([6, 30], 1.0)
     assert "spread out" in far and "barely enough time" in far
     assert "1 edible ghost out" in strategy.arrangement([4], None)
+
+
+def events_manager(quiet=True):
+    m, clock = manager(timing="events", quiet=lambda: quiet)
+    return m, clock
+
+
+def test_events_timing_asks_goal_and_stance_first_then_waits_for_the_heartbeat():
+    m, clock = events_manager()
+    m.choose(STATE, IMAGE, 0)
+    assert len(m.strategist.asked) == 1 and m.strategist.only_log[-1] is None  # first: everything
+    clock.now += 1.0
+    m.choose(STATE, IMAGE, 60)
+    assert len(m.strategist.asked) == 1  # nothing new happened, heartbeat not due
+    clock.now += strategy.HEARTBEAT
+    m.choose(STATE, IMAGE, 400)
+    assert len(m.strategist.asked) == 2 and m.strategist.only_log[-1] == ("goal",)  # heartbeat: the goal alone
+
+
+def test_a_game_event_asks_the_goal_at_once_even_while_junction_questions_wait():
+    m, clock = events_manager(quiet=False)
+    m.choose(STATE, IMAGE, 0)  # not quiet: the first full question waits
+    assert m.strategist.asked == []
+    clock.now += 0.5
+    m.choose(with_blue(STATE), IMAGE, 30)  # ghosts turn blue
+    assert len(m.strategist.asked) == 1 and m.strategist.only_log[-1] == ("goal",)
+    m.strategist.advice = advice("clear_dots")
+    clock.now += 0.1
+    m.choose(with_blue(STATE), IMAGE, 36)
+    assert m.drain()[-1]["why"] == "event: blue"
+
+
+def test_heartbeats_wait_for_a_quiet_moment():
+    quiet = {"now": False}
+    m, clock = manager(timing="events", quiet=lambda: quiet["now"])
+    for _ in range(4):
+        clock.now += strategy.HEARTBEAT
+        m.choose(STATE, IMAGE, 0)
+    assert m.strategist.asked == []
+    quiet["now"] = True
+    m.choose(STATE, IMAGE, 0)
+    assert len(m.strategist.asked) == 1
+

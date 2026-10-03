@@ -46,7 +46,7 @@ class Player:
     def __init__(self, stream, broker, worker, strategy, decisions_log, strategy_interval=0.5,
                  lookahead=LOOKAHEAD_STEPS, knowledge=None, revise=False, reflex=True,
                  chain_depth=CHAIN_DEPTH, park=False, refuge=False, danger_query=False,
-                 danger_worker=None, clock=time.time, late="rule", *, spec):
+                 danger_worker=None, clock=time.time, late="rule", strategy_timing="events", *, spec):
         # Ablation switches. revise: code re-checks each stored answer against fresh facts (code overruling the
         # decider, so off by default). reflex: the survival instinct. chain_depth: look-ahead chain, 0 = off.
         self.clock = clock  # wall-clock seconds; a replay passes recorded time
@@ -96,6 +96,14 @@ class Player:
         self.last_how = None  # how the last _go() changed the proposed direction: None, "revise" or "reflex"
         self.latencies, self.sources = [], {}
         self.ledger = Ledger(self.log)  # who executed each move (arcadekit.ledger)
+        # a model slow layer shares the model server: tell it when no junction question waits (strategy.TIMINGS)
+        if hasattr(strategy, "configure"):
+            strategy.configure(timing=strategy_timing, quiet=self._quiet)
+
+    def _quiet(self):
+        """No junction or danger question is waiting or being answered."""
+        workers = [w for w in (self.worker, self.danger_worker) if w is not None]
+        return not any(getattr(w, "busy", lambda: False)() for w in workers)
 
     def log(self, **record):
         record["t"] = round(self.clock(), 3)

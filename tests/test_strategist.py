@@ -92,3 +92,12 @@ def test_the_mock_client_answers_every_question_from_its_chooser():
     mock = MockStrategistClient(lambda hint: {"goal": "b", "care": "low"}, latency_ms=(1, 2))
     advice, _ = parse_reply(mock.ask("state", build_questions(SCHEMA), hint={}), SCHEMA)
     assert (advice.goal, advice.mods) == ("b", {"care": "low"})
+
+
+def test_asking_the_goal_alone_leaves_the_stance_unanswered_without_complaint():
+    from arcadekit.strategist import build_questions, parse_reply
+    schema = {"instructions": "x", "goals": {"a": "A", "b": "B"},
+              "modifiers": {"caution": {"about": "c", "levels": {"low": "l", "high": "h"}, "default": "low"}}}
+    assert set(build_questions(schema, only=("goal",))) == {"goal"}
+    advice, problems = parse_reply({"answers": {"goal": {"choice": "b", "confidence": 0.8}}}, schema, asked={"goal"})
+    assert advice.goal == "b" and advice.mods == {} and problems == []

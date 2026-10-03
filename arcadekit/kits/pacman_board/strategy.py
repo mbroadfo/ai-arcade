@@ -15,6 +15,12 @@ from .maze import ENERGIZER, Maze
 MODEL_GOALS = ("clear_dots", "hunt_ghosts", "ambush", "eat_fruit")  # pacifist stays a pinned mission only
 ADVICE_TTL = 8.0  # seconds a piece of advice is trusted; after that the code's own goal takes over
 DWELL = 3.0  # a model-chosen goal is held at least this long (a goal whose precondition has vanished is dropped)
+# timing "events" (the default for runs): the slow layer shares the model server with the junction questions, which
+# answers one question at a time, so it asks only when it is worth it. Measured 2026-10-02 on nimble, idle server:
+# goal alone 95 ms, goal and the three stance questions 665 ms.
+TIMINGS = ("events", "always")
+HEARTBEAT = 5.0  # seconds: the goal is asked at least this often (and at once on a game event)
+STANCE_EVERY = 15.0  # seconds: the stance is asked this often, only when no junction question is waiting
 
 
 def schema(name):
@@ -96,7 +102,7 @@ class ModelGoalManager:
     mission = "model"
 
     def __init__(self, strategist, code_manager, interval=1.0, dwell=DWELL, ttl=ADVICE_TTL, clock=time.time,
-                 name="the player"):
+                 name="the player", timing="always", quiet=lambda: True):
         self.name = name  # the player's name, for the situation summary
         self.strategist, self.code, self.interval, self.dwell, self.ttl, self.clock = (
             strategist, code_manager, interval, dwell, ttl, clock)
@@ -105,6 +111,39 @@ class ModelGoalManager:
         self.goal, self.since, self.asked_at, self.advice_at = code_manager.goal, clock(), -1e9, None
         self.events = []
         self.stats = {"advice": 0, "agreed_with_code": 0, "gated": 0, "held": 0, "expired": 0}
+        self.configure(timing, quiet)
+        self.stance_at, self.signature, self.why = -1e9, None, None
+
+    def configure(self, timing=None, quiet=None):
+        """timing: "always" asks goal and stance as often as answers come (every `interval`); "events" asks the
+        goal on game events and every HEARTBEAT seconds, the stance every STANCE_EVERY seconds when quiet().
+        quiet: the player's "no junction question is waiting" (a timing switch: when to ask, never what to choose)."""
+        if timing is not None:
+            if timing not in TIMINGS:
+                raise ValueError(f"timing must be one of {TIMINGS}")
+            self.timing = timing
+        if quiet is not None:
+            self.quiet = quiet
+
+    @staticmethod
+    def _signature(state, sit):
+        """What, when it changes, is worth a new goal: energizers, blue ghosts, fruit, lives, level."""
+        return (len(sit["energizers"]), bool(sit["blue"]), sit["fruit"] is not None, state.lives, state.level)
+
+    def _due(self, state, sit, now):
+        """(ask now?, only these questions or None for all, why)."""
+        if self.timing == "always":
+            return now - self.asked_at >= self.interval, None, "interval"
+        signature, before = self._signature(state, sit), self.signature
+        self.signature = signature
+        if before is not None and signature != before:
+            changed = [n for n, a, b in zip(("energizers", "blue", "fruit", "lives", "level"), before, signature) if a != b]
+            return True, ("goal",), "event: " + ", ".join(changed)
+        if now - self.stance_at >= STANCE_EVERY and self.quiet():
+            return True, None, "stance heartbeat"
+        if now - self.asked_at >= HEARTBEAT and self.quiet():
+            return True, ("goal",), "heartbeat"
+        return False, None, None
 
     def drain(self):
         out, self.events = self.events, []
@@ -115,10 +154,12 @@ class ModelGoalManager:
         self.stats["agreed_with_code"] += advice.goal == code_goal
         self.advice_at = now
         record = {"event": "advice", "goal": advice.goal, "code_goal": code_goal, "mods": advice.mods,
-                  "confidence": round(advice.confidence, 2), "latency_ms": round(advice.latency_ms)}
+                  "confidence": round(advice.confidence, 2), "latency_ms": round(advice.latency_ms), "why": self.why}
         if advice.orders is not None:
             record["orders"] = advice.orders
         self.mods.update(advice.mods)
+        if advice.mods:
+            self.stance_until = now + (2 * STANCE_EVERY if self.timing == "events" else self.ttl)
         if not legal(advice.goal, sit):
             self.stats["gated"] += 1
             record["result"] = "gated: nothing to aim at"
@@ -136,13 +177,20 @@ class ModelGoalManager:
         now = self.clock()
         code_goal = self.code.choose(state, image, frame)
         sit = situation(state, image)
-        if now - self.asked_at >= self.interval:
+        due, only, why = self._due(state, sit, now)
+        if due:
             left = None
             if sit["blue"] and self.code.fright_left:
                 left = self.code.fright_left / GAME_FPS  # frames of blue left, in game seconds
-            if self.strategist.request(describe(state, sit, self.goal, self.mods, left, self.name),
-                                       hint={"code_goal": code_goal, "mods": dict(self.mods)}):
-                self.asked_at = now
+            asked = self.strategist.request(describe(state, sit, self.goal, self.mods, left, self.name),
+                                            hint={"code_goal": code_goal, "mods": dict(self.mods)},
+                                            **({"only": only} if only else {}))
+            if asked:
+                self.asked_at, self.why = now, why
+                if only is None:
+                    self.stance_at = now
+            elif why and why.startswith("event"):
+                self.signature = None  # the previous question was still out: try the event again next time
         advice = self.strategist.take()
         if advice:
             self._apply(advice, code_goal, sit, now)
@@ -150,8 +198,9 @@ class ModelGoalManager:
             if self.advice_at is not None:
                 self.stats["expired"] += 1
                 self.advice_at = None
-                self.mods = dict(self.default_mods)
             self.goal = code_goal
+        if self.mods != self.default_mods and now > getattr(self, "stance_until", 0):
+            self.mods = dict(self.default_mods)  # a stance not renewed in time lapses
         elif not legal(self.goal, sit):
             self.goal, self.since = code_goal, now  # what it aimed at has gone
         return self.goal

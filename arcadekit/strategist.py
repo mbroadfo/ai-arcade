@@ -26,16 +26,17 @@ class Advice:
     orders: int = None  # the standing orders' version the question was asked under (arcadekit.orders), if any
 
 
-def build_questions(schema):
+def build_questions(schema, only=None):
+    """The goal question and one per modifier; only: the names to ask (default all), e.g. ("goal",)."""
     questions = {"goal": {"type": "choice", "criteria": dict(schema["goals"]),
                           "instructions": f"{schema['instructions']} Which goal should be pursued now?"}}
     for name, mod in schema["modifiers"].items():
         questions[name] = {"type": "choice", "criteria": dict(mod["levels"]),
                            "instructions": f"{schema['instructions']} {mod['about']}"}
-    return questions
+    return questions if only is None else {k: q for k, q in questions.items() if k in only}
 
 
-def parse_reply(reply, schema):
+def parse_reply(reply, schema, asked=None):
     """(Advice or None, problems). A bad goal voids the advice; a bad modifier is just left out."""
     answers, problems = reply.get("answers", {}), []
     goal = answers.get("goal", {})
@@ -43,6 +44,8 @@ def parse_reply(reply, schema):
         return None, [f"goal {goal.get('choice')!r} is not one of the goals"]
     mods = {}
     for name, mod in schema["modifiers"].items():
+        if asked is not None and name not in asked:
+            continue  # not asked this time: the stance it set before stands
         choice = answers.get(name, {}).get("choice")
         if choice in mod["levels"]:
             mods[name] = choice
@@ -59,21 +62,23 @@ class Strategist:
         self.stats = {"asked": 0, "answered": 0, "errors": 0, "low_confidence": 0, "invalid": 0}
         self.last_error = ""
 
-    def request(self, text, hint=None):
-        """Ask in the background. False (and nothing asked) if the previous question is still out."""
+    def request(self, text, hint=None, only=None):
+        """Ask in the background. False (and nothing asked) if the previous question is still out.
+        only: which questions (default all); asking the goal alone is several times quicker."""
         with self.lock:
             if self.busy:
                 return False
             self.busy = True
             self.stats["asked"] += 1
-        threading.Thread(target=self._ask, args=(text, hint), daemon=True).start()
+        threading.Thread(target=self._ask, args=(text, hint, only), daemon=True).start()
         return True
 
-    def _ask(self, text, hint):
+    def _ask(self, text, hint, only=None):
         advice = None
         try:
-            reply = self.client.ask(text, build_questions(self.schema), hint=hint)
-            advice, problems = parse_reply(reply, self.schema)
+            questions = build_questions(self.schema, only)
+            reply = self.client.ask(text, questions, hint=hint)
+            advice, problems = parse_reply(reply, self.schema, asked=set(questions))
             if advice is None:
                 self.stats["invalid"] += 1
                 self.last_error = "; ".join(problems)

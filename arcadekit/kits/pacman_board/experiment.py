@@ -23,6 +23,10 @@ OPTIONS = (
     Option("late", "override", "no answer on arrival at a junction: the rule decides (code-late), or keep: nothing "
            "changes and he waits for the model's answer (with --no-reflex, the model alone)",
            default="rule", parse=str, choices=("rule", "keep"), tag="late-{}"),
+    Option("strategy_timing", "timing", "with a model setting the goal and stance (--strategist ollama): events = the "
+           "goal on game events and every 5 s, the stance every 15 s when no junction question waits; always = goal "
+           "and stance as often as answers come (the slow layer then keeps the model server busy)",
+           default="events", parse=str, choices=("events", "always"), tag="strat-{}"),
     Option("chain_depth", "timing", "look-ahead chain depth, 0 = off (player default 2)", default=None, flag="--chain",
            parse=int, tag="chain{}"),
 )

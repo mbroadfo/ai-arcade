@@ -57,6 +57,7 @@ class DecisionWorker:
     def __init__(self, decider, threads=1, max_queue=6):
         self.decider, self.max_queue = decider, max_queue
         self.queue, self.keys, self.done = deque(), set(), []
+        self.active = 0  # questions being answered right now
         self.cond = threading.Condition()
         for _ in range(threads):
             threading.Thread(target=self._loop, daemon=True).start()
@@ -83,9 +84,16 @@ class DecisionWorker:
                 while not self.queue:
                     self.cond.wait()
                 key, goal, facts = self.queue.popleft()
+                self.active += 1
             decision = self.decider.decide(facts, goal)
             with self.cond:
+                self.active -= 1
                 self.done.append((key, goal, facts, decision, time.time()))
+
+    def busy(self):
+        """True while a question waits or is being answered (another layer sharing the model server can wait)."""
+        with self.cond:
+            return bool(self.queue) or self.active > 0
 
     def take_all(self):
         """Finished results since the last call: [(key, goal, facts, decision, finished_at)]."""
