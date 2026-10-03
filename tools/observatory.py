@@ -238,9 +238,17 @@ class Control:
 
     def start_ai(self, game, answers):
         import ai_setup
-        args = ai_setup.command_line(game, answers)
-        if self.runner.busy():
-            raise RuntimeError("an AI run is already going: stop it first")
+        args = ai_setup.command_line(game, answers)  # checked before anything is stopped
+        if self.runner.state["state"] == "starting":
+            raise RuntimeError("an AI run is starting: wait for it, or stop it")
+
+        def go():  # the run on screen (if any) finishes its files first, as the picker says it will
+            self.hub.set_panel("control", {**self.runner.state, "state": "stopping", "next": game})
+            self._end_ai()
+            self.runner.start(game, args)
+        if self.runner.busy() or self.hub.players:
+            threading.Thread(target=go, daemon=True).start()
+            return {"args": args, "after": "stopping the current run"}
         self.runner.start(game, args)
         return {"args": args}
 

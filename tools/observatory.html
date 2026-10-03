@@ -293,7 +293,9 @@
   .swrow b { font: 600 13px var(--mono); } .swrow small { display: block; color: var(--dim); font-size: 12px; }
   .cmd { font: 11px/1.5 var(--mono); color: var(--dim); word-break: break-all; flex: 1; }
   details summary { cursor: pointer; color: var(--dim); font: 600 11px var(--sans); letter-spacing: .16em; margin: 18px 0 6px; }
-  .toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 40; padding: 10px 16px; border-radius: 10px;
+  .toast.info { background: #0d2230; border-color: #2ef2ff88; color: #d4f8ff; }
+  .toast { cursor: pointer; }
+  .toast { position: fixed; top: 76px; left: 50%; transform: translateX(-50%); z-index: 40; padding: 10px 16px; border-radius: 10px;
            background: #2a0d16; border: 1px solid #ff3d6e88; color: #ffd0da; font-size: 13px; max-width: 80vw; }
 
   @media (max-width: 1100px) {
@@ -943,7 +945,11 @@ async function api(path, body) {
   if (!r.ok) throw new Error(data.error || `${r.status}`);
   return data;
 }
-function toast(text) { const t = $("toast"); t.textContent = text; t.classList.remove("hidden"); clearTimeout(toast.timer); toast.timer = setTimeout(() => t.classList.add("hidden"), 6000); }
+function toast(text, kind) {  // errors stay until clicked; news fades
+  const t = $("toast"); t.textContent = text; t.className = "toast" + (kind === "info" ? " info" : "");
+  clearTimeout(toast.timer); if (kind === "info") toast.timer = setTimeout(() => t.classList.add("hidden"), 6000);
+}
+$("toast").addEventListener("click", () => $("toast").classList.add("hidden"));
 async function act(path, body) { try { return await api(path, body ?? {}); } catch (e) { toast(e.message); } }
 
 async function loadCatalog(refresh) {
@@ -1095,7 +1101,8 @@ $("s-body").addEventListener("change", e => {
 $("s-body").addEventListener("input", e => { if (e.target.tagName === "TEXTAREA" || e.target.type === "number") { readSetup(); showCommand(); } });
 async function startAi(game, answers) {
   const r = await act("/api/ai", { game, answers });
-  if (r) { ctl.answers = answers; openDrawer(null); }
+  if (r) { ctl.answers = answers; openDrawer(null);
+    const g = gameByAi(game); toast(r.after ? `Stopping the current run, then starting ${g ? g.name : game}…` : `Starting ${g ? g.name : game}…`, "info"); }
 }
 $("s-start").addEventListener("click", () => {
   const d = readSetup(), a = answersOf(d);
@@ -1105,6 +1112,7 @@ $("s-start").addEventListener("click", () => {
 
 function onPanel(p) {
   if (p.name === "features") { ctl.features = p.value; if (p.value.control && !ctl.catalog) loadCatalog(); }
+  else if (p.name === "control" && p.value.state === "stopping" && p.value.next) { ctl.control = p.value; }
   else if (p.name === "cabinet") ctl.cabinet = p.value;
   else if (p.name === "control") { ctl.control = p.value; if (p.value.state === "failed") toast("AI run: " + (p.value.step || "failed")); }
   else if (p.name === "players") ctl.players = p.value;
