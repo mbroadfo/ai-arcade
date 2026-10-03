@@ -621,7 +621,8 @@ class Player:
             if first:
                 self.applied.add(key)
                 self.stats["on_time"] += 1
-                if key in self.behind_asked:
+                if key in self.behind_asked:  # once per guess: the same junction can be asked again later
+                    self.behind_asked.discard(key)
                     self.stats["spare"]["behind_used"] += 1
             final = self._go(state, image, junction, arriving, decision.choice, "junction", decision.source)
             if first:
