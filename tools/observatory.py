@@ -11,6 +11,7 @@ What goes the other way, all on the operator's request:
   /api/play     start a game for a person (as EmulationStation would)
   /api/ai       start an AI run: MAME for the game, then play.py with the AI setup's answers (tools/ai_runner.py)
   /api/stop     end what is playing (an AI run is asked to finish its files first); /api/menu: back to the menu
+  /api/speed    AI mode's game speed, while it runs (the player logs the speed it measures)
   /orders       standing orders for the running player (arcadekit/orders.py), which confirms with an `orders` event
 
 It decides nothing about play and knows no game: the AI setup is read from the game package (tools/ai_setup.py) and
@@ -239,17 +240,20 @@ class Control:
     def start_ai(self, game, answers):
         import ai_setup
         args = ai_setup.command_line(game, answers)  # checked before anything is stopped
+        speed = float(answers.get("speed", 0.85))
+        if not 0.2 <= speed <= 1.0:
+            raise ValueError("speed: 0.2 to 1.0")
         if self.runner.state["state"] == "starting":
             raise RuntimeError("an AI run is starting: wait for it, or stop it")
 
         def go():  # the run on screen (if any) finishes its files first, as the picker says it will
             self.hub.set_panel("control", {**self.runner.state, "state": "stopping", "next": game})
             self._end_ai()
-            self.runner.start(game, args)
+            self.runner.start(game, args, speed)
         if self.runner.busy() or self.hub.players:
             threading.Thread(target=go, daemon=True).start()
             return {"args": args, "after": "stopping the current run"}
-        self.runner.start(game, args)
+        self.runner.start(game, args, speed)
         return {"args": args}
 
     def _end_ai(self, wait=25):
@@ -336,6 +340,8 @@ def make_handler(hub, control=None):
                 self.guarded(lambda: control.start_ai(str(body["game"]), body.get("answers") or {}))
             elif control and self.path == "/api/stop":
                 self.guarded(control.stop)
+            elif control and self.path == "/api/speed":
+                self.guarded(lambda: control.cabinet.speed(float(body["speed"])))
             elif control and self.path == "/api/menu":
                 self.guarded(control.menu)
             else:

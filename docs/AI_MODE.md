@@ -61,6 +61,12 @@ the game's switches grouped by kind (overrides and skills marked: they change wh
 last setup per game and shows the play.py command it will run. Links: `#games` opens the picker, `#setup=arcade/pacman`
 a game's setup. `--watch-only` leaves the controls out; `--listen 0.0.0.0` lets anyone on the LAN watch and control.
 
+Game speed: AI mode runs at 85 % by default (`start_pi_game.py --speed`), the Pi 3's pace (about 51 frames a second),
+which the model's answer times were tuned on; at the Pi 5's full 60 most answers arrived after Pac-Man had passed the
+junction. The setup has a speed slider and the dashboard one under the video, which changes it during the run
+(tools/mame_speed_control.lua sets MAME's throttle rate). The player measures the speed it actually gets every three
+seconds and logs each change as a `speed` event; the manifest lists them (`speeds`).
+
 The dashboard: the game's video beside what the player is doing.
 Drawn over the video: a line from Pac-Man to each ghost with its distance in steps along the maze, the junction just
 decided (every option sized by the model's probability, the executed way in the colour of who made the move, a

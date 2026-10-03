@@ -74,6 +74,12 @@
   .toggles { display: flex; gap: 14px; font: 12px var(--mono); color: var(--dim); align-items: center; height: 24px; }
   .toggles label { display: flex; gap: 6px; align-items: center; cursor: pointer; }
   .toggles input { accent-color: var(--accent); }
+  .speed { display: flex; align-items: center; gap: 8px; margin-left: auto; font: 12px var(--mono); color: var(--dim); }
+  .speed input[type=range] { width: 130px; accent-color: var(--accent); }
+  .speed b { color: var(--text); min-width: 40px; text-align: right; }
+  .rangefield { display: grid; grid-template-columns: 1fr 56px; gap: 12px; align-items: center; }
+  .rangefield input { accent-color: var(--accent); width: 100%; }
+  .rangefield b { font: 600 14px var(--mono); text-align: right; }
 
   /* ---------- intent ---------- */
   .goal { font: 18px/1.3 var(--pixel); color: var(--accent); text-shadow: 0 0 18px #ffe60055; word-break: break-word; }
@@ -347,6 +353,8 @@
       <label><input type="checkbox" id="o-marks" checked> distances</label>
       <label><input type="checkbox" id="o-choice" checked> choices</label>
       <label><input type="checkbox" id="o-ahead" checked> answers ahead</label>
+      <label class="speed hidden" id="speedbox" title="How fast the game runs. Slower gives the model more time per decision; the run logs every change.">
+        SPEED <input type="range" id="speed" min="0.3" max="1" step="0.05" value="0.85"><b id="speed-v">85%</b></label>
     </div>
   </section>
 
@@ -724,6 +732,7 @@ function rowFor(r) {
     case "goal": return ["goal", "GOAL", (r.goal || "").replace(/_/g, " "), "other"];
     case "stance": return ["goal", "STANCE", Object.entries(r.mods || {}).map(([k, v]) => `${k} ${v}`).join(", ") || "all normal", "other"];
     case "advice": return ["goal", "ADVICE", Object.entries(r).filter(([k]) => !["event", "t", "frame"].includes(k)).map(([k, v]) => `${k}=${typeof v === "object" ? JSON.stringify(v) : v}`).join(" "), "other"];
+    case "speed": return ["dim", "SPEED", `the game now runs at ${r.emulated_fps} frames a second`, "other"];
     case "game_over": return ["over", "GAME OVER", `game ${r.game} · score ${Number(r.score).toLocaleString()} · level ${r.level}`, "other"];
     case "move": return ["move", ARROW[r.executed] || "·", `${r.executed} at ${r.tile} · <span style="color:${BY_COLOUR[r.by]}">${esc(r.by)}</span>` +
                          (r.proposed !== r.executed ? ` · proposed ${esc(r.proposed)}` : "") + (r.latency_ms ? ` · ${r.latency_ms} ms` : ""), "move", true];
@@ -1019,7 +1028,7 @@ async function openSetup(game) {
     ctl.draft = { decider: a.decider || "ollama", model: a.model || (models.find(m => m.startsWith("nimble")) || models[0] || "nimble"),
                   knowledge: a.knowledge !== undefined ? a.knowledge : schema.default_knowledge, goal: a.goal || "auto",
                   strategist: a.strategist || "code", strategist_model: a.strategist_model || "nimble",
-                  games: a.games || 3, orders: a.orders || [], switches: a.switches || {} };
+                  games: a.games || 3, orders: a.orders || [], switches: a.switches || {}, speed: a.speed || schema.speed.default };
     renderSetup();
   } catch (e) { $("s-body").innerHTML = `<p style="color:var(--bad)">${esc(e.message)}</p>`; }
 }
@@ -1055,6 +1064,8 @@ function renderSetup() {
     <div class="field"><label>STANDING ORDERS (ONE PER LINE)</label><textarea name="orders" placeholder="${esc(s.orders_example ? "e.g. " + s.orders_example : "Plain words for the model")}">${esc(d.orders.join("\n"))}</textarea>
       <div class="help">${model || d.strategist === "ollama" ? "Put in front of every question the model is asked. You can change them during the run." : "No model reads them with this setup (the rule and the mock never read text)."}</div></div>
     <div class="field"><label>GAMES</label><input type="number" name="games" min="1" max="100" value="${esc(d.games)}"></div>
+    <div class="field"><label>GAME SPEED</label><div class="rangefield"><input type="range" name="speed" min="${s.speed.min}" max="${s.speed.max}" step="0.05" value="${esc(d.speed)}"><b id="s-speed-v">${Math.round(100 * d.speed)}%</b></div>
+      <div class="help">${esc(s.speed.help)}</div></div>
     <details ${Object.keys(d.switches).length ? "open" : ""}><summary>GAME SWITCHES (${s.switches.length})</summary>
       ${kinds.map(k => { const fs = s.switches.filter(f => f.kind === k); if (!fs.length) return "";
         return `<div class="kindbox ${k === "override" || k === "skill" ? "who" : ""}"><h5>${esc(k)}</h5><p>${esc(s.kinds[k])}</p>${fs.map(sw).join("")}</div>`; }).join("")}
@@ -1073,6 +1084,8 @@ function readSetup() {
   if (body.querySelector('[name="strategist_model"]')) d.strategist_model = val("strategist_model");
   d.orders = (val("orders") || "").split("\n").map(x => x.trim()).filter(Boolean);
   d.games = Number(val("games") || 3);
+  d.speed = Number(val("speed") || s.speed.default);
+  if ($("s-speed-v")) $("s-speed-v").textContent = Math.round(100 * d.speed) + "%";
   const sw = {};
   for (const f of s.switches) {
     const el = body.querySelector(`[name="sw:${f.name}"]`); if (!el) continue;
@@ -1084,12 +1097,13 @@ function readSetup() {
 }
 function answersOf(d) {
   return { decider: d.decider, model: d.model, knowledge: d.decider === "ollama" ? d.knowledge : null, goal: d.goal,
-           strategist: d.strategist, strategist_model: d.strategist_model, games: d.games, orders: d.orders, switches: d.switches };
+           strategist: d.strategist, strategist_model: d.strategist_model, games: d.games, orders: d.orders, switches: d.switches,
+           speed: d.speed };
 }
 function showCommand() {
   const d = ctl.draft;
   const parts = ["play.py", "--decider " + d.decider, d.decider === "ollama" ? "--model " + d.model : "", d.decider === "ollama" && d.knowledge ? "--knowledge " + d.knowledge : "",
-    "--goal " + d.goal, d.strategist !== "code" ? "--strategist " + d.strategist : "", "--games " + d.games, d.orders.length ? `${d.orders.length} order(s)` : "",
+    "--goal " + d.goal, d.strategist !== "code" ? "--strategist " + d.strategist : "", "--games " + d.games, `speed ${Math.round(100 * d.speed)}%`, d.orders.length ? `${d.orders.length} order(s)` : "",
     ...Object.entries(d.switches).map(([k, v]) => `${k}=${v}`)];
   $("s-cmd").textContent = parts.filter(Boolean).join(" ");
 }
@@ -1098,7 +1112,7 @@ $("s-body").addEventListener("change", e => {
   readSetup();
   if (JSON.stringify([ctl.draft.decider, ctl.draft.goal, ctl.draft.strategist]) !== before) renderSetup(); else showCommand();
 });
-$("s-body").addEventListener("input", e => { if (e.target.tagName === "TEXTAREA" || e.target.type === "number") { readSetup(); showCommand(); } });
+$("s-body").addEventListener("input", e => { if (e.target.tagName === "TEXTAREA" || e.target.type === "number" || e.target.type === "range") { readSetup(); showCommand(); } });
 async function startAi(game, answers) {
   const r = await act("/api/ai", { game, answers });
   if (r) { ctl.answers = answers; openDrawer(null);
@@ -1110,6 +1124,22 @@ $("s-start").addEventListener("click", () => {
   startAi(ctl.setup.game, a);
 });
 
+/* the game's speed, while an AI game is up */
+let speedTimer = null, speedTouched = 0;
+$("speed").addEventListener("input", e => {
+  $("speed-v").textContent = Math.round(100 * e.target.value) + "%";
+  speedTouched = Date.now();
+  clearTimeout(speedTimer);
+  speedTimer = setTimeout(() => act("/api/speed", { speed: Number(e.target.value) }), 250);
+});
+function showSpeed() {
+  const ai = ctl.cabinet?.ai;
+  $("speedbox").classList.toggle("hidden", !(ctl.features.control && ai));
+  if (ai && ai.speed != null && Date.now() - speedTouched > 3000) {  // the cabinet's own value, unless just moved
+    $("speed").value = ai.speed; $("speed-v").textContent = Math.round(100 * ai.speed) + "%";
+  }
+}
+
 function onPanel(p) {
   if (p.name === "features") { ctl.features = p.value; if (p.value.control && !ctl.catalog) loadCatalog(); }
   else if (p.name === "control" && p.value.state === "stopping" && p.value.next) { ctl.control = p.value; }
@@ -1117,6 +1147,7 @@ function onPanel(p) {
   else if (p.name === "control") { ctl.control = p.value; if (p.value.state === "failed") toast("AI run: " + (p.value.step || "failed")); }
   else if (p.name === "players") ctl.players = p.value;
   applyMode();
+  showSpeed();
   if ($("picker").classList.contains("open")) renderDetail();
 }
 

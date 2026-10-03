@@ -87,3 +87,15 @@ def test_answers_become_plays_command_line():
 def test_answers_the_setup_does_not_offer_are_refused(answers):
     with pytest.raises(ValueError):
         ai_setup.command_line("arcade/pacman", answers)
+
+
+@pytest.mark.parametrize("value", ["0.1", "1.5", "fast"])
+def test_the_game_speed_stays_between_a_fifth_and_full(value):
+    cabinet = load_cabinet()
+    with pytest.raises((SystemExit, ValueError)):
+        cabinet.main(["cabinet.py", "speed", value])
+
+
+def test_the_setup_offers_the_speed_and_refuses_one_outside_it():
+    s = ai_setup.schema("arcade/pacman")["speed"]
+    assert s["default"] == 0.85 and s["min"] < s["default"] <= s["max"] == 1.0

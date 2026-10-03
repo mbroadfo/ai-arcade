@@ -7,6 +7,7 @@
     python3 cabinet.py stop              end the game on the screen (a person's or the AI's MAME)
     python3 cabinet.py clear             end everything on the screen, menu included (before AI mode takes it)
     python3 cabinet.py menu              back to EmulationStation
+    python3 cabinet.py speed 0.85        AI mode's game speed, now (tools/mame_speed_control.lua applies it)
 
 A launch is handed to the console session: the request goes in LAUNCH_FILE, the session restarts, and the autostart
 hook (pending.sh, run by /opt/retropie/configs/all/autostart.sh before EmulationStation) runs it, so the game gets the
@@ -32,6 +33,7 @@ CONFIGS = "/opt/retropie/configs"
 LAUNCH_FILE = "/dev/shm/ai-arcade-launch"
 ES_PROCESS = "/emulationstation/emulationstation( |$)"
 AI_SCRIPT = "/home/pi/ai-arcade/autoboot.lua"  # tools/start_pi_game.py's MAME (AI mode)
+SPEED_FILE, SPEED_NOW = "/dev/shm/ai-arcade-speed", "/dev/shm/ai-arcade-speed.now"
 MAME_SYSTEMS = re.compile(r"^(arcade|mame.*|fba|neogeo)$")  # systems whose files are MAME sets
 
 
@@ -105,7 +107,12 @@ def status():
     if human:
         out["human"] = {"system": system, "rom": rom, "stem": os.path.splitext(os.path.basename(rom))[0]}
     if ai:
-        out["ai"] = {"romset": ai[1],
+        try:
+            with open(SPEED_NOW) as f:
+                speed = float(f.read().strip())
+        except (OSError, ValueError):
+            speed = None
+        out["ai"] = {"romset": ai[1], "speed": speed,
                      "state_server": bool(find(procs, r"state_server\.py")),
                      "frame_server": bool(find(procs, r"frame_server\.py"))}
     return out
@@ -259,6 +266,15 @@ def main(argv):
         end_games()
         run("pkill", "-f", ES_PROCESS)
         print(json.dumps({"ok": True}))
+    elif command == "speed" and len(argv) == 3:
+        value = float(argv[2])
+        if not 0.2 <= value <= 1.0:
+            raise SystemExit("speed: 0.2 to 1.0")
+        tmp = SPEED_FILE + ".tmp"
+        with open(tmp, "w") as f:
+            f.write(f"{value}\n")
+        os.replace(tmp, SPEED_FILE)
+        print(json.dumps({"ok": True, "speed": value}))
     elif command == "menu":
         end_games()
         if not find(processes(), ES_PROCESS):

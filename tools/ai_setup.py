@@ -75,6 +75,9 @@ def schema(spec):
         "orders_example": getattr(game, "ORDERS_EXAMPLE", ""),
         "switches": [_option_field(o) for o in (experiment.OPTIONS if experiment else ())],
         "kinds": KIND_HELP,
+        "speed": {"default": 0.85, "min": 0.3, "max": 1.0,
+                  "help": "How fast the game runs. Slower gives the model more time per decision; 85 % is the Pi 3's "
+                          "pace, which the answer times were tuned on. Changeable during the run."},
     }
 
 

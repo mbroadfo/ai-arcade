@@ -163,6 +163,9 @@ def main(argv=None):
     player.log(event="orders", version=orders.version, orders=orders.items, source="start", reaches=orders_reach)
     observe = getattr(player, "observe", None) if live else None
     observed_at = 0.0
+    # the game's speed can change during the run (the Observatory's slider): measure it, log every change
+    speed_mark = (stream.latest()[0], time.time())
+    speeds = [{"t": round(time.time(), 3), "emulated_fps": manifest["emulated_fps"]}]
 
     results, deadline = [], time.time() + args.seconds
     last_good = time.time()
@@ -173,6 +176,12 @@ def main(argv=None):
             try:
                 result = player.tick()
                 last_good = time.time()
+                if last_good - speed_mark[1] >= 3.0:
+                    fps = round((player.last_frame - speed_mark[0]) / (last_good - speed_mark[1]), 1)
+                    speed_mark = (player.last_frame, last_good)
+                    if abs(fps - speeds[-1]["emulated_fps"]) >= 3:
+                        speeds.append({"t": round(last_good, 3), "emulated_fps": fps})
+                        player.log(event="speed", emulated_fps=fps)
                 if observe and last_good - observed_at >= 0.2:
                     observed_at = last_good
                     live.send({**observe(), "asked": orders.latest(), "t": round(last_good, 3)})
@@ -204,7 +213,7 @@ def main(argv=None):
             live.send({"event": "run_end", "label": label, "games_completed": len(results), "t": round(time.time(), 3)})
         decisions_log.close()
         stream.close()
-        manifest.update(ended=time.strftime("%Y-%m-%dT%H:%M:%S"), games_completed=len(results),
+        manifest.update(ended=time.strftime("%Y-%m-%dT%H:%M:%S"), games_completed=len(results), speeds=speeds,
                         orders={**orders.summary(), "reaches": orders_reach})
         manifest_path.write_text(json.dumps(manifest, indent=2))
 

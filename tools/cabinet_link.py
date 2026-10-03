@@ -69,3 +69,6 @@ class Cabinet:
 
     def menu(self):
         return self.call("menu")
+
+    def speed(self, value):
+        return self.call("speed", f"{float(value):.2f}", timeout=10)

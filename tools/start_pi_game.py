@@ -20,6 +20,7 @@ STATE_FILE = "/dev/shm/ai-arcade-state.bin"
 SERVER_LOG = "/tmp/ai-arcade-state-server.log"
 FRAME_FILE = "/dev/shm/ai-arcade-frame.bin"
 FRAME_LOG = "/tmp/ai-arcade-frame-server.log"
+SPEED_FILE = "/dev/shm/ai-arcade-speed"  # tools/mame_speed_control.lua
 # The EmulationStation program itself, not its wrapper scripts (process names stop at 15 characters, so match the path)
 ES_PROCESS = "/emulationstation/emulationstation( |$)"
 
@@ -30,9 +31,10 @@ def main():
     parser.add_argument("--host", default=DEFAULT_PI_HOST)
     parser.add_argument("--user", default="pi")
     parser.add_argument("--state-port", type=int, default=8766)
-    parser.add_argument("--speed", type=float, default=1.0,
-                        help="emulation speed relative to real time (MAME -speed), e.g. 0.5 gives the decider twice the "
-                             "time per decision; wall-clock seconds in the results stretch by the same factor")
+    parser.add_argument("--speed", type=float, default=0.85,
+                        help="game speed relative to real time (default 0.85, the Pi 3's pace, which the model's answer "
+                             "times were tuned on); lower gives the decider more time per decision; wall-clock seconds "
+                             "in the results stretch by the same factor. Changeable during the run (the Observatory)")
     parser.add_argument("--video-fps", type=int, default=15,
                         help="video frames a second for the Observatory (of the game's 60)")
     parser.add_argument("--video-port", type=int, default=8767)
@@ -52,8 +54,11 @@ def main():
         sftp.put(str(ROOT / "tools" / "mame_state_export.lua"), f"{REMOTE_DIR}/mame_state_export.lua")
         sftp.put(str(ROOT / "pi" / "state_server.py"), f"{REMOTE_DIR}/state_server.py")
         sftp.put(str(ROOT / "tools" / "mame_video_export.lua"), f"{REMOTE_DIR}/mame_video_export.lua")
+        sftp.put(str(ROOT / "tools" / "mame_speed_control.lua"), f"{REMOTE_DIR}/mame_speed_control.lua")
+        with sftp.file(SPEED_FILE, "w") as f:  # the speed control applies it from the first frames
+            f.write(f"{args.speed}\n")
         sftp.put(str(ROOT / "pi" / "frame_server.py"), f"{REMOTE_DIR}/frame_server.py")
-        scripts = ["mame_state_export.lua"] + ([] if args.no_video else ["mame_video_export.lua"])
+        scripts = ["mame_state_export.lua", "mame_speed_control.lua"] + ([] if args.no_video else ["mame_video_export.lua"])
         with sftp.file(f"{REMOTE_DIR}/autoboot.lua", "w") as f:  # MAME takes one script: it loads the others
             f.write("".join(f'dofile("{REMOTE_DIR}/{name}")\n' for name in scripts))
         with sftp.file(f"{REMOTE_DIR}/regions.lua", "w") as f:
@@ -72,7 +77,6 @@ def main():
                  f"mame {romset} -rompath /home/pi/RetroPie/roms/{system} "
                  "-video accel -nowindow -skip_gameinfo -joystick -joystickprovider sdl "
                  "-ctrlrpath /home/pi/.mame/ctrlr -ctrlr aiarcade "
-                 + (f"-speed {args.speed} " if args.speed != 1.0 else "") +
                  f"-autoboot_script {REMOTE_DIR}/autoboot.lua "
                  f"> {MAME_LOG} 2>&1 < /dev/null &")
         for _ in range(40):
