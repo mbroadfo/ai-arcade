@@ -74,7 +74,8 @@ def main(argv=None):
     parser.add_argument("--policy", choices=sorted(POLICIES), default="pattern")
     parser.add_argument("--hz", type=float, default=10.0, help="decisions a second")
     parser.add_argument("--seconds", type=float, default=60.0)
-    parser.add_argument("--coins", type=int, default=2, help="coins one play costs (default setting: 2)")
+    parser.add_argument("--coins", type=int, default=None, help="coins one play costs (default: the game's "
+                        "COINS_PER_PLAY, which assumes its SETTINGS were applied by start_pi_game.py)")
     parser.add_argument("--host", default=DEFAULT_PI_HOST)
     parser.add_argument("--out", default=str(ROOT / "runs"))
     parser.add_argument("--tag", default="")
@@ -90,9 +91,11 @@ def main(argv=None):
     stream = StateStream(args.host, game=game)
     stream.start_latest()
     broker = BrokerLink(args.host)
+    coins = game.COINS_PER_PLAY if args.coins is None else args.coins
     log.write(json.dumps({"event": "run", "label": label, "policy": args.policy, "hz": args.hz,
-                          "seconds": args.seconds, "t": time.time()}) + "\n")
-    start_game(stream, broker, args.coins)
+                          "seconds": args.seconds, "settings": game.SETTINGS, "coins": coins,
+                          "t": time.time()}) + "\n")
+    start_game(stream, broker, coins)
 
     clock = TickClock(args.hz)
     began, previous, last_frame = time.monotonic(), None, None

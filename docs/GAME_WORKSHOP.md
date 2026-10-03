@@ -87,6 +87,11 @@ Questions: what can the player do, and does each action work through the broker?
 - Note what the game needs that the broker lacks: two sticks at once, hold-fire-while-moving (the held-set operation,
   phase 3), analog input (not built).
 
+- Read the operator settings (DIP switches) and decide which, if any, AI mode changes. By default every game runs at
+  its factory settings, so results compare with the real arcade game; a change is declared in the game's `SETTINGS`
+  and recorded in every run, never made by hand. Battlezone: free play (its factory setting is 2 coins a game, which
+  first hid every credit from discovery); lives stay at the factory 3.
+
 Exit: every control works, and latency is measured.
 
 Pac-Man: four directions, coin, start. One direction is held at a time. Holding a direction into a wall stops

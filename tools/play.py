@@ -105,7 +105,8 @@ def main(argv=None):
     run_record = {"event": "run", "label": label, "game": args.game, "decider": args.decider,
                   "model": None if args.decider == "rule" else args.model, "knowledge": args.knowledge,
                   "goal": args.goal, "strategist": args.strategist, "games": args.games, "switches": game_values,
-                  "orders_example": getattr(game, "ORDERS_EXAMPLE", ""), "t": round(time.time(), 3)}
+                  "orders_example": getattr(game, "ORDERS_EXAMPLE", ""), "settings": getattr(game, "SETTINGS", {}),
+                  "t": round(time.time(), 3)}
 
     def orders_record(source):
         version, items = orders.snapshot()

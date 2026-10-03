@@ -37,6 +37,8 @@ games/arcade/pacman/
 | `player.Player(stream, broker, worker, goal_manager, log, knowledge=, **switches)` with `.stats`, `.ledger` (`arcadekit.ledger`), `.latencies` | `tools/play.py` |
 | `experiment.OPTIONS` (switches, each an `arcadekit.options.Option` with a kind), `experiment.METRICS`, `experiment.player_kwargs(values, new_worker)`, `experiment.report_lines(player, results)` | `tools/play.py` builds its game switches, run label, manifest and summary from these (optional: without it a game has no switches) |
 | `ORDERS_EXAMPLE` (text) | the example standing order the Observatory shows for this game (optional) |
+| `SETTINGS` (dict) | operator settings (DIP switches) for AI mode, by MAME's names, e.g. `{"Coinage": "Free Play"}` (optional). `tools/start_pi_game.py` applies them and puts every other switch at its factory default, prints all of them, and refuses to start if a name is wrong; run logs record them |
+| `COINS_PER_PLAY` (int) | coins one game costs with `SETTINGS` applied (0 for free play) |
 | `player.Player.observe()` -> a `status` record: `title`, `game`, `playing`, `score`, `level`, `lives`, `goal`, `stance`, `held`, `moves`; `facts` [{label, value, tone}], `series` [{key, label, value, unit, worse, alarm, colour}], `marks` [{label, kind: player/threat/target/neutral, x, y, steps, note, alert, colour}], `screen` {size, tile_to_px} | the Observatory (`tools/observatory.py`), which knows no game and draws what these say (optional: without it the page shows video, events and moves only). Display only: nothing reads it to decide |
 
 `Player.tick()` returns a result dict when a game ends: `game`, `score`, `level`, `seconds`, the outcome block every

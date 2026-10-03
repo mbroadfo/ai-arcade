@@ -63,3 +63,10 @@ def test_the_image_window_comes_from_the_game_and_has_no_default():
     assert len(image) == pacman.IMAGE[1] and image[0xE00:0xE02] == b"\x01\x02" and image[0xD00] == 3
     with pytest.raises(TypeError):
         expand(b"\x01\x02\x03", regions)  # a game that forgets its IMAGE fails loudly
+
+
+def test_settings_are_written_for_the_settings_script_with_names_quoted():
+    import start_pi_game
+    assert start_pi_game.settings_lua({"Coinage": "Free Play"}) == 'return {{"Coinage", "Free Play"}}\n'
+    assert start_pi_game.settings_lua({'Odd "x"': "a\b"}) == 'return {{"Odd \\"x\\"", "a\\b"}}\n'
+    assert start_pi_game.settings_lua({}) == "return {}\n"

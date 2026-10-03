@@ -21,6 +21,13 @@ SERVER_LOG = "/tmp/ai-arcade-state-server.log"
 FRAME_FILE = "/dev/shm/ai-arcade-frame.bin"
 FRAME_LOG = "/tmp/ai-arcade-frame-server.log"
 SPEED_FILE = "/dev/shm/ai-arcade-speed"  # tools/mame_speed_control.lua
+SETTINGS_NOW = "/dev/shm/ai-arcade-settings.now"  # tools/mame_settings.lua: every switch as applied
+
+
+def settings_lua(settings):
+    """The settings.lua tools/mame_settings.lua reads, from a game's SETTINGS {switch name: setting name}."""
+    quote = lambda s: '"' + str(s).replace("\\", "\\\\").replace('"', '\\"') + '"'  # noqa: E731
+    return "return {" + ", ".join(f"{{{quote(k)}, {quote(v)}}}" for k, v in settings.items()) + "}\n"
 # The EmulationStation program itself, not its wrapper scripts (process names stop at 15 characters, so match the path)
 ES_PROCESS = "/emulationstation/emulationstation( |$)"
 
@@ -43,6 +50,7 @@ def main():
     system, _ = split_spec(args.game)
     romset = load_profile(args.game)["romset"]
     AGENT_REGIONS = load_game(args.game).AGENT_REGIONS
+    SETTINGS = getattr(load_game(args.game), "SETTINGS", {})  # operator settings; all others at factory default
 
     ssh = paramiko.SSHClient()
     ssh.load_system_host_keys()
@@ -58,7 +66,11 @@ def main():
         with sftp.file(SPEED_FILE, "w") as f:  # the speed control applies it from the first frames
             f.write(f"{args.speed}\n")
         sftp.put(str(ROOT / "pi" / "frame_server.py"), f"{REMOTE_DIR}/frame_server.py")
-        scripts = ["mame_state_export.lua", "mame_speed_control.lua"] + ([] if args.no_video else ["mame_video_export.lua"])
+        sftp.put(str(ROOT / "tools" / "mame_settings.lua"), f"{REMOTE_DIR}/mame_settings.lua")
+        with sftp.file(f"{REMOTE_DIR}/settings.lua", "w") as f:
+            f.write(settings_lua(SETTINGS))
+        scripts = (["mame_settings.lua", "mame_state_export.lua", "mame_speed_control.lua"]
+                   + ([] if args.no_video else ["mame_video_export.lua"]))
         with sftp.file(f"{REMOTE_DIR}/autoboot.lua", "w") as f:  # MAME takes one script: it loads the others
             f.write("".join(f'dofile("{REMOTE_DIR}/{name}")\n' for name in scripts))
         with sftp.file(f"{REMOTE_DIR}/regions.lua", "w") as f:
@@ -71,7 +83,7 @@ def main():
         # tools/human_mode.py brings ES back.
         run(ssh, f"pkill -f '{ES_PROCESS}' || true; "
                  f"timeout 10 sh -c \"while pgrep -f '{ES_PROCESS}' >/dev/null; do sleep 0.2; done\" || true")
-        run(ssh, f"rm -f {STATE_FILE} {FRAME_FILE}")
+        run(ssh, f"rm -f {STATE_FILE} {FRAME_FILE} {SETTINGS_NOW}")
         every = max(1, round(60 / max(1, args.video_fps)))
         run(ssh, f"nohup env SDL_AUDIODRIVER=alsa AI_ARCADE_VIDEO_EVERY={every} "
                  f"mame {romset} -rompath {pi_rompath(system)} "
@@ -85,6 +97,12 @@ def main():
                 break
         else:
             print("exporter never produced state:\n" + run(ssh, f"tail -20 {MAME_LOG}"))
+            return 1
+
+        applied = run(ssh, f"cat {SETTINGS_NOW} 2>/dev/null || true").strip()
+        print("operator settings:\n  " + "\n  ".join(applied.splitlines() or ["(none read)"]))
+        if "!" in applied:
+            print("a declared setting could not be applied (see the lines starting with '!')")
             return 1
 
         regions = json.dumps([list(r) for r in AGENT_REGIONS])
