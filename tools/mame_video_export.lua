@@ -7,6 +7,9 @@
 --   2 bytes  quarter turns clockwise that make it upright (the machine's orientation: rot90 = 1)
 --   width * height * 4 bytes  pixels, B G R X per pixel, rows top to bottom
 -- On a Pi 5 a Pac-Man capture costs about 0.4 ms (measured 2026-10-02), so 15 a second does not slow the game.
+-- A vector game (Battlezone) draws nothing into the screen bitmap: its frames come from MAME's rendered snapshot
+-- instead (video:snapshot_pixels, already upright, 640 x 480: about 6 ms a capture on a Pi 5, measured 2026-10-03,
+-- with the game still at full speed).
 -- pi/frame_server.py streams it to the PC (port 8767).
 
 local function get(obj, name)  -- methods on MAME 0.206, properties on 0.227 and later
@@ -25,6 +28,17 @@ local machine = get(manager, "machine")
 local screen
 for _, s in pairs(machine.screens) do screen = s; break end
 local turns = TURNS[tostring(get(machine.system, "orientation"))] or 0
+local vector = screen ~= nil and tostring(get(screen, "screen_type")) == "vector"
+
+local function capture()
+  if vector then
+    local video = get(machine, "video")
+    local width, height = video:snapshot_size()
+    return video:snapshot_pixels(), width, height, 0  -- the snapshot is rendered upright
+  end
+  local pixels, width, height = screen:pixels()
+  return pixels, width, height, turns
+end
 
 local function u16le(n) return string.char(n & 0xff, (n >> 8) & 0xff) end
 local function u32le(n) return string.char(n & 0xff, (n >> 8) & 0xff, (n >> 16) & 0xff, (n >> 24) & 0xff) end
@@ -33,10 +47,10 @@ local frame = 0
 VIDEO_NOTIFIER = on_frame(function()  -- kept global: newer MAME drops a notifier that is garbage-collected
   frame = frame + 1
   if not screen or frame % EVERY ~= 0 then return end
-  local ok, pixels, width, height = pcall(function() return screen:pixels() end)
+  local ok, pixels, width, height, quarter = pcall(capture)
   if not ok or not pixels or not width then return end
   local f = io.open(TMP_FILE, "wb")
-  f:write(u32le(frame), u16le(width), u16le(height), u16le(turns), pixels)
+  f:write(u32le(frame), u16le(width), u16le(height), u16le(quarter), pixels)
   f:close()
   os.rename(TMP_FILE, OUT_FILE)
 end)

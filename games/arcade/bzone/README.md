@@ -29,8 +29,9 @@ Found on 2 October 2026:
 - A shell hits only within 224-320 world units of the enemy (the game's SHRTCK), about +-0.6 degrees at 25,000 units,
   finer than the heading's step: aiming by angle (4 degrees) gave 1 kill in a game, aiming by where the shot would pass
   gave 8 (`track_and_fire`, 10 Hz).
-- The video export shows nothing for Battlezone: it copies MAME's screen bitmap, and a vector game does not draw into
-  it. The Observatory needs a different capture for vector games (not built).
+- The video export showed nothing for Battlezone: it copied MAME's screen bitmap, and a vector game does not draw into
+  it. Vector screens now use MAME's rendered snapshot (`tools/mame_video_export.lua`): 640 x 480, about 6 ms a capture,
+  10.6 frames a second to the Observatory at 17 KB a frame (3 October 2026).
 
 ## Getting the ROM
 
