@@ -20,9 +20,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[4] / "tools"))
 from gamelib import DEFAULT_PI_HOST, ROOT, load_game  # noqa: E402  (puts the repository root on sys.path)
 
 from arcadekit.clock import TickClock  # noqa: E402
+from arcadekit.observatory import DEFAULT_ADDRESS, LiveSink  # noqa: E402
 from broker_link import BrokerLink  # noqa: E402
 from games.arcade.bzone.controls import broker_actions, describe  # noqa: E402
 from games.arcade.bzone.facts import derive  # noqa: E402
+from games.arcade.bzone.observe import status  # noqa: E402
 from games.arcade.bzone.policies import POLICIES  # noqa: E402
 from state_client import StateStream  # noqa: E402
 
@@ -84,6 +86,8 @@ def main(argv=None):
     parser.add_argument("--host", default=DEFAULT_PI_HOST)
     parser.add_argument("--out", default=str(ROOT / "runs"))
     parser.add_argument("--tag", default="")
+    parser.add_argument("--observatory", default="%s:%d" % DEFAULT_ADDRESS,
+                        help="HOST:PORT of the Observatory (tools/observatory.py), or none")
     args = parser.parse_args(argv)
 
     game = load_game("arcade/bzone")
@@ -97,15 +101,24 @@ def main(argv=None):
     stream.start_latest()
     broker = BrokerLink(args.host)
     coins = game.COINS_PER_PLAY if args.coins is None else args.coins
-    log.write(json.dumps({"event": "run", "label": label, "policy": args.policy, "hz": args.hz,
-                          "seconds": args.seconds, "settings": game.SETTINGS, "coins": coins,
-                          "t": time.time()}) + "\n")
+    run_record = {"event": "run", "label": label, "game": "arcade/bzone", "policy": args.policy, "hz": args.hz,
+                  "decider": f"lab: {args.policy} (code)", "model": None, "knowledge": None, "goal": None,
+                  "strategist": None, "games": 1, "switches": {"hz": args.hz}, "seconds": args.seconds,
+                  "settings": game.SETTINGS, "coins": coins, "t": time.time()}
+    log.write(json.dumps(run_record) + "\n")
+    stop = []
+    live = None
+    if args.observatory != "none":
+        host, _, port = args.observatory.rpartition(":")
+        live = LiveSink((host, int(port)), hello=lambda: [run_record],
+                        on_command=lambda m: stop.append(1) if m.get("op") == "stop" else None)
     start_game(stream, broker, coins)
 
     clock = TickClock(args.hz)
     began, previous, last_frame, held = time.monotonic(), None, None, frozenset()
     try:
-        while time.monotonic() - began < args.seconds:
+        shown = 0.0
+        while time.monotonic() - began < args.seconds and not stop:
             tick = clock.wait()
             (frame, state, _), arrived = stream.latest_timed(timeout=1.0)
             t = tick.began - began
@@ -131,6 +144,11 @@ def main(argv=None):
             clock.done(tick)
             record["work_ms"] = round(tick.work_ms, 1)
             log.write(json.dumps(record) + "\n")
+            if live and tick.began - shown >= 0.2:  # the Observatory: five status lines a second
+                shown = tick.began
+                live.send({**status(state, facts, frame, describe(names), why, state.hits), "t": round(time.time(), 3)})
+            for change in record["changes"] if live else ():
+                live.send({"event": "lab", "what": change, "t": round(time.time(), 3)})
             previous, last_frame = state, frame
             if previous.playing is False and t > 5:
                 break  # the game ended
@@ -142,6 +160,9 @@ def main(argv=None):
                    "t": time.time()}
         log.write(json.dumps(summary) + "\n")
         log.close()
+        if live:
+            live.send({"event": "run_end", "label": label, "t": time.time()})
+            live.close(2.0)
         stream.close()
     print(json.dumps(summary["clock"], indent=1))
     print(f"log: {path}")
