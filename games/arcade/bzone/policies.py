@@ -212,12 +212,12 @@ POLICY_INFO = {
                        "limitation": "Pivots in place: never moves or evades. All three deaths of its 3 October game "
                                      "came standing still, each from a shot aimed 0-1 units off."},
     "flank_and_fire": {"group": "Targeting baselines", "label": "Flank & Fire", "tag": "experiment",
-                       "purpose": "The doctrine as code, using the skills a model will ask for: dodge a heard shot "
-                                  "(across its line, or pivot a few degrees and reverse when it comes from near the "
-                                  "nose); flank toward a point 30 degrees off the enemy's line; when close and beside "
-                                  "it, back up swinging onto it and fire.",
-                       "limitation": "Does not see obstacles or the missile; picks the flank side by the smaller "
-                                     "turn only."},
+                       "purpose": "The doctrine as code, using the same skills the AI player uses: dodge a heard shot "
+                                  "(across its line, or pivot and reverse when it comes from near the nose); flank "
+                                  "toward a point 30 degrees off the enemy's line; turn in and fire while the enemy "
+                                  "cannot fire back or when within 10,000 units; missile defense; steer clear of "
+                                  "obstacles. Code makes every choice: the comparison for the AI player.",
+                       "limitation": "Fixed rules: does not seek cover; picks the flank side by the smaller turn."},
     "mobile_track_and_fire": {"group": "Targeting baselines", "label": "Mobile Track & Fire", "tag": "experiment",
                               "purpose": "Track & Fire that keeps moving: pivots only while a new enemy still holds "
                                          "its fire (32 frames), then turns with one tread so it moves while it aims; "
