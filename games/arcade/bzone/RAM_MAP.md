@@ -36,18 +36,18 @@ hypothesis to test). Multi-byte values are little-endian.
 
 | Address | Name | Meaning | Provenance |
 |---|---|---|---|
-| `2A` | `TANGLE` | Tank angle: 256 = a full circle | observed: turning left adds about 22.5 a second (about 11 s a turn) and wraps 255 → 0; discovery's best turn byte |
+| `2A` | `TANGLE` | Tank angle: 256 = a full circle, counterclockwise from +X (turning left raises it) | observed: turning left adds about 15.5 a second (22 degrees, 16.5 s a full turn) and wraps 255 → 0; the tank drives along (cos, sin) of it (lab run, 2 October 2026) |
 | `27` | `LANGLE` | Least significant bit of the 9-bit angle, in bit 7 | source; seen as `80`/`00` |
-| `2D-2E` | `TPOSX` | Tank X position, signed 16-bit (`2F-30`: the enemy's, as the `,X` index 2 twin) | source; discovery's drive shortlist had `2E`. Not yet observed: the one drive test began as the tank died, so the change seen was the respawn (verify) |
-| `31-32` | `TPOSY` | Tank Y position, signed 16-bit (`33-34`: the enemy's) | source; as `TPOSX` (verify) |
+| `2D-2E` | `TPOSX` | Tank X position, signed 16-bit (`2F-30`: the enemy's, as the `,X` index 2 twin) | observed: driving moves it about 1,900 units a second along the heading (heading 44 degrees: +4140, +3960 in 2 s), turning does not; enemy half: source |
+| `31-32` | `TPOSY` | Tank Y position, signed 16-bit (`33-34`: the enemy's) | observed as `TPOSX`; enemy half: source |
 | `24` | `FIRECT` | Shell timer counter (`26`: the enemy's) | source; cheat.dat "Enemy Tanks Can't Fire" writes `26` |
 | `A8-AB` | `SHELLX` | Shell X: the tank's at `A8`, the enemy's at `AA` | observed: `A8` changes after each press of fire |
 | `AC-AF` | `SHELLY` | Shell Y, as `SHELLX` | source |
 | `C7` | `CRACK` | Cracked windshield counter (the death screen) | observed: counts up by about 4 every 6 frames for about 1 s after each death, then 0 |
 | `C9` | `EIRNGE` | "Enemy in range" flag (the on-screen message) | source |
 
-Driving was not checked cleanly (the tank was destroyed as the test began): to verify, with the decoder
-(`state.py`) and its tests (`tests/test_bzone_state.py`, on the scripted recording in `tests/fixtures`).
+The game's frame counter (and the exporter's frames) run at about 41 a second. In the 10 Hz lab run a command showed
+in the state 100-200 ms after it was sent (one or two ticks), and observations were 13 ms old at the median.
 
 ## The enemy and the world
 

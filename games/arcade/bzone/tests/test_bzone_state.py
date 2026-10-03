@@ -33,8 +33,8 @@ def test_turning_left_raises_the_angle_steadily_round_a_full_circle():
     angles = [s.tank.angle for s in during("turn left")]
     steps = [(b - a) % 256 for a, b in zip(angles, angles[1:])]
     assert all(0 <= d <= 4 for d in steps) and sum(steps) > 256  # 20 s: more than one full turn, never backwards
-    per_second = sum(steps) / (len(steps) * 6 / 60)
-    assert 20 < per_second < 25
+    per_second = sum(steps) / (len(steps) * 6 / 41)  # the game's frame counter runs at about 41 a second
+    assert 14 < per_second < 17
 
 
 def test_each_death_takes_a_life_and_counts_a_hit_taken_while_the_windshield_cracks():
