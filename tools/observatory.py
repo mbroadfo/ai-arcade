@@ -222,7 +222,7 @@ class Control:
         with self.catalog_lock:
             if self.catalog_cache is None or refresh:
                 raw = self.cabinet.catalog()
-                ai = {(spec.split("/")[0], info["romset"]): spec for spec, info in ai_setup.ai_games().items()}
+                ai = {(spec.split("/")[0], info["file"]): spec for spec, info in ai_setup.ai_games().items()}
                 systems = []
                 for s in raw["systems"]:
                     if s["name"] in HIDDEN_SYSTEMS:

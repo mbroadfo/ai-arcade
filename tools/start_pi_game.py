@@ -51,6 +51,7 @@ def main():
     romset = load_profile(args.game)["romset"]
     AGENT_REGIONS = load_game(args.game).AGENT_REGIONS
     SETTINGS = getattr(load_game(args.game), "SETTINGS", {})  # operator settings; all others at factory default
+    snap = getattr(load_game(args.game), "VIDEO_SIZE", None)  # a vector game's video is MAME's snapshot, this size
 
     ssh = paramiko.SSHClient()
     ssh.load_system_host_keys()
@@ -88,6 +89,7 @@ def main():
         run(ssh, f"nohup env SDL_AUDIODRIVER=alsa AI_ARCADE_VIDEO_EVERY={every} "
                  f"mame {romset} -rompath {pi_rompath(system)} "
                  "-video accel -nowindow -skip_gameinfo -joystick -joystickprovider sdl "
+                 + (f"-snapsize {snap[0]}x{snap[1]} " if snap else "") +
                  "-ctrlrpath /home/pi/.mame/ctrlr -ctrlr aiarcade "
                  f"-autoboot_script {REMOTE_DIR}/autoboot.lua "
                  f"> {MAME_LOG} 2>&1 < /dev/null &")

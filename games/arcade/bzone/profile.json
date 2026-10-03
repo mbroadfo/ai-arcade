@@ -1,6 +1,6 @@
 {
-  "romset": "bzone",
-  "description": "Battle Zone (rev 2)",
+  "romset": "bzonea",
+  "description": "Battle Zone (rev 1)",
   "controls": {
     "player1": [
       "BUTTON_1"
@@ -65,5 +65,6 @@
       "value": 0,
       "description": "No Homing Missiles"
     }
-  ]
+  ],
+  "cabinet_file": "bzone"
 }

@@ -44,7 +44,8 @@ def marks(state, facts):
 def status(state, facts, frame, held, why, kills):
     """The Observatory's status record for one tick (`event: status`)."""
     record = {"event": "status", "frame": frame, "title": "Battlezone", "game": 1, "playing": state.playing,
-              "held": held, "why": why, "screen": {"size": list(SIZE)}, "score": state.hits, "lives": state.lives}
+              "held": held, "why": why, "screen": {"size": list(SIZE), "smooth": True},  # marks in 640 x 480 units
+              "score": None, "lives": state.lives}  # the displayed score is not found yet (HITS is not it)
     if not state.playing:
         return record
     record["marks"] = marks(state, facts)

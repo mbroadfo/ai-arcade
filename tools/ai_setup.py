@@ -42,7 +42,8 @@ def ai_games():
             continue
         data = json.loads(profile.read_text())
         out[f"{system}/{name}"] = {"romset": data.get("romset", name), "title": data.get("description", name),
-                                   "kind": kind}
+                                   "kind": kind,  # the cabinet's file for it, when its name is not the ROM set's
+                                   "file": data.get("cabinet_file", data.get("romset", name))}
     return out
 
 
