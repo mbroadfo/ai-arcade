@@ -42,8 +42,8 @@ def main():
                         help="game speed relative to real time (default 0.85, the Pi 3's pace, which the model's answer "
                              "times were tuned on); lower gives the decider more time per decision; wall-clock seconds "
                              "in the results stretch by the same factor. Changeable during the run (the Observatory)")
-    parser.add_argument("--video-fps", type=int, default=15,
-                        help="video frames a second for the Observatory (of the game's 60)")
+    parser.add_argument("--video-fps", type=int, default=None,
+                        help="video frames a second for the Observatory (default: the game's VIDEO_FPS, else 15)")
     parser.add_argument("--video-port", type=int, default=8767)
     parser.add_argument("--no-video", action="store_true", help="no video stream: the state exporter alone")
     args = parser.parse_args()
@@ -52,6 +52,7 @@ def main():
     AGENT_REGIONS = load_game(args.game).AGENT_REGIONS
     SETTINGS = getattr(load_game(args.game), "SETTINGS", {})  # operator settings; all others at factory default
     snap = getattr(load_game(args.game), "VIDEO_SIZE", None)  # a vector game's video is MAME's snapshot, this size
+    video_fps = args.video_fps or getattr(load_game(args.game), "VIDEO_FPS", 15)
 
     ssh = paramiko.SSHClient()
     ssh.load_system_host_keys()
@@ -85,8 +86,7 @@ def main():
         run(ssh, f"pkill -f '{ES_PROCESS}' || true; "
                  f"timeout 10 sh -c \"while pgrep -f '{ES_PROCESS}' >/dev/null; do sleep 0.2; done\" || true")
         run(ssh, f"rm -f {STATE_FILE} {FRAME_FILE} {SETTINGS_NOW}")
-        every = max(1, round(60 / max(1, args.video_fps)))
-        run(ssh, f"nohup env SDL_AUDIODRIVER=alsa AI_ARCADE_VIDEO_EVERY={every} "
+        run(ssh, f"nohup env SDL_AUDIODRIVER=alsa AI_ARCADE_VIDEO_FPS={video_fps} "
                  f"mame {romset} -rompath {pi_rompath(system)} "
                  "-video accel -nowindow -skip_gameinfo -joystick -joystickprovider sdl "
                  + (f"-snapsize {snap[0]}x{snap[1]} " if snap else "") +

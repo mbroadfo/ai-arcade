@@ -20,6 +20,7 @@ COINS_PER_PLAY = 0  # with SETTINGS applied: START alone begins a game
 # The video for the Observatory is MAME's rendered snapshot (a vector screen draws nothing into the screen bitmap):
 # rendered at this size and scaled smoothly on the page. 640 x 480 looked jagged scaled up.
 VIDEO_SIZE = (960, 720)
+VIDEO_FPS = 20  # every other frame of the screen's 41 a second
 
 # No model plays Battlezone yet: the Observatory offers its real-time lab instead (tools/ai_setup.py), runs of code
 # policies on a fixed-rate clock, labelled as code (scripts/lab.py, policies.py).

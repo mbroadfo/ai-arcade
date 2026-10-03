@@ -1,6 +1,8 @@
 -- Video exporter for standalone MAME: the game's own pixels for the Observatory (the dashboard on the PC), not for
 -- the decider, which reads the state exporter. Runs beside mame_state_export.lua (both are loaded by autoboot.lua).
--- Every AI_ARCADE_VIDEO_EVERY frames (default 4: 15 a second at 60 Hz) it writes the first screen's bitmap to
+-- AI_ARCADE_VIDEO_FPS times a second (default 15; the step in frames comes from the screen's own refresh rate, which is
+-- 60 for Pac-Man but about 41 for Battlezone; AI_ARCADE_VIDEO_EVERY, if set, is the step itself) it writes the first
+-- screen's bitmap to
 -- /dev/shm/ai-arcade-frame.bin (atomic rename):
 --   4 bytes  frame counter, little-endian (as in the state file, so the same server code can publish it)
 --   2 bytes  width, 2 bytes height, little-endian (the unrotated bitmap, e.g. 288 x 224 for Pac-Man)
@@ -21,12 +23,24 @@ local on_frame = emu.add_machine_frame_notifier or emu.register_frame
 
 local OUT_FILE = "/dev/shm/ai-arcade-frame.bin"
 local TMP_FILE = OUT_FILE .. ".tmp"
-local EVERY = tonumber(os.getenv("AI_ARCADE_VIDEO_EVERY") or "") or 4
 local TURNS = { rot0 = 0, rot90 = 1, rot180 = 2, rot270 = 3 }
 
 local machine = get(manager, "machine")
 local screen
 for _, s in pairs(machine.screens) do screen = s; break end
+
+local function refresh_hz()  -- the screen's frames a second (the frame notifier's rate), 60 if it cannot be read
+  local ok, period = pcall(function() return get(screen, "frame_period") end)
+  if ok and type(period) == "userdata" then ok, period = pcall(function() return period:as_double() end) end
+  if ok and type(period) == "number" and period > 0 then return 1 / period end
+  return 60
+end
+local EVERY = tonumber(os.getenv("AI_ARCADE_VIDEO_EVERY") or "")
+if not EVERY then
+  local fps = tonumber(os.getenv("AI_ARCADE_VIDEO_FPS") or "") or 15
+  EVERY = math.max(1, math.floor((screen and refresh_hz() or 60) / fps + 0.5))
+end
+print(string.format("video export: every %d frames (screen %.1f Hz)", EVERY, screen and refresh_hz() or 0))
 local turns = TURNS[tostring(get(machine.system, "orientation"))] or 0
 local vector = screen ~= nil and tostring(get(screen, "screen_type")) == "vector"
 
