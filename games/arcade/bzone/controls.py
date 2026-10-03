@@ -14,6 +14,9 @@ DRIVE = frozenset({"LEFT_FORWARD", "RIGHT_FORWARD"})
 REVERSE = frozenset({"LEFT_BACK", "RIGHT_BACK"})
 TURN_LEFT = frozenset({"LEFT_BACK", "RIGHT_FORWARD"})
 TURN_RIGHT = frozenset({"LEFT_FORWARD", "RIGHT_BACK"})
+# one tread forward: turning while moving (the right tread alone turns left)
+ARC_LEFT = frozenset({"RIGHT_FORWARD"})
+ARC_RIGHT = frozenset({"LEFT_FORWARD"})
 
 
 def broker_actions(names):
@@ -29,5 +32,6 @@ def describe(names):
     names = frozenset(names)
     treads = names - {"FIRE"}
     words = {DRIVE: "drive forward", REVERSE: "drive backward", TURN_LEFT: "turn left", TURN_RIGHT: "turn right",
+             ARC_LEFT: "arc left", ARC_RIGHT: "arc right",
              frozenset(): "treads still"}.get(treads, " + ".join(sorted(treads)))
     return words + (" + fire" if "FIRE" in names else "")

@@ -92,3 +92,23 @@ def test_the_scripts_compile():  # no test imports them: a broken lab.py would o
     import py_compile
     for script in (Path(__file__).parents[1] / "scripts").glob("*.py"):
         py_compile.compile(str(script), doraise=True)
+
+
+def test_mobile_track_and_fire_never_stands_still_or_pivots_once_the_enemy_may_fire():
+    from games.arcade.bzone.controls import TURN_LEFT, TURN_RIGHT
+    from games.arcade.bzone.facts import derive
+    from games.arcade.bzone.policies import mobile_track_and_fire
+    seen_shot = False
+    for _, s in RECORDS:
+        if not s.playing or s.dying:
+            continue
+        f = derive(s)
+        names, why = mobile_track_and_fire(s, f, 0.0, frozenset())
+        treads = names - {"FIRE"}
+        assert treads, why  # always moving
+        if not f.enemy_holds_fire:
+            assert treads not in (TURN_LEFT, TURN_RIGHT), why
+        if f.enemy_shell == "flying":
+            seen_shot = True
+            assert "shot heard" in why
+    assert seen_shot
