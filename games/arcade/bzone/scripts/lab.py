@@ -208,14 +208,11 @@ def main(argv=None):
             if player:
                 for asked in player.asked:  # answers that arrived this tick: the log and the Observatory's timeline
                     d = asked["decision"]
-                    if args.policy == "pilot":  # ~10 answers a second: the log only (the status line shows each)
-                        log.write(json.dumps({"event": "asked", "t": asked["t"], "command": d["command"],
-                                              "fire": d.get("fire"), "fire_options": d.get("fire_options"),
-                                              "fire_probabilities": d.get("fire_probabilities"),
+                    if args.policy == "pilot":  # a plan every second or so: the log; the status line shows it
+                        log.write(json.dumps({"event": "plan", "t": asked["t"], "plan": d["plan"], "goal": d.get("goal"),
                                               "source": d["source"], "confidence": d.get("confidence"),
-                                              "probabilities": d.get("probabilities"),
-                                              "latency_ms": round(d["latency_ms"]), "state_text": d.get("state_text"),
-                                              "options": d.get("options"), "note": d.get("note")}) + "\n")
+                                              "latency_ms": round(d["latency_ms"]), "steps_ms": d.get("steps_ms"),
+                                              "state_text": d.get("state_text"), "note": d.get("note")}) + "\n")
                         continue
                     log.write(json.dumps({"event": "asked", "t": asked["t"], "on": asked["event"], "tactic": d["tactic"],
                                           "if_fired": d["if_fired"], "source": d["source"],

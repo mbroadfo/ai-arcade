@@ -193,46 +193,23 @@ def test_the_s1m_player_asks_on_events_carries_out_the_answer_and_labels_every_t
     assert "model" in player.model_share()
 
 
-def test_the_pilot_holds_the_models_command_fires_once_and_nudges_one_tick():
-    import time as _time
-    from games.arcade.bzone.controls import TURN_LEFT
+def test_the_pilot_plays_the_models_plan_on_the_clock_and_fires_once():
+    from games.arcade.bzone.controls import DRIVE, TURN_RIGHT
     from games.arcade.bzone.facts import derive
     from games.arcade.bzone.pilot import S1MPilot
 
-    class Fake:
-        def __init__(self, command, fire):
-            self.command, self.fire = command, fire
+    class Never:
+        def ask(self, *a, **k):
+            raise RuntimeError("not asked in this test")
 
-        def ask(self, state, questions, hint=None):
-            out = {"command": {"choice": self.command, "confidence": 1.0, "probabilities": {}}}
-            if "fire" in questions:
-                out["fire"] = {"choice": "fire" if self.fire else "hold", "confidence": 1.0, "probabilities": {}}
-            return {"answers": out, "latency_ms": 5.0}
+    live = [s for _, s in RECORDS if s.playing and not s.dying]
+    s, f = live[0], derive(live[0])
+    pilot = S1MPilot(Never())
+    pilot.worker.submit = lambda *a, **k: False  # keep the plan below
+    pilot.plan, pilot.plan_t = {"plan": [("pivot_right", 0.5, "after"), ("forward", None, "hold")], "source": "model"}, 0.0
+    assert pilot(s, f, 0.1, frozenset())[0] == TURN_RIGHT  # step 1 for its 0.5 s
+    assert pilot(s, f, 0.4, frozenset())[0] == TURN_RIGHT
+    assert pilot(s, f, 0.55, frozenset())[0] == DRIVE | {"FIRE"}  # step 2, fire at the end of step 1: one press
+    assert pilot(s, f, 0.6, frozenset())[0] == DRIVE
+    assert pilot(s, f, 5.0, frozenset())[0] == DRIVE  # step 2 held until the next plan
 
-    live = [s for _, s in RECORDS if s.playing and not s.dying][:40]
-    pilot = S1MPilot(Fake("reverse", False))
-    held = [pilot(s, derive(s), i * 0.1, frozenset()) for i, s in enumerate(live) if not _time.sleep(0.01)]
-    assert any(why.startswith("[model] reverse") for names, why in held)
-    # an aimed turn: turn while short of the target heading, then the controls for "there"
-    from types import SimpleNamespace
-    from games.arcade.bzone.controls import TURN_RIGHT
-    aimer = S1MPilot(Fake("aim_pivot", False))
-    aimer.worker.submit = lambda *a, **k: False
-    aimer.current = {"command": "aim_pivot", "fire": True, "source": "model", "options": {}, "target9": 100,
-                     "style": "pivot"}
-    f0 = derive(live[0])
-    at = lambda a9: SimpleNamespace(**{**vars(live[0]), "angle9": a9, "tank": live[0].tank})  # noqa: E731
-    first = aimer(at(110), f0, 0, frozenset())[0]
-    assert first == TURN_RIGHT  # 10 units to the right still to go: turning, no fire yet
-    there = aimer(at(100), f0, 0.05, frozenset())[0]
-    assert there == frozenset({"FIRE"})  # there: stop, and the fire chosen with it is pressed now
-    nudger = S1MPilot(Fake("nudge_left", False))
-    nudger.current = {"command": "nudge_left", "fire": False, "source": "model", "options": {}}
-    f = derive(live[0])
-    nudger.worker.submit = lambda *a, **k: False  # keep this answer current
-    assert nudger(live[0], f, 0, frozenset())[0] == TURN_LEFT and nudger(live[0], f, 0.1, frozenset())[0] == frozenset()
-    shooter = S1MPilot(Fake("forward", True))
-    shooter.worker.submit = lambda *a, **k: False
-    shooter.current = {"command": "forward", "fire": True, "source": "model", "options": {}}
-    first, second = shooter(live[0], f, 0, frozenset())[0], shooter(live[0], f, 0.1, frozenset())[0]
-    assert "FIRE" in first and "FIRE" not in second  # one press per answer
