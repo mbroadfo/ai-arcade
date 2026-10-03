@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Build MAME 0.251 ROM sets from files already in the collection, without touching the originals.
 
-For each set name: ask MAME (-listxml) which ROMs it needs, find each one by checksum in any zip of the source folder,
+For each set name: ask MAME (-listxml) which ROMs it needs, find each one by checksum in any zip of the source folder
+(and of EXTRA: files from newer sets added with tools/add_rom_files.py, which EmulationStation never lists),
 and write a self-contained (non-merged) <set>.zip into the destination folder. MAME then verifies it (-verifyroms);
 a set that does not verify is deleted again. One JSON line per set.
 
@@ -17,12 +18,13 @@ from pathlib import Path
 
 SOURCE = Path.home() / "RetroPie/roms/arcade"
 DEST = Path.home() / "RetroPie/mame-0251/roms"
+EXTRA = Path.home() / "RetroPie/mame-0251/extra"
 
 
-def index(source):
-    """checksum -> (zip, member) for every file in every zip of the source folder."""
+def index(source, extra=EXTRA):
+    """checksum -> (zip, member) for every file in every zip of the source folder, then of the extra folder."""
     pool = {}
-    for z in sorted(source.glob("*.zip")):
+    for z in sorted(source.glob("*.zip")) + sorted(extra.glob("*.zip")):
         try:
             with zipfile.ZipFile(z) as f:
                 for info in f.infolist():

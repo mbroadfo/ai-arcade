@@ -11,7 +11,7 @@ import time
 
 import paramiko
 
-from gamelib import DEFAULT_GAME, DEFAULT_PI_HOST, ROOT, load_game, load_profile, split_spec
+from gamelib import DEFAULT_GAME, DEFAULT_PI_HOST, ROOT, load_game, load_profile, pi_rompath, split_spec
 from probe_mame_input import MAME_LOG, run
 from state_regions import regions_lua
 
@@ -74,7 +74,7 @@ def main():
         run(ssh, f"rm -f {STATE_FILE} {FRAME_FILE}")
         every = max(1, round(60 / max(1, args.video_fps)))
         run(ssh, f"nohup env SDL_AUDIODRIVER=alsa AI_ARCADE_VIDEO_EVERY={every} "
-                 f"mame {romset} -rompath /home/pi/RetroPie/roms/{system} "
+                 f"mame {romset} -rompath {pi_rompath(system)} "
                  "-video accel -nowindow -skip_gameinfo -joystick -joystickprovider sdl "
                  "-ctrlrpath /home/pi/.mame/ctrlr -ctrlr aiarcade "
                  f"-autoboot_script {REMOTE_DIR}/autoboot.lua "

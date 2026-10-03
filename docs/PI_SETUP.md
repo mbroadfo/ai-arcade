@@ -85,6 +85,14 @@ On 2 October 2026: 116 of the 233 arcade games run in MAME 0.251; the rest are p
 chip dumps, a rebuild MAME rejected, or a fault in 0.251 such as Donkey Kong freezing or Galaxian's sound crashing), and
 MAME 0.251 is the arcade default for games added later. Some games open on a MAME warning screen; press any key.
 
+Files from newer ROM sets (chips dumped after the collection was made) go in with
+`python tools/add_rom_files.py PATH.zip --sets SET...`: the zip lands in `~/RetroPie/mame-0251/extra` (never listed by
+EmulationStation), and each named set is built from the collection plus that pool into `~/RetroPie/mame-0251/roms`,
+kept only if MAME verifies it. AI mode and the other Pi tools search that folder first (`gamelib.pi_rompath`), so a set
+built there plays in AI mode at once; human mode keeps the game's own emulator until `convert.py` moves it. On
+2 October 2026 a newer `bzone.zip` built Battle Zone (rev 2), whose 8 lookup chips the collection lacked. The same zip
+also completes Bradley Trainer, Tempest, Black Widow, Major Havoc and Space Duel (not built yet).
+
 Measured on the Pi 5 with MAME 0.251: Pac-Man at full speed with the agent export (60.7 emulated frames a second; the
 Pi 3 managed about 51), press to visible effect 66 ms median. The Lua scripts in `tools/` run on both MAME versions.
 

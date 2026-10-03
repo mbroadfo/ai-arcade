@@ -22,6 +22,12 @@ DEFAULT_GAME = "arcade/pacman"
 DEFAULT_PI_HOST = os.environ.get("ARCADE_PI_HOST", "192.168.10.122")
 
 
+def pi_rompath(system):
+    """MAME's -rompath on the Pi, quoted for the shell: sets made for MAME 0.251 first (rebuilt, or built with files
+    from newer sets by tools/add_rom_files.py), then the cabinet's own folder for the system."""
+    return f"'/home/pi/RetroPie/mame-0251/roms;/home/pi/RetroPie/roms/{system}'"
+
+
 def split_spec(spec):
     system, _, name = spec.partition("/")
     if not system or not name or "/" in name:

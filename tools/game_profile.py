@@ -17,11 +17,10 @@ from pathlib import Path
 import paramiko
 
 from probe_mame_input import run
-from gamelib import DEFAULT_PI_HOST
+from gamelib import DEFAULT_PI_HOST, pi_rompath
 
 PI_HISCORE = "/usr/share/games/mame/plugins/hiscore/hiscore.dat"
 PI_CHEAT = "/opt/retropie/libretrocores/lr-mame2003/metadata/cheat.dat"
-PI_ROMS = "/home/pi/RetroPie/roms"
 PORTS_LUA = "mame_ports_probe.lua"
 PORTS_LOG = "/tmp/ai-arcade-ports.log"
 
@@ -123,7 +122,7 @@ def main():
 
         run(ssh, "pkill -9 -x mame || true")
         run(ssh, f"rm -f {PORTS_LOG}")
-        run(ssh, f"nohup mame {args.romset} -rompath {PI_ROMS}/{args.system} -sound none -video accel "
+        run(ssh, f"nohup mame {args.romset} -rompath {pi_rompath(args.system)} -sound none -video accel "
                  f"-nowindow -skip_gameinfo -autoboot_script /home/pi/ai-arcade/{PORTS_LUA} "
                  "> /tmp/ai-arcade-mame.log 2>&1 < /dev/null &")
         ports_text = ""

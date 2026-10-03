@@ -14,7 +14,7 @@ import time
 
 import paramiko
 
-from gamelib import DEFAULT_GAME, DEFAULT_PI_HOST, ROOT, load_game, load_profile, split_spec
+from gamelib import DEFAULT_GAME, DEFAULT_PI_HOST, ROOT, load_game, load_profile, pi_rompath, split_spec
 from probe_mame_input import run
 from state_regions import regions_lua
 
@@ -56,7 +56,7 @@ def main():
                 sftp.close()
             script = f"-autoboot_script {REMOTE_DIR}/mame_state_export.lua " if regions else ""
             run(ssh, f"rm -f {LOG}")
-            run(ssh, f"nohup mame {romset} -rompath /home/pi/RetroPie/roms/{system} -sound none "
+            run(ssh, f"nohup mame {romset} -rompath {pi_rompath(system)} -sound none "
                      "-video accel -nowindow -skip_gameinfo -joystick -joystickprovider sdl "
                      f"-seconds_to_run {args.seconds} {script}> {LOG} 2>&1 < /dev/null &")
             time.sleep(5)

@@ -17,7 +17,7 @@ import paramiko
 
 from controller_client import send
 from probe_mame_input import MAME_LOG, run
-from gamelib import DEFAULT_PI_HOST
+from gamelib import DEFAULT_PI_HOST, pi_rompath
 
 REMOTE_DIR = "/home/pi/ai-arcade"
 REQ = "/dev/shm/ai-arcade-snap.req"
@@ -43,7 +43,7 @@ class Session:
             f.write(f"return {{{{0x{self.args.start:X}, 0x{self.args.end:X}}}}}\n")
         sftp.close()
         run(self.ssh, f"pkill -9 -x mame || true; rm -f {REQ} {OUT}")
-        run(self.ssh, f"nohup mame {self.args.romset} -rompath /home/pi/RetroPie/roms/{self.args.system} "
+        run(self.ssh, f"nohup mame {self.args.romset} -rompath {pi_rompath(self.args.system)} "
                       "-sound none -video accel -nowindow -skip_gameinfo -joystick "
                       "-joystickprovider sdl -ctrlrpath /home/pi/.mame/ctrlr -ctrlr aiarcade "
                       f"-autoboot_script {REMOTE_DIR}/mame_snapshot_service.lua "
