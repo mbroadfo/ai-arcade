@@ -336,7 +336,7 @@ class IdleWorker(FakeWorker):
 
 
 def test_spare_time_fills_the_path_ahead_then_asks_about_the_junction_behind():
-    p = player.Player(None, None, IdleWorker(), goals.GoalManager("clear_dots"), io.StringIO())
+    p = player.Player(None, None, IdleWorker(), goals.GoalManager("clear_dots"), io.StringIO(), turn_guess=True)
     maze = Maze(IMAGE)
     heading = player.LOWER_TO_UPPER[STATE.pacman.direction]
     junction, _, path = maze.walk_to_decision(STATE.pacman.tile, heading)

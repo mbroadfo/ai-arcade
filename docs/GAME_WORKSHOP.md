@@ -184,6 +184,28 @@ never choose:
 - **Late default**: `--late rule` lets the rule decide; `--late keep` changes nothing and waits for the model, which
   with the reflex off is the model alone.
 
+The model server answers one question at a time, so every question waits for the ones before it, including guesses
+and the slow layer's. The figure that counts is answers used on time, not how fast one answer is. What was learned
+on Ms. Pac-Man (2 October 2026, nimble at 85% speed), in `arcadekit/answers.py` and `arcadekit/decisions.py` for any
+game:
+
+- **The next decision point first.** Its question goes to the front of the queue (`next_point=True`); one already
+  queued is moved there. In first-in-first-out order, 434 of 537 late moves had their question still waiting behind
+  guesses, though an answer took only 258 ms.
+- **Guesses only when the model is idle**, nothing queued and nothing being answered (`spare=True`), and retried each
+  tick, not only when an answer arrives. A guess the model has started holds up the next real question.
+- **Withdraw what is no longer on the way** (`withdraw(keep)`): a queued question about a branch not taken.
+- **Count why each move was late** before tuning: after these, most late moves were geometry (decision points too
+  close together, turn-arounds), not a slow model. Asking ahead further (12 tiles instead of 8) and guessing the
+  point behind a turn-around did not help.
+- **The slow layer shares the server.** Ask it on game events and a heartbeat, and only when no decision question
+  waits; ask its stance one setting at a time; offer only goals with something to aim at (`Strategist.request`
+  `goals=`), so no answer is spent on an impossible one.
+
+Together these took the model from 23% to 61% of Ms. Pac-Man's moves (3-game runs; the scores did not show a
+difference at that size). What a game supplies for them: its next decision point (the question key), the path ahead
+(which points follow from stored answers, for the chain and for withdrawing), and which of its goals are possible now.
+
 Choose the model for the cadence. In v13, `tev1:0.8b` (80 ms) made 69% of Pac-Man's junction decisions itself (86%
 of the real junctions once corners are left out); `nimble` (250 ms) made 31%, because 67% of its answers were late.
 To judge a slow model's choices without the latency handicap, run the game slower (`start_pi_game.py --speed 0.5`).

@@ -30,6 +30,8 @@ OPTIONS = (
     Option("ask_order", "timing", "the model's queue: nearest = the junction he is heading to first, chained "
            "junctions only in spare time, questions off his way withdrawn; fifo = in the order they come up",
            default="nearest", parse=str, choices=("nearest", "fifo"), tag="order-{}"),
+    Option("turn_guess", "timing", "in spare time, also ask about the junction behind him (ready if he turns "
+           "around); measured 2 October 2026 without a gain, so off by default", tag="turnguess"),
     Option("chain_depth", "timing", "look-ahead chain depth, 0 = off (player default 2)", default=None, flag="--chain",
            parse=int, tag="chain{}"),
 )

@@ -48,7 +48,8 @@ LATE_DEFAULTS = ("rule", "keep")  # with no answer on arrival: the rule decides,
 # question at once), so guesses still held up the next real question: none of 425 chained guesses were skipped.
 # With guesses only when idle, 140 of 292 late junctions came under 0.8 s after the previous one (a guess refused
 # when its answer arrived was never asked again) and 114 within 1.5 s of a turn-around (the junction behind him had
-# not been asked). So in spare time (_spare_guess) the path ahead is filled each tick, then the junction behind him.
+# not been asked). So in spare time (_spare_guess) the path ahead is filled each tick: short-corridor lates fell to 58
+# of 542. Asking about the junction behind him too (turn_guess) did not help turn-arounds (102 of 542), so it is off.
 ASK_ORDERS = ("nearest", "fifo")
 
 
@@ -57,7 +58,7 @@ class Player:
                  lookahead=LOOKAHEAD_STEPS, knowledge=None, revise=False, reflex=True,
                  chain_depth=CHAIN_DEPTH, park=False, refuge=False, danger_query=False,
                  danger_worker=None, clock=time.time, late="rule", strategy_timing="events", ask_order="nearest",
-                 *, spec):
+                 turn_guess=False, *, spec):
         # Ablation switches. revise: code re-checks each stored answer against fresh facts (code overruling the
         # decider, so off by default). reflex: the survival instinct. chain_depth: look-ahead chain, 0 = off.
         self.clock = clock  # wall-clock seconds; a replay passes recorded time
@@ -113,6 +114,7 @@ class Player:
         self.stats["queue"] = self.book.counts  # promoted, withdrawn, spare_skipped
         self.stats["spare"] = {"ahead": 0, "behind": 0, "behind_used": 0}  # guesses asked in spare time (_spare_guess)
         self.behind_asked = set()
+        self.turn_guess = turn_guess
         # a model slow layer shares the model server: tell it when no junction question waits (strategy.TIMINGS)
         if hasattr(strategy, "configure"):
             strategy.configure(timing=strategy_timing, quiet=self._quiet)
@@ -428,8 +430,8 @@ class Player:
 
     def _spare_guess(self, state, image, maze, key, heading):
         """With the model idle, ask one guess: the first junction on his way without an answer (following the
-        stored answers, chain_depth deep), else the junction behind him, which a turn-around (his own choice or the
-        reflex) makes the next one. A timing choice: what is asked about, never what is chosen."""
+        stored answers, chain_depth deep), else (turn_guess) the junction behind him, which a turn-around (his own
+        choice or the reflex) makes the next one. A timing choice: what is asked about, never what is chosen."""
         k = key
         for depth in range(1, self.chain_depth + 1):
             stored = self.book.get(k)
@@ -447,7 +449,7 @@ class Player:
                     self.stats["spare"]["ahead"] += 1
                 return
         back = OPPOSITE.get(heading)
-        if back is None:
+        if back is None or not self.turn_guess:
             return
         junction, steps, path = maze.walk_to_decision(state.pacman.tile, back)
         if junction is None or steps > CHAIN_MAX_STEPS:
