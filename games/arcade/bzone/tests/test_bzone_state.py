@@ -210,9 +210,22 @@ def test_the_pilot_holds_the_models_command_fires_once_and_nudges_one_tick():
             return {"answers": out, "latency_ms": 5.0}
 
     live = [s for _, s in RECORDS if s.playing and not s.dying][:40]
-    pilot = S1MPilot(Fake("pivot_left", False))
+    pilot = S1MPilot(Fake("reverse", False))
     held = [pilot(s, derive(s), i * 0.1, frozenset()) for i, s in enumerate(live) if not _time.sleep(0.01)]
-    assert any(names == TURN_LEFT and why.startswith("[model] pivot_left") for names, why in held)
+    assert any(why.startswith("[model] reverse") for names, why in held)
+    # an aimed turn: turn while short of the target heading, then the controls for "there"
+    from types import SimpleNamespace
+    from games.arcade.bzone.controls import TURN_RIGHT
+    aimer = S1MPilot(Fake("aim_pivot", False))
+    aimer.worker.submit = lambda *a, **k: False
+    aimer.current = {"command": "aim_pivot", "fire": True, "source": "model", "options": {}, "target9": 100,
+                     "style": "pivot"}
+    f0 = derive(live[0])
+    at = lambda a9: SimpleNamespace(**{**vars(live[0]), "angle9": a9, "tank": live[0].tank})  # noqa: E731
+    first = aimer(at(110), f0, 0, frozenset())[0]
+    assert first == TURN_RIGHT  # 10 units to the right still to go: turning, no fire yet
+    there = aimer(at(100), f0, 0.05, frozenset())[0]
+    assert there == frozenset({"FIRE"})  # there: stop, and the fire chosen with it is pressed now
     nudger = S1MPilot(Fake("nudge_left", False))
     nudger.current = {"command": "nudge_left", "fire": False, "source": "model", "options": {}}
     f = derive(live[0])
