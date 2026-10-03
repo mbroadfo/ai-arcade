@@ -1,0 +1,115 @@
+{
+ "note": "Recorded 2 October 2026, MAME 0.251, set bzone (rev 2): work RAM 0000-03FF every 6 frames, records of frame (u32 little-endian) + 1024 bytes. Events: broker presses by frame (approximate, read back from the Pi). Left tread = player 1 stick, right tread = player 2 stick.",
+ "events": [
+  {
+   "label": "coin",
+   "start": 378,
+   "end": 396
+  },
+  {
+   "label": "coin",
+   "start": 426,
+   "end": 438
+  },
+  {
+   "label": "start",
+   "start": 468,
+   "end": 480
+  },
+  {
+   "label": "turn left",
+   "start": 648,
+   "end": 1476
+  },
+  {
+   "label": "forward",
+   "start": 1518,
+   "end": 1644
+  },
+  {
+   "label": "back",
+   "start": 1686,
+   "end": 1812
+  },
+  {
+   "label": "turn right",
+   "start": 1854,
+   "end": 1902
+  },
+  {
+   "label": "fire",
+   "start": 1902,
+   "end": 1914
+  },
+  {
+   "label": "turn right",
+   "start": 1974,
+   "end": 2016
+  },
+  {
+   "label": "fire",
+   "start": 2022,
+   "end": 2028
+  },
+  {
+   "label": "turn right",
+   "start": 2088,
+   "end": 2136
+  },
+  {
+   "label": "fire",
+   "start": 2136,
+   "end": 2148
+  },
+  {
+   "label": "turn right",
+   "start": 2208,
+   "end": 2250
+  },
+  {
+   "label": "fire",
+   "start": 2250,
+   "end": 2262
+  },
+  {
+   "label": "turn right",
+   "start": 2322,
+   "end": 2370
+  },
+  {
+   "label": "fire",
+   "start": 2370,
+   "end": 2382
+  },
+  {
+   "label": "turn right",
+   "start": 2442,
+   "end": 2484
+  },
+  {
+   "label": "fire",
+   "start": 2490,
+   "end": 2496
+  },
+  {
+   "label": "turn right",
+   "start": 2562,
+   "end": 2604
+  },
+  {
+   "label": "fire",
+   "start": 2604,
+   "end": 2616
+  },
+  {
+   "label": "turn right",
+   "start": 2676,
+   "end": 2718
+  },
+  {
+   "label": "fire",
+   "start": 2724,
+   "end": 2736
+  }
+ ]
+}

@@ -28,7 +28,8 @@ hypothesis to test). Multi-byte values are little-endian.
 | `CE` | `ATRACT` | Attract flag: `00` attract, `FF` playing | observed |
 | `CF` | `SKILL` | Skill of player | source |
 | `C6` | `FRAME` | Frame counter | source |
-| `B8-BB` | `HITS` | "Number of hits (score)", 4 bytes | observed: `BA` went 0 → 1 → 2 as two enemies were destroyed; the units shown on screen are still to check (verify) |
+| `B8-B9` | `HITS` | "Number of hits (score)": the player's hits, the score | source; stayed 0 in a run that hit nothing (the screen showed 0000). The screen prints the digits then a fixed "000" (message `YSCORE`), so probably thousands (verify with a kill) |
+| `BA-BB` | `HITS+2` | The enemy's hits: the hits the player's tank has taken | observed: +1 at each of two deaths, with `LIVES` -1 and `CRACK` counting |
 | `0300-031D` | `HSCTBL` | High scores, 30 bytes (also hiscore.dat's region) | source |
 
 ## The player's tank
@@ -37,15 +38,16 @@ hypothesis to test). Multi-byte values are little-endian.
 |---|---|---|---|
 | `2A` | `TANGLE` | Tank angle: 256 = a full circle | observed: turning left adds about 22.5 a second (about 11 s a turn) and wraps 255 → 0; discovery's best turn byte |
 | `27` | `LANGLE` | Least significant bit of the 9-bit angle, in bit 7 | source; seen as `80`/`00` |
-| `2D-2E` | `TPOSX` | Tank X position, signed 16-bit (`2F-30`: the enemy's, as the `,X` index 2 twin) | observed: changes along the heading when driving; enemy half: source |
-| `31-32` | `TPOSY` | Tank Y position, signed 16-bit (`33-34`: the enemy's) | observed as `TPOSX`; enemy half: source |
+| `2D-2E` | `TPOSX` | Tank X position, signed 16-bit (`2F-30`: the enemy's, as the `,X` index 2 twin) | source; discovery's drive shortlist had `2E`. Not yet observed: the one drive test began as the tank died, so the change seen was the respawn (verify) |
+| `31-32` | `TPOSY` | Tank Y position, signed 16-bit (`33-34`: the enemy's) | source; as `TPOSX` (verify) |
 | `24` | `FIRECT` | Shell timer counter (`26`: the enemy's) | source; cheat.dat "Enemy Tanks Can't Fire" writes `26` |
 | `A8-AB` | `SHELLX` | Shell X: the tank's at `A8`, the enemy's at `AA` | observed: `A8` changes after each press of fire |
 | `AC-AF` | `SHELLY` | Shell Y, as `SHELLX` | source |
-| `C7` | `CRACK` | Cracked windshield counter (the death screen) | source |
+| `C7` | `CRACK` | Cracked windshield counter (the death screen) | observed: counts up by about 4 every 6 frames for about 1 s after each death, then 0 |
 | `C9` | `EIRNGE` | "Enemy in range" flag (the on-screen message) | source |
 
-Driving backward was not checked cleanly (the tank was destroyed during the test): to verify.
+Driving was not checked cleanly (the tank was destroyed as the test began): to verify, with the decoder
+(`state.py`) and its tests (`tests/test_bzone_state.py`, on the scripted recording in `tests/fixtures`).
 
 ## The enemy and the world
 
