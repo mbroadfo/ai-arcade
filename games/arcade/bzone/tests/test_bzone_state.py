@@ -67,3 +67,19 @@ def test_the_hit_radius_follows_the_games_formula_head_on_to_side_on():
     from games.arcade.bzone.facts import hit_radius
     assert hit_radius(0, 0) == 224 and hit_radius(64, 0) == hit_radius(0, 64) == 320
     assert hit_radius(128, 0) == 224  # facing each other is head-on too
+
+
+def test_each_death_was_an_enemy_shell_whose_path_crossed_the_tank():
+    from games.arcade.bzone.facts import derive
+    seq = [s for _, s in RECORDS if s.playing]
+    deaths = [i for i in range(1, len(seq)) if seq[i].lives == seq[i - 1].lives - 1]
+    for i in deaths:
+        assert seq[i].enemy.fire >= 0x80  # the shell is exploding as the life goes
+        flying = [derive(s) for s in seq[max(0, i - 15):i] if 0 < s.enemy.fire < 0x80]
+        assert flying and all(f.enemy_shell == "flying" and abs(f.shell_miss) < 224 for f in flying)
+        assert flying[-1].shell_arrives_s < 0.15  # it arrived when the estimate said
+
+
+def test_the_score_is_hits_read_as_bcd_thousands():
+    from games.arcade.bzone.state import bcd
+    assert bcd(0x18) == 18 and bcd(0x06) == 6 and bcd(0x0100) == 100  # the screen showed 18000 with HITS = $18

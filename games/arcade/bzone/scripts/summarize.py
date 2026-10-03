@@ -16,7 +16,8 @@ def summarize(path):
         return None
     alive = [r for r in ticks if r["state"]["playing"] and not r["facts"]["dying"]]
     radar = [r for r in alive if r["facts"]["enemy_on_radar"]]
-    kills = ticks[-1]["state"]["hits"] - ticks[0]["state"]["hits"]
+    # A kill raises the score (HITS, thousands in BCD); older logs have no score changes, only "hits a->b"
+    kills = sum(any(c.startswith(("score", "hits ")) for c in r["changes"]) for r in ticks)
     deaths = sum("life lost" in r["changes"] for r in ticks)
     shots = sum(1 for r in ticks if ["1", "BUTTON_1"] in [list(map(str, p)) for p in r["pressed"]])
     misses = [abs(r["facts"]["miss_by"]) for r in radar if r["facts"].get("miss_by") is not None]

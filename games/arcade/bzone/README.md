@@ -9,7 +9,7 @@ two tread sticks used together, decisions on a beat instead of at junctions.
 |---|---|
 | 0 Feasibility | done: 100% speed on the Pi 5 (MAME 0.251) with no exporter and with all 1 KB of work RAM exported every frame (`mame_speed_test.py`); unthrottled with no display 1,350% |
 | 1 Controls | `profile.json` written. Left tread on Player 1's stick (up = forward), right tread on Player 2's, fire on Player 1's button 1, coin, start: the `bzone` section of `tools/configure_mame_controller.py`. All checked to reach the game (`tools/mame_inputs_probe.lua`); the broker needs no change. Default coinage is 2 coins, 1 play. Press-to-effect latency not measured yet |
-| 2 State | done for what the lab needs: Atari's own RAM names (RAM_MAP.md), the decoder (`state.py`) tested on a scripted recording (`tests/`), and in live runs: credits, lives, attract flag, heading, position, score (hits), hits taken, death counter |
+| 2 State | done for what the lab needs: Atari's own RAM names (RAM_MAP.md), the decoder (`state.py`) tested on a scripted recording (`tests/`), and in live runs: credits, lives, attract flag, heading, position, score (`HITS`, thousands in BCD), hits taken, death counter, the enemy's shell and its hold-fire timer |
 | 3 Decision | on a beat: the real-time lab (below). Facts (`facts.py`) are what a player sees: the screen's left/right/rear warning always; bearing, distance and whether a shot would hit only while the enemy is on the radar, which shows it only within firing range |
 | 4-8 | not started: no model plays yet |
 
@@ -32,6 +32,15 @@ Found on 2 October 2026:
 - The video export showed nothing for Battlezone: it copied MAME's screen bitmap, and a vector game does not draw into
   it. Vector screens now use MAME's rendered snapshot (`tools/mame_video_export.lua`): 640 x 480, about 6 ms a capture,
   10.6 frames a second to the Observatory at 17 KB a frame (3 October 2026).
+
+The enemy's fire, 3 October 2026 (Atari's FIREIT and SHUPDT, checked on the scripted recording and a lab game):
+- It never fires in its first 32 game frames (`FTIMER` below `$20`); the earliest live shot came at 33.
+- It fires only when its heading is within 2 units of the bearing to the tank, so the shell flies at where the tank
+  was. Every killing shot (2 recorded, 3 live) was fired 0-1 units off and exploded where the tank stood.
+- The shell covers about 23,000 units a second and gives out at about 32,000, the radar's range: from the radar's edge
+  it arrives in about 1.2 s.
+- All three deaths in the lab game (`track_and_fire`, 6 kills, 6,000 points) came while the tank stood still:
+  `track_and_fire` pivots in place. Moving off the line during that second is the obvious test.
 
 ## Getting the ROM
 

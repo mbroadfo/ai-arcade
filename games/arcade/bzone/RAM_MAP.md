@@ -28,7 +28,7 @@ hypothesis to test). Multi-byte values are little-endian.
 | `CE` | `ATRACT` | Attract flag: `00` attract, `FF` playing | observed |
 | `CF` | `SKILL` | Skill of player | source |
 | `C6` | `FRAME` | Frame counter | source |
-| `B8-B9` | `HITS` | "Number of hits (score)": the player's hits, the score | source; stayed 0 in a run that hit nothing (the screen showed 0000). The screen prints the digits then a fixed "000" (message `YSCORE`), so probably thousands (verify with a kill) |
+| `B8-B9` | `HITS` | The score in thousands, BCD: the screen prints its digits then a fixed "000" (message `YSCORE`). Raised by each kill's points, so it is not a count of kills | observed: `06` with the screen showing 6000 after six tank kills; `18` (read as 24) with the screen showing 18000; 0 in a run that hit nothing |
 | `BA-BB` | `HITS+2` | The enemy's hits: the hits the player's tank has taken | observed: +1 at each of two deaths, with `LIVES` -1 and `CRACK` counting |
 | `0300-031D` | `HSCTBL` | High scores, 30 bytes (also hiscore.dat's region) | source |
 
@@ -40,9 +40,12 @@ hypothesis to test). Multi-byte values are little-endian.
 | `27` | `LANGLE` | Least significant bit of the 9-bit angle, in bit 7 | source; seen as `80`/`00` |
 | `2D-2E` | `TPOSX` | Tank X position, signed 16-bit (`2F-30`: the enemy's, as the `,X` index 2 twin) | observed: driving moves it about 1,900 units a second along the heading (heading 44 degrees: +4140, +3960 in 2 s), turning does not; enemy half: source |
 | `31-32` | `TPOSY` | Tank Y position, signed 16-bit (`33-34`: the enemy's) | observed as `TPOSX`; enemy half: source |
-| `24` | `FIRECT` | Shell timer counter (`26`: the enemy's) | source; cheat.dat "Enemy Tanks Can't Fire" writes `26` |
-| `A8-AB` | `SHELLX` | Shell X: the tank's at `A8`, the enemy's at `AA` | observed: `A8` changes after each press of fire |
-| `AC-AF` | `SHELLY` | Shell Y, as `SHELLX` | source |
+| `24` | `FIRECT` | Shell state (`26`: the enemy's): 0 none; `7F` when fired, counting down an update at a time while it flies; `80` and up exploding (`8F` on hitting the tank, `A0` on an obstacle), back to 0 | source; observed for `26`: both deaths of the scripted recording went `00 → 7F`, down to the `20`s, `8F` as the life was lost, `00` |
+| `A8-AB` | `SHELLX` | Shell X: the tank's at `A8`, the enemy's at `AA` | observed: `A8` changes after each press of fire; `AA` moved in a straight line to where the tank stood (recording) |
+| `AC-AF` | `SHELLY` | Shell Y, as `SHELLX` | source; `AE` observed as `AA` |
+| `B0-B3` | `SINCX` | Shell X step per update (`B2`: the enemy's), from its heading when fired | source; observed: the enemy's shell moved `B2`/`B6` per update (253 units, about 90 updates a second) |
+| `B4-B7` | `SINCY` | Shell Y step, as `SINCX` | as `SINCX` |
+| `D1` | `FTIMER` | Game frames since the enemy appeared, stops at `FF`. The enemy never fires below `20`; until the player has 2 hits it fires only when on the player's screen (`PTURN` < `20`) and close (`TDIST` < `24`), unless `FTIMER` is `FF`; at `FF` it always attacks | source (`FIREIT`, `R_40S_`); reset to 0 by `ROBOT1` when an enemy is placed (verify live) |
 | `C7` | `CRACK` | Cracked windshield counter (the death screen) | observed: counts up by about 4 every 6 frames for about 1 s after each death, then 0 |
 | `C9` | `EIRNGE` | "Enemy in range" flag (the on-screen message) | source |
 

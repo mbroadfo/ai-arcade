@@ -31,10 +31,11 @@ from state_client import StateStream  # noqa: E402
 
 def digest(state):
     """The decoded state, flat, for the log."""
-    return {"playing": state.playing, "lives": state.lives, "hits": state.hits, "hits_taken": state.hits_taken,
+    return {"playing": state.playing, "lives": state.lives, "hits": state.hits, "score": state.score, "hits_taken": state.hits_taken,
             "dying": state.dying, "angle": state.tank.angle, "x": state.tank.x, "y": state.tank.y,
             "enemy": [state.enemy.x, state.enemy.y, state.enemy.angle], "enemy_distance": state.enemy_distance,
-            "enemy_in_range": state.enemy_in_range, "missile": state.missile, "saucer": state.saucer}
+            "enemy_in_range": state.enemy_in_range, "missile": state.missile, "saucer": state.saucer,
+            "enemy_fire": state.enemy.fire, "enemy_shell": list(state.enemy.shell), "enemy_timer": state.enemy_timer}
 
 
 def changes(before, after):
@@ -44,10 +45,12 @@ def changes(before, after):
         return out
     if after.lives < before.lives:
         out.append("life lost")
-    if after.hits != before.hits:
-        out.append(f"hits {before.hits}->{after.hits}")
+    if after.score > before.score:
+        out.append(f"score {before.score}->{after.score}")
     if after.hits_taken != before.hits_taken:
         out.append(f"hit taken ({after.hits_taken})")
+    if after.enemy.fire and not before.enemy.fire:
+        out.append("enemy fired")
     if after.dying and not before.dying:
         out.append("windshield cracked")
     if after.playing != before.playing:
@@ -115,7 +118,7 @@ def main(argv=None):
     start_game(stream, broker, coins)
 
     clock = TickClock(args.hz)
-    began, previous, last_frame, held = time.monotonic(), None, None, frozenset()
+    began, previous, last_frame, held, kills = time.monotonic(), None, None, frozenset(), 0
     try:
         shown = 0.0
         while time.monotonic() - began < args.seconds and not stop:
@@ -146,9 +149,10 @@ def main(argv=None):
             log.write(json.dumps(record) + "\n")
             if live and tick.began - shown >= 0.2:  # the Observatory: five status lines a second
                 shown = tick.began
-                live.send({**status(state, facts, frame, describe(names), why, state.hits), "t": round(time.time(), 3)})
+                live.send({**status(state, facts, frame, describe(names), why, kills), "t": round(time.time(), 3)})
             for change in record["changes"] if live else ():
                 live.send({"event": "lab", "what": change, "t": round(time.time(), 3)})
+            kills += any(c.startswith("score") for c in record["changes"])  # a tank, missile or saucer destroyed
             previous, last_frame = state, frame
             if previous.playing is False and t > 5:
                 break  # the game ended
