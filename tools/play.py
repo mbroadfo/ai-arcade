@@ -16,6 +16,7 @@ Standing orders (arcadekit/orders.py): text put in front of every question a mod
 import argparse
 import json
 import sys
+import threading
 import time
 from pathlib import Path
 
@@ -111,7 +112,11 @@ def main(argv=None):
         return {"event": "orders", "version": version, "orders": items, "source": source,
                 "reaches": orders_reach, "t": round(time.time(), 3)}
 
+    stop_requested = threading.Event()
+
     def command(message):  # from the Observatory
+        if message.get("op") == "stop":  # end the run as Ctrl+C would: results and manifest are written
+            stop_requested.set()
         if message.get("op") == "orders" and isinstance(message.get("orders"), list):
             if orders.set(message["orders"], source="operator") is None:
                 live.send(orders_record("unchanged"))  # still confirm, so the page stops waiting
@@ -164,7 +169,7 @@ def main(argv=None):
     print(f"playing {args.games} game(s) of {args.game} with decider={args.decider} "
           f"goal={args.goal} knowledge={args.knowledge}; logs in {out_dir}", flush=True)
     try:
-        while time.time() < deadline and player.finished < args.games:
+        while time.time() < deadline and player.finished < args.games and not stop_requested.is_set():
             try:
                 result = player.tick()
                 last_good = time.time()

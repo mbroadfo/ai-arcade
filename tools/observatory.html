@@ -201,7 +201,104 @@
   .muted { color: var(--dim); }
   .hidden { display: none !important; }
 
+
+  /* ---------- modes: the AI panels only while an AI run is on screen ---------- */
+  body:not(.ai) .ai-only { display: none !important; }
+  body.ai .home-only { display: none !important; }
+  body:not(.ai) main { grid-template-columns: minmax(0, 1fr); }
+  body:not(.ai) .stagecol { display: none; }
+  .home { width: 100%; max-width: 1180px; margin: 0 auto; }
+  .actions { display: flex; gap: 8px; align-items: center; }
+  .hbtn { font: 700 12px var(--sans); letter-spacing: .08em; padding: 9px 14px; border-radius: 9px; cursor: pointer;
+          border: 1px solid var(--line-2); background: var(--panel-2); color: var(--text); white-space: nowrap; }
+  .hbtn:hover { border-color: var(--accent); }
+  .hbtn.primary { background: var(--accent); color: #06070b; border-color: var(--accent); }
+  .hbtn.warnbtn { border-color: #ff3d6e88; color: var(--bad); }
+  .hbtn:disabled { opacity: .45; cursor: default; }
+  .now { display: flex; flex-direction: column; line-height: 1.2; min-width: 0; }
+  .now small { font-size: 9px; letter-spacing: .22em; color: var(--dim); }
+  .now b { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 30vw; }
+
+  /* ---------- home (no AI run on screen) ---------- */
+  .home { min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+  .hero { padding: 26px 28px; border-radius: 16px; border: 1px solid var(--line);
+          background: radial-gradient(circle at 0% 0%, #1b2a5a55, transparent 60%), linear-gradient(180deg, var(--panel), #0b0e15); }
+  .hero small { font: 600 10px var(--sans); letter-spacing: .26em; color: var(--dim); }
+  .hero h1 { margin: 8px 0 6px; font: 22px/1.35 var(--pixel); color: var(--accent); text-shadow: 0 0 18px #ffe60044; }
+  .hero p { margin: 0 0 18px; color: #c4cad6; max-width: 62ch; }
+  .hero .actions { flex-wrap: wrap; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }
+  .tile { text-align: left; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: #0a0d14;
+          color: var(--text); cursor: pointer; font: 14px var(--sans); display: flex; flex-direction: column; gap: 4px; }
+  .tile:hover { border-color: var(--accent); }
+  .tile span { font: 11px var(--mono); color: var(--dim); }
+  .badge { display: inline-block; font: 700 10px var(--mono); letter-spacing: .08em; padding: 1px 6px; border-radius: 5px;
+           background: var(--model); color: #06070b; margin-left: 6px; vertical-align: 1px; }
+  .steps { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; font: 13px var(--mono); }
+  .steps li { color: var(--faint); } .steps li.done { color: var(--ok); } .steps li.now { color: var(--accent); }
+  .steps li.done::before { content: "✓ "; } .steps li.now::before { content: "▸ "; } .steps li::before { content: "· "; }
+  .tail { font: 11px/1.5 var(--mono); color: var(--dim); white-space: pre-wrap; margin-top: 10px; max-height: 160px; overflow: auto; }
+
+  /* ---------- drawers ---------- */
+  .scrim { position: fixed; inset: 0; background: #0009; backdrop-filter: blur(2px); z-index: 20; opacity: 0;
+           pointer-events: none; transition: opacity .2s; }
+  .scrim.open { opacity: 1; pointer-events: auto; }
+  .drawer { position: fixed; top: 0; bottom: 0; width: min(520px, 100vw); z-index: 30; background: #0b0e15;
+            border: 1px solid var(--line-2); display: flex; flex-direction: column; transition: transform .25s ease;
+            box-shadow: 0 0 60px #000a; }
+  .drawer.left { left: 0; transform: translateX(-105%); border-left: 0; }
+  .drawer.right { right: 0; transform: translateX(105%); border-right: 0; width: min(600px, 100vw); }
+  .drawer.open { transform: none; }
+  .drawer header { position: static; height: auto; padding: 16px 18px; gap: 12px; background: none; backdrop-filter: none; }
+  .drawer header h3 { margin: 0; font: 13px var(--pixel); color: var(--accent); flex: 1; }
+  .drawer .x { background: none; border: 0; color: var(--dim); font-size: 20px; cursor: pointer; }
+  .drawer .body { flex: 1; overflow-y: auto; padding: 0 18px 18px; }
+  .drawer .foot { padding: 14px 18px; border-top: 1px solid var(--line); display: flex; gap: 10px; align-items: center; }
+  .search { width: 100%; background: #07090f; border: 1px solid var(--line-2); border-radius: 10px; color: var(--text);
+            font: 15px var(--sans); padding: 11px 13px; outline: none; margin-bottom: 10px; }
+  .search:focus { border-color: var(--accent); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .chipbtn { font: 600 11px var(--mono); padding: 4px 10px; border-radius: 99px; border: 1px solid var(--line-2);
+             background: none; color: var(--dim); cursor: pointer; }
+  .chipbtn.on { background: var(--accent); color: #06070b; border-color: var(--accent); }
+  .glist { display: grid; gap: 4px; }
+  .gitem { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; padding: 9px 11px; border-radius: 9px;
+           border: 1px solid transparent; cursor: pointer; }
+  .gitem:hover, .gitem.sel { background: var(--panel-2); border-color: var(--line-2); }
+  .gitem b { font-weight: 500; } .gitem span { font: 11px var(--mono); color: var(--dim); }
+  .gdetail { border: 1px solid var(--line-2); border-radius: 12px; padding: 14px; margin: 6px 0 10px; background: var(--panel); }
+  .gdetail h4 { margin: 0 0 4px; font-size: 16px; }
+  .gdetail .meta { font: 12px var(--mono); color: var(--dim); margin-bottom: 12px; }
+  .gdetail .warn { font-size: 12px; color: var(--code); margin: 0 0 10px; }
+  .field { margin: 16px 0; }
+  .field > label, .field > .lbl2 { display: block; font: 600 10px var(--sans); letter-spacing: .2em; color: var(--dim); margin-bottom: 8px; }
+  .field .help { font-size: 12px; color: var(--dim); margin-top: 6px; }
+  .opts { display: grid; gap: 6px; }
+  .opt2 { display: grid; grid-template-columns: 18px 1fr; gap: 8px; padding: 9px 11px; border-radius: 9px; border: 1px solid var(--line);
+          cursor: pointer; align-items: start; }
+  .opt2:has(input:checked) { border-color: var(--accent); background: #ffe6000d; }
+  .opt2 input { accent-color: var(--accent); margin-top: 3px; }
+  .opt2 b { font-weight: 600; } .opt2 small { display: block; color: var(--dim); font-size: 12px; margin-top: 2px; }
+  .drawer select, .drawer input[type=number], .drawer input[type=text], .drawer textarea {
+    background: #07090f; border: 1px solid var(--line-2); border-radius: 8px; color: var(--text); font: 14px var(--sans);
+    padding: 8px 10px; outline: none; width: 100%; }
+  .drawer textarea { min-height: 70px; resize: vertical; }
+  .kindbox { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin: 10px 0; }
+  .kindbox.who { border-color: #ff7a1a55; }
+  .kindbox h5 { margin: 0 0 2px; font: 600 11px var(--sans); letter-spacing: .14em; text-transform: uppercase; }
+  .kindbox.who h5 { color: var(--code); }
+  .kindbox p { margin: 0 0 8px; font-size: 12px; color: var(--dim); }
+  .sw { }
+  .swrow { display: grid; grid-template-columns: 1fr 140px; gap: 10px; align-items: center; padding: 6px 0; border-top: 1px solid #151a26; }
+  .swrow b { font: 600 13px var(--mono); } .swrow small { display: block; color: var(--dim); font-size: 12px; }
+  .cmd { font: 11px/1.5 var(--mono); color: var(--dim); word-break: break-all; flex: 1; }
+  details summary { cursor: pointer; color: var(--dim); font: 600 11px var(--sans); letter-spacing: .16em; margin: 18px 0 6px; }
+  .toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 40; padding: 10px 16px; border-radius: 10px;
+           background: #2a0d16; border: 1px solid #ff3d6e88; color: #ffd0da; font-size: 13px; max-width: 80vw; }
+
   @media (max-width: 1100px) {
+    .home { grid-column: auto; }
+    .now b { max-width: 70vw; }
     body { overflow: auto; }
     header { height: auto; flex-wrap: wrap; padding: 10px 16px; gap: 12px; }
     .runinfo { margin-left: 0; flex-wrap: wrap; }
@@ -219,32 +316,41 @@
 <header>
   <div class="brand"><b>AI ARCADE</b><span>OBSERVATORY</span></div>
   <span class="pill" id="runstate"><i></i><span>WAITING</span></span>
-  <div class="score">
+  <div class="now home-only" id="now"><small>ON THE SCREEN</small><b id="now-text">–</b></div>
+  <div class="score ai-only">
     <div><small>GAME</small><b id="h-game">–</b></div>
     <div><small>SCORE</small><b id="h-score">–</b></div>
     <div><small>LEVEL</small><b id="h-level">–</b></div>
     <div class="lives"><small>LIVES</small><b id="h-lives">–</b></div>
   </div>
-  <div class="runinfo" id="runinfo"></div>
-  <div class="links"><span><i id="d-page"></i>page</span><span><i id="d-video"></i>video <span id="fps"></span></span></div>
+  <div class="runinfo ai-only" id="runinfo"></div>
+  <div class="actions control-only" id="actions">
+    <button class="hbtn" id="b-games">☰ GAMES</button>
+    <button class="hbtn hidden" id="b-again">RUN AGAIN</button>
+    <button class="hbtn warnbtn hidden" id="b-stop">STOP</button>
+    <button class="hbtn hidden" id="b-menu">BACK TO MENU</button>
+  </div>
+  <div class="links"><span><i id="d-page"></i>page</span><span class="ai-only"><i id="d-video"></i>video <span id="fps"></span></span></div>
 </header>
 
 <main>
   <section class="stagecol">
     <div class="stage" id="stage">
-      <div class="empty" id="novideo">NO SIGNAL<br><span style="font-family:var(--mono);font-size:12px">python tools/start_pi_game.py</span></div>
+      <div class="empty" id="novideo">NO SIGNAL<br><span style="font-family:var(--mono);font-size:12px">video comes with AI runs</span></div>
       <img id="frame" alt="" class="hidden">
       <canvas id="overlay"></canvas>
       <div class="banner hidden" id="banner"></div>
     </div>
-    <div class="toggles">
+    <div class="toggles ai-only">
       <label><input type="checkbox" id="o-marks" checked> distances</label>
       <label><input type="checkbox" id="o-choice" checked> choices</label>
       <label><input type="checkbox" id="o-ahead" checked> answers ahead</label>
     </div>
   </section>
 
-  <section class="col">
+  <section class="home home-only" id="home"></section>
+
+  <section class="col ai-only">
     <div class="card orders-card">
       <h2>STANDING ORDERS <em id="orders-version"></em></h2>
       <div id="orders"><span class="muted">None. The model plays on its own judgement.</span></div>
@@ -299,7 +405,7 @@
     </div>
   </section>
 
-  <section class="col">
+  <section class="col ai-only">
     <div class="card asked">
       <h2>WHAT THE MODEL WAS ASKED <em><label style="cursor:pointer"><input type="checkbox" id="freeze"> hold</label></em></h2>
       <div class="tabs" id="asked-tabs"></div>
@@ -316,6 +422,23 @@
     </div>
   </section>
 </main>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer left" id="picker" aria-label="Choose a game">
+  <header><h3>CHOOSE A GAME</h3><button class="x" data-close>✕</button></header>
+  <div class="body">
+    <input class="search" id="g-search" placeholder="Search games" autocomplete="off">
+    <div class="chips" id="g-systems"></div>
+    <div id="g-detail"></div>
+    <div class="glist" id="g-list"><span class="muted">Loading the cabinet's games…</span></div>
+  </div>
+</aside>
+<aside class="drawer right" id="setup" aria-label="AI setup">
+  <header><h3 id="s-title">AI SETUP</h3><button class="x" data-close>✕</button></header>
+  <div class="body" id="s-body"></div>
+  <div class="foot"><div class="cmd" id="s-cmd"></div><button class="hbtn primary" id="s-start">START</button></div>
+</aside>
+<div class="toast hidden" id="toast"></div>
 
 <script>
 const $ = id => document.getElementById(id);
@@ -342,11 +465,18 @@ function byTag(by) { return `<span class="by" style="background:${BY_COLOUR[by] 
 function rel(t) { return view.runStart && t ? Math.max(0, t - view.runStart).toFixed(0) + "s" : ""; }
 
 /* ---------- header and run state ---------- */
+const MODE_PILL = { offline: ["ended", "OFFLINE"], menu: ["", "AT THE MENU"], human: ["between", "PERSON PLAYING"],
+                    launching: ["between", "STARTING"], idle: ["", "SCREEN FREE"], "ai-starting": ["between", "AI STARTING"],
+                    "ai-idle": ["ended", "AI GAME UP · NO PLAYER"], unknown: ["", "CONNECTING"] };
 function runState() {
   const pill = $("runstate"), label = pill.querySelector("span");
   pill.className = "pill";
   const fresh = Date.now() - view.statusAt < 3000;
-  if (view.ended) { pill.classList.add("ended"); label.textContent = "RUN ENDED"; }
+  const m = typeof mode === "function" ? mode() : "watch";
+  if (MODE_PILL[m]) { if (MODE_PILL[m][0]) pill.classList.add(MODE_PILL[m][0]); label.textContent = MODE_PILL[m][1];
+    if (m === "ai-idle" && view.ended) label.textContent = "AI RUN ENDED"; }
+  else if (ctl.control.state === "stopping") { pill.classList.add("ended"); label.textContent = "AI STOPPING"; }
+  else if (view.ended) { pill.classList.add("ended"); label.textContent = "RUN ENDED"; }
   else if (fresh && view.status?.playing) { pill.classList.add("live"); label.textContent = "LIVE"; }
   else if (fresh) { pill.classList.add("between"); label.textContent = "BETWEEN GAMES"; }
   else label.textContent = view.run ? "NO PLAYER" : "WAITING";
@@ -721,15 +851,278 @@ function draw() {
 requestAnimationFrame(draw);
 
 /* ---------- connection ---------- */
+/* ---------- the cabinet: modes, home, the game picker and the AI setup ---------- */
+const ctl = { features: { control: false }, cabinet: null, control: { state: "idle" }, players: 0,
+              catalog: null, system: "all", query: "", selected: null, setup: null, models: [], answers: null };
+const STEPS = ["Clearing the screen", "Starting MAME and the streams", "Starting the player"];
+
+function gameByPath(path) {
+  for (const s of ctl.catalog?.systems || []) for (const g of s.games) if (g.path === path) return { ...g, system: s.name, fullname: s.fullname };
+  return null;
+}
+function gameByAi(spec) {
+  for (const s of ctl.catalog?.systems || []) for (const g of s.games) if (g.ai === spec) return { ...g, system: s.name, fullname: s.fullname };
+  return null;
+}
+function mode() {
+  if (!ctl.features.control) return view.run ? "ai-live" : "watch";
+  const cab = ctl.cabinet || { mode: "unknown" }, run = ctl.control.state;
+  if (cab.mode === "offline") return "offline";
+  if (run === "starting") return "ai-starting";
+  if (run === "running" || run === "stopping" || ctl.players > 0) return "ai-live";
+  if (cab.mode === "ai") return "ai-idle";
+  return cab.mode;  // menu, human, launching, idle, unknown
+}
+function nowText(m) {
+  const cab = ctl.cabinet || {};
+  if (m === "human") { const g = gameByPath(cab.human?.rom); return `${g ? g.name : cab.human?.stem} · a person is playing`; }
+  if (m === "menu") return "the menu (EmulationStation)";
+  if (m === "launching") return "starting a game…";
+  if (m === "idle") return "nothing (the screen is free)";
+  if (m === "offline") return "cabinet not reachable";
+  return "–";
+}
+function applyMode() {
+  const m = mode();
+  const ai = m.startsWith("ai") || m === "watch";
+  document.body.classList.toggle("ai", ai && m !== "ai-starting");
+  document.body.classList.toggle("has-control", ctl.features.control);
+  $("now-text").textContent = nowText(m);
+  const run = ctl.control.state;
+  $("b-stop").classList.toggle("hidden", !(m === "human" || m === "ai-live"));
+  $("b-stop").textContent = m === "ai-live" ? (run === "stopping" ? "STOPPING…" : "STOP AI") : "STOP GAME";
+  $("b-stop").disabled = run === "stopping";
+  $("b-menu").classList.toggle("hidden", !(m === "ai-idle" || m === "idle" || m === "ai-starting" && run === "failed"));
+  $("b-again").classList.toggle("hidden", !(m === "ai-idle" && ctl.answers && ctl.control.game));
+  $("actions").classList.toggle("hidden", !ctl.features.control);
+  if (!ai || m === "ai-starting") showHome(m);
+  runState();
+}
+function played(stamp) {  // EmulationStation's 20261002T164333
+  const d = new Date(`${stamp.slice(0, 4)}-${stamp.slice(4, 6)}-${stamp.slice(6, 8)}T${stamp.slice(9, 11)}:${stamp.slice(11, 13)}`);
+  return isNaN(d) ? stamp : d.toLocaleDateString(undefined, { day: "numeric", month: "short" });
+}
+function quickTiles(games, ai) {
+  return games.map(g => `<button class="tile" data-path="${esc(g.path)}"><div>${esc(g.name)}${g.ai ? '<span class="badge">AI</span>' : ""}</div>
+    <span>${esc(g.fullname || g.system)}${g.lastplayed ? " · played " + esc(played(g.lastplayed)) : ""}</span></button>`).join("");
+}
+function showHome(m) {
+  const cab = ctl.cabinet || {}, c = ctl.control;
+  const all = (ctl.catalog?.systems || []).flatMap(s => s.games.map(g => ({ ...g, system: s.name, fullname: s.fullname })));
+  const aiGames = all.filter(g => g.ai);
+  const recent = all.filter(g => g.lastplayed).sort((a, b) => b.lastplayed.localeCompare(a.lastplayed)).slice(0, 6);
+  let hero;
+  if (m === "offline") hero = `<small>CABINET</small><h1>NOT REACHABLE</h1><p>${esc(cab.error || "")}</p><p>Check that the Pi is on and on the network. This page keeps trying every few seconds.</p>`;
+  else if (m === "human") { const g = gameByPath(cab.human?.rom);
+    hero = `<small>NOW PLAYING · A PERSON</small><h1>${esc(g ? g.name : cab.human?.stem)}</h1><p>${esc(g?.fullname || cab.human?.system)}${g?.emulator ? " · " + esc(g.emulator) : ""}. The page cannot see inside games people play yet: the video and the AI panels are for AI runs.</p>
+      <div class="actions"><button class="hbtn warnbtn" data-act="stop">STOP GAME</button><button class="hbtn" data-act="games">CHOOSE ANOTHER</button></div>`; }
+  else if (m === "launching") hero = `<small>STARTING</small><h1>A GAME IS STARTING</h1><p>The menu closes and the game takes the screen.</p>`;
+  else if (m === "ai-starting") { const i = STEPS.indexOf(c.step); const g = gameByAi(c.game);
+    hero = `<small>AI RUN · STARTING</small><h1>${esc(g ? g.name : c.game)}</h1><ul class="steps">${STEPS.map((s, k) =>
+      `<li class="${k < i ? "done" : k === i ? "now" : ""}">${esc(s)}</li>`).join("")}<li>The player connects and the dashboard opens</li></ul>`; }
+  else if (m === "idle") hero = `<small>THE SCREEN IS FREE</small><h1>NOTHING IS RUNNING</h1><p>Neither the menu nor a game is on the cabinet's screen.</p>
+      <div class="actions"><button class="hbtn primary" data-act="games">CHOOSE A GAME</button><button class="hbtn" data-act="menu">BACK TO MENU</button></div>`;
+  else hero = `<small>THE CABINET IS AT THE MENU</small><h1>WHAT'S NEXT?</h1><p>Pick a game for a person to play on the cabinet, or one the AI can play: you choose who decides and what it is told, then watch it think here.</p>
+      <div class="actions"><button class="hbtn primary" data-act="games">CHOOSE A GAME</button></div>`;
+  if (c.state === "failed") hero += `<p style="color:var(--bad);margin-top:14px">The last AI run failed: ${esc(c.step || "")}</p><div class="tail">${esc((c.tail || []).join("\n"))}</div>`;
+  $("home").innerHTML = `<div class="hero">${hero}</div>` +
+    (aiGames.length ? `<div class="card"><h2>THE AI CAN PLAY</h2><div class="tiles">${quickTiles(aiGames)}</div></div>` : "") +
+    (recent.length ? `<div class="card"><h2>RECENTLY PLAYED</h2><div class="tiles">${quickTiles(recent)}</div></div>` : "");
+}
+$("home").addEventListener("click", e => {
+  const t = e.target.closest("[data-path],[data-act]"); if (!t) return;
+  if (t.dataset.path) { openPicker(); selectGame(t.dataset.path); }
+  else if (t.dataset.act === "games") openPicker();
+  else if (t.dataset.act === "stop") act("/api/stop");
+  else if (t.dataset.act === "menu") act("/api/menu");
+});
+
+async function api(path, body) {
+  const r = await fetch(path, body === undefined ? {} : { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error || `${r.status}`);
+  return data;
+}
+function toast(text) { const t = $("toast"); t.textContent = text; t.classList.remove("hidden"); clearTimeout(toast.timer); toast.timer = setTimeout(() => t.classList.add("hidden"), 6000); }
+async function act(path, body) { try { return await api(path, body ?? {}); } catch (e) { toast(e.message); } }
+
+async function loadCatalog(refresh) {
+  try { ctl.catalog = await api("/api/catalog" + (refresh ? "?refresh=1" : "")); renderPicker(); applyMode(); }
+  catch (e) { $("g-list").innerHTML = `<span class="muted">Could not read the cabinet's games: ${esc(e.message)}</span>`; }
+}
+
+/* drawers */
+function openDrawer(id) { for (const d of ["picker", "setup"]) $(d).classList.toggle("open", d === id); $("scrim").classList.toggle("open", !!id); }
+function openPicker() { openDrawer("picker"); if (!ctl.catalog) loadCatalog(); setTimeout(() => $("g-search").focus(), 200); }
+$("scrim").addEventListener("click", () => openDrawer(null));
+for (const b of document.querySelectorAll("[data-close]")) b.addEventListener("click", () => openDrawer(null));
+document.addEventListener("keydown", e => { if (e.key === "Escape") openDrawer(null); });
+$("b-games").addEventListener("click", openPicker);
+$("b-stop").addEventListener("click", () => act("/api/stop"));
+$("b-menu").addEventListener("click", () => act("/api/menu"));
+$("b-again").addEventListener("click", () => startAi(ctl.control.game, ctl.answers));
+
+function renderPicker() {
+  const systems = ctl.catalog?.systems || [];
+  $("g-systems").innerHTML = [["all", "All"], ["ai", "AI can play"], ...systems.map(s => [s.name, s.fullname])].map(([k, v]) =>
+    `<button class="chipbtn ${ctl.system === k ? "on" : ""}" data-sys="${esc(k)}">${esc(v)}</button>`).join("");
+  const q = ctl.query.toLowerCase();
+  const rows = [];
+  for (const s of systems) for (const g of s.games) {
+    if (ctl.system === "ai" ? !g.ai : ctl.system !== "all" && s.name !== ctl.system) continue;
+    if (q && !(g.name.toLowerCase().includes(q) || g.stem.toLowerCase().includes(q))) continue;
+    rows.push({ ...g, system: s.name, fullname: s.fullname });
+  }
+  rows.sort((a, b) => (b.ai ? 1 : 0) - (a.ai ? 1 : 0) || a.name.localeCompare(b.name));
+  $("g-list").innerHTML = rows.length ? rows.slice(0, 400).map(g =>
+    `<div class="gitem ${ctl.selected === g.path ? "sel" : ""}" data-path="${esc(g.path)}"><div><b>${esc(g.name)}</b>${g.ai ? '<span class="badge">AI</span>' : ""}<br><span>${esc(g.fullname)} · ${esc(g.path.split("/").pop())}</span></div><span>${esc(g.emulator || "")}</span></div>`).join("")
+    : '<span class="muted">No games match.</span>';
+  renderDetail();
+}
+function renderDetail() {
+  const g = ctl.selected && gameByPath(ctl.selected);
+  if (!g) { $("g-detail").innerHTML = ""; return; }
+  const m = mode(), cab = ctl.cabinet || {};
+  const busy = m === "human" ? `This stops ${esc(gameByPath(cab.human?.rom)?.name || cab.human?.stem)}, which is playing now.`
+             : m === "ai-live" ? "This stops the AI run on screen (it finishes its files first)." : "";
+  $("g-detail").innerHTML = `<div class="gdetail"><h4>${esc(g.name)}${g.ai ? '<span class="badge">AI</span>' : ""}</h4>
+    <div class="meta">${esc(g.fullname)} · ${esc(g.path.split("/").pop())}${g.emulator ? " · " + esc(g.emulator) : ""}${g.playcount ? " · played " + g.playcount + "×" : ""}</div>
+    ${busy ? `<p class="warn">${busy}</p>` : ""}
+    <div class="actions"><button class="hbtn primary" data-play>▶ PLAY</button>${g.ai ? '<button class="hbtn" data-ai>AI PLAYS…</button>' : ""}</div></div>`;
+}
+function selectGame(path) { ctl.selected = path; renderPicker(); $("g-detail").scrollIntoView({ block: "nearest" }); }
+$("g-search").addEventListener("input", e => { ctl.query = e.target.value; renderPicker(); });
+$("g-systems").addEventListener("click", e => { const k = e.target.dataset.sys; if (k) { ctl.system = k; renderPicker(); } });
+$("g-list").addEventListener("click", e => { const t = e.target.closest("[data-path]"); if (t) selectGame(t.dataset.path); });
+$("g-detail").addEventListener("click", async e => {
+  const g = gameByPath(ctl.selected); if (!g) return;
+  if (e.target.closest("[data-play]")) { openDrawer(null); toast(`Starting ${g.name}…`); await act("/api/play", { system: g.system, path: g.path }); }
+  if (e.target.closest("[data-ai]")) openSetup(g.ai);
+});
+
+/* the AI setup, built from the game's own schema */
+function saved(game) { try { return JSON.parse(localStorage.getItem("setup:" + game)) || null; } catch { return null; } }
+function remember(game, answers) { try { localStorage.setItem("setup:" + game, JSON.stringify(answers)); } catch {} }
+async function openSetup(game) {
+  openDrawer("setup");
+  $("s-body").innerHTML = '<p class="muted">Reading the game…</p>';
+  try {
+    const [schema, models] = await Promise.all([api("/api/ai/" + game), api("/api/models").catch(() => [])]);
+    ctl.setup = schema; ctl.models = models;
+    const a = saved(game) || {};
+    ctl.draft = { decider: a.decider || "ollama", model: a.model || (models.find(m => m.startsWith("nimble")) || models[0] || "nimble"),
+                  knowledge: a.knowledge !== undefined ? a.knowledge : schema.default_knowledge, goal: a.goal || "auto",
+                  strategist: a.strategist || "code", strategist_model: a.strategist_model || "nimble",
+                  games: a.games || 3, orders: a.orders || [], switches: a.switches || {} };
+    renderSetup();
+  } catch (e) { $("s-body").innerHTML = `<p style="color:var(--bad)">${esc(e.message)}</p>`; }
+}
+function radios(name, options, value) {
+  return `<div class="opts">${options.map(o => `<label class="opt2"><input type="radio" name="${name}" value="${esc(o.value ?? "")}" ${String(o.value ?? "") === String(value ?? "") ? "checked" : ""}>
+    <div><b>${esc(o.label)}</b>${o.help ? `<small>${esc(o.help)}</small>` : ""}</div></label>`).join("")}</div>`;
+}
+function modelSelect(name, value, blank) {
+  const list = ctl.models.length ? ctl.models : [value];
+  return `<select name="${name}">${blank ? `<option value="">${esc(blank)}</option>` : ""}${list.map(m => `<option ${m === value ? "selected" : ""}>${esc(m)}</option>`).join("")}</select>`;
+}
+function renderSetup() {
+  const s = ctl.setup, d = ctl.draft, g = gameByAi(s.game);
+  $("s-title").textContent = "AI SETUP · " + (g ? g.name : s.title).toUpperCase();
+  const model = d.decider === "ollama";
+  const kinds = ["facts", "timing", "override", "skill"];
+  const sw = f => {
+    const v = d.switches[f.name] ?? f.default;
+    const input = f.type === "switch" ? `<select name="sw:${f.name}"><option value="1" ${v ? "selected" : ""}>on</option><option value="0" ${v ? "" : "selected"}>off</option></select>`
+      : f.type === "choice" ? `<select name="sw:${f.name}">${f.choices.map(c => `<option ${c === v ? "selected" : ""}>${esc(c)}</option>`).join("")}</select>`
+      : f.type === "model" ? modelSelect("sw:" + f.name, v || "", "(not used)")
+      : `<input type="${f.type === "number" ? "number" : "text"}" name="sw:${f.name}" value="${esc(v ?? "")}" placeholder="default">`;
+    return `<div class="swrow"><div><b>${esc(f.name)}</b><small>${esc(f.help)}</small></div>${input}</div>`;
+  };
+  $("s-body").innerHTML = `
+    <div class="field"><span class="lbl2">WHO DECIDES EACH MOVE</span>${radios("decider", s.deciders, d.decider)}</div>
+    ${model ? `<div class="field"><label>MODEL</label>${modelSelect("model", d.model)}</div>
+    <div class="field"><span class="lbl2">WHAT THE MODEL IS TOLD</span>${radios("knowledge", s.knowledge, d.knowledge)}</div>` : ""}
+    <div class="field"><label>GOAL</label><select name="goal">${s.goals.map(o => `<option value="${esc(o.value)}" ${o.value === d.goal ? "selected" : ""}>${esc(o.label)}</option>`).join("")}</select>
+      <div class="help">${esc(s.goals.find(o => o.value === d.goal)?.help || "")}</div></div>
+    ${s.strategists.length > 1 ? `<div class="field"><span class="lbl2">WHO SETS THE GOAL AND STANCE</span>${d.goal !== "auto" ? '<div class="help">With a pinned goal there is nothing to set: the goal stays as chosen.</div>' : radios("strategist", s.strategists, d.strategist)}
+      ${d.goal === "auto" && d.strategist === "ollama" ? `<div style="margin-top:8px">${modelSelect("strategist_model", d.strategist_model)}</div>` : ""}</div>` : ""}
+    <div class="field"><label>STANDING ORDERS (ONE PER LINE)</label><textarea name="orders" placeholder="${esc(s.orders_example ? "e.g. " + s.orders_example : "Plain words for the model")}">${esc(d.orders.join("\n"))}</textarea>
+      <div class="help">${model || d.strategist === "ollama" ? "Put in front of every question the model is asked. You can change them during the run." : "No model reads them with this setup (the rule and the mock never read text)."}</div></div>
+    <div class="field"><label>GAMES</label><input type="number" name="games" min="1" max="100" value="${esc(d.games)}"></div>
+    <details ${Object.keys(d.switches).length ? "open" : ""}><summary>GAME SWITCHES (${s.switches.length})</summary>
+      ${kinds.map(k => { const fs = s.switches.filter(f => f.kind === k); if (!fs.length) return "";
+        return `<div class="kindbox ${k === "override" || k === "skill" ? "who" : ""}"><h5>${esc(k)}</h5><p>${esc(s.kinds[k])}</p>${fs.map(sw).join("")}</div>`; }).join("")}
+    </details>`;
+  showCommand();
+}
+function readSetup() {
+  const body = $("s-body"), d = ctl.draft, s = ctl.setup;
+  const val = n => body.querySelector(`[name="${n}"]:checked`)?.value ?? body.querySelector(`[name="${n}"]`)?.value;
+  d.decider = val("decider") ?? d.decider;
+  if (body.querySelector('[name="model"]')) d.model = val("model");
+  if (body.querySelector('[name="knowledge"]')) { const k = val("knowledge"); d.knowledge = k === "" ? null : k; }
+  d.goal = val("goal") ?? d.goal;
+  if (body.querySelector('[name="strategist"]')) d.strategist = val("strategist");
+  if (d.goal !== "auto") d.strategist = "code";
+  if (body.querySelector('[name="strategist_model"]')) d.strategist_model = val("strategist_model");
+  d.orders = (val("orders") || "").split("\n").map(x => x.trim()).filter(Boolean);
+  d.games = Number(val("games") || 3);
+  const sw = {};
+  for (const f of s.switches) {
+    const el = body.querySelector(`[name="sw:${f.name}"]`); if (!el) continue;
+    let v = f.type === "switch" ? el.value === "1" : f.type === "number" ? (el.value === "" ? null : Number(el.value)) : (el.value || null);
+    if (v !== f.default && !(v === null && f.default === null)) sw[f.name] = v;
+  }
+  d.switches = sw;
+  return d;
+}
+function answersOf(d) {
+  return { decider: d.decider, model: d.model, knowledge: d.decider === "ollama" ? d.knowledge : null, goal: d.goal,
+           strategist: d.strategist, strategist_model: d.strategist_model, games: d.games, orders: d.orders, switches: d.switches };
+}
+function showCommand() {
+  const d = ctl.draft;
+  const parts = ["play.py", "--decider " + d.decider, d.decider === "ollama" ? "--model " + d.model : "", d.decider === "ollama" && d.knowledge ? "--knowledge " + d.knowledge : "",
+    "--goal " + d.goal, d.strategist !== "code" ? "--strategist " + d.strategist : "", "--games " + d.games, d.orders.length ? `${d.orders.length} order(s)` : "",
+    ...Object.entries(d.switches).map(([k, v]) => `${k}=${v}`)];
+  $("s-cmd").textContent = parts.filter(Boolean).join(" ");
+}
+$("s-body").addEventListener("change", e => {
+  const before = JSON.stringify([ctl.draft.decider, ctl.draft.goal, ctl.draft.strategist]);
+  readSetup();
+  if (JSON.stringify([ctl.draft.decider, ctl.draft.goal, ctl.draft.strategist]) !== before) renderSetup(); else showCommand();
+});
+$("s-body").addEventListener("input", e => { if (e.target.tagName === "TEXTAREA" || e.target.type === "number") { readSetup(); showCommand(); } });
+async function startAi(game, answers) {
+  const r = await act("/api/ai", { game, answers });
+  if (r) { ctl.answers = answers; openDrawer(null); }
+}
+$("s-start").addEventListener("click", () => {
+  const d = readSetup(), a = answersOf(d);
+  remember(ctl.setup.game, d);
+  startAi(ctl.setup.game, a);
+});
+
+function onPanel(p) {
+  if (p.name === "features") { ctl.features = p.value; if (p.value.control && !ctl.catalog) loadCatalog(); }
+  else if (p.name === "cabinet") ctl.cabinet = p.value;
+  else if (p.name === "control") { ctl.control = p.value; if (p.value.state === "failed") toast("AI run: " + (p.value.step || "failed")); }
+  else if (p.name === "players") ctl.players = p.value;
+  applyMode();
+  if ($("picker").classList.contains("open")) renderDetail();
+}
+
 function connect() {
   const es = new EventSource("/events");
   es.onopen = () => $("d-page").classList.add("on");
   es.onerror = () => $("d-page").classList.remove("on");
   es.addEventListener("event", e => onEvent(JSON.parse(e.data)));
   es.addEventListener("status", e => onStatus(JSON.parse(e.data)));
+  es.addEventListener("panel", e => onPanel(JSON.parse(e.data)));
   es.addEventListener("video", e => {
     const v = JSON.parse(e.data);
     $("d-video").classList.toggle("on", v.connected);
+    if (!v.connected) { $("frame").classList.add("hidden"); $("novideo").classList.remove("hidden"); }  // no stale picture
     $("fps").textContent = v.connected && v.fps ? `${v.fps} fps` : "";
   });
   es.addEventListener("frame", e => {
@@ -744,6 +1137,9 @@ $("frame").addEventListener("load", e => {
 });
 for (const k of Object.keys(filters)) $("f-" + k).addEventListener("change", e => { filters[k] = e.target.checked; });
 connect();
+// links straight to a panel: #games opens the picker, #setup=<system>/<name> the AI setup for that game
+if (location.hash === "#games") openPicker();
+else if (location.hash.startsWith("#setup=")) openSetup(decodeURIComponent(location.hash.slice(7)));
 </script>
 </body>
 </html>

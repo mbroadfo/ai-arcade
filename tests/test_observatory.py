@@ -149,7 +149,10 @@ def test_hub_remembers_the_run_for_pages_opened_later():
 def test_the_observatory_names_no_game_of_its_own():
     import arcadekit.observatory
     import arcadekit.orders
-    for module in (observatory.PAGE, observatory.__file__, arcadekit.observatory.__file__, arcadekit.orders.__file__):
+    tools = Path(observatory.__file__).parent
+    for module in (observatory.PAGE, observatory.__file__, arcadekit.observatory.__file__, arcadekit.orders.__file__,
+                   tools / "ai_setup.py", tools / "ai_runner.py", tools / "cabinet_link.py",
+                   tools.parent / "pi" / "cabinet" / "cabinet.py"):
         source = open(module, encoding="utf-8").read().lower()
         for word in ("pac-man", "pacman", "ghost", "maze", "junction", "energizer", "fruit", "blinky", "eyes", "prey",
                      "danger"):

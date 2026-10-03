@@ -17,6 +17,13 @@ from .ghosts import GHOST_NAMES, direction_between, forecast, targets
 from .maze import MOVES, Maze, step
 
 LEVELS = ("L0", "L1", "L2", "L3a", "L3b")
+LEVEL_HELP = {  # one line each, for the Observatory's AI setup
+    "L0": "raw state only: coordinates and flags",
+    "L1": "+ the rules of the game",
+    "L2": "+ a situation report: distances along the maze, where each ghost comes from, danger bands",
+    "L3a": "+ how each ghost chooses where to go",
+    "L3b": "+ each ghost's current target and route",
+}
 DANGER_STEPS, NEAR_STEPS = 4, 8
 def _rel(dl, dh):
     """Describe an offset in screen terms (down is +l, left is +h)."""

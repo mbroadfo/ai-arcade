@@ -36,9 +36,32 @@ python tools/play.py --game arcade/pacman --decider ollama --model nimble --know
 `--decider` is `rule` (control), `mock` (simulated model latency) or `ollama`. Each run writes
 `runs/<time>-<game>-<decider>-<knowledge>-decisions.jsonl` and `...-games.jsonl` (git-ignored).
 
-## The Observatory (dashboard)
+## The Observatory (control panel and dashboard)
 
-`python tools/observatory.py`, then open http://localhost:8780/: the game's video beside what the player is doing.
+`python tools/observatory.py`, then open http://localhost:8780/. It is the cabinet's control panel: pick any game the
+cabinet has and play it, or, for a game with an AI package, set up an AI run and watch it. One-time setup:
+`python tools/install_cabinet.py` (the cabinet controls, pi/cabinet/, and a hook in RetroPie's autostart).
+
+What the page shows follows what is on the cabinet's screen (polled every two seconds):
+
+| On the screen | The page | The header's action |
+|---|---|---|
+| the menu | home: what's next, the games the AI can play, recently played | GAMES |
+| a person's game (from the menu or the page) | home: what is playing, its emulator | STOP GAME |
+| an AI run starting | its steps: screen cleared, MAME and streams, player | – |
+| an AI run | the dashboard below | STOP AI (the player writes its results first) |
+| AI mode's MAME, no player (a run ended) | the dashboard's last state | RUN AGAIN, BACK TO MENU |
+| nothing / cabinet unreachable | what is wrong, retrying | BACK TO MENU |
+
+GAMES opens the picker (search, systems, "AI can play"); a game's PLAY starts it for a person as EmulationStation would
+(its own emulator), AI PLAYS… opens the AI setup. The setup is read from the game package (tools/ai_setup.py): who
+decides (a model from this PC's Ollama, the rule as the control, or the mock), what the model is told (the knowledge
+levels with the game's own descriptions), the goal, who sets the goal and stance, standing orders, how many games, and
+the game's switches grouped by kind (overrides and skills marked: they change who makes the moves). It remembers the
+last setup per game and shows the play.py command it will run. Links: `#games` opens the picker, `#setup=arcade/pacman`
+a game's setup. `--watch-only` leaves the controls out; `--listen 0.0.0.0` lets anyone on the LAN watch and control.
+
+The dashboard: the game's video beside what the player is doing.
 Drawn over the video: a line from Pac-Man to each ghost with its distance in steps along the maze, the junction just
 decided (every option sized by the model's probability, the executed way in the colour of who made the move, a
 proposal code overruled in red), and the answers already waiting at junctions ahead. Beside it: the goal and stance,

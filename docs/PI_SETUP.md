@@ -40,6 +40,9 @@ defaults to `DEFAULT_PI_HOST` in `tools/gamelib.py` (override with the `ARCADE_P
 4. ROMs and BIOS, straight from the old Pi through this PC (nothing is stored in the repository):
    `ssh pi@<old> 'tar cf - -C ~/RetroPie roms BIOS' | ssh pi@<pi> 'tar xf - -C ~/RetroPie'`.
 5. `python tools/install_pi.py --host <pi>` (the broker, below) and `python tools/configure_mame_controller.py`.
+   For the Observatory's control panel: `python tools/install_cabinet.py` (pi/cabinet/ to `~/ai-arcade/cabinet`, and one
+   line at the top of `/opt/retropie/configs/all/autostart.sh` that runs a game the page asked for before the menu; the
+   original is kept as `autostart.sh.before-ai-arcade`).
 6. Check: `python tools/start_pi_game.py`, then `python tools/state_client.py --measure`.
 
 ### A USB keyboard for human mode
