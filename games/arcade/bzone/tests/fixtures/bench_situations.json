@@ -1,0 +1,4327 @@
+{
+"note": "Moments from Battlezone lab games (3 October 2026), sampled by kind for scripts/benchmark.py",
+"situations": [
+{
+"run": "20261003-141825-arcade_bzone-lab-pilot-10hz-pilot-tev1",
+"t": 67.7,
+"facts": {
+"heading_deg": 125.2,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": -6,
+"enemy_bearing_deg": -8.4,
+"enemy_distance": 8322,
+"miss_by": -1308,
+"hit_radius": 228,
+"on_target": false,
+"dying": false,
+"enemy_age": 255,
+"enemy_holds_fire": false,
+"enemy_aim": 118,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-10.3,
+17359,
+"narrow pyramid"
+]
+]
+},
+"kind": "ahead"
+},
+{
+"run": "20261003-134530-arcade_bzone-lab-s1m-10hz-s1m-second",
+"t": 48.6,
+"facts": {
+"heading_deg": 53.4,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": -15,
+"enemy_bearing_deg": -21.1,
+"enemy_distance": 12120,
+"miss_by": -4579,
+"hit_radius": 224,
+"on_target": false,
+"dying": false,
+"enemy_age": 4,
+"enemy_holds_fire": true,
+"enemy_aim": -12,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-24.8,
+18893,
+"narrow pyramid"
+]
+]
+},
+"kind": "ahead"
+},
+{
+"run": "20261003-142243-arcade_bzone-lab-pilot-10hz-pilot-nudge2",
+"t": 86.4,
+"facts": {
+"heading_deg": 234.8,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": -17,
+"enemy_bearing_deg": -23.9,
+"enemy_distance": 22007,
+"miss_by": -9081,
+"hit_radius": 312,
+"on_target": false,
+"dying": false,
+"enemy_age": 201,
+"enemy_holds_fire": false,
+"enemy_aim": -82,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+17.0,
+7987,
+"wide pyramid"
+],
+[
+23.3,
+23444,
+"wide pyramid"
+],
+[
+29.2,
+24101,
+"short box"
+]
+]
+},
+"kind": "ahead"
+},
+{
+"run": "20261003-154557-arcade_bzone-lab-pilot-20hz-plan-g2",
+"t": 78.0,
+"facts": {
+"heading_deg": 88.6,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": 15,
+"enemy_bearing_deg": 21.1,
+"enemy_distance": 19044,
+"miss_by": 7052,
+"hit_radius": 284,
+"on_target": false,
+"dying": false,
+"enemy_age": 32,
+"enemy_holds_fire": false,
+"enemy_aim": -71,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+27.0,
+21373,
+"narrow pyramid"
+],
+[
+-17.9,
+24751,
+"tall box"
+]
+]
+},
+"kind": "ahead"
+},
+{
+"run": "20261003-133350-arcade_bzone-lab-flank_and_fire-10hz-missile-g2",
+"t": 134.6,
+"facts": {
+"heading_deg": 146.2,
+"enemy_side": "right",
+"enemy_on_radar": true,
+"enemy_bearing": -35,
+"enemy_bearing_deg": -49.2,
+"enemy_distance": 24483,
+"miss_by": -18843,
+"hit_radius": 252,
+"on_target": false,
+"dying": false,
+"enemy_age": 8,
+"enemy_holds_fire": true,
+"enemy_aim": null,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": "wide pyramid",
+"obstacles_in_view": [
+[
+-28.4,
+24950,
+"wide pyramid"
+]
+]
+},
+"kind": "ahead"
+},
+{
+"run": "20261003-133650-arcade_bzone-lab-flank_and_fire-10hz-missile-g3",
+"t": 54.8,
+"facts": {
+"heading_deg": 305.2,
+"enemy_side": "right",
+"enemy_on_radar": true,
+"enemy_bearing": -27,
+"enemy_bearing_deg": -38.0,
+"enemy_distance": 21483,
+"miss_by": -13038,
+"hit_radius": 248,
+"on_target": false,
+"dying": false,
+"enemy_age": 62,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-12.0,
+14727,
+"tall box"
+],
+[
+8.8,
+23087,
+"wide pyramid"
+]
+]
+},
+"kind": "ahead"
+},
+{
+"run": "20261003-153322-arcade_bzone-lab-pilot-10hz-pilot-advice-g2",
+"t": 66.1,
+"facts": {
+"heading_deg": 101.2,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": 14,
+"enemy_bearing_deg": 19.7,
+"enemy_distance": 23014,
+"miss_by": 7637,
+"hit_radius": 300,
+"on_target": false,
+"dying": false,
+"enemy_age": 255,
+"enemy_holds_fire": false,
+"enemy_aim": -38,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-8.3,
+12003,
+"wide pyramid"
+],
+[
+24.6,
+18571,
+"tall box"
+]
+]
+},
+"kind": "ahead"
+},
+{
+"run": "20261003-134108-arcade_bzone-lab-s1m-10hz-s1m-first",
+"t": 0.5,
+"facts": {
+"heading_deg": 348.8,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": -7,
+"enemy_bearing_deg": -9.8,
+"enemy_distance": 24253,
+"miss_by": -4260,
+"hit_radius": 308,
+"on_target": false,
+"dying": false,
+"enemy_age": 26,
+"enemy_holds_fire": true,
+"enemy_aim": 51,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-4.3,
+11491,
+"tall box"
+],
+[
+11.2,
+16192,
+"narrow pyramid"
+]
+]
+},
+"kind": "ahead"
+},
+{
+"run": "20261003-142243-arcade_bzone-lab-pilot-10hz-pilot-nudge2",
+"t": 23.4,
+"facts": {
+"heading_deg": 7.0,
+"enemy_side": "right",
+"enemy_on_radar": true,
+"enemy_bearing": -28,
+"enemy_bearing_deg": -39.4,
+"enemy_distance": 1542,
+"miss_by": -972,
+"hit_radius": 236,
+"on_target": false,
+"dying": false,
+"enemy_age": 255,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": true,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+7.6,
+11772,
+"tall box"
+],
+[
+13.1,
+17583,
+"short box"
+],
+[
+-17.3,
+17815,
+"wide pyramid"
+]
+]
+},
+"kind": "ahead"
+},
+{
+"run": "20261003-153751-arcade_bzone-lab-flank_and_fire-10hz",
+"t": 39.9,
+"facts": {
+"heading_deg": 8.4,
+"enemy_side": "left",
+"enemy_on_radar": true,
+"enemy_bearing": 49,
+"enemy_bearing_deg": 68.9,
+"enemy_distance": 8996,
+"miss_by": 8403,
+"hit_radius": 248,
+"on_target": false,
+"dying": false,
+"enemy_age": 247,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": []
+},
+"kind": "ahead"
+},
+{
+"run": "20261003-133650-arcade_bzone-lab-flank_and_fire-10hz-missile-g3",
+"t": 8.6,
+"facts": {
+"heading_deg": 296.7,
+"enemy_side": "left",
+"enemy_on_radar": true,
+"enemy_bearing": 50,
+"enemy_bearing_deg": 70.3,
+"enemy_distance": 16759,
+"miss_by": 15754,
+"hit_radius": 264,
+"on_target": false,
+"dying": false,
+"enemy_age": 125,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-7.7,
+8483,
+"narrow pyramid"
+],
+[
+17.9,
+14145,
+"wide pyramid"
+]
+]
+},
+"kind": "ahead"
+},
+{
+"run": "20261003-153322-arcade_bzone-lab-pilot-10hz-pilot-advice-g2",
+"t": 10.4,
+"facts": {
+"heading_deg": 345.9,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": 4,
+"enemy_bearing_deg": 5.6,
+"enemy_distance": 20198,
+"miss_by": 2127,
+"hit_radius": 224,
+"on_target": false,
+"dying": false,
+"enemy_age": 175,
+"enemy_holds_fire": false,
+"enemy_aim": -125,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-20.4,
+4852,
+"tall box"
+],
+[
+16.1,
+9127,
+"narrow pyramid"
+]
+]
+},
+"kind": "ahead"
+},
+{
+"run": "20261003-140535-arcade_bzone-lab-pilot-10hz-pilot-second",
+"t": 6.501,
+"facts": {
+"heading_deg": 0.0,
+"enemy_side": "right",
+"enemy_on_radar": true,
+"enemy_bearing": -28,
+"enemy_bearing_deg": -39.4,
+"enemy_distance": 12195,
+"miss_by": -7789,
+"hit_radius": 276,
+"on_target": false,
+"dying": false,
+"enemy_age": 109,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": true,
+"obstacle_ahead": 0,
+"obstacle_ahead_left": -228,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-11.8,
+1113,
+"narrow pyramid"
+],
+[
+-0.7,
+17474,
+"tall box"
+],
+[
+7.2,
+22771,
+"short box"
+],
+[
+-15.1,
+24462,
+"wide pyramid"
+]
+]
+},
+"kind": "ahead"
+},
+{
+"run": "20261003-133350-arcade_bzone-lab-flank_and_fire-10hz-missile-g2",
+"t": 67.4,
+"facts": {
+"heading_deg": 303.8,
+"enemy_side": "right",
+"enemy_on_radar": true,
+"enemy_bearing": -34,
+"enemy_bearing_deg": -47.8,
+"enemy_distance": 10895,
+"miss_by": -8246,
+"hit_radius": 228,
+"on_target": false,
+"dying": false,
+"enemy_age": 50,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-12.9,
+15599,
+"tall box"
+],
+[
+8.0,
+23679,
+"wide pyramid"
+]
+]
+},
+"kind": "ahead"
+},
+{
+"run": "20261003-133650-arcade_bzone-lab-flank_and_fire-10hz-missile-g3",
+"t": 108.601,
+"facts": {
+"heading_deg": 171.6,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": -8,
+"enemy_bearing_deg": -11.2,
+"enemy_distance": 2005,
+"miss_by": -383,
+"hit_radius": 248,
+"on_target": false,
+"dying": false,
+"enemy_age": 253,
+"enemy_holds_fire": false,
+"enemy_aim": 9,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+26.7,
+9453,
+"wide pyramid"
+],
+[
+8.1,
+19219,
+"tall box"
+]
+]
+},
+"kind": "ahead"
+},
+{
+"run": "20261003-152728-arcade_bzone-lab-pilot-10hz",
+"t": 61.4,
+"facts": {
+"heading_deg": 22.5,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": 6,
+"enemy_bearing_deg": 8.4,
+"enemy_distance": 14490,
+"miss_by": 2043,
+"hit_radius": 264,
+"on_target": false,
+"dying": false,
+"enemy_age": 155,
+"enemy_holds_fire": false,
+"enemy_aim": 35,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+17.9,
+3846,
+"short box"
+],
+[
+9.9,
+18024,
+"tall box"
+],
+[
+-15.1,
+19473,
+"wide pyramid"
+]
+]
+},
+"kind": "ahead"
+},
+{
+"run": "20261003-152728-arcade_bzone-lab-pilot-10hz",
+"t": 31.4,
+"facts": {
+"heading_deg": 25.3,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": 14,
+"enemy_bearing_deg": 19.7,
+"enemy_distance": 24576,
+"miss_by": 8279,
+"hit_radius": 260,
+"on_target": false,
+"dying": false,
+"enemy_age": 5,
+"enemy_holds_fire": true,
+"enemy_aim": 39,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-21.7,
+8391,
+"wide pyramid"
+],
+[
+-8.9,
+23670,
+"short box"
+]
+]
+},
+"kind": "ahead"
+},
+{
+"run": "20261003-133650-arcade_bzone-lab-flank_and_fire-10hz-missile-g3",
+"t": 50.601,
+"facts": {
+"heading_deg": 317.8,
+"enemy_side": "right",
+"enemy_on_radar": true,
+"enemy_bearing": -33,
+"enemy_bearing_deg": -46.4,
+"enemy_distance": 24472,
+"miss_by": -17833,
+"hit_radius": 240,
+"on_target": false,
+"dying": false,
+"enemy_age": 8,
+"enemy_holds_fire": true,
+"enemy_aim": null,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-24.5,
+17607,
+"tall box"
+]
+]
+},
+"kind": "ahead"
+},
+{
+"run": "20261003-140535-arcade_bzone-lab-pilot-10hz-pilot-second",
+"t": 97.2,
+"facts": {
+"heading_deg": 4.2,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": -13,
+"enemy_bearing_deg": -18.3,
+"enemy_distance": 14701,
+"miss_by": -4864,
+"hit_radius": 248,
+"on_target": false,
+"dying": false,
+"enemy_age": 55,
+"enemy_holds_fire": false,
+"enemy_aim": -124,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": "tall box",
+"obstacles_in_view": [
+[
+-17.4,
+9935,
+"tall box"
+],
+[
+-1.1,
+14815,
+"short box"
+]
+]
+},
+"kind": "ahead"
+},
+{
+"run": "20261003-133650-arcade_bzone-lab-flank_and_fire-10hz-missile-g3",
+"t": 143.6,
+"facts": {
+"heading_deg": 68.9,
+"enemy_side": "right",
+"enemy_on_radar": true,
+"enemy_bearing": -60,
+"enemy_bearing_deg": -84.4,
+"enemy_distance": 25132,
+"miss_by": -25031,
+"hit_radius": 236,
+"on_target": false,
+"dying": false,
+"enemy_age": 77,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+9.0,
+9596,
+"short box"
+],
+[
+22.7,
+10412,
+"wide pyramid"
+],
+[
+-25.6,
+19649,
+"tall box"
+]
+]
+},
+"kind": "ahead"
+},
+{
+"run": "20261003-153704-arcade_bzone-lab-flank_and_fire-10hz",
+"t": 18.201,
+"facts": {
+"heading_deg": 54.8,
+"enemy_side": "right",
+"enemy_on_radar": true,
+"enemy_bearing": -55,
+"enemy_bearing_deg": -77.3,
+"enemy_distance": 23924,
+"miss_by": -23424,
+"hit_radius": 252,
+"on_target": false,
+"dying": false,
+"enemy_age": 255,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+12.1,
+12117,
+"tall box"
+]
+]
+},
+"kind": "ahead"
+},
+{
+"run": "20261003-152728-arcade_bzone-lab-pilot-10hz",
+"t": 42.4,
+"facts": {
+"heading_deg": 47.8,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": -6,
+"enemy_bearing_deg": -8.4,
+"enemy_distance": 19650,
+"miss_by": -2811,
+"hit_radius": 272,
+"on_target": false,
+"dying": false,
+"enemy_age": 167,
+"enemy_holds_fire": false,
+"enemy_aim": 27,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": true,
+"obstacle_ahead": 9,
+"obstacle_ahead_left": 798,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+21.1,
+19892,
+"narrow pyramid"
+]
+]
+},
+"kind": "ahead"
+},
+{
+"run": "20261003-133650-arcade_bzone-lab-flank_and_fire-10hz-missile-g3",
+"t": 10.4,
+"facts": {
+"heading_deg": 308.0,
+"enemy_side": "left",
+"enemy_on_radar": true,
+"enemy_bearing": 50,
+"enemy_bearing_deg": 70.3,
+"enemy_distance": 15913,
+"miss_by": 14870,
+"hit_radius": 308,
+"on_target": false,
+"dying": false,
+"enemy_age": 148,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-25.9,
+5621,
+"narrow pyramid"
+],
+[
+9.9,
+11250,
+"wide pyramid"
+],
+[
+-16.2,
+22464,
+"short box"
+],
+[
+18.5,
+24761,
+"tall box"
+]
+]
+},
+"kind": "ahead"
+},
+{
+"run": "20261003-153751-arcade_bzone-lab-flank_and_fire-10hz",
+"t": 8.5,
+"facts": {
+"heading_deg": 306.6,
+"enemy_side": "left",
+"enemy_on_radar": true,
+"enemy_bearing": 36,
+"enemy_bearing_deg": 50.6,
+"enemy_distance": 18852,
+"miss_by": 14553,
+"hit_radius": 240,
+"on_target": false,
+"dying": false,
+"enemy_age": 141,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-13.5,
+17361,
+"wide pyramid"
+],
+[
+28.5,
+23304,
+"short box"
+]
+]
+},
+"kind": "ahead"
+},
+{
+"run": "20261003-134108-arcade_bzone-lab-s1m-10hz-s1m-first",
+"t": 74.8,
+"facts": {
+"heading_deg": 230.6,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": -17,
+"enemy_bearing_deg": -23.9,
+"enemy_distance": 24575,
+"miss_by": -10234,
+"hit_radius": 264,
+"on_target": false,
+"dying": false,
+"enemy_age": 15,
+"enemy_holds_fire": true,
+"enemy_aim": -47,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": 2391,
+"cover": null,
+"obstacles_in_view": [
+[
+20.5,
+15439,
+"narrow pyramid"
+]
+]
+},
+"kind": "ahead"
+},
+{
+"run": "20261003-140535-arcade_bzone-lab-pilot-10hz-pilot-second",
+"t": 20.7,
+"facts": {
+"heading_deg": 0.0,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": 16,
+"enemy_bearing_deg": 22.5,
+"enemy_distance": 16758,
+"miss_by": 6579,
+"hit_radius": 248,
+"on_target": false,
+"dying": false,
+"enemy_age": 255,
+"enemy_holds_fire": false,
+"enemy_aim": -96,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": true,
+"obstacle_ahead": 0,
+"obstacle_ahead_left": -228,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-11.8,
+1113,
+"narrow pyramid"
+],
+[
+-0.7,
+17474,
+"tall box"
+],
+[
+7.2,
+22771,
+"short box"
+],
+[
+-15.1,
+24462,
+"wide pyramid"
+]
+]
+},
+"kind": "ahead"
+},
+{
+"run": "20261003-154557-arcade_bzone-lab-pilot-20hz-plan-g2",
+"t": 12.657,
+"facts": {
+"heading_deg": 52.0,
+"enemy_side": "right",
+"enemy_on_radar": true,
+"enemy_bearing": -24,
+"enemy_bearing_deg": -33.8,
+"enemy_distance": 16812,
+"miss_by": -9378,
+"hit_radius": 284,
+"on_target": false,
+"dying": false,
+"enemy_age": 204,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": true,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": 0,
+"cover": null,
+"obstacles_in_view": [
+[
+-22.9,
+4847,
+"narrow pyramid"
+]
+]
+},
+"kind": "ahead"
+},
+{
+"run": "20261003-154557-arcade_bzone-lab-pilot-20hz-plan-g2",
+"t": 10.0,
+"facts": {
+"heading_deg": 33.8,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": -15,
+"enemy_bearing_deg": -21.1,
+"enemy_distance": 13165,
+"miss_by": -5024,
+"hit_radius": 236,
+"on_target": false,
+"dying": false,
+"enemy_age": 164,
+"enemy_holds_fire": false,
+"enemy_aim": 103,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": true,
+"obstacle_ahead": 0,
+"obstacle_ahead_left": -737,
+"obstacle_behind": 4033,
+"cover": null,
+"obstacles_in_view": [
+[
+-26.3,
+22826,
+"short box"
+],
+[
+9.1,
+23896,
+"narrow pyramid"
+]
+]
+},
+"kind": "ahead"
+},
+{
+"run": "20261003-153751-arcade_bzone-lab-flank_and_fire-10hz",
+"t": 40.2,
+"facts": {
+"heading_deg": 14.1,
+"enemy_side": "left",
+"enemy_on_radar": true,
+"enemy_bearing": 48,
+"enemy_bearing_deg": 67.5,
+"enemy_distance": 8451,
+"miss_by": 7786,
+"hit_radius": 240,
+"on_target": false,
+"dying": false,
+"enemy_age": 252,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+30.3,
+12765,
+"short box"
+],
+[
+28.8,
+23641,
+"wide pyramid"
+]
+]
+},
+"kind": "ahead"
+},
+{
+"run": "20261003-133650-arcade_bzone-lab-flank_and_fire-10hz-missile-g3",
+"t": 14.9,
+"facts": {
+"heading_deg": 336.1,
+"enemy_side": "left",
+"enemy_on_radar": true,
+"enemy_bearing": 48,
+"enemy_bearing_deg": 67.5,
+"enemy_distance": 13493,
+"miss_by": 12528,
+"hit_radius": 228,
+"on_target": false,
+"dying": false,
+"enemy_age": 206,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-23.1,
+3945,
+"wide pyramid"
+],
+[
+-7.2,
+17490,
+"tall box"
+]
+]
+},
+"kind": "ahead"
+},
+{
+"run": "20261003-153751-arcade_bzone-lab-flank_and_fire-10hz",
+"t": 30.6,
+"facts": {
+"heading_deg": 312.2,
+"enemy_side": "left",
+"enemy_on_radar": true,
+"enemy_bearing": 38,
+"enemy_bearing_deg": 53.4,
+"enemy_distance": 18498,
+"miss_by": 14821,
+"hit_radius": 248,
+"on_target": false,
+"dying": false,
+"enemy_age": 104,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": 2280,
+"obstacle_ahead_left": -648,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-11.3,
+3297,
+"narrow pyramid"
+],
+[
+19.0,
+10113,
+"wide pyramid"
+],
+[
+-16.2,
+20233,
+"short box"
+],
+[
+20.3,
+23847,
+"tall box"
+]
+]
+},
+"kind": "ahead"
+},
+{
+"run": "20261003-153751-arcade_bzone-lab-flank_and_fire-10hz",
+"t": 48.2,
+"facts": {
+"heading_deg": 91.4,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": -2,
+"enemy_bearing_deg": -2.8,
+"enemy_distance": 24389,
+"miss_by": -1225,
+"hit_radius": 224,
+"on_target": false,
+"dying": false,
+"enemy_age": 5,
+"enemy_holds_fire": true,
+"enemy_aim": 1,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+15.7,
+13820,
+"narrow pyramid"
+],
+[
+28.4,
+24660,
+"wide pyramid"
+]
+]
+},
+"kind": "ahead"
+},
+{
+"run": "20261003-142243-arcade_bzone-lab-pilot-10hz-pilot-nudge2",
+"t": 89.5,
+"facts": {
+"heading_deg": 210.9,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": -11,
+"enemy_bearing_deg": -15.5,
+"enemy_distance": 21238,
+"miss_by": -5847,
+"hit_radius": 320,
+"on_target": false,
+"dying": false,
+"enemy_age": 248,
+"enemy_holds_fire": false,
+"enemy_aim": -75,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": "tall box",
+"obstacles_in_view": [
+[
+-15.0,
+11519,
+"tall box"
+]
+]
+},
+"kind": "ahead"
+},
+{
+"run": "20261003-133350-arcade_bzone-lab-flank_and_fire-10hz-missile-g2",
+"t": 136.7,
+"facts": {
+"heading_deg": 113.9,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": -12,
+"enemy_bearing_deg": -16.9,
+"enemy_distance": 24301,
+"miss_by": -7554,
+"hit_radius": 320,
+"on_target": false,
+"dying": false,
+"enemy_age": 34,
+"enemy_holds_fire": false,
+"enemy_aim": 52,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": "wide pyramid",
+"obstacles_in_view": [
+[
+-19.0,
+12709,
+"wide pyramid"
+],
+[
+0.1,
+22829,
+"short box"
+],
+[
+4.0,
+24759,
+"wide pyramid"
+]
+]
+},
+"kind": "ahead"
+},
+{
+"run": "20261003-140535-arcade_bzone-lab-pilot-10hz-pilot-second",
+"t": 17.2,
+"facts": {
+"heading_deg": 0.0,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": 16,
+"enemy_bearing_deg": 22.5,
+"enemy_distance": 16758,
+"miss_by": 6579,
+"hit_radius": 260,
+"on_target": false,
+"dying": false,
+"enemy_age": 255,
+"enemy_holds_fire": false,
+"enemy_aim": 117,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": true,
+"obstacle_ahead": 0,
+"obstacle_ahead_left": -228,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-11.8,
+1113,
+"narrow pyramid"
+],
+[
+-0.7,
+17474,
+"tall box"
+],
+[
+7.2,
+22771,
+"short box"
+],
+[
+-15.1,
+24462,
+"wide pyramid"
+]
+]
+},
+"kind": "ahead"
+},
+{
+"run": "20261003-133350-arcade_bzone-lab-flank_and_fire-10hz-missile-g2",
+"t": 127.201,
+"facts": {
+"heading_deg": 331.9,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": 10,
+"enemy_bearing_deg": 14.1,
+"enemy_distance": 11064,
+"miss_by": 2479,
+"hit_radius": 264,
+"on_target": false,
+"dying": false,
+"enemy_age": 45,
+"enemy_holds_fire": false,
+"enemy_aim": -21,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+7.7,
+18580,
+"wide pyramid"
+]
+]
+},
+"kind": "ahead"
+},
+{
+"run": "20261003-153704-arcade_bzone-lab-flank_and_fire-10hz",
+"t": 30.4,
+"facts": {
+"heading_deg": 153.3,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": 21,
+"enemy_bearing_deg": 29.5,
+"enemy_distance": 21425,
+"miss_by": 10104,
+"hit_radius": 312,
+"on_target": false,
+"dying": false,
+"enemy_age": 66,
+"enemy_holds_fire": false,
+"enemy_aim": -44,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": []
+},
+"kind": "ahead"
+},
+{
+"run": "20261003-134108-arcade_bzone-lab-s1m-10hz-s1m-first",
+"t": 103.6,
+"facts": {
+"heading_deg": 84.4,
+"enemy_side": "right",
+"enemy_on_radar": true,
+"enemy_bearing": -53,
+"enemy_bearing_deg": -74.5,
+"enemy_distance": 8863,
+"miss_by": -8558,
+"hit_radius": 296,
+"on_target": false,
+"dying": false,
+"enemy_age": 255,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+27.9,
+18331,
+"short box"
+]
+]
+},
+"kind": "ahead"
+},
+{
+"run": "20261003-141825-arcade_bzone-lab-pilot-10hz-pilot-tev1",
+"t": 1.1,
+"facts": {
+"heading_deg": 5.6,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": 11,
+"enemy_bearing_deg": 15.5,
+"enemy_distance": 23574,
+"miss_by": 6543,
+"hit_radius": 272,
+"on_target": false,
+"dying": false,
+"enemy_age": 35,
+"enemy_holds_fire": false,
+"enemy_aim": -23,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-22.2,
+10929,
+"tall box"
+],
+[
+-5.8,
+15597,
+"narrow pyramid"
+]
+]
+},
+"kind": "ahead"
+},
+{
+"run": "20261003-152728-arcade_bzone-lab-pilot-10hz",
+"t": 33.0,
+"facts": {
+"heading_deg": 16.9,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": 20,
+"enemy_bearing_deg": 28.1,
+"enemy_distance": 24576,
+"miss_by": 11585,
+"hit_radius": 224,
+"on_target": false,
+"dying": false,
+"enemy_age": 29,
+"enemy_holds_fire": true,
+"enemy_aim": 21,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-13.3,
+8391,
+"wide pyramid"
+],
+[
+-0.5,
+23670,
+"short box"
+]
+]
+},
+"kind": "ahead"
+},
+{
+"run": "20261003-134530-arcade_bzone-lab-s1m-10hz-s1m-second",
+"t": 88.4,
+"facts": {
+"heading_deg": 39.4,
+"enemy_side": "right",
+"enemy_on_radar": true,
+"enemy_bearing": -85,
+"enemy_bearing_deg": -119.5,
+"enemy_distance": 6937,
+"miss_by": -6024,
+"hit_radius": 288,
+"on_target": false,
+"dying": false,
+"enemy_age": 255,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+15.5,
+21720,
+"wide pyramid"
+]
+]
+},
+"kind": "behind"
+},
+{
+"run": "20261003-155134-arcade_bzone-lab-pilot-20hz-plan-goals-g2",
+"t": 47.45,
+"facts": {
+"heading_deg": 241.9,
+"enemy_side": "rear",
+"enemy_on_radar": true,
+"enemy_bearing": 110,
+"enemy_bearing_deg": 154.7,
+"enemy_distance": 28066,
+"miss_by": 12264,
+"hit_radius": 288,
+"on_target": false,
+"dying": false,
+"enemy_age": 255,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-12.2,
+16571,
+"tall box"
+],
+[
+9.7,
+20886,
+"wide pyramid"
+]
+]
+},
+"kind": "behind"
+},
+{
+"run": "20261003-134530-arcade_bzone-lab-s1m-10hz-s1m-second",
+"t": 66.7,
+"facts": {
+"heading_deg": 274.2,
+"enemy_side": "right",
+"enemy_on_radar": true,
+"enemy_bearing": -85,
+"enemy_bearing_deg": -119.5,
+"enemy_distance": 8349,
+"miss_by": -7252,
+"hit_radius": 300,
+"on_target": false,
+"dying": false,
+"enemy_age": 255,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": 5408,
+"cover": null,
+"obstacles_in_view": [
+[
+29.5,
+8153,
+"short box"
+],
+[
+-7.7,
+9875,
+"tall box"
+],
+[
+14.9,
+16934,
+"wide pyramid"
+],
+[
+-10.7,
+23320,
+"short box"
+]
+]
+},
+"kind": "behind"
+},
+{
+"run": "20261003-155134-arcade_bzone-lab-pilot-20hz-plan-goals-g2",
+"t": 74.35,
+"facts": {
+"heading_deg": 95.6,
+"enemy_side": "right",
+"enemy_on_radar": true,
+"enemy_bearing": -91,
+"enemy_bearing_deg": -128.0,
+"enemy_distance": 20501,
+"miss_by": -16258,
+"hit_radius": 284,
+"on_target": false,
+"dying": false,
+"enemy_age": 176,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-11.1,
+14117,
+"narrow pyramid"
+]
+]
+},
+"kind": "behind"
+},
+{
+"run": "20261003-154422-arcade_bzone-lab-pilot-20hz-plan-g1",
+"t": 50.3,
+"facts": {
+"heading_deg": 292.5,
+"enemy_side": "rear",
+"enemy_on_radar": true,
+"enemy_bearing": -119,
+"enemy_bearing_deg": -167.3,
+"enemy_distance": 10550,
+"miss_by": -2374,
+"hit_radius": 312,
+"on_target": false,
+"dying": false,
+"enemy_age": 135,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": 0,
+"obstacle_ahead_left": -674,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+0.2,
+17796,
+"short box"
+]
+]
+},
+"kind": "behind"
+},
+{
+"run": "20261003-155134-arcade_bzone-lab-pilot-20hz-plan-goals-g2",
+"t": 70.0,
+"facts": {
+"heading_deg": 102.7,
+"enemy_side": "right",
+"enemy_on_radar": true,
+"enemy_bearing": -64,
+"enemy_bearing_deg": -90.0,
+"enemy_distance": 12127,
+"miss_by": -12124,
+"hit_radius": 272,
+"on_target": false,
+"dying": false,
+"enemy_age": 109,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-27.4,
+24299,
+"wide pyramid"
+]
+]
+},
+"kind": "behind"
+},
+{
+"run": "20261003-134530-arcade_bzone-lab-s1m-10hz-s1m-second",
+"t": 162.401,
+"facts": {
+"heading_deg": 123.8,
+"enemy_side": "right",
+"enemy_on_radar": true,
+"enemy_bearing": -64,
+"enemy_bearing_deg": -90.0,
+"enemy_distance": 10416,
+"miss_by": -10414,
+"hit_radius": 264,
+"on_target": false,
+"dying": false,
+"enemy_age": 230,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+4.9,
+20104,
+"wide pyramid"
+]
+]
+},
+"kind": "behind"
+},
+{
+"run": "20261003-134530-arcade_bzone-lab-s1m-10hz-s1m-second",
+"t": 54.7,
+"facts": {
+"heading_deg": 43.6,
+"enemy_side": "right",
+"enemy_on_radar": true,
+"enemy_bearing": -68,
+"enemy_bearing_deg": -95.6,
+"enemy_distance": 4206,
+"miss_by": -4180,
+"hit_radius": 288,
+"on_target": false,
+"dying": false,
+"enemy_age": 98,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+11.3,
+21563,
+"wide pyramid"
+]
+]
+},
+"kind": "behind"
+},
+{
+"run": "20261003-155134-arcade_bzone-lab-pilot-20hz-plan-goals-g2",
+"t": 78.75,
+"facts": {
+"heading_deg": 84.4,
+"enemy_side": "right",
+"enemy_on_radar": true,
+"enemy_bearing": -97,
+"enemy_bearing_deg": -136.4,
+"enemy_distance": 27763,
+"miss_by": -18981,
+"hit_radius": 264,
+"on_target": false,
+"dying": false,
+"enemy_age": 244,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": 1756,
+"obstacle_ahead_left": -583,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-12.0,
+2811,
+"narrow pyramid"
+],
+[
+-4.0,
+17260,
+"tall box"
+],
+[
+-16.1,
+21628,
+"narrow pyramid"
+]
+]
+},
+"kind": "behind"
+},
+{
+"run": "20261003-155134-arcade_bzone-lab-pilot-20hz-plan-goals-g2",
+"t": 74.5,
+"facts": {
+"heading_deg": 91.4,
+"enemy_side": "right",
+"enemy_on_radar": true,
+"enemy_bearing": -88,
+"enemy_bearing_deg": -123.8,
+"enemy_distance": 20501,
+"miss_by": -17133,
+"hit_radius": 276,
+"on_target": false,
+"dying": false,
+"enemy_age": 178,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-6.9,
+14117,
+"narrow pyramid"
+]
+]
+},
+"kind": "behind"
+},
+{
+"run": "20261003-140249-arcade_bzone-lab-pilot-10hz-pilot-first",
+"t": 74.6,
+"facts": {
+"heading_deg": 164.5,
+"enemy_side": "rear",
+"enemy_on_radar": true,
+"enemy_bearing": -114,
+"enemy_bearing_deg": -160.3,
+"enemy_distance": 14943,
+"miss_by": -5141,
+"hit_radius": 228,
+"on_target": false,
+"dying": false,
+"enemy_age": 215,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": 2952,
+"obstacle_ahead_left": 27,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+0.4,
+4103,
+"wide pyramid"
+],
+[
+-20.0,
+12415,
+"tall box"
+]
+]
+},
+"kind": "behind"
+},
+{
+"run": "20261003-154557-arcade_bzone-lab-pilot-20hz-plan-g2",
+"t": 30.85,
+"facts": {
+"heading_deg": 43.6,
+"enemy_side": "left",
+"enemy_on_radar": false,
+"enemy_bearing": null,
+"enemy_bearing_deg": null,
+"enemy_distance": null,
+"miss_by": null,
+"hit_radius": null,
+"on_target": null,
+"dying": false,
+"enemy_age": 255,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": []
+},
+"kind": "behind"
+},
+{
+"run": "20261003-134530-arcade_bzone-lab-s1m-10hz-s1m-second",
+"t": 38.8,
+"facts": {
+"heading_deg": 70.3,
+"enemy_side": "right",
+"enemy_on_radar": true,
+"enemy_bearing": -77,
+"enemy_bearing_deg": -108.3,
+"enemy_distance": 6282,
+"miss_by": -5925,
+"hit_radius": 312,
+"on_target": false,
+"dying": false,
+"enemy_age": 255,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-25.3,
+2718,
+"tall box"
+],
+[
+24.7,
+13237,
+"wide pyramid"
+]
+]
+},
+"kind": "behind"
+},
+{
+"run": "20261003-155134-arcade_bzone-lab-pilot-20hz-plan-goals-g2",
+"t": 50.35,
+"facts": {
+"heading_deg": 272.8,
+"enemy_side": "left",
+"enemy_on_radar": true,
+"enemy_bearing": 91,
+"enemy_bearing_deg": 128.0,
+"enemy_distance": 31559,
+"miss_by": 24759,
+"hit_radius": 260,
+"on_target": false,
+"dying": false,
+"enemy_age": 255,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-22.5,
+16499,
+"wide pyramid"
+]
+]
+},
+"kind": "behind"
+},
+{
+"run": "20261003-134108-arcade_bzone-lab-s1m-10hz-s1m-first",
+"t": 90.5,
+"facts": {
+"heading_deg": 196.9,
+"enemy_side": "right",
+"enemy_on_radar": true,
+"enemy_bearing": -75,
+"enemy_bearing_deg": -105.5,
+"enemy_distance": 21653,
+"miss_by": -20872,
+"hit_radius": 240,
+"on_target": false,
+"dying": false,
+"enemy_age": 255,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-1.8,
+15414,
+"tall box"
+]
+]
+},
+"kind": "behind"
+},
+{
+"run": "20261003-155134-arcade_bzone-lab-pilot-20hz-plan-goals-g2",
+"t": 71.7,
+"facts": {
+"heading_deg": 102.7,
+"enemy_side": "right",
+"enemy_on_radar": true,
+"enemy_bearing": -84,
+"enemy_bearing_deg": -118.1,
+"enemy_distance": 16871,
+"miss_by": -14851,
+"hit_radius": 284,
+"on_target": false,
+"dying": false,
+"enemy_age": 135,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-13.3,
+20531,
+"narrow pyramid"
+]
+]
+},
+"kind": "behind"
+},
+{
+"run": "20261003-134108-arcade_bzone-lab-s1m-10hz-s1m-first",
+"t": 87.9,
+"facts": {
+"heading_deg": 225.0,
+"enemy_side": "right",
+"enemy_on_radar": true,
+"enemy_bearing": -88,
+"enemy_bearing_deg": -123.8,
+"enemy_distance": 20067,
+"miss_by": -16662,
+"hit_radius": 228,
+"on_target": false,
+"dying": false,
+"enemy_age": 216,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+3.6,
+12056,
+"wide pyramid"
+],
+[
+-26.8,
+19164,
+"tall box"
+]
+]
+},
+"kind": "behind"
+},
+{
+"run": "20261003-140535-arcade_bzone-lab-pilot-10hz-pilot-second",
+"t": 49.9,
+"facts": {
+"heading_deg": 147.7,
+"enemy_side": "rear",
+"enemy_on_radar": true,
+"enemy_bearing": 123,
+"enemy_bearing_deg": 173.0,
+"enemy_distance": 15939,
+"miss_by": 2243,
+"hit_radius": 240,
+"on_target": false,
+"dying": false,
+"enemy_age": 253,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+3.2,
+14148,
+"tall box"
+],
+[
+-29.4,
+21767,
+"short box"
+]
+]
+},
+"kind": "behind"
+},
+{
+"run": "20261003-155134-arcade_bzone-lab-pilot-20hz-plan-goals-g2",
+"t": 18.15,
+"facts": {
+"heading_deg": 341.7,
+"enemy_side": "right",
+"enemy_on_radar": true,
+"enemy_bearing": -90,
+"enemy_bearing_deg": -126.6,
+"enemy_distance": 9445,
+"miss_by": -7603,
+"hit_radius": 236,
+"on_target": false,
+"dying": false,
+"enemy_age": 255,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+13.0,
+6533,
+"short box"
+],
+[
+26.2,
+17940,
+"short box"
+]
+]
+},
+"kind": "behind"
+},
+{
+"run": "20261003-155134-arcade_bzone-lab-pilot-20hz-plan-goals-g2",
+"t": 43.75,
+"facts": {
+"heading_deg": 237.7,
+"enemy_side": "left",
+"enemy_on_radar": true,
+"enemy_bearing": 103,
+"enemy_bearing_deg": 144.8,
+"enemy_distance": 18765,
+"miss_by": 10876,
+"hit_radius": 240,
+"on_target": false,
+"dying": false,
+"enemy_age": 216,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-23.6,
+17015,
+"short box"
+]
+]
+},
+"kind": "behind"
+},
+{
+"run": "20261003-154422-arcade_bzone-lab-pilot-20hz-plan-g1",
+"t": 22.65,
+"facts": {
+"heading_deg": 344.5,
+"enemy_side": "left",
+"enemy_on_radar": true,
+"enemy_bearing": 103,
+"enemy_bearing_deg": 144.8,
+"enemy_distance": 14053,
+"miss_by": 8202,
+"hit_radius": 260,
+"on_target": false,
+"dying": false,
+"enemy_age": 255,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "flying",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-26.1,
+10997,
+"tall box"
+],
+[
+-13.8,
+21179,
+"wide pyramid"
+]
+]
+},
+"kind": "shot heard"
+},
+{
+"run": "20261003-153124-arcade_bzone-lab-pilot-10hz",
+"t": 63.9,
+"facts": {
+"heading_deg": 77.3,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": 13,
+"enemy_bearing_deg": 18.3,
+"enemy_distance": 17766,
+"miss_by": 5387,
+"hit_radius": 240,
+"on_target": false,
+"dying": false,
+"enemy_age": 255,
+"enemy_holds_fire": false,
+"enemy_aim": 0,
+"enemy_shell": "flying",
+"shell_miss": -831,
+"shell_arrives_s": 0.16,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": 2534,
+"obstacle_ahead_left": 716,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+11.8,
+3510,
+"wide pyramid"
+],
+[
+-2.1,
+16334,
+"tall box"
+]
+]
+},
+"kind": "shot heard"
+},
+{
+"run": "20261003-154557-arcade_bzone-lab-pilot-20hz-plan-g2",
+"t": 38.45,
+"facts": {
+"heading_deg": 84.4,
+"enemy_side": "left",
+"enemy_on_radar": true,
+"enemy_bearing": 42,
+"enemy_bearing_deg": 59.1,
+"enemy_distance": 21129,
+"miss_by": 18005,
+"hit_radius": 284,
+"on_target": false,
+"dying": false,
+"enemy_age": 255,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "flying",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+2.9,
+22214,
+"short box"
+]
+]
+},
+"kind": "shot heard"
+},
+{
+"run": "20261003-154422-arcade_bzone-lab-pilot-20hz-plan-g1",
+"t": 27.95,
+"facts": {
+"heading_deg": 338.9,
+"enemy_side": "rear",
+"enemy_on_radar": true,
+"enemy_bearing": 120,
+"enemy_bearing_deg": 168.8,
+"enemy_distance": 13806,
+"miss_by": 2749,
+"hit_radius": 236,
+"on_target": false,
+"dying": false,
+"enemy_age": 255,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "flying",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-17.9,
+12281,
+"wide pyramid"
+]
+]
+},
+"kind": "shot heard"
+},
+{
+"run": "20261003-153229-arcade_bzone-lab-pilot-10hz-pilot-advice-g1",
+"t": 31.3,
+"facts": {
+"heading_deg": 206.7,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": 15,
+"enemy_bearing_deg": 21.1,
+"enemy_distance": 12394,
+"miss_by": 4337,
+"hit_radius": 240,
+"on_target": false,
+"dying": false,
+"enemy_age": 255,
+"enemy_holds_fire": false,
+"enemy_aim": 0,
+"enemy_shell": "flying",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-7.0,
+21814,
+"short box"
+]
+]
+},
+"kind": "shot heard"
+},
+{
+"run": "20261003-153124-arcade_bzone-lab-pilot-10hz",
+"t": 25.2,
+"facts": {
+"heading_deg": 11.2,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": -5,
+"enemy_bearing_deg": -7.0,
+"enemy_distance": 9718,
+"miss_by": -1183,
+"hit_radius": 228,
+"on_target": false,
+"dying": false,
+"enemy_age": 255,
+"enemy_holds_fire": false,
+"enemy_aim": 0,
+"enemy_shell": "flying",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": 3397,
+"cover": null,
+"obstacles_in_view": [
+[
+-5.5,
+17317,
+"tall box"
+],
+[
+0.9,
+22862,
+"short box"
+],
+[
+-21.9,
+23782,
+"wide pyramid"
+]
+]
+},
+"kind": "shot heard"
+},
+{
+"run": "20261003-140535-arcade_bzone-lab-pilot-10hz-pilot-second",
+"t": 80.7,
+"facts": {
+"heading_deg": 113.9,
+"enemy_side": "rear",
+"enemy_on_radar": true,
+"enemy_bearing": -112,
+"enemy_bearing_deg": -157.5,
+"enemy_distance": 27942,
+"miss_by": -10405,
+"hit_radius": 248,
+"on_target": false,
+"dying": false,
+"enemy_age": 255,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "flying",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+19.9,
+17402,
+"narrow pyramid"
+]
+]
+},
+"kind": "shot heard"
+},
+{
+"run": "20261003-134108-arcade_bzone-lab-s1m-10hz-s1m-first",
+"t": 19.2,
+"facts": {
+"heading_deg": 353.0,
+"enemy_side": "right",
+"enemy_on_radar": true,
+"enemy_bearing": -50,
+"enemy_bearing_deg": -70.3,
+"enemy_distance": 8849,
+"miss_by": -8337,
+"hit_radius": 296,
+"on_target": false,
+"dying": false,
+"enemy_age": 255,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "flying",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+19.9,
+3801,
+"narrow pyramid"
+],
+[
+9.2,
+22154,
+"narrow pyramid"
+],
+[
+-18.0,
+22178,
+"short box"
+]
+]
+},
+"kind": "shot heard"
+},
+{
+"run": "20261003-140535-arcade_bzone-lab-pilot-10hz-pilot-second",
+"t": 78.9,
+"facts": {
+"heading_deg": 113.9,
+"enemy_side": "rear",
+"enemy_on_radar": true,
+"enemy_bearing": -108,
+"enemy_bearing_deg": -151.9,
+"enemy_distance": 26737,
+"miss_by": -12027,
+"hit_radius": 252,
+"on_target": false,
+"dying": false,
+"enemy_age": 255,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "flying",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+15.3,
+22502,
+"narrow pyramid"
+]
+]
+},
+"kind": "shot heard"
+},
+{
+"run": "20261003-133350-arcade_bzone-lab-flank_and_fire-10hz-missile-g2",
+"t": 104.6,
+"facts": {
+"heading_deg": 296.7,
+"enemy_side": "left",
+"enemy_on_radar": true,
+"enemy_bearing": 84,
+"enemy_bearing_deg": 118.1,
+"enemy_distance": 18566,
+"miss_by": 16575,
+"hit_radius": 288,
+"on_target": false,
+"dying": false,
+"enemy_age": 81,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "flying",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-29.4,
+13517,
+"wide pyramid"
+],
+[
+-7.5,
+22970,
+"narrow pyramid"
+],
+[
+-21.1,
+24885,
+"tall box"
+]
+]
+},
+"kind": "shot heard"
+},
+{
+"run": "20261003-155134-arcade_bzone-lab-pilot-20hz-plan-goals-g2",
+"t": 82.3,
+"facts": {
+"heading_deg": 43.6,
+"enemy_side": "right",
+"enemy_on_radar": true,
+"enemy_bearing": -70,
+"enemy_bearing_deg": -98.4,
+"enemy_distance": 24525,
+"miss_by": -24259,
+"hit_radius": 308,
+"on_target": false,
+"dying": false,
+"enemy_age": 255,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "flying",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": 108,
+"obstacle_ahead_left": 342,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+15.8,
+1256,
+"narrow pyramid"
+],
+[
+23.5,
+20070,
+"narrow pyramid"
+],
+[
+-30.4,
+22740,
+"short box"
+]
+]
+},
+"kind": "shot heard"
+},
+{
+"run": "20261003-153124-arcade_bzone-lab-pilot-10hz",
+"t": 25.4,
+"facts": {
+"heading_deg": 11.2,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": -5,
+"enemy_bearing_deg": -7.0,
+"enemy_distance": 9893,
+"miss_by": -1122,
+"hit_radius": 228,
+"on_target": false,
+"dying": false,
+"enemy_age": 255,
+"enemy_holds_fire": false,
+"enemy_aim": 0,
+"enemy_shell": "flying",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": 2641,
+"cover": null,
+"obstacles_in_view": [
+[
+-5.2,
+18071,
+"tall box"
+],
+[
+0.9,
+23620,
+"short box"
+],
+[
+-21.2,
+24488,
+"wide pyramid"
+]
+]
+},
+"kind": "shot heard"
+},
+{
+"run": "20261003-154913-arcade_bzone-lab-pilot-20hz-plan-goals-g1",
+"t": 89.8,
+"facts": {
+"heading_deg": 334.7,
+"enemy_side": "left",
+"enemy_on_radar": true,
+"enemy_bearing": 103,
+"enemy_bearing_deg": 144.8,
+"enemy_distance": 24885,
+"miss_by": 14213,
+"hit_radius": 260,
+"on_target": false,
+"dying": false,
+"enemy_age": 255,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "flying",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+13.9,
+11403,
+"wide pyramid"
+]
+]
+},
+"kind": "shot heard"
+},
+{
+"run": "20261003-154557-arcade_bzone-lab-pilot-20hz-plan-g2",
+"t": 99.25,
+"facts": {
+"heading_deg": 78.8,
+"enemy_side": "left",
+"enemy_on_radar": true,
+"enemy_bearing": 107,
+"enemy_bearing_deg": 150.5,
+"enemy_distance": 12204,
+"miss_by": 5897,
+"hit_radius": 252,
+"on_target": false,
+"dying": false,
+"enemy_age": 255,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "flying",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": true,
+"obstacle_ahead": 14,
+"obstacle_ahead_left": 208,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+10.3,
+1166,
+"wide pyramid"
+],
+[
+-5.8,
+14070,
+"tall box"
+]
+]
+},
+"kind": "shot heard"
+},
+{
+"run": "20261003-153124-arcade_bzone-lab-pilot-10hz",
+"t": 101.3,
+"facts": {
+"heading_deg": 195.5,
+"enemy_side": "left",
+"enemy_on_radar": true,
+"enemy_bearing": 63,
+"enemy_bearing_deg": 88.6,
+"enemy_distance": 2013,
+"miss_by": 2011,
+"hit_radius": 264,
+"on_target": false,
+"dying": false,
+"enemy_age": 255,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "flying",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-24.8,
+16732,
+"narrow pyramid"
+],
+[
+6.6,
+20021,
+"short box"
+]
+]
+},
+"kind": "shot heard"
+},
+{
+"run": "20261003-153322-arcade_bzone-lab-pilot-10hz-pilot-advice-g2",
+"t": 69.2,
+"facts": {
+"heading_deg": 120.9,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": 0,
+"enemy_bearing_deg": 0.0,
+"enemy_distance": 19955,
+"miss_by": 226,
+"hit_radius": 228,
+"on_target": true,
+"dying": false,
+"enemy_age": 255,
+"enemy_holds_fire": false,
+"enemy_aim": -5,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+7.4,
+16230,
+"tall box"
+]
+]
+},
+"kind": "lined up"
+},
+{
+"run": "20261003-141129-arcade_bzone-lab-pilot-10hz-pilot-third",
+"t": 86.9,
+"facts": {
+"heading_deg": 95.6,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": 1,
+"enemy_bearing_deg": 1.4,
+"enemy_distance": 1497,
+"miss_by": 26,
+"hit_radius": 296,
+"on_target": true,
+"dying": false,
+"enemy_age": 239,
+"enemy_holds_fire": false,
+"enemy_aim": -47,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-12.1,
+21524,
+"short box"
+],
+[
+-6.0,
+22410,
+"wide pyramid"
+],
+[
+23.5,
+24473,
+"narrow pyramid"
+]
+]
+},
+"kind": "lined up"
+},
+{
+"run": "20261003-154557-arcade_bzone-lab-pilot-20hz-plan-g2",
+"t": 49.6,
+"facts": {
+"heading_deg": 77.3,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": 1,
+"enemy_bearing_deg": 1.4,
+"enemy_distance": 14160,
+"miss_by": 243,
+"hit_radius": 260,
+"on_target": true,
+"dying": false,
+"enemy_age": 41,
+"enemy_holds_fire": false,
+"enemy_aim": -24,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+6.5,
+18322,
+"short box"
+]
+]
+},
+"kind": "lined up"
+},
+{
+"run": "20261003-133350-arcade_bzone-lab-flank_and_fire-10hz-missile-g2",
+"t": 22.0,
+"facts": {
+"heading_deg": 18.3,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": 0,
+"enemy_bearing_deg": 0.0,
+"enemy_distance": 11095,
+"miss_by": 19,
+"hit_radius": 224,
+"on_target": true,
+"dying": false,
+"enemy_age": 34,
+"enemy_holds_fire": false,
+"enemy_aim": 3,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+15.0,
+10499,
+"wide pyramid"
+]
+]
+},
+"kind": "lined up"
+},
+{
+"run": "20261003-133650-arcade_bzone-lab-flank_and_fire-10hz-missile-g3",
+"t": 84.2,
+"facts": {
+"heading_deg": 25.3,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": 0,
+"enemy_bearing_deg": 0.0,
+"enemy_distance": 12144,
+"miss_by": -267,
+"hit_radius": 288,
+"on_target": true,
+"dying": false,
+"enemy_age": 32,
+"enemy_holds_fire": false,
+"enemy_aim": -82,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-3.2,
+16206,
+"narrow pyramid"
+],
+[
+-14.9,
+22547,
+"wide pyramid"
+]
+]
+},
+"kind": "lined up"
+},
+{
+"run": "20261003-153751-arcade_bzone-lab-flank_and_fire-10hz",
+"t": 50.101,
+"facts": {
+"heading_deg": 88.6,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": 0,
+"enemy_bearing_deg": 0.0,
+"enemy_distance": 24389,
+"miss_by": -28,
+"hit_radius": 260,
+"on_target": true,
+"dying": false,
+"enemy_age": 31,
+"enemy_holds_fire": true,
+"enemy_aim": -25,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+18.5,
+13820,
+"narrow pyramid"
+]
+]
+},
+"kind": "lined up"
+},
+{
+"run": "20261003-153124-arcade_bzone-lab-pilot-10hz",
+"t": 2.8,
+"facts": {
+"heading_deg": 18.3,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": 0,
+"enemy_bearing_deg": 0.0,
+"enemy_distance": 23696,
+"miss_by": -265,
+"hit_radius": 300,
+"on_target": true,
+"dying": false,
+"enemy_age": 61,
+"enemy_holds_fire": false,
+"enemy_aim": -75,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-18.7,
+14562,
+"narrow pyramid"
+]
+]
+},
+"kind": "lined up"
+},
+{
+"run": "20261003-134530-arcade_bzone-lab-s1m-10hz-s1m-second",
+"t": 179.5,
+"facts": {
+"heading_deg": 104.1,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": 0,
+"enemy_bearing_deg": 0.0,
+"enemy_distance": 24204,
+"miss_by": 75,
+"hit_radius": 236,
+"on_target": true,
+"dying": false,
+"enemy_age": 63,
+"enemy_holds_fire": false,
+"enemy_aim": 11,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+23.4,
+4298,
+"short box"
+],
+[
+-11.7,
+13662,
+"narrow pyramid"
+]
+]
+},
+"kind": "lined up"
+},
+{
+"run": "20261003-141825-arcade_bzone-lab-pilot-10hz-pilot-tev1",
+"t": 73.2,
+"facts": {
+"heading_deg": 108.3,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": 2,
+"enemy_bearing_deg": 2.8,
+"enemy_distance": 2902,
+"miss_by": 141,
+"hit_radius": 296,
+"on_target": true,
+"dying": false,
+"enemy_age": 255,
+"enemy_holds_fire": false,
+"enemy_aim": 50,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+4.3,
+11947,
+"narrow pyramid"
+]
+]
+},
+"kind": "lined up"
+},
+{
+"run": "20261003-134530-arcade_bzone-lab-s1m-10hz-s1m-second",
+"t": 176.9,
+"facts": {
+"heading_deg": 104.1,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": 0,
+"enemy_bearing_deg": 0.0,
+"enemy_distance": 24388,
+"miss_by": 23,
+"hit_radius": 284,
+"on_target": true,
+"dying": false,
+"enemy_age": 24,
+"enemy_holds_fire": true,
+"enemy_aim": 40,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+23.4,
+4298,
+"short box"
+],
+[
+-11.7,
+13662,
+"narrow pyramid"
+]
+]
+},
+"kind": "lined up"
+},
+{
+"run": "20261003-153642-arcade_bzone-lab-pilot-20hz-pilot-aimed-g1",
+"t": 9.45,
+"facts": {
+"heading_deg": 2.8,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": 0,
+"enemy_bearing_deg": 0.0,
+"enemy_distance": 11595,
+"miss_by": -149,
+"hit_radius": 252,
+"on_target": true,
+"dying": false,
+"enemy_age": 157,
+"enemy_holds_fire": false,
+"enemy_aim": -105,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": 20,
+"obstacle_ahead_left": -366,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-18.2,
+1171,
+"narrow pyramid"
+],
+[
+-3.8,
+17516,
+"tall box"
+],
+[
+4.1,
+22801,
+"short box"
+],
+[
+-18.1,
+24522,
+"wide pyramid"
+]
+]
+},
+"kind": "lined up"
+},
+{
+"run": "20261003-153124-arcade_bzone-lab-pilot-10hz",
+"t": 10.5,
+"facts": {
+"heading_deg": 354.4,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": 0,
+"enemy_bearing_deg": 0.0,
+"enemy_distance": 20550,
+"miss_by": 88,
+"hit_radius": 248,
+"on_target": true,
+"dying": false,
+"enemy_age": 173,
+"enemy_holds_fire": false,
+"enemy_aim": -112,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-17.0,
+4499,
+"tall box"
+],
+[
+13.9,
+9369,
+"narrow pyramid"
+]
+]
+},
+"kind": "lined up"
+},
+{
+"run": "20261003-133205-arcade_bzone-lab-flank_and_fire-10hz-missile-g1",
+"t": 69.3,
+"facts": {
+"heading_deg": 236.2,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": 0,
+"enemy_bearing_deg": 0.0,
+"enemy_distance": 24486,
+"miss_by": -252,
+"hit_radius": 260,
+"on_target": true,
+"dying": false,
+"enemy_age": 32,
+"enemy_holds_fire": false,
+"enemy_aim": -102,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": 3480,
+"obstacle_ahead_left": 443,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+5.6,
+4565,
+"wide pyramid"
+],
+[
+20.8,
+19890,
+"wide pyramid"
+],
+[
+27.7,
+20522,
+"short box"
+]
+]
+},
+"kind": "lined up"
+},
+{
+"run": "20261003-133350-arcade_bzone-lab-flank_and_fire-10hz-missile-g2",
+"t": 71.7,
+"facts": {
+"heading_deg": 246.1,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": 1,
+"enemy_bearing_deg": 1.4,
+"enemy_distance": 9397,
+"miss_by": 151,
+"hit_radius": 236,
+"on_target": true,
+"dying": false,
+"enemy_age": 106,
+"enemy_holds_fire": false,
+"enemy_aim": -8,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-23.6,
+24224,
+"wide pyramid"
+]
+]
+},
+"kind": "lined up"
+},
+{
+"run": "20261003-154422-arcade_bzone-lab-pilot-20hz-plan-g1",
+"t": 34.65,
+"facts": {
+"heading_deg": 60.5,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": -7,
+"enemy_bearing_deg": -9.8,
+"enemy_distance": 1575,
+"miss_by": -256,
+"hit_radius": 296,
+"on_target": true,
+"dying": false,
+"enemy_age": 58,
+"enemy_holds_fire": false,
+"enemy_aim": -56,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "tank",
+"missile_height": null,
+"missile_low": null,
+"missile_weaving": null,
+"blocked": true,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-11.5,
+11289,
+"short box"
+],
+[
+10.8,
+23055,
+"wide pyramid"
+],
+[
+29.0,
+23883,
+"narrow pyramid"
+]
+]
+},
+"kind": "lined up"
+},
+{
+"run": "20261003-134530-arcade_bzone-lab-s1m-10hz-s1m-second",
+"t": 145.3,
+"facts": {
+"heading_deg": 49.2,
+"enemy_side": "right",
+"enemy_on_radar": true,
+"enemy_bearing": -46,
+"enemy_bearing_deg": -64.7,
+"enemy_distance": 5184,
+"miss_by": -4734,
+"hit_radius": 500,
+"on_target": false,
+"dying": false,
+"enemy_age": 38,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "missile",
+"missile_height": 0,
+"missile_low": true,
+"missile_weaving": true,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-17.0,
+22994,
+"narrow pyramid"
+]
+]
+},
+"kind": "missile"
+},
+{
+"run": "20261003-154913-arcade_bzone-lab-pilot-20hz-plan-goals-g1",
+"t": 40.2,
+"facts": {
+"heading_deg": 15.5,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": 10,
+"enemy_bearing_deg": 14.1,
+"enemy_distance": 7329,
+"miss_by": 1649,
+"hit_radius": 396,
+"on_target": false,
+"dying": false,
+"enemy_age": 28,
+"enemy_holds_fire": true,
+"enemy_aim": 0,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "missile",
+"missile_height": 0,
+"missile_low": true,
+"missile_weaving": false,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+8.9,
+6854,
+"narrow pyramid"
+],
+[
+-3.6,
+18677,
+"wide pyramid"
+],
+[
+-7.6,
+20773,
+"short box"
+]
+]
+},
+"kind": "missile"
+},
+{
+"run": "20261003-154913-arcade_bzone-lab-pilot-20hz-plan-goals-g1",
+"t": 40.9,
+"facts": {
+"heading_deg": 15.5,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": 6,
+"enemy_bearing_deg": 8.4,
+"enemy_distance": 3446,
+"miss_by": 544,
+"hit_radius": 384,
+"on_target": false,
+"dying": false,
+"enemy_age": 39,
+"enemy_holds_fire": false,
+"enemy_aim": -1,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "missile",
+"missile_height": 0,
+"missile_low": true,
+"missile_weaving": false,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+7.0,
+8630,
+"narrow pyramid"
+],
+[
+-3.3,
+20467,
+"wide pyramid"
+],
+[
+-7.0,
+22551,
+"short box"
+]
+]
+},
+"kind": "missile"
+},
+{
+"run": "20261003-133650-arcade_bzone-lab-flank_and_fire-10hz-missile-g3",
+"t": 117.0,
+"facts": {
+"heading_deg": 181.4,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": 2,
+"enemy_bearing_deg": 2.8,
+"enemy_distance": 5004,
+"miss_by": 302,
+"hit_radius": 372,
+"on_target": true,
+"dying": false,
+"enemy_age": 54,
+"enemy_holds_fire": false,
+"enemy_aim": 0,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "missile",
+"missile_height": 0,
+"missile_low": true,
+"missile_weaving": false,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+5.5,
+18298,
+"tall box"
+]
+]
+},
+"kind": "missile"
+},
+{
+"run": "20261003-134108-arcade_bzone-lab-s1m-10hz-s1m-first",
+"t": 70.7,
+"facts": {
+"heading_deg": 303.8,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": -11,
+"enemy_bearing_deg": -15.5,
+"enemy_distance": 14242,
+"miss_by": -3787,
+"hit_radius": 396,
+"on_target": false,
+"dying": false,
+"enemy_age": 21,
+"enemy_holds_fire": true,
+"enemy_aim": 0,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "missile",
+"missile_height": 1024,
+"missile_low": false,
+"missile_weaving": false,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-29.0,
+18976,
+"tall box"
+],
+[
+-5.5,
+24949,
+"wide pyramid"
+]
+]
+},
+"kind": "missile"
+},
+{
+"run": "20261003-154557-arcade_bzone-lab-pilot-20hz-plan-g2",
+"t": 44.85,
+"facts": {
+"heading_deg": 81.6,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": 0,
+"enemy_bearing_deg": 0.0,
+"enemy_distance": 7403,
+"miss_by": -21,
+"hit_radius": 372,
+"on_target": true,
+"dying": false,
+"enemy_age": 26,
+"enemy_holds_fire": true,
+"enemy_aim": -2,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "missile",
+"missile_height": 0,
+"missile_low": true,
+"missile_weaving": false,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+27.7,
+5413,
+"short box"
+],
+[
+7.5,
+15352,
+"narrow pyramid"
+],
+[
+-28.5,
+20476,
+"wide pyramid"
+]
+]
+},
+"kind": "missile"
+},
+{
+"run": "20261003-134108-arcade_bzone-lab-s1m-10hz-s1m-first",
+"t": 71.201,
+"facts": {
+"heading_deg": 313.6,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": -18,
+"enemy_bearing_deg": -25.3,
+"enemy_distance": 10658,
+"miss_by": -4548,
+"hit_radius": 420,
+"on_target": false,
+"dying": false,
+"enemy_age": 28,
+"enemy_holds_fire": true,
+"enemy_aim": 0,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "missile",
+"missile_height": 0,
+"missile_low": true,
+"missile_weaving": false,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+28.9,
+22032,
+"narrow pyramid"
+],
+[
+-15.4,
+24949,
+"wide pyramid"
+]
+]
+},
+"kind": "missile"
+},
+{
+"run": "20261003-140535-arcade_bzone-lab-pilot-10hz-pilot-second",
+"t": 82.4,
+"facts": {
+"heading_deg": 113.9,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": 0,
+"enemy_bearing_deg": 0.0,
+"enemy_distance": 18245,
+"miss_by": -225,
+"hit_radius": 368,
+"on_target": false,
+"dying": false,
+"enemy_age": 10,
+"enemy_holds_fire": true,
+"enemy_aim": 0,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "missile",
+"missile_height": 3840,
+"missile_low": false,
+"missile_weaving": false,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+26.9,
+13010,
+"narrow pyramid"
+]
+]
+},
+"kind": "missile"
+},
+{
+"run": "20261003-134530-arcade_bzone-lab-s1m-10hz-s1m-second",
+"t": 93.6,
+"facts": {
+"heading_deg": 7.0,
+"enemy_side": "ahead",
+"enemy_on_radar": true,
+"enemy_bearing": -9,
+"enemy_bearing_deg": -12.7,
+"enemy_distance": 18905,
+"miss_by": -4384,
+"hit_radius": 420,
+"on_target": false,
+"dying": false,
+"enemy_age": 12,
+"enemy_holds_fire": true,
+"enemy_aim": 10,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "missile",
+"missile_height": 3328,
+"missile_low": false,
+"missile_weaving": true,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-9.4,
+6654,
+"narrow pyramid"
+]
+]
+},
+"kind": "missile"
+},
+{
+"run": "20261003-134530-arcade_bzone-lab-s1m-10hz-s1m-second",
+"t": 145.6,
+"facts": {
+"heading_deg": 47.8,
+"enemy_side": "right",
+"enemy_on_radar": true,
+"enemy_bearing": -54,
+"enemy_bearing_deg": -75.9,
+"enemy_distance": 2380,
+"miss_by": -2320,
+"hit_radius": 524,
+"on_target": false,
+"dying": false,
+"enemy_age": 42,
+"enemy_holds_fire": false,
+"enemy_aim": null,
+"enemy_shell": "none",
+"shell_miss": null,
+"shell_arrives_s": null,
+"enemy_kind": "missile",
+"missile_height": 0,
+"missile_low": true,
+"missile_weaving": true,
+"blocked": false,
+"obstacle_ahead": null,
+"obstacle_ahead_left": null,
+"obstacle_behind": null,
+"cover": null,
+"obstacles_in_view": [
+[
+-16.2,
+22275,
+"narrow pyramid"
+]
+]
+},
+"kind": "missile"
+}
+]
+}
