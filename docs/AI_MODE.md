@@ -233,6 +233,18 @@ never sees or sets a raw number, and the scale is bounded.
 - Every answer is logged as an `advice` event beside the goal the code would have chosen and what became of it
   (`taken`, `held`, `gated`); the run summary counts them, including how often the model agreed with the code.
 - Survival still overrides everything.
+- When it asks (`--strategy-timing`, a timing switch). The model server answers one question at a time, so the slow
+  layer's questions and the junction questions wait for each other. `events` (the default): the goal alone on a game
+  event (energizers, ghosts turning blue or back, fruit, a life, a level), at once, and otherwise every 5 s; goal and
+  stance every 15 s; heartbeats only when no junction question waits or is being answered. A stance not renewed in 30 s
+  lapses to normal. `always`: goal and stance as often as answers come (the behaviour before 2 October 2026). Each
+  `advice` record says why it was asked. Measured on nimble with an idle server: the goal alone 95 ms, goal and stance
+  665 ms; with `always`, one Ms. Pac-Man run kept the server busy 78% of the time and junction answers took a median
+  1.9 s, so code's late default made 98% of the moves.
+- The code's goal (`GoalManager`, the default without `--strategist`) is a hand-tuned policy: it reads only what a
+  player can see or know (path distances, blue time from the Pac-Man Dossier's table), but its thresholds are code's
+  judgement, and the goal it picks is in every junction question. A run with code's goal is "the model picks
+  directions under code's strategy".
 
 Label results by what the model did: with `--strategist ollama` and the rule decider, the model sets parameters
 and code picks every direction (not the S1M playing); with `--decider ollama` as well, a model does both.
