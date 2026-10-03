@@ -49,7 +49,7 @@ def marks(state, facts):
         x, y = on_radar(ahead, left)
         h = state.enemy.angle * math.pi / 128
         out.append({"label": "enemy (radar, predicted; line: its heading)", "kind": "threat", "line": False,
-                    "x": x, "y": y, "to": pointing(x, y, *turn(state, math.cos(h), math.sin(h)), 14),
+                    "x": x, "y": y, "to": pointing(x, y, *turn(state, math.cos(h), math.sin(h)), 30),
                     "note": f"{facts.enemy_distance} units, {facts.enemy_bearing_deg:+.0f} deg",
                     "colour": "#ff4040", "alert": bool(facts.on_target)})
     if facts.enemy_side == "ahead" and ahead > 0:

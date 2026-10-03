@@ -817,7 +817,13 @@ function draw() {
       ctx.globalAlpha = m.steps === null ? 0.15 : near ? 0.9 : m.steps === undefined ? 0.8 : 0.4;  // steps null: out of reach; absent: a game without steps
       ctx.strokeStyle = m.colour; ctx.lineWidth = near ? 1.6 : 0.9;
       if (m.line !== false) { ctx.beginPath(); ctx.moveTo(player.x, player.y); ctx.lineTo(m.x, m.y); ctx.stroke(); }
-      if (m.to) { ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(m.to[0], m.to[1]); ctx.stroke(); }  // a heading, a path
+      if (m.to) {  // a heading or a path: an arrow from the circle's edge
+        const dx = m.to[0] - m.x, dy = m.to[1] - m.y, n = Math.hypot(dx, dy) || 1, ux = dx / n, uy = dy / n;
+        ctx.save(); ctx.globalAlpha = 0.95; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(m.x + 9 * ux, m.y + 9 * uy); ctx.lineTo(m.to[0], m.to[1]);
+        ctx.moveTo(m.to[0] - 6 * ux + 4 * uy, m.to[1] - 6 * uy - 4 * ux); ctx.lineTo(m.to[0], m.to[1]);
+        ctx.lineTo(m.to[0] - 6 * ux - 4 * uy, m.to[1] - 6 * uy + 4 * ux); ctx.stroke(); ctx.restore();
+      }
       ctx.setLineDash([]);
       ctx.beginPath(); ctx.arc(m.x, m.y, 9, 0, Math.PI * 2); ctx.stroke();
       if (m.steps != null) {
