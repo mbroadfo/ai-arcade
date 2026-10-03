@@ -36,14 +36,14 @@ class Runner:
     def busy(self):
         return self.state["state"] in ("starting", "running", "stopping")
 
-    def start(self, game, play_args, speed=0.85):
+    def start(self, game, play_args, speed=0.85, script="play.py"):
         if self.busy():
             raise RuntimeError("an AI run is already going")
         self.tail.clear()
         self._set(state="starting", game=game, step="Clearing the screen", args=play_args)
-        threading.Thread(target=self._run, args=(game, play_args, speed), daemon=True).start()
+        threading.Thread(target=self._run, args=(game, play_args, speed, script), daemon=True).start()
 
-    def _run(self, game, play_args, speed):
+    def _run(self, game, play_args, speed, script="play.py"):
         try:
             self.cabinet.clear()
             self._set(state="starting", game=game, step="Starting MAME and the streams", args=play_args)
@@ -58,7 +58,7 @@ class Runner:
             LOGS.mkdir(parents=True, exist_ok=True)
             log_path = LOGS / f"{time.strftime('%Y%m%d-%H%M%S')}-{game.replace('/', '_')}.log"
             with open(log_path, "w", encoding="utf-8") as log:
-                self.proc = subprocess.Popen([sys.executable, "-u", str(TOOLS / "play.py"), "--host", self.host] + play_args,
+                self.proc = subprocess.Popen([sys.executable, "-u", str(TOOLS / script), "--host", self.host] + play_args,
                                              cwd=TOOLS, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
                                              encoding="utf-8", errors="replace")
                 self._set(state="running", game=game, args=play_args, log=str(log_path))

@@ -14,3 +14,19 @@ AGENT_REGIONS = REGIONS  # 1 KB a frame; narrowed once the RAM map is known
 # setting is 2 coins, 1 credit). Lives stay at the factory 3.
 SETTINGS = {"Coinage": "Free Play"}
 COINS_PER_PLAY = 0  # with SETTINGS applied: START alone begins a game
+
+# No model plays Battlezone yet: the Observatory offers its real-time lab instead (tools/ai_setup.py), runs of code
+# policies on a fixed-rate clock, labelled as code (scripts/lab.py, policies.py).
+LAB = {"default_policy": "track_and_fire", "default_hz": 10, "hz_range": (1, 40)}
+
+
+def lab_policies():
+    """{name: what it does} for the AI setup panel."""
+    from .policies import POLICIES
+    return {name: (f.__doc__ or name.replace("_", " ")).strip().splitlines()[0] for name, f in POLICIES.items()}
+
+
+def lab_main(argv):
+    """Run the lab with these arguments (tools/run_lab.py)."""
+    from .scripts.lab import main
+    return main(argv)

@@ -65,7 +65,19 @@ def test_the_ai_setup_is_read_from_the_game_package():
     kinds = {f["name"]: f["kind"] for f in s["switches"]}
     assert kinds["reflex"] == "override" and kinds["park"] == "skill"
     assert set(ai_setup.ai_games()) >= {"arcade/pacman", "arcade/mspacman"}
-    assert "arcade/bzone" not in ai_setup.ai_games()  # in the workshop: a profile and a RAM map, no player yet
+    assert ai_setup.ai_games()["arcade/bzone"]["kind"] == "lab"  # no model player yet: its lab of code policies
+    assert ai_setup.ai_games()["arcade/pacman"]["kind"] == "model"
+
+
+def test_a_lab_game_offers_its_policies_and_rate():
+    s = ai_setup.schema("arcade/bzone")
+    assert s["kind"] == "lab" and "track_and_fire" in [p["value"] for p in s["policies"]]
+    args = ai_setup.command_line("arcade/bzone", {"policy": "turn_toward", "hz": 5, "seconds": 120})
+    assert args == ["--game", "arcade/bzone", "--policy", "turn_toward", "--hz", "5", "--seconds", "120"]
+    with pytest.raises(ValueError):
+        ai_setup.command_line("arcade/bzone", {"policy": "cheat"})
+    with pytest.raises(ValueError):
+        ai_setup.command_line("arcade/bzone", {"hz": 500})
 
 
 def test_answers_become_plays_command_line():

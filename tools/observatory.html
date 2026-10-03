@@ -1027,6 +1027,11 @@ async function openSetup(game) {
     const [schema, models] = await Promise.all([api("/api/ai/" + game), api("/api/models").catch(() => [])]);
     ctl.setup = schema; ctl.models = models;
     const a = saved(game) || {};
+    if (schema.kind === "lab") {  // no model plays it yet: a run of code policies on a fixed-rate clock
+      ctl.draft = { policy: a.policy || schema.default_policy, hz: a.hz || schema.hz.default,
+                    seconds: a.seconds || schema.seconds.default, speed: a.speed || schema.speed.default };
+      renderSetup(); return;
+    }
     ctl.draft = { decider: a.decider || "ollama", model: a.model || (models.find(m => m.startsWith("nimble")) || models[0] || "nimble"),
                   knowledge: a.knowledge !== undefined ? a.knowledge : schema.default_knowledge, goal: a.goal || "auto",
                   strategist: a.strategist || "code", strategist_model: a.strategist_model || "nimble",
@@ -1042,7 +1047,22 @@ function modelSelect(name, value, blank) {
   const list = ctl.models.length ? ctl.models : [value];
   return `<select name="${name}">${blank ? `<option value="">${esc(blank)}</option>` : ""}${list.map(m => `<option ${m === value ? "selected" : ""}>${esc(m)}</option>`).join("")}</select>`;
 }
+function renderLab() {
+  const s = ctl.setup, d = ctl.draft, g = gameByAi(s.game);
+  $("s-title").textContent = "LAB SETUP · " + (g ? g.name : s.title).toUpperCase();
+  $("s-body").innerHTML = `
+    <div class="field"><div class="help">${esc(s.note)}</div></div>
+    <div class="field"><span class="lbl2">POLICY (CODE)</span>${radios("policy", s.policies, d.policy)}</div>
+    <div class="field"><label>DECISIONS A SECOND</label><input type="number" name="hz" min="${s.hz.min}" max="${s.hz.max}" step="1" value="${esc(d.hz)}">
+      <div class="help">${esc(s.hz.help)}</div></div>
+    <div class="field"><label>LONGEST RUN (SECONDS)</label><input type="number" name="seconds" min="${s.seconds.min}" max="${s.seconds.max}" value="${esc(d.seconds)}">
+      <div class="help">${esc(s.seconds.help)}</div></div>
+    <div class="field"><label>GAME SPEED</label><div class="rangefield"><input type="range" name="speed" min="${s.speed.min}" max="${s.speed.max}" step="0.05" value="${esc(d.speed)}"><b id="s-speed-v">${Math.round(100 * d.speed)}%</b></div>
+      <div class="help">${esc(s.speed.help)}</div></div>`;
+  showCommand();
+}
 function renderSetup() {
+  if (ctl.setup.kind === "lab") return renderLab();
   const s = ctl.setup, d = ctl.draft, g = gameByAi(s.game);
   $("s-title").textContent = "AI SETUP · " + (g ? g.name : s.title).toUpperCase();
   const model = d.decider === "ollama";
@@ -1077,6 +1097,14 @@ function renderSetup() {
 function readSetup() {
   const body = $("s-body"), d = ctl.draft, s = ctl.setup;
   const val = n => body.querySelector(`[name="${n}"]:checked`)?.value ?? body.querySelector(`[name="${n}"]`)?.value;
+  if (s.kind === "lab") {
+    d.policy = val("policy") || d.policy;
+    d.hz = Number(val("hz") || s.hz.default);
+    d.seconds = Number(val("seconds") || s.seconds.default);
+    d.speed = Number(val("speed") || s.speed.default);
+    if ($("s-speed-v")) $("s-speed-v").textContent = Math.round(100 * d.speed) + "%";
+    return d;
+  }
   d.decider = val("decider") ?? d.decider;
   if (body.querySelector('[name="model"]')) d.model = val("model");
   if (body.querySelector('[name="knowledge"]')) { const k = val("knowledge"); d.knowledge = k === "" ? null : k; }
@@ -1098,12 +1126,17 @@ function readSetup() {
   return d;
 }
 function answersOf(d) {
+  if (ctl.setup && ctl.setup.kind === "lab") return { policy: d.policy, hz: d.hz, seconds: d.seconds, speed: d.speed };
   return { decider: d.decider, model: d.model, knowledge: d.decider === "ollama" ? d.knowledge : null, goal: d.goal,
            strategist: d.strategist, strategist_model: d.strategist_model, games: d.games, orders: d.orders, switches: d.switches,
            speed: d.speed };
 }
 function showCommand() {
   const d = ctl.draft;
+  if (ctl.setup && ctl.setup.kind === "lab") {
+    $("s-cmd").textContent = `run_lab.py --policy ${d.policy} --hz ${d.hz} --seconds ${d.seconds} speed ${Math.round(100 * d.speed)}%`;
+    return;
+  }
   const parts = ["play.py", "--decider " + d.decider, d.decider === "ollama" ? "--model " + d.model : "", d.decider === "ollama" && d.knowledge ? "--knowledge " + d.knowledge : "",
     "--goal " + d.goal, d.strategist !== "code" ? "--strategist " + d.strategist : "", "--games " + d.games, `speed ${Math.round(100 * d.speed)}%`, d.orders.length ? `${d.orders.length} order(s)` : "",
     ...Object.entries(d.switches).map(([k, v]) => `${k}=${v}`)];

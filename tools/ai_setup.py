@@ -31,16 +31,43 @@ STRATEGISTS = [
 
 
 def ai_games():
-    """{"<system>/<name>": {"romset", "title"}} for every game package with an AI player. A game still in the workshop
-    (a profile and a RAM map, no player yet) is left out: it can be played by a human only."""
+    """{"<system>/<name>": {"romset", "title", "kind"}} for every game package with an AI player ("model") or, while
+    no model plays it yet, a real-time lab of code policies ("lab"). A game with neither (a profile and a RAM map only)
+    is left out: it can be played by a human only."""
     out = {}
     for profile in sorted(GAMES_DIR.glob("*/*/profile.json")):
         system, name = profile.parent.parent.name, profile.parent.name
-        if getattr(load_game(f"{system}/{name}"), "player", None) is None:
+        kind = lab_or_model(load_game(f"{system}/{name}"))
+        if kind is None:
             continue
         data = json.loads(profile.read_text())
-        out[f"{system}/{name}"] = {"romset": data.get("romset", name), "title": data.get("description", name)}
+        out[f"{system}/{name}"] = {"romset": data.get("romset", name), "title": data.get("description", name),
+                                   "kind": kind}
     return out
+
+
+def lab_or_model(game):
+    if getattr(game, "player", None) is not None:
+        return "model"
+    if hasattr(game, "lab_main") and hasattr(game, "LAB"):
+        return "lab"
+    return None
+
+
+def lab_schema(spec, game):
+    lab = game.LAB
+    lo, hi = lab["hz_range"]
+    return {
+        "game": spec, "kind": "lab", "title": load_profile(spec).get("description", spec),
+        "note": "No model plays this game yet. A lab run is code choosing every move (a diagnostic policy), on a "
+                "fixed-rate clock that logs every tick: it is never reported as AI play.",
+        "policies": [{"value": n, "label": n.replace("_", " "), "help": h} for n, h in game.lab_policies().items()],
+        "default_policy": lab["default_policy"],
+        "hz": {"default": lab["default_hz"], "min": lo, "max": hi,
+               "help": "Decisions a second: the clock observes, decides and sets the controls this often."},
+        "seconds": {"default": 300, "min": 10, "max": 3600, "help": "Longest run; it also ends when the game ends."},
+        "speed": {"default": 1.0, "min": 0.3, "max": 1.0, "help": "How fast the game runs. Timing work runs at 100 %."},
+    }
 
 
 def _option_field(o):
@@ -60,6 +87,8 @@ def _option_field(o):
 
 def schema(spec):
     game = load_game(spec)
+    if lab_or_model(game) == "lab":
+        return lab_schema(spec, game)
     levels = list(getattr(game.knowledge, "LEVELS", ()))
     level_help = getattr(game.knowledge, "LEVEL_HELP", {})
     goals = getattr(game.goals, "GOALS", {})
@@ -85,9 +114,19 @@ def schema(spec):
 
 
 def command_line(spec, answers):
-    """play.py's arguments for these answers. Raises ValueError on anything the schema does not offer."""
+    """play.py's arguments for these answers (run_lab.py's, for a lab). Raises ValueError on anything not offered."""
     s = schema(spec)
     args = ["--game", spec]
+    if s.get("kind") == "lab":
+        policy = answers.get("policy", s["default_policy"])
+        if policy not in [p["value"] for p in s["policies"]]:
+            raise ValueError(f"policy: {policy!r} is not offered")
+        hz, seconds = float(answers.get("hz", s["hz"]["default"])), int(answers.get("seconds", s["seconds"]["default"]))
+        if not s["hz"]["min"] <= hz <= s["hz"]["max"]:
+            raise ValueError(f"hz: {s['hz']['min']} to {s['hz']['max']}")
+        if not s["seconds"]["min"] <= seconds <= s["seconds"]["max"]:
+            raise ValueError(f"seconds: {s['seconds']['min']} to {s['seconds']['max']}")
+        return args + ["--policy", policy, "--hz", f"{hz:g}", "--seconds", str(seconds)]
 
     def pick(name, options, default):
         value = answers.get(name, default)

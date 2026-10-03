@@ -240,6 +240,7 @@ class Control:
     def start_ai(self, game, answers):
         import ai_setup
         args = ai_setup.command_line(game, answers)  # checked before anything is stopped
+        script = "run_lab.py" if ai_setup.schema(game).get("kind") == "lab" else "play.py"
         speed = float(answers.get("speed", 0.85))
         if not 0.2 <= speed <= 1.0:
             raise ValueError("speed: 0.2 to 1.0")
@@ -249,11 +250,11 @@ class Control:
         def go():  # the run on screen (if any) finishes its files first, as the picker says it will
             self.hub.set_panel("control", {**self.runner.state, "state": "stopping", "next": game})
             self._end_ai()
-            self.runner.start(game, args, speed)
+            self.runner.start(game, args, speed, script)
         if self.runner.busy() or self.hub.players:
             threading.Thread(target=go, daemon=True).start()
             return {"args": args, "after": "stopping the current run"}
-        self.runner.start(game, args, speed)
+        self.runner.start(game, args, speed, script)
         return {"args": args}
 
     def _end_ai(self, wait=25):

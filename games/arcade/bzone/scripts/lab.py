@@ -161,7 +161,7 @@ def main(argv=None):
         log.write(json.dumps(summary) + "\n")
         log.close()
         if live:
-            live.send({"event": "run_end", "label": label, "t": time.time()})
+            live.send({"event": "run_end", "label": label, "games_completed": int(bool(previous and not previous.playing)), "t": time.time()})
             live.close(2.0)
         stream.close()
     print(json.dumps(summary["clock"], indent=1))

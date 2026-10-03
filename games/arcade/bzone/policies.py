@@ -10,22 +10,27 @@ NOTHING = frozenset()
 
 
 def idle(state, facts, t, last):
+    """Press nothing: watch, or drive yourself on the keyboard while the lab reports."""
     return NOTHING, "hold nothing"
 
 
 def rotate_left(state, facts, t, last):
+    """Turn left on the spot, always."""
     return TURN_LEFT, "always turn left"
 
 
 def rotate_right(state, facts, t, last):
+    """Turn right on the spot, always."""
     return TURN_RIGHT, "always turn right"
 
 
 def drive(state, facts, t, last):
+    """Drive straight ahead, always."""
     return DRIVE, "always drive forward"
 
 
 def pattern(state, facts, t, last, turn_s=2.0, drive_s=2.0):
+    """Turn left 2 s, drive 2 s, repeat."""
     phase = t % (turn_s + drive_s)
     if phase < turn_s:
         return TURN_LEFT, f"pattern: turning ({phase:.1f} s of {turn_s:.0f})"
