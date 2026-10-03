@@ -1,6 +1,6 @@
 """Battlezone's real-time lab: a fixed-rate loop running a diagnostic policy, logging every tick.
 
-    observe -> decode -> policy(state) -> hold controls -> wait for the next tick
+    observe -> decode -> facts -> policy(state, facts) -> hold controls -> wait for the next tick
 
 Each tick's log line says when it ran and how late, which snapshot it saw and how old that was when the command went
 out, the decoded state, what the policy chose and why, what was actually pressed and released, how long the decision
@@ -22,6 +22,7 @@ from gamelib import DEFAULT_PI_HOST, ROOT, load_game  # noqa: E402  (puts the re
 from arcadekit.clock import TickClock  # noqa: E402
 from broker_link import BrokerLink  # noqa: E402
 from games.arcade.bzone.controls import broker_actions, describe  # noqa: E402
+from games.arcade.bzone.facts import derive  # noqa: E402
 from games.arcade.bzone.policies import POLICIES  # noqa: E402
 from state_client import StateStream  # noqa: E402
 
@@ -98,15 +99,17 @@ def main(argv=None):
     start_game(stream, broker, coins)
 
     clock = TickClock(args.hz)
-    began, previous, last_frame = time.monotonic(), None, None
+    began, previous, last_frame, held = time.monotonic(), None, None, frozenset()
     try:
         while time.monotonic() - began < args.seconds:
             tick = clock.wait()
             (frame, state, _), arrived = stream.latest_timed(timeout=1.0)
             t = tick.began - began
             t0 = time.perf_counter()
-            names, why = policy(state, t)
-            decide_ms = (time.perf_counter() - t0) * 1000
+            facts = derive(state)
+            names, why = policy(state, facts, t, held)
+            decide_ms = (time.perf_counter() - t0) * 1000  # facts and policy together
+            held = frozenset(names)
             before = broker.holding
             t1 = time.perf_counter()
             broker.hold(broker_actions(names))
@@ -114,7 +117,8 @@ def main(argv=None):
             age_ms = (time.time() - arrived) * 1000  # how old the observation was when the command had gone out
             record = {"event": "tick", "tick": tick.index, "t": round(t, 3), "interval_ms": round(tick.interval * 1000, 1),
                       "late_ms": round(tick.late_ms, 1), "frame": frame, "new_frame": frame != last_frame,
-                      "obs_age_ms": round(age_ms, 1), "state": digest(state), "action": sorted(names),
+                      "obs_age_ms": round(age_ms, 1), "state": digest(state), "facts": vars(facts),
+                      "game_turn": state.game_turn, "action": sorted(names),
                       "action_words": describe(names), "why": why,
                       "pressed": sorted(map(list, broker.holding - before)),
                       "released": sorted(map(list, before - broker.holding)),

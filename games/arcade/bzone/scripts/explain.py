@@ -26,6 +26,13 @@ def lines(records, start=0.0, end=math.inf, changes_only=False):
         text = (f"{r['t']:8.3f} s  tick {r['tick']}  frame {r['frame']}{'' if r['new_frame'] else ' (same)'}  "
                 f"obs age {r['obs_age_ms']:.0f} ms  heading {s['angle']} ({degrees(s['angle']):.0f} deg)  "
                 f"pos ({s['x']}, {s['y']})  lives {s['lives']}")
+        f = r.get("facts")
+        if f:
+            text += (f"\n          facts: enemy {f['enemy_side']}"
+                     + (f" {f['enemy_bearing_deg']:+.0f} deg" if f["enemy_bearing_deg"] is not None else "")
+                     + (f", on radar at {f['enemy_distance']}" if f["enemy_on_radar"] else ", off radar")
+                     + (f", shot would pass {f['miss_by']:+d} of radius {f['hit_radius']}" if f.get("miss_by") is not None else "")
+                     + (", ON TARGET" if f.get("on_target") else ""))
         text += f"\n          -> {r['why']}: hold {r['action_words']}"
         if acted:
             text += f"  (pressed {r['pressed']}, released {r['released']}; broker {r['broker_ms']:.0f} ms)"

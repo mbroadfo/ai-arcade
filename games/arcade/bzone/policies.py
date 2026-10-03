@@ -1,41 +1,75 @@
 """Diagnostic policies: instrumentation tests of the real-time loop, not attempts to play well.
 
-Each is a function (state, seconds_into_run) -> (control names to hold, why), using only the decoded state, so a log
-can show that a given state led to a given command. They are code choosing, so they are controls (the rule tier in
-docs/GAME_WORKSHOP.md), never reported as AI play.
+Each is a function (state, facts, seconds_into_run, last_action) -> (control names to hold, why), using only the
+decoded state and the tactical facts (facts.py), so a log can show that a given state led to a given command. They are
+code choosing, so they are controls (the rule tier in docs/GAME_WORKSHOP.md), never reported as AI play.
 """
 from .controls import DRIVE, TURN_LEFT, TURN_RIGHT
 
-
-def idle(state, t):
-    return frozenset(), "hold nothing"
+NOTHING = frozenset()
 
 
-def rotate_left(state, t):
+def idle(state, facts, t, last):
+    return NOTHING, "hold nothing"
+
+
+def rotate_left(state, facts, t, last):
     return TURN_LEFT, "always turn left"
 
 
-def rotate_right(state, t):
+def rotate_right(state, facts, t, last):
     return TURN_RIGHT, "always turn right"
 
 
-def drive(state, t):
+def drive(state, facts, t, last):
     return DRIVE, "always drive forward"
 
 
-def pattern(state, t, turn_s=2.0, drive_s=2.0):
+def pattern(state, facts, t, last, turn_s=2.0, drive_s=2.0):
     phase = t % (turn_s + drive_s)
     if phase < turn_s:
         return TURN_LEFT, f"pattern: turning ({phase:.1f} s of {turn_s:.0f})"
     return DRIVE, f"pattern: driving ({phase - turn_s:.1f} s of {drive_s:.0f})"
 
 
-def fire_pulse(state, t, every_s=1.0, held_s=0.2):
+def fire_pulse(state, facts, t, last, every_s=1.0, held_s=0.2):
     """Fire is a button the game reads on a press: hold it briefly, then let go, every `every_s` seconds."""
     if t % every_s < held_s:
         return frozenset({"FIRE"}), f"fire pulse ({t % every_s:.1f} s into a {every_s:.0f} s cycle)"
-    return frozenset(), "between fire pulses"
+    return NOTHING, "between fire pulses"
+
+
+def turn_toward(state, facts, t, last):
+    """Turn to the side the screen names; once the bearing is known (radar or on screen), centre on it."""
+    if facts.dying:
+        return NOTHING, "dying: nothing to steer"
+    if facts.on_target:
+        return NOTHING, f"on target (shot would pass {facts.miss_by:+d}, radius {facts.hit_radius}): hold still"
+    if facts.miss_by is not None:
+        if facts.enemy_bearing is not None and abs(facts.enemy_bearing) > 2:
+            pass  # far off: steer by the bearing below
+        elif facts.miss_by > 0:
+            return TURN_LEFT, f"shot would pass {facts.miss_by:+d} (left of it): turn left"
+        else:
+            return TURN_RIGHT, f"shot would pass {facts.miss_by:+d} (right of it): turn right"
+    if facts.enemy_bearing is not None:
+        if facts.enemy_bearing > 0:
+            return TURN_LEFT, f"enemy {facts.enemy_bearing_deg:+.0f} deg (left): turn left"
+        return TURN_RIGHT, f"enemy {facts.enemy_bearing_deg:+.0f} deg (right): turn right"
+    if facts.enemy_side == "right":
+        return TURN_RIGHT, "screen says enemy to the right: turn right"
+    return TURN_LEFT, f"screen says enemy to the {facts.enemy_side}: turn left"
+
+
+def track_and_fire(state, facts, t, last):
+    """turn_toward, and fire when a shot would pass within the hit radius: a press on one tick, a release on the next."""
+    names, why = turn_toward(state, facts, t, last)
+    if facts.on_target:
+        if "FIRE" in last:
+            return names, why + "; release fire (it fires on a press)"
+        return names | {"FIRE"}, why + "; on target: fire"
+    return names, why
 
 
 POLICIES = {"idle": idle, "rotate_left": rotate_left, "rotate_right": rotate_right, "drive": drive,
-            "pattern": pattern, "fire_pulse": fire_pulse}
+            "pattern": pattern, "fire_pulse": fire_pulse, "turn_toward": turn_toward, "track_and_fire": track_and_fire}

@@ -16,6 +16,7 @@ FIRECT = 0x24
 SHELLX, SHELLY = 0xA8, 0xAC
 HITS = 0xB8  # 2 bytes each: the tank's hits (the score) at +0, the enemy's hits on the tank at +2
 CRACK, EIRNGE, R2D3FL, LIVES, GOVER, ATRACT = 0xC7, 0xC9, 0xCB, 0xCC, 0xCD, 0xCE
+PTURN = 0xD0  # the game's own |enemy bearing - heading|, for its warnings
 SAPOSX, SAPOSY, SAUCER = 0xD5, 0xD7, 0xDE
 FRAME = 0xC6
 TDIST = 0x02E8
@@ -57,6 +58,7 @@ class BattlezoneState:
     enemy_distance: int  # TDIST: high byte of the distance, from the radar routine
     angle9: int  # the tank's 9-bit angle (0-511)
     frame: int
+    game_turn: int  # PTURN: the game's own size of the enemy's bearing from the heading (to check facts.py against)
 
 
 def decode(image):
@@ -69,4 +71,5 @@ def decode(image):
         lives=image[LIVES], hits=u16(image, HITS), hits_taken=u16(image, HITS + 2), dying=image[CRACK],
         enemy_in_range=image[EIRNGE], missile=image[R2D3FL], saucer=image[SAUCER],
         saucer_pos=(s16(image, SAPOSX), s16(image, SAPOSY)), tank=tank, enemy=enemy,
-        enemy_distance=image[TDIST], angle9=image[TANGLE] << 1 | image[LANGLE] >> 7, frame=image[FRAME])
+        enemy_distance=image[TDIST], angle9=image[TANGLE] << 1 | image[LANGLE] >> 7, frame=image[FRAME],
+        game_turn=image[PTURN])

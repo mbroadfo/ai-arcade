@@ -44,3 +44,26 @@ def test_each_death_takes_a_life_and_counts_a_hit_taken_while_the_windshield_cra
     for a, b in deaths:
         assert b.hits_taken == a.hits_taken + 1 and b.dying > 0
     assert all(s.hits == 0 for s in seq)  # the blind firing hit nothing (the screen showed 0000)
+
+
+def test_the_enemys_bearing_matches_the_games_own_within_one_unit():
+    from games.arcade.bzone.facts import relative
+    live = [s for _, s in RECORDS if s.playing and not s.dying]
+    close = sum(abs(abs(relative(s.tank, (s.enemy.x, s.enemy.y))) - s.game_turn) <= 1 for s in live)
+    assert len(live) > 300 and close >= 0.98 * len(live)
+
+
+def test_beyond_the_radar_a_player_knows_only_the_side():
+    from games.arcade.bzone.facts import derive
+    for _, s in RECORDS:
+        if s.playing:
+            f = derive(s)
+            assert f.enemy_side in ("ahead", "left", "right", "rear")
+            if not f.enemy_on_radar and f.enemy_side != "ahead":
+                assert f.enemy_bearing is None and f.enemy_distance is None and f.on_target is None
+
+
+def test_the_hit_radius_follows_the_games_formula_head_on_to_side_on():
+    from games.arcade.bzone.facts import hit_radius
+    assert hit_radius(0, 0) == 224 and hit_radius(64, 0) == hit_radius(0, 64) == 320
+    assert hit_radius(128, 0) == 224  # facing each other is head-on too
