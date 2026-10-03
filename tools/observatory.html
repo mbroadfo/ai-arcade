@@ -1111,10 +1111,13 @@ function renderLab() {
   $("s-start").textContent = d.runtype === "manual" ? "PLAY" : "START RUN";
   if (d.runtype === "ai") {
     $("s-body").innerHTML = types + `
-      <div class="field"><label>MODEL</label>${modelSelect("model", d.model || "nimble")}</div>
-      <div class="field"><div class="pcard"><h4>WHO DECIDES WHAT</h4>
+      ${(s.ai_modes || []).length ? `<div class="field"><span class="lbl2">WHO DRIVES</span>${radios("ai_mode", s.ai_modes.map(m => ({ value: m.value, label: m.label, help: m.help })), d.ai_mode || s.ai_modes[0].value)}</div>` : ""}
+      <div class="field"><label>MODEL</label>${modelSelect("model", d.model || (s.ai_modes || []).find(m => m.value === (d.ai_mode || s.ai_modes[0].value))?.model || "nimble")}</div>
+      ${(d.ai_mode || "pilot") === "pilot" ? `<div class="field"><div class="pcard"><h4>WHO DECIDES WHAT</h4>
+        <p><b>The model</b>, as fast as it answers (about twice a second): which treads to hold (forward, reverse, pivot, arc, back up turning, a one-tick nudge, stop) and, when the gun is ready and the enemy in range, whether to fire. Each option says what it would do: the enemy closer to or farther from the sights, into an obstacle or not, the shot hitting or missing.</p>
+        <p><b>Code</b> only presses what was chosen and releases fire after a press. If the model fails, the tank stands still (labelled fallback).</p></div></div>` : `<div class="field"><div class="pcard"><h4>WHO DECIDES WHAT</h4>
         <p><b>The model</b>, on each game event (a new enemy or missile, a shot heard, its shell spent, close range, blocked, a life lost) and at least every 3 s: the tactic, and what to do if fired on.</p>
-        <p><b>Code skills</b>, every tick: flank, attack, dodge, missile defense, steering clear of obstacles. Code's own choice (labelled fallback) stands in only until the model's first answer or when it fails.</p></div></div>
+        <p><b>Code skills</b>, every tick: flank, attack, dodge, missile defense, steering clear of obstacles, and pulling the trigger when a shot would hit. Code's own choice (labelled fallback) stands in only until the model's first answer or when it fails.</p></div></div>`}
       <div class="field"><span class="lbl2">RUN SETTINGS</span><div class="settings">
         <span>Control rate</span><span><input type="number" name="hz" min="${s.hz.min}" max="${s.hz.max}" step="1" value="${esc(d.hz)}"> Hz</span>
         <div class="help">${esc(s.hz.help)}</div>
@@ -1189,7 +1192,9 @@ function readSetup() {
   if (s.kind === "lab") {
     d.runtype = val("runtype") || d.runtype;
     d.policy = val("policy") || d.policy;
-    if (body.querySelector('[name="model"]')) d.model = val("model");
+    if (body.querySelector('[name="ai_mode"]')) { const m = val("ai_mode"); if (m !== d.ai_mode) { d.ai_mode = m; d.model = null; } }
+    if (body.querySelector('[name="model"]') && d.model !== null) d.model = val("model");
+    else if (body.querySelector('[name="model"]')) d.model = (s.ai_modes || []).find(x => x.value === d.ai_mode)?.model || val("model");
     d.hz = Number(val("hz") || s.hz.default);
     d.seconds = Number(val("seconds") || s.seconds.default);
     d.speed = Number(val("speed") || s.speed.default);
@@ -1217,7 +1222,7 @@ function readSetup() {
   return d;
 }
 function answersOf(d) {
-  if (ctl.setup && ctl.setup.kind === "lab") return { runtype: d.runtype, policy: d.policy, model: d.model, hz: d.hz, seconds: d.seconds, speed: d.speed };
+  if (ctl.setup && ctl.setup.kind === "lab") return { runtype: d.runtype, ai_mode: d.ai_mode, policy: d.policy, model: d.model, hz: d.hz, seconds: d.seconds, speed: d.speed };
   return { decider: d.decider, model: d.model, knowledge: d.decider === "ollama" ? d.knowledge : null, goal: d.goal,
            strategist: d.strategist, strategist_model: d.strategist_model, games: d.games, orders: d.orders, switches: d.switches,
            speed: d.speed };
@@ -1225,7 +1230,7 @@ function answersOf(d) {
 function showCommand() {
   const d = ctl.draft;
   if (ctl.setup && ctl.setup.kind === "lab") {
-    $("s-cmd").textContent = `run_lab.py --policy ${d.runtype === "ai" ? "s1m --model " + (d.model || "nimble") : d.policy} --hz ${d.hz} --seconds ${d.seconds} speed ${Math.round(100 * d.speed)}%`;
+    $("s-cmd").textContent = `run_lab.py --policy ${d.runtype === "ai" ? ((d.ai_mode || "pilot") === "pilot" ? "pilot" : "s1m") + " --model " + (d.model || "?") : d.policy} --hz ${d.hz} --seconds ${d.seconds} speed ${Math.round(100 * d.speed)}%`;
     return;
   }
   const parts = ["play.py", "--decider " + d.decider, d.decider === "ollama" ? "--model " + d.model : "", d.decider === "ollama" && d.knowledge ? "--knowledge " + d.knowledge : "",
@@ -1234,7 +1239,7 @@ function showCommand() {
   $("s-cmd").textContent = parts.filter(Boolean).join(" ");
 }
 $("s-body").addEventListener("change", e => {
-  const key = () => JSON.stringify([ctl.draft.decider, ctl.draft.goal, ctl.draft.strategist, ctl.draft.runtype, ctl.draft.policy]);
+  const key = () => JSON.stringify([ctl.draft.decider, ctl.draft.goal, ctl.draft.strategist, ctl.draft.runtype, ctl.draft.policy, ctl.draft.ai_mode]);
   const before = key();
   readSetup();
   if (key() !== before) renderSetup(); else showCommand();

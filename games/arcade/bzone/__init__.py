@@ -25,6 +25,11 @@ VIDEO_FPS = 20  # every other frame of the screen's 41 a second
 # No model plays Battlezone yet: the Observatory offers its real-time lab instead (tools/ai_setup.py), runs of code
 # policies on a fixed-rate clock, labelled as code (scripts/lab.py, policies.py).
 LAB = {"ai_player": True,
+       "ai_modes": [
+           {"value": "pilot", "policy": "pilot", "model": "tev1:latest", "label": "AI drives",
+            "help": "The model chooses every tread and fire command, about twice a second (pilot.py). No skills."},
+           {"value": "tactics", "policy": "s1m", "model": "nimble", "label": "AI picks tactics, skills drive",
+            "help": "The model chooses the tactic and what to do if fired on; code skills carry it out (s1m.py)."}],
        "ai_help": "S1M plays: on each game event the model chooses the tactic (flank, attack, missile defense) and "
                   "what to do if fired on; code skills carry it out every tick. Every tick says whose order it was.","default_policy": "track_and_fire", "default_hz": 10, "hz_range": (1, 40)}
 

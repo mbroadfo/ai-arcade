@@ -119,8 +119,9 @@ def start_game(stream, broker, coins):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--policy", choices=sorted(POLICIES) + ["s1m"], default="pattern",
-                        help="a code policy, or s1m: the model chooses the tactic, skills carry it out (s1m.py)")
+    parser.add_argument("--policy", choices=sorted(POLICIES) + ["s1m", "pilot"], default="pattern",
+                        help="a code policy; s1m: the model chooses the tactic, skills carry it out (s1m.py); "
+                             "pilot: the model chooses every tread and fire command (pilot.py)")
     parser.add_argument("--model", default="nimble", help="with --policy s1m: the System One model")
     parser.add_argument("--hz", type=float, default=10.0, help="decisions a second")
     parser.add_argument("--seconds", type=float, default=60.0)
@@ -140,6 +141,11 @@ def main(argv=None):
         from games.arcade.bzone.s1m import S1MPlayer
         player = S1MPlayer(OllamaSystemOne(model=args.model, timeout=5.0))
         policy = player
+    elif args.policy == "pilot":
+        from arcadekit.systemone import OllamaSystemOne
+        from games.arcade.bzone.pilot import S1MPilot
+        player = S1MPilot(OllamaSystemOne(model=args.model, timeout=2.0))
+        policy = player
     else:
         policy = POLICIES[args.policy]
     label = "-".join(p for p in (time.strftime("%Y%m%d-%H%M%S"), "arcade_bzone-lab", args.policy,
@@ -152,7 +158,8 @@ def main(argv=None):
     broker = BrokerLink(args.host)
     coins = game.COINS_PER_PLAY if args.coins is None else args.coins
     run_record = {"event": "run", "label": label, "game": "arcade/bzone", "policy": args.policy, "hz": args.hz,
-                  "decider": f"S1M {args.model}: tactics (model), skills (code)" if player else
+                  "decider": (f"S1M {args.model}: every tread and fire command (model)" if args.policy == "pilot" else
+                              f"S1M {args.model}: tactics (model), skills (code)") if player else
                   f"lab: {args.policy} (code)", "model": args.model if player else None, "knowledge": None, "goal": None,
                   "strategist": None, "games": 1, "switches": {"hz": args.hz}, "seconds": args.seconds,
                   "settings": game.SETTINGS, "coins": coins, "t": time.time()}
@@ -201,6 +208,15 @@ def main(argv=None):
             if player:
                 for asked in player.asked:  # answers that arrived this tick: the log and the Observatory's timeline
                     d = asked["decision"]
+                    if args.policy == "pilot":  # ~10 answers a second: the log only (the status line shows each)
+                        log.write(json.dumps({"event": "asked", "t": asked["t"], "command": d["command"],
+                                              "fire": d.get("fire"), "fire_options": d.get("fire_options"),
+                                              "fire_probabilities": d.get("fire_probabilities"),
+                                              "source": d["source"], "confidence": d.get("confidence"),
+                                              "probabilities": d.get("probabilities"),
+                                              "latency_ms": round(d["latency_ms"]), "state_text": d.get("state_text"),
+                                              "options": d.get("options"), "note": d.get("note")}) + "\n")
+                        continue
                     log.write(json.dumps({"event": "asked", "t": asked["t"], "on": asked["event"], "tactic": d["tactic"],
                                           "if_fired": d["if_fired"], "source": d["source"],
                                           "probabilities": d.get("probabilities"), "latency_ms": round(d["latency_ms"]),

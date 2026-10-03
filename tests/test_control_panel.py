@@ -117,7 +117,9 @@ def test_the_setup_offers_the_speed_and_refuses_one_outside_it():
 def test_a_lab_setup_leads_with_the_run_type_and_the_baselines():
     s = ai_setup.schema("arcade/bzone")
     assert [t["value"] for t in s["run_types"]] == ["manual", "lab", "ai"] and not s["run_types"][2]["disabled"]
-    args = ai_setup.command_line("arcade/bzone", {"runtype": "ai", "model": "nimble"})
+    args = ai_setup.command_line("arcade/bzone", {"runtype": "ai"})  # by default the model drives
+    assert args[args.index("--policy") + 1] == "pilot" and args[args.index("--model") + 1] == "tev1:latest"
+    args = ai_setup.command_line("arcade/bzone", {"runtype": "ai", "ai_mode": "tactics", "model": "nimble"})
     assert args[args.index("--policy") + 1] == "s1m" and args[args.index("--model") + 1] == "nimble"
     assert s["groups"][0] == "Targeting baselines" and {p["group"] for p in s["policies"]} == set(s["groups"])
     baseline = next(p for p in s["policies"] if p["value"] == "track_and_fire")

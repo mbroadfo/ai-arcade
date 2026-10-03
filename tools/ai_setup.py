@@ -70,6 +70,7 @@ def lab_schema(spec, game):
         "groups": list(getattr(game, "LAB_GROUPS", ())) or None,  # in this order (the baselines first)
         "default_policy": lab["default_policy"],
         "measures": list(getattr(game, "LAB_MEASURES", [])),
+        "ai_modes": list(lab.get("ai_modes", [])),
         "hz": {"default": lab["default_hz"], "min": lo, "max": hi,
                "help": "How often the policy reads the game and sets the controls."},
         "seconds": {"default": 300, "min": 10, "max": 3600, "help": "The run also ends when the game ends."},
@@ -128,7 +129,11 @@ def command_line(spec, answers):
         ai = answers.get("runtype") == "ai"
         if ai and s["run_types"][2].get("disabled"):
             raise ValueError("no AI player for this game")
-        policy = "s1m" if ai else answers.get("policy", s["default_policy"])
+        modes = {m["value"]: m for m in s.get("ai_modes", [])}
+        mode = answers.get("ai_mode") or next(iter(modes), None)
+        if ai and mode not in modes:
+            raise ValueError(f"ai_mode: {mode!r} is not offered")
+        policy = modes[mode]["policy"] if ai else answers.get("policy", s["default_policy"])
         if not ai and policy not in [p["value"] for p in s["policies"]]:
             raise ValueError(f"policy: {policy!r} is not offered")
         hz, seconds = float(answers.get("hz", s["hz"]["default"])), int(answers.get("seconds", s["seconds"]["default"]))
@@ -137,7 +142,7 @@ def command_line(spec, answers):
         if not s["seconds"]["min"] <= seconds <= s["seconds"]["max"]:
             raise ValueError(f"seconds: {s['seconds']['min']} to {s['seconds']['max']}")
         return (args + ["--policy", policy, "--hz", f"{hz:g}", "--seconds", str(seconds)]
-                + (["--model", str(answers.get("model") or "nimble")] if ai else []))
+                + (["--model", str(answers.get("model") or modes[mode].get("model", "nimble"))] if ai else []))
 
     def pick(name, options, default):
         value = answers.get(name, default)

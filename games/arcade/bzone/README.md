@@ -126,6 +126,30 @@ told the enemy could not fire back. Described for the moment ("SAFE NOW: it cann
 the air)", "a 60-degree turn left"), it attacked in 3 of 3 safe situations taken from the log (0 of 3 before) and
 flanked toward the side the enemy was on. The descriptions state facts and consequences; the choice is the model's.
 
+## The AI drives (pilot.py)
+
+The model chooses every tread and fire command: no skills, no tactics. It is asked continuously (a new question as
+soon as the last is answered) two choice questions: which tread command (forward, reverse, pivot, arc, back up
+turning, a one-tick nudge, stop), and, when the gun is ready and the enemy in range, whether to fire. Each option says
+what it would do over the time the model takes to answer: the enemy closer to or farther from the sights, into an
+obstacle or not, the shot hitting or missing. Code presses what was chosen (and releases fire after the press); if
+the model fails the tank stands still (labelled fallback). Run it from the Observatory (Battle Zone, AI player, "AI
+drives") or `lab.py --policy pilot --model tev1:latest`.
+
+How the question was found, 3 October 2026 (each step tested offline on logged situations, then in a game):
+
+| Version | What went wrong | Game |
+|---|---|---|
+| eleven long options, nimble | 479 ms an answer; fired at 62 shots it was told would miss | 0 points |
+| short options | 155 ms; chose the first-listed option ("forward") 320 times in 375 | 2,000 |
+| shuffled, "closer to / farther from your sights", plain aim instruction | turned toward the enemy 32 times in 35 (1 in 35 before), but never chose "fire" from the list, even when the shot would hit | 1,000 |
+| fire as its own question, tev1 | fired at 5 of 11 hits, 1 of 164 misses; a turn held for a whole answer overshoots the half-degree a long shot needs | 1,000 |
+| one-tick nudges for fine aim | 2 kills from 4 shots fired | 2,000 |
+
+The model's choices are all its own (99 %+ of ticks); it plays well below the code baselines so far. The limits now:
+answers take about 0.66 s with tev1 (nimble is faster but fires almost at random when asked alone), and with tev1
+the control loop sometimes stalls (up to 1.6 s; nimble never did): to look into.
+
 ## Getting the ROM
 
 The collection's `bzone.zip` matches an older MAME and lacks 8 lookup chips. A newer `bzone.zip` was added with
