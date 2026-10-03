@@ -68,5 +68,7 @@ def test_the_image_window_comes_from_the_game_and_has_no_default():
 def test_settings_are_written_for_the_settings_script_with_names_quoted():
     import start_pi_game
     assert start_pi_game.settings_lua({"Coinage": "Free Play"}) == 'return {{"Coinage", "Free Play"}}\n'
-    assert start_pi_game.settings_lua({'Odd "x"': "a\b"}) == 'return {{"Odd \\"x\\"", "a\\b"}}\n'
+    backslash = chr(92)
+    assert (start_pi_game.settings_lua({'Odd "x"': "a" + backslash + "b"})
+            == 'return {{"Odd ' + backslash + '"x' + backslash + '"", "a' + backslash * 2 + 'b"}}\n')
     assert start_pi_game.settings_lua({}) == "return {}\n"
