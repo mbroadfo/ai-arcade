@@ -119,7 +119,9 @@ def start_game(stream, broker, coins):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--policy", choices=sorted(POLICIES), default="pattern")
+    parser.add_argument("--policy", choices=sorted(POLICIES) + ["s1m"], default="pattern",
+                        help="a code policy, or s1m: the model chooses the tactic, skills carry it out (s1m.py)")
+    parser.add_argument("--model", default="nimble", help="with --policy s1m: the System One model")
     parser.add_argument("--hz", type=float, default=10.0, help="decisions a second")
     parser.add_argument("--seconds", type=float, default=60.0)
     parser.add_argument("--coins", type=int, default=None, help="coins one play costs (default: the game's "
@@ -132,7 +134,14 @@ def main(argv=None):
     args = parser.parse_args(argv)
 
     game = load_game("arcade/bzone")
-    policy = POLICIES[args.policy]
+    player = None
+    if args.policy == "s1m":
+        from arcadekit.systemone import OllamaSystemOne
+        from games.arcade.bzone.s1m import S1MPlayer
+        player = S1MPlayer(OllamaSystemOne(model=args.model, timeout=5.0))
+        policy = player
+    else:
+        policy = POLICIES[args.policy]
     label = "-".join(p for p in (time.strftime("%Y%m%d-%H%M%S"), "arcade_bzone-lab", args.policy,
                                  f"{args.hz:g}hz", args.tag) if p)
     path = Path(args.out) / f"{label}.jsonl"
@@ -143,7 +152,8 @@ def main(argv=None):
     broker = BrokerLink(args.host)
     coins = game.COINS_PER_PLAY if args.coins is None else args.coins
     run_record = {"event": "run", "label": label, "game": "arcade/bzone", "policy": args.policy, "hz": args.hz,
-                  "decider": f"lab: {args.policy} (code)", "model": None, "knowledge": None, "goal": None,
+                  "decider": f"S1M {args.model}: tactics (model), skills (code)" if player else
+                  f"lab: {args.policy} (code)", "model": args.model if player else None, "knowledge": None, "goal": None,
                   "strategist": None, "games": 1, "switches": {"hz": args.hz}, "seconds": args.seconds,
                   "settings": game.SETTINGS, "coins": coins, "t": time.time()}
     log.write(json.dumps(run_record) + "\n")
@@ -158,6 +168,13 @@ def main(argv=None):
     if args.observatory != "none":
         host, _, port = args.observatory.rpartition(":")
         live = LiveSink((host, int(port)), hello=lambda: [run_record], on_command=command)
+    if player:  # load the model before the clock starts (a cold model takes ~10 s to answer the first question)
+        from arcadekit.systemone import OllamaSystemOne
+        try:
+            OllamaSystemOne(model=args.model, timeout=60).ask("warm-up", {"x": {"type": "choice", "instructions": "Pick.",
+                                                                               "criteria": {"a": "a", "b": "b"}}})
+        except Exception as exc:
+            print(f"warm-up failed: {exc}")
     start_game(stream, broker, coins)
 
     clock = TickClock(args.hz)
@@ -181,6 +198,21 @@ def main(argv=None):
             t0 = time.perf_counter()
             facts = derive(state)
             names, why = policy(state, facts, t, held)
+            if player:
+                for asked in player.asked:  # answers that arrived this tick: the log and the Observatory's timeline
+                    d = asked["decision"]
+                    log.write(json.dumps({"event": "asked", "t": asked["t"], "on": asked["event"], "tactic": d["tactic"],
+                                          "if_fired": d["if_fired"], "source": d["source"],
+                                          "probabilities": d.get("probabilities"), "latency_ms": round(d["latency_ms"]),
+                                          "state_text": d.get("state_text"), "note": d.get("note")}) + "\n")
+                    if live:
+                        p = d.get("probabilities") or {}
+                        conf = lambda q: f" {p[q][d[q]]:.2f}" if q in p and d[q] in p[q] else ""  # noqa: E731
+                        live.send({"event": "lab", "what": f"S1M on {asked['event']}: {d['tactic']}{conf('tactic')}, "
+                                   f"if fired {d['if_fired']}{conf('if_fired')} ({d['latency_ms'] / 1000:.1f} s"
+                                   + (", fallback" if "fallback" in d["source"].values() else "") + ")",
+                                   "t": round(time.time(), 3)})
+                player.asked.clear()
             decide_ms = (time.perf_counter() - t0) * 1000  # facts and policy together
             held = frozenset(names)
             before = broker.holding
@@ -223,6 +255,7 @@ def main(argv=None):
     finally:
         broker.release_all()
         summary = {"event": "summary", "clock": clock.summary(), "final": digest(previous) if previous else None,
+                   "orders_by_source": player.model_share() if player else None,
                    "t": time.time()}
         log.write(json.dumps(summary) + "\n")
         log.close()

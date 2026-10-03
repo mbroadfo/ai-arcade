@@ -64,8 +64,8 @@ def lab_schema(spec, game):
             {"value": "manual", "label": "Manual", "help": "A person plays on the cabinet."},
             {"value": "lab", "label": "Lab policy", "help": "Code plays: a fixed policy on a fixed-rate clock, every "
                                                          "tick logged. Never reported as AI play."},
-            {"value": "ai", "label": "AI player", "help": "Not available yet: no model plays this game.",
-             "disabled": True}],
+            {"value": "ai", "label": "AI player", "help": lab.get("ai_help", "Not available yet: no model plays this "
+                                                                  "game."), "disabled": not lab.get("ai_player")}],
         "policies": list(game.lab_policies()),
         "groups": list(getattr(game, "LAB_GROUPS", ())) or None,  # in this order (the baselines first)
         "default_policy": lab["default_policy"],
@@ -125,15 +125,19 @@ def command_line(spec, answers):
     s = schema(spec)
     args = ["--game", spec]
     if s.get("kind") == "lab":
-        policy = answers.get("policy", s["default_policy"])
-        if policy not in [p["value"] for p in s["policies"]]:
+        ai = answers.get("runtype") == "ai"
+        if ai and s["run_types"][2].get("disabled"):
+            raise ValueError("no AI player for this game")
+        policy = "s1m" if ai else answers.get("policy", s["default_policy"])
+        if not ai and policy not in [p["value"] for p in s["policies"]]:
             raise ValueError(f"policy: {policy!r} is not offered")
         hz, seconds = float(answers.get("hz", s["hz"]["default"])), int(answers.get("seconds", s["seconds"]["default"]))
         if not s["hz"]["min"] <= hz <= s["hz"]["max"]:
             raise ValueError(f"hz: {s['hz']['min']} to {s['hz']['max']}")
         if not s["seconds"]["min"] <= seconds <= s["seconds"]["max"]:
             raise ValueError(f"seconds: {s['seconds']['min']} to {s['seconds']['max']}")
-        return args + ["--policy", policy, "--hz", f"{hz:g}", "--seconds", str(seconds)]
+        return (args + ["--policy", policy, "--hz", f"{hz:g}", "--seconds", str(seconds)]
+                + (["--model", str(answers.get("model") or "nimble")] if ai else []))
 
     def pick(name, options, default):
         value = answers.get(name, default)

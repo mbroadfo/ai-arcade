@@ -1109,6 +1109,23 @@ function renderLab() {
       ${esc(t.label)}${t.disabled ? "<small>not available yet</small>" : ""}</label>`).join("")}</div>
     <div class="help">${esc(s.run_types.find(t => t.value === d.runtype)?.help || "")}</div></div>`;
   $("s-start").textContent = d.runtype === "manual" ? "PLAY" : "START RUN";
+  if (d.runtype === "ai") {
+    $("s-body").innerHTML = types + `
+      <div class="field"><label>MODEL</label>${modelSelect("model", d.model || "nimble")}</div>
+      <div class="field"><div class="pcard"><h4>WHO DECIDES WHAT</h4>
+        <p><b>The model</b>, on each game event (a new enemy or missile, a shot heard, its shell spent, close range, blocked, a life lost) and at least every 3 s: the tactic, and what to do if fired on.</p>
+        <p><b>Code skills</b>, every tick: flank, attack, dodge, missile defense, steering clear of obstacles. Code's own choice (labelled fallback) stands in only until the model's first answer or when it fails.</p></div></div>
+      <div class="field"><span class="lbl2">RUN SETTINGS</span><div class="settings">
+        <span>Control rate</span><span><input type="number" name="hz" min="${s.hz.min}" max="${s.hz.max}" step="1" value="${esc(d.hz)}"> Hz</span>
+        <div class="help">${esc(s.hz.help)}</div>
+        <span>Maximum run</span><span><input type="number" name="seconds" min="${s.seconds.min}" max="${s.seconds.max}" value="${esc(d.seconds)}"> s</span>
+        <div class="help">${esc(s.seconds.help)}</div>
+        <span>Game speed</span><div class="rangefield"><input type="range" name="speed" min="${s.speed.min}" max="${s.speed.max}" step="0.05" value="${esc(d.speed)}"><b id="s-speed-v">${Math.round(100 * d.speed)}%</b></div>
+      </div></div>
+      ${s.measures?.length ? `<div class="field"><span class="lbl2">MEASURED (REPORTED WHEN THE RUN ENDS)</span><ul class="measures">${s.measures.map(m => `<li>${esc(m)}</li>`).join("")}</ul></div>` : ""}`;
+    showCommand();
+    return;
+  }
   if (d.runtype === "manual") {
     $("s-body").innerHTML = types + `<div class="field"><div class="help">The game starts on the cabinet for you to play with the sticks and buttons. The page shows the cabinet, not the game's insides: the video and the facts are for lab and AI runs.</div></div>`;
     $("s-cmd").textContent = `cabinet: launch ${g ? g.system + " " + g.path : s.game}`;
@@ -1172,6 +1189,7 @@ function readSetup() {
   if (s.kind === "lab") {
     d.runtype = val("runtype") || d.runtype;
     d.policy = val("policy") || d.policy;
+    if (body.querySelector('[name="model"]')) d.model = val("model");
     d.hz = Number(val("hz") || s.hz.default);
     d.seconds = Number(val("seconds") || s.seconds.default);
     d.speed = Number(val("speed") || s.speed.default);
@@ -1199,7 +1217,7 @@ function readSetup() {
   return d;
 }
 function answersOf(d) {
-  if (ctl.setup && ctl.setup.kind === "lab") return { policy: d.policy, hz: d.hz, seconds: d.seconds, speed: d.speed };
+  if (ctl.setup && ctl.setup.kind === "lab") return { runtype: d.runtype, policy: d.policy, model: d.model, hz: d.hz, seconds: d.seconds, speed: d.speed };
   return { decider: d.decider, model: d.model, knowledge: d.decider === "ollama" ? d.knowledge : null, goal: d.goal,
            strategist: d.strategist, strategist_model: d.strategist_model, games: d.games, orders: d.orders, switches: d.switches,
            speed: d.speed };
@@ -1207,7 +1225,7 @@ function answersOf(d) {
 function showCommand() {
   const d = ctl.draft;
   if (ctl.setup && ctl.setup.kind === "lab") {
-    $("s-cmd").textContent = `run_lab.py --policy ${d.policy} --hz ${d.hz} --seconds ${d.seconds} speed ${Math.round(100 * d.speed)}%`;
+    $("s-cmd").textContent = `run_lab.py --policy ${d.runtype === "ai" ? "s1m --model " + (d.model || "nimble") : d.policy} --hz ${d.hz} --seconds ${d.seconds} speed ${Math.round(100 * d.speed)}%`;
     return;
   }
   const parts = ["play.py", "--decider " + d.decider, d.decider === "ollama" ? "--model " + d.model : "", d.decider === "ollama" && d.knowledge ? "--knowledge " + d.knowledge : "",

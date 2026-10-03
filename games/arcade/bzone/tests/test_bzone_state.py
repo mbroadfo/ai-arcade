@@ -161,3 +161,33 @@ def test_steer_clear_turns_a_drive_into_an_obstacle_away_from_it():
     assert steer_clear(near, DRIVE, "go")[0] == ARC_RIGHT  # obstacle left of the path: arc right
     stuck = SimpleNamespace(blocked=True, obstacle_ahead=0, obstacle_ahead_left=300, obstacle_behind=None)
     assert steer_clear(stuck, DRIVE, "go")[0] == TURN_RIGHT
+
+
+def test_the_s1m_player_asks_on_events_carries_out_the_answer_and_labels_every_tick():
+    import time as _time
+    from games.arcade.bzone.facts import derive
+    from games.arcade.bzone.s1m import S1MPlayer
+
+    class Fake:  # answers at once: the first option of each question, sure of it
+        def __init__(self):
+            self.asked = []
+
+        def ask(self, state, questions, hint=None):
+            self.asked.append((state, questions))
+            pick = {"tactic": "attack", "if_fired": "pivot_reverse"}
+            return {"answers": {q: {"choice": pick[q] if pick[q] in spec["criteria"] else next(iter(spec["criteria"])),
+                                    "confidence": 1.0, "probabilities": {}} for q, spec in questions.items()},
+                    "latency_ms": 1.0}
+
+    fake = Fake()
+    player = S1MPlayer(fake)
+    live = [s for _, s in RECORDS if s.playing]
+    whys = []
+    for i, s in enumerate(live):
+        names, why = player(s, derive(s), i * 0.6, frozenset())
+        whys.append(why)
+        _time.sleep(0.002)  # let the worker answer
+    assert fake.asked and all(why.startswith(("[model]", "[fallback]", "[no choice]", "dying")) for why in whys)
+    assert any(why.startswith("[model] attack") for why in whys)  # the model's order was carried out
+    assert any("standing order pivot_reverse" in why for why in whys)  # a heard shot: the order given before
+    assert "model" in player.model_share()
