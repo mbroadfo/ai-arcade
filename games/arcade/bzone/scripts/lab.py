@@ -23,7 +23,7 @@ from arcadekit.clock import TickClock  # noqa: E402
 from arcadekit.observatory import DEFAULT_ADDRESS, LiveSink  # noqa: E402
 from broker_link import BrokerLink  # noqa: E402
 from games.arcade.bzone.controls import broker_actions, describe  # noqa: E402
-from games.arcade.bzone.facts import derive  # noqa: E402
+from games.arcade.bzone.facts import derive, shell_pass  # noqa: E402
 from games.arcade.bzone.observe import status  # noqa: E402
 from games.arcade.bzone.policies import POLICIES  # noqa: E402
 from games.arcade.bzone.state import LETTERS  # noqa: E402
@@ -36,7 +36,9 @@ def digest(state):
             "dying": state.dying, "angle": state.tank.angle, "x": state.tank.x, "y": state.tank.y,
             "enemy": [state.enemy.x, state.enemy.y, state.enemy.angle], "enemy_distance": state.enemy_distance,
             "enemy_in_range": state.enemy_in_range, "missile": state.missile, "saucer": state.saucer,
-            "enemy_fire": state.enemy.fire, "enemy_shell": list(state.enemy.shell), "enemy_timer": state.enemy_timer}
+            "enemy_fire": state.enemy.fire, "enemy_shell": list(state.enemy.shell), "enemy_timer": state.enemy_timer,
+            # where the flying shell's path passes the tank, seen or not: for scoring dodges afterwards, never shown
+            "shell_true": list(shell_pass(state, seen_only=False))}
 
 
 def changes(before, after):

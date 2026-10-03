@@ -4,7 +4,8 @@ Each is a function (state, facts, seconds_into_run, last_action) -> (control nam
 decoded state and the tactical facts (facts.py), so a log can show that a given state led to a given command. They are
 code choosing, so they are controls (the rule tier in docs/GAME_WORKSHOP.md), never reported as AI play.
 """
-from .controls import ARC_LEFT, ARC_RIGHT, DRIVE, TURN_LEFT, TURN_RIGHT
+from .facts import SHELL_UPDATES_PER_S
+from .controls import ARC_LEFT, ARC_RIGHT, BACK_ARC_LEFT, BACK_ARC_RIGHT, DRIVE, REVERSE, TURN_LEFT, TURN_RIGHT
 
 NOTHING = frozenset()
 
@@ -32,6 +33,16 @@ def arc_left(state, facts, t, last):
 def arc_right(state, facts, t, last):
     """Left tread forward alone: turn right while moving, always."""
     return ARC_RIGHT, "always arc right (left tread forward)"
+
+
+def reverse(state, facts, t, last):
+    """Drive straight backward, always."""
+    return REVERSE, "always drive backward"
+
+
+def back_arc_left(state, facts, t, last):
+    """Left tread back alone: back up while the nose swings left, always."""
+    return BACK_ARC_LEFT, "always back up turning left (left tread back)"
 
 
 def drive(state, facts, t, last):
@@ -129,6 +140,47 @@ def mobile_track_and_fire(state, facts, t, last):
     return DRIVE, why + "; keep moving"
 
 
+CLOSE = 10000  # world units: near enough to turn in and fire whatever the enemy is doing
+DODGED_S = 0.6  # after a heard shot, dodge this long; then its shell is past or elsewhere: turn in
+
+
+def flank_and_fire(state, facts, t, last):
+    """The doctrine as code: dodge a heard shot first (drive across its line, or pivot a few degrees and reverse when
+    it comes from near the nose); flank toward a point beside the enemy, keeping it off the nose; once close, pivot
+    onto it and fire. The enemy has one shell (FIREIT fires only when FIRECT+2 is 0): once a heard shot has been
+    dodged, it cannot fire again while that shell flies or explodes, so that is the moment to turn in, as is a new
+    enemy's first 32 frames. Uses the skills (skills.py) a model would ask for."""
+    from .skills import broadside, dodge, flank
+    if facts.dying:
+        return NOTHING, "dying: nothing to steer"
+    known = facts.enemy_distance is not None and facts.enemy_side != "none"
+    if facts.enemy_shell == "flying":
+        since = (0x7F - state.enemy.fire) / SHELL_UPDATES_PER_S
+        if since < DODGED_S or not known:
+            return fire_on_press(*dodge(state, facts, "turn_reverse"), facts, last)
+        names, why = broadside(facts, last)
+        return names, why + f" (its shell is still flying, {since:.1f} s: it cannot fire again yet)"
+    if facts.enemy_side == "none":
+        return DRIVE, "no enemy (it is exploding): keep moving"
+    if known and facts.enemy_shell == "exploding":
+        names, why = broadside(facts, last)
+        return names, why + " (its shell is exploding: it cannot fire yet)"
+    if known and facts.enemy_holds_fire:
+        names, why = broadside(facts, last)
+        return names, why + " (a new enemy holds its fire)"
+    if known and facts.enemy_distance < CLOSE:  # close: turn in and fire
+        return broadside(facts, last)
+    if facts.on_target:
+        return fire_on_press(DRIVE, "on target: drive straight (the heading holds)", facts, last)
+    steer = flank(facts, may_pivot=facts.enemy_holds_fire)
+    if steer:
+        return steer
+    names, why = turn_toward(state, facts, t, last)  # beyond the radar: only the warning's side is known
+    if not facts.enemy_holds_fire and names in (TURN_LEFT, TURN_RIGHT):
+        return (ARC_LEFT if names == TURN_LEFT else ARC_RIGHT), why + " (arc: moving)"
+    return names or DRIVE, why
+
+
 # For the setup panel: what each policy is for, grouped. Movement and observation policies test the loop and the
 # decoder; the targeting ones are baselines a player is measured against.
 POLICY_INFO = {
@@ -137,6 +189,8 @@ POLICY_INFO = {
     "drive": {"group": "Movement", "label": "Drive"},
     "arc_left": {"group": "Movement", "label": "Arc left"},
     "arc_right": {"group": "Movement", "label": "Arc right"},
+    "reverse": {"group": "Movement", "label": "Reverse"},
+    "back_arc_left": {"group": "Movement", "label": "Back up turning left"},
     "pattern": {"group": "Movement", "label": "Pattern"},
     "idle": {"group": "Observation / weapons", "label": "Idle"},
     "fire_pulse": {"group": "Observation / weapons", "label": "Fire pulse"},
@@ -148,6 +202,13 @@ POLICY_INFO = {
                                   "pass within the hit radius.",
                        "limitation": "Pivots in place: never moves or evades. All three deaths of its 3 October game "
                                      "came standing still, each from a shot aimed 0-1 units off."},
+    "flank_and_fire": {"group": "Targeting baselines", "label": "Flank & Fire", "tag": "experiment",
+                       "purpose": "The doctrine as code, using the skills a model will ask for: dodge a heard shot "
+                                  "(across its line, or pivot a few degrees and reverse when it comes from near the "
+                                  "nose); flank toward a point 30 degrees off the enemy's line; when close and beside "
+                                  "it, back up swinging onto it and fire.",
+                       "limitation": "Does not see obstacles or the missile; picks the flank side by the smaller "
+                                     "turn only."},
     "mobile_track_and_fire": {"group": "Targeting baselines", "label": "Mobile Track & Fire", "tag": "experiment",
                               "purpose": "Track & Fire that keeps moving: pivots only while a new enemy still holds "
                                          "its fire (32 frames), then turns with one tread so it moves while it aims; "
@@ -158,6 +219,6 @@ POLICY_INFO = {
 }
 
 POLICIES = {"idle": idle, "rotate_left": rotate_left, "rotate_right": rotate_right, "drive": drive,
-            "arc_left": arc_left, "arc_right": arc_right,
+            "arc_left": arc_left, "arc_right": arc_right, "reverse": reverse, "back_arc_left": back_arc_left,
             "pattern": pattern, "fire_pulse": fire_pulse, "turn_toward": turn_toward, "track_and_fire": track_and_fire,
-            "mobile_track_and_fire": mobile_track_and_fire}
+            "mobile_track_and_fire": mobile_track_and_fire, "flank_and_fire": flank_and_fire}

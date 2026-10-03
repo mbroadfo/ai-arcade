@@ -112,3 +112,27 @@ def test_mobile_track_and_fire_never_stands_still_or_pivots_once_the_enemy_may_f
             seen_shot = True
             assert "shot heard" in why
     assert seen_shot
+
+
+def test_flank_point_is_off_the_line_to_the_enemy_on_the_asked_side():
+    from types import SimpleNamespace
+    from games.arcade.bzone.skills import flank_point
+    ahead = SimpleNamespace(enemy_distance=20000, enemy_bearing=0)  # dead ahead, 20,000 units
+    left, right = flank_point(ahead, 1), flank_point(ahead, -1)
+    assert round(left[0] * 360 / 256) == 30 and round(right[0] * 360 / 256) == -30  # the flank angle each side
+    assert flank_point(SimpleNamespace(enemy_distance=None, enemy_bearing=None), 1) is None
+
+
+def test_flank_and_fire_dodges_every_heard_shot_and_keeps_moving():
+    from games.arcade.bzone.facts import derive
+    from games.arcade.bzone.facts import SHELL_UPDATES_PER_S
+    from games.arcade.bzone.policies import DODGED_S, flank_and_fire
+    for _, s in RECORDS:
+        if not s.playing or s.dying:
+            continue
+        f = derive(s)
+        names, why = flank_and_fire(s, f, 0.0, frozenset())
+        if f.enemy_shell == "flying":  # dodge first; once dodged, its one shell is busy: turn in
+            since = (0x7F - s.enemy.fire) / SHELL_UPDATES_PER_S
+            assert why.startswith("dodge" if since < DODGED_S or f.enemy_distance is None else "broadside"), why
+        assert names - {"FIRE"} or why.startswith("broadside"), why
