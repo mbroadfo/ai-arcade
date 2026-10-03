@@ -8,6 +8,7 @@
     python3 cabinet.py clear             end everything on the screen, menu included (before AI mode takes it)
     python3 cabinet.py menu              back to EmulationStation
     python3 cabinet.py speed 0.85        AI mode's game speed, now (tools/mame_speed_control.lua applies it)
+    python3 cabinet.py pause on|off      pause or resume AI mode's game (the same script)
 
 A launch is handed to the console session: the request goes in LAUNCH_FILE, the session restarts, and the autostart
 hook (pending.sh, run by /opt/retropie/configs/all/autostart.sh before EmulationStation) runs it, so the game gets the
@@ -34,6 +35,7 @@ LAUNCH_FILE = "/dev/shm/ai-arcade-launch"
 ES_PROCESS = "/emulationstation/emulationstation( |$)"
 AI_SCRIPT = "/home/pi/ai-arcade/autoboot.lua"  # tools/start_pi_game.py's MAME (AI mode)
 SPEED_FILE, SPEED_NOW = "/dev/shm/ai-arcade-speed", "/dev/shm/ai-arcade-speed.now"
+PAUSE_FILE, PAUSE_NOW = "/dev/shm/ai-arcade-pause", "/dev/shm/ai-arcade-pause.now"
 MAME_SYSTEMS = re.compile(r"^(arcade|mame.*|fba|neogeo)$")  # systems whose files are MAME sets
 
 
@@ -112,7 +114,12 @@ def status():
                 speed = float(f.read().strip())
         except (OSError, ValueError):
             speed = None
-        out["ai"] = {"romset": ai[1], "speed": speed,
+        try:
+            with open(PAUSE_NOW) as f:
+                paused = f.read().strip() == "1"
+        except OSError:
+            paused = False
+        out["ai"] = {"romset": ai[1], "speed": speed, "paused": paused,
                      "state_server": bool(find(procs, r"state_server\.py")),
                      "frame_server": bool(find(procs, r"frame_server\.py"))}
     return out
@@ -275,6 +282,25 @@ def main(argv):
             f.write(f"{value}\n")
         os.replace(tmp, SPEED_FILE)
         print(json.dumps({"ok": True, "speed": value}))
+    elif command == "pause" and len(argv) == 3 and argv[2] in ("on", "off"):
+        if not ai_mame(processes()):
+            raise SystemExit("no AI-mode game to pause")
+        tmp = PAUSE_FILE + ".tmp"
+        with open(tmp, "w") as f:
+            f.write("1\n" if argv[2] == "on" else "0\n")
+        os.replace(tmp, PAUSE_FILE)
+        deadline = time.time() + 2  # until MAME has done it, so the answer is the state in force
+        want = "1" if argv[2] == "on" else "0"
+        while time.time() < deadline:
+            try:
+                with open(PAUSE_NOW) as f:
+                    if f.read().strip() == want:
+                        break
+            except OSError:
+                if want == "0":
+                    break
+            time.sleep(0.05)
+        print(json.dumps({"ok": True, "paused": argv[2] == "on"}))
     elif command == "menu":
         end_games()
         if not find(processes(), ES_PROCESS):

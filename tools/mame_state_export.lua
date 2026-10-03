@@ -38,7 +38,12 @@ end
 
 local cache = {}
 local frame = 0
+local function machine_paused()  -- a paused machine still calls frame notifiers (unthrottled): those are not frames
+  local ok, paused = pcall(function() return manager.machine.paused end)
+  return ok and paused == true
+end
 FRAME_NOTIFIER = on_frame(function()  -- kept global: newer MAME drops a notifier that is garbage-collected
+  if machine_paused() then return end
   frame = frame + 1
   local chunks = { u32le(frame) }
   for i, r in ipairs(regions) do

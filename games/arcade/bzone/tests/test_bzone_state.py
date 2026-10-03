@@ -70,16 +70,25 @@ def test_the_hit_radius_follows_the_games_formula_head_on_to_side_on():
 
 
 def test_each_death_was_an_enemy_shell_whose_path_crossed_the_tank():
-    from games.arcade.bzone.facts import derive
+    from games.arcade.bzone.facts import derive, shell_pass
     seq = [s for _, s in RECORDS if s.playing]
     deaths = [i for i in range(1, len(seq)) if seq[i].lives == seq[i - 1].lives - 1]
     for i in deaths:
         assert seq[i].enemy.fire >= 0x80  # the shell is exploding as the life goes
-        flying = [derive(s) for s in seq[max(0, i - 15):i] if 0 < s.enemy.fire < 0x80]
-        assert flying and all(f.enemy_shell == "flying" and abs(f.shell_miss) < 224 for f in flying)
-        assert flying[-1].shell_arrives_s < 0.15  # it arrived when the estimate said
+        flying = [s for s in seq[max(0, i - 15):i] if 0 < s.enemy.fire < 0x80]
+        assert flying and all(derive(s).enemy_shell == "flying" for s in flying)
+        passes = [shell_pass(s, seen_only=False) for s in flying]  # both came from off screen: a fact only in view
+        assert all(abs(miss) < 224 for miss, _ in passes)
+        assert passes[-1][1] < 0.15  # it arrived when the estimate said
+        assert all(derive(s).shell_miss is None for s in flying)
 
 
 def test_the_score_is_hits_read_as_bcd_thousands():
     from games.arcade.bzone.state import bcd
     assert bcd(0x18) == 18 and bcd(0x06) == 6 and bcd(0x0100) == 100  # the screen showed 18000 with HITS = $18
+
+
+def test_the_scripts_compile():  # no test imports them: a broken lab.py would otherwise show only on the cabinet
+    import py_compile
+    for script in (Path(__file__).parents[1] / "scripts").glob("*.py"):
+        py_compile.compile(str(script), doraise=True)

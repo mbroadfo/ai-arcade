@@ -72,3 +72,6 @@ class Cabinet:
 
     def speed(self, value):
         return self.call("speed", f"{float(value):.2f}", timeout=10)
+
+    def pause(self, on):
+        return self.call("pause", "on" if on else "off", timeout=10)

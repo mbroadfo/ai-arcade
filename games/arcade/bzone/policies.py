@@ -48,6 +48,8 @@ def turn_toward(state, facts, t, last):
     """Turn to the side the screen names; once the bearing is known (radar or on screen), centre on it."""
     if facts.dying:
         return NOTHING, "dying: nothing to steer"
+    if facts.enemy_side == "none":
+        return NOTHING, "the enemy is exploding: nothing to aim at"
     if facts.on_target:
         return NOTHING, f"on target (shot would pass {facts.miss_by:+d}, radius {facts.hit_radius}): hold still"
     if facts.miss_by is not None:

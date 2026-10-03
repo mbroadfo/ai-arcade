@@ -21,6 +21,7 @@ SERVER_LOG = "/tmp/ai-arcade-state-server.log"
 FRAME_FILE = "/dev/shm/ai-arcade-frame.bin"
 FRAME_LOG = "/tmp/ai-arcade-frame-server.log"
 SPEED_FILE = "/dev/shm/ai-arcade-speed"  # tools/mame_speed_control.lua
+PAUSE_FILES = "/dev/shm/ai-arcade-pause /dev/shm/ai-arcade-pause.now"  # the same script: a new game starts running
 SETTINGS_NOW = "/dev/shm/ai-arcade-settings.now"  # tools/mame_settings.lua: every switch as applied
 
 
@@ -85,7 +86,7 @@ def main():
         # tools/human_mode.py brings ES back.
         run(ssh, f"pkill -f '{ES_PROCESS}' || true; "
                  f"timeout 10 sh -c \"while pgrep -f '{ES_PROCESS}' >/dev/null; do sleep 0.2; done\" || true")
-        run(ssh, f"rm -f {STATE_FILE} {FRAME_FILE} {SETTINGS_NOW}")
+        run(ssh, f"rm -f {STATE_FILE} {FRAME_FILE} {SETTINGS_NOW} {PAUSE_FILES}")
         run(ssh, f"nohup env SDL_AUDIODRIVER=alsa AI_ARCADE_VIDEO_FPS={video_fps} "
                  f"mame {romset} -rompath {pi_rompath(system)} "
                  "-video accel -nowindow -skip_gameinfo -joystick -joystickprovider sdl "

@@ -201,9 +201,13 @@ class Control:
         from cabinet_link import Cabinet
         self.hub, self.host = hub, host
         self.cabinet = Cabinet(host)
-        self.runner = Runner(self.cabinet, hub.command, lambda state: hub.set_panel("control", state), host)
-        hub.set_panel("control", self.runner.state)
+        self.last = None  # the last AI run started (game, answers): PLAY AGAIN and RESTART repeat it
+        self.runner = Runner(self.cabinet, hub.command, self.publish, host)
+        self.publish(self.runner.state)
         self.catalog_cache, self.catalog_lock = None, threading.Lock()
+
+    def publish(self, state):
+        self.hub.set_panel("control", {**state, "again": self.last[0] if self.last else None})
 
     def poll(self):
         """What the cabinet shows, every POLL_SECONDS, as the "cabinet" panel."""
@@ -246,9 +250,10 @@ class Control:
             raise ValueError("speed: 0.2 to 1.0")
         if self.runner.state["state"] == "starting":
             raise RuntimeError("an AI run is starting: wait for it, or stop it")
+        self.last = (game, dict(answers))
 
         def go():  # the run on screen (if any) finishes its files first, as the picker says it will
-            self.hub.set_panel("control", {**self.runner.state, "state": "stopping", "next": game})
+            self.publish({**self.runner.state, "state": "stopping", "next": game})
             self._end_ai()
             self.runner.start(game, args, speed, script)
         if self.runner.busy() or self.hub.players:
@@ -268,6 +273,23 @@ class Control:
             threading.Thread(target=self._end_ai, daemon=True).start()  # for another run, or Back to menu
             return {"ok": True, "stopping": "ai"}
         return self.cabinet.stop()
+
+    def again(self):
+        """The last AI run again, from the start of a fresh game (PLAY AGAIN after a run, RESTART during one)."""
+        if not self.last:
+            raise RuntimeError("no AI run to repeat yet")
+        return self.start_ai(*self.last)
+
+    def pause(self, on):
+        answer = self.cabinet.pause(on)
+        self.hub.command({"op": "pause", "on": bool(on)})  # the player may stop its clock; ignored by those that cannot
+        try:
+            state = self.cabinet.status()
+            state.pop("t", None)
+            self.hub.set_panel("cabinet", state)  # the page shows it now, not at the next poll
+        except Exception:
+            pass
+        return answer
 
     def menu(self):
         def go():
@@ -343,6 +365,10 @@ def make_handler(hub, control=None):
                 self.guarded(control.stop)
             elif control and self.path == "/api/speed":
                 self.guarded(lambda: control.cabinet.speed(float(body["speed"])))
+            elif control and self.path == "/api/pause":
+                self.guarded(lambda: control.pause(bool(body.get("on"))))
+            elif control and self.path == "/api/again":
+                self.guarded(control.again)
             elif control and self.path == "/api/menu":
                 self.guarded(control.menu)
             else:

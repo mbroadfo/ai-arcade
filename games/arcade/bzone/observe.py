@@ -5,14 +5,15 @@ snapshot), so a person can see whether the RAM map is right:
 - on the radar: the game draws its blip from the same enemy position (TPOSX+2/TPOSY+2). Calibrated 3 October 2026
   from 56 recorded frames: the blip sat a median 1.0 px from this prediction (centre (317.8, 50.0), 38.4 px for 32,768
   world units, the radar's range).
-- the enemy's heading, as a short line from its radar mark (the game draws no such line; check it against the tank's
-  shape when it is on screen), and its shell, on the radar with a line along its path and in the window when ahead.
+- the enemy's heading, as an arrow from its radar mark while it is on screen (where its shape shows which way it
+  faces; the radar shows only a blip), and its shell while on screen, with an arrow along its path on the radar. No
+  mark shows more than a player can see, and none shows while the enemy explodes.
 - in the window: where the enemy tank should be drawn while it is on screen (within $16 of the heading). The
   horizontal scale is an estimate from the screen's width, not yet calibrated.
 """
 import math
 
-from .facts import IN_VIEW, wrap16
+from .facts import IN_VIEW, in_view, wrap16
 
 SIZE = (640, 480)
 RADAR_CENTRE, RADAR_PX = (317.8, 50.0), 38.4 / 32768  # pixels per world unit
@@ -48,8 +49,9 @@ def marks(state, facts):
     if facts.enemy_on_radar:
         x, y = on_radar(ahead, left)
         h = state.enemy.angle * math.pi / 128
-        out.append({"label": "enemy (radar, predicted; line: its heading)", "kind": "threat", "line": False,
-                    "x": x, "y": y, "to": pointing(x, y, *turn(state, math.cos(h), math.sin(h)), 30),
+        out.append({"label": "enemy (radar, predicted" + ("; arrow: its heading)" if facts.enemy_side == "ahead" else ")"),
+                    "kind": "threat", "line": False, "x": x, "y": y,
+                    "to": pointing(x, y, *turn(state, math.cos(h), math.sin(h)), 30) if facts.enemy_side == "ahead" else None,
                     "note": f"{facts.enemy_distance} units, {facts.enemy_bearing_deg:+.0f} deg",
                     "colour": "#ff4040", "alert": bool(facts.on_target)})
     if facts.enemy_side == "ahead" and ahead > 0:
@@ -57,16 +59,16 @@ def marks(state, facts):
                     "x": round(SIGHT[0] - VIEW_PX * left / ahead, 1), "y": SIGHT[1],
                     "note": "on target" if facts.on_target else "in view", "colour": "#40ff80",
                     "alert": bool(facts.on_target)})
-    if facts.enemy_shell == "flying":
+    if facts.enemy_shell == "flying" and in_view(state, state.enemy.shell):
         s_ahead, s_left = offsets(state, state.enemy.shell)
         x, y = on_radar(s_ahead, s_left)
         incoming = facts.shell_miss is not None
         note = (f"passes {abs(facts.shell_miss)} {'left' if facts.shell_miss >= 0 else 'right'} in "
                 f"{facts.shell_arrives_s:.2f} s" if incoming else "going away")
-        out.append({"label": "enemy shell (radar; line: its path)", "kind": "threat", "line": False, "x": x, "y": y,
+        out.append({"label": "enemy shell (radar; arrow: its path)", "kind": "threat", "line": False, "x": x, "y": y,
                     "to": pointing(x, y, *turn(state, *state.enemy.shell_step), 30), "note": note,
                     "colour": "#ff9a1f", "alert": incoming})
-        if s_ahead > 0 and abs(s_left) < s_ahead * 0.6:
+        if True:  # in the window
             out.append({"label": "enemy shell (window)", "kind": "threat", "line": False,
                         "x": round(SIGHT[0] - VIEW_PX * s_left / s_ahead, 1), "y": SIGHT[1], "note": note,
                         "colour": "#ff9a1f", "alert": incoming})
@@ -94,7 +96,8 @@ def status(state, facts, frame, held, why, kills):
         {"label": "enemy aim", "value": "-" if facts.enemy_aim is None else
          ("on you" if abs(facts.enemy_aim) < 2 else f"{facts.enemy_aim:+d} units off"),
          "tone": "bad" if facts.enemy_aim is not None and abs(facts.enemy_aim) < 2 else None},
-        {"label": "enemy shell", "value": facts.enemy_shell if facts.shell_miss is None else
+        {"label": "enemy shell", "value": (facts.enemy_shell + ("" if facts.enemy_shell == "none" else " (heard)"))
+         if facts.shell_miss is None else
          f"passes {abs(facts.shell_miss)} {'left' if facts.shell_miss >= 0 else 'right'} in {facts.shell_arrives_s:.2f} s",
          "tone": "bad" if facts.shell_miss is not None else None},
         {"label": "kills", "value": kills, "tone": None},

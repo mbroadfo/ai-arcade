@@ -58,7 +58,12 @@ local function u16le(n) return string.char(n & 0xff, (n >> 8) & 0xff) end
 local function u32le(n) return string.char(n & 0xff, (n >> 8) & 0xff, (n >> 16) & 0xff, (n >> 24) & 0xff) end
 
 local frame = 0
+local function machine_paused()  -- a paused machine still calls frame notifiers (unthrottled): those are not frames
+  local ok, paused = pcall(function() return manager.machine.paused end)
+  return ok and paused == true
+end
 VIDEO_NOTIFIER = on_frame(function()  -- kept global: newer MAME drops a notifier that is garbage-collected
+  if machine_paused() then return end
   frame = frame + 1
   if not screen or frame % EVERY ~= 0 then return end
   local ok, pixels, width, height, quarter = pcall(capture)

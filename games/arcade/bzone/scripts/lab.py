@@ -26,6 +26,7 @@ from games.arcade.bzone.controls import broker_actions, describe  # noqa: E402
 from games.arcade.bzone.facts import derive  # noqa: E402
 from games.arcade.bzone.observe import status  # noqa: E402
 from games.arcade.bzone.policies import POLICIES  # noqa: E402
+from games.arcade.bzone.state import LETTERS  # noqa: E402
 from state_client import StateStream  # noqa: E402
 
 
@@ -58,6 +59,40 @@ def changes(before, after):
     return out
 
 
+def enter_initials(stream, broker, name="AI ", seconds=40):
+    """On the high-score screen, enter `name` (letters and spaces only: the game has no digits). The game says the right
+    hand controller steps the letter and fire takes it; which tread direction steps which way is learned from RAM (a
+    press that changes nothing tries the next), so a missed or doubled step is corrected. Returns (done, attempts)."""
+    tries = [(2, "UP"), (2, "DOWN"), (1, "UP"), (1, "DOWN")]
+    learned = {}  # +1 / -1 -> the control that steps that way
+    attempts, deadline, k = [], time.time() + seconds, 0
+    while time.time() < deadline:
+        (_, state, _), _ = stream.latest_timed()
+        if not state.entering_initials:
+            return True, attempts
+        i = min(state.initial_index, 2)
+        want, have = LETTERS[name[i]], state.initials[i]
+        if have == want:
+            broker.tap("BUTTON_1", ms=150)
+            attempts.append({"letter": i, "fire": True})
+            time.sleep(0.6)
+            continue
+        way = 1 if ((want - have) // 2) % 27 <= 13 else -1
+        control = learned.get(way) or tries[k % len(tries)]
+        broker.hold({control})
+        time.sleep(0.3)  # the game steps after 4 frames held, then every 4 more
+        broker.hold(set())
+        time.sleep(0.25)
+        (_, after, _), _ = stream.latest_timed()
+        moved = ((after.initials[i] - have) // 2) % 27 if after.initial_index == i else 0
+        attempts.append({"letter": i, "control": list(control), "from": have, "to": after.initials[i]})
+        if moved:
+            learned[1 if moved <= 13 else -1] = control
+        elif control not in learned.values():
+            k += 1  # this one does nothing here: the next
+    return False, attempts
+
+
 def start_game(stream, broker, coins):
     (_, state, _), _ = stream.latest_timed()
     if state.playing:
@@ -65,17 +100,17 @@ def start_game(stream, broker, coins):
     for _ in range(coins):
         broker.tap("COIN")
         time.sleep(0.6)
-    # After a game with a high score the game asks for three initials, each entered with fire, and ignores START until
-    # they are in: press fire, then start, until a game begins.
+    # After a game with a high score the game asks for three initials and ignores START until they are in.
     deadline = time.time() + 45
     while time.time() < deadline:
+        (_, state, _), _ = stream.latest_timed()
+        if state.entering_initials:
+            enter_initials(stream, broker)
         broker.tap("START")
         time.sleep(1.0)
         (_, state, _), _ = stream.latest_timed()
         if state.playing:
             return
-        broker.tap("BUTTON_1")
-        time.sleep(0.5)
     raise RuntimeError("the game did not start (coins, start, initials)")
 
 
@@ -109,12 +144,17 @@ def main(argv=None):
                   "strategist": None, "games": 1, "switches": {"hz": args.hz}, "seconds": args.seconds,
                   "settings": game.SETTINGS, "coins": coins, "t": time.time()}
     log.write(json.dumps(run_record) + "\n")
-    stop = []
+    stop, paused = [], [False]
+
+    def command(m):  # from the Observatory: stop the run, or the game was paused / resumed
+        if m.get("op") == "stop":
+            stop.append(1)
+        elif m.get("op") == "pause":
+            paused[0] = bool(m.get("on"))
     live = None
     if args.observatory != "none":
         host, _, port = args.observatory.rpartition(":")
-        live = LiveSink((host, int(port)), hello=lambda: [run_record],
-                        on_command=lambda m: stop.append(1) if m.get("op") == "stop" else None)
+        live = LiveSink((host, int(port)), hello=lambda: [run_record], on_command=command)
     start_game(stream, broker, coins)
 
     clock = TickClock(args.hz)
@@ -123,7 +163,17 @@ def main(argv=None):
         shown = 0.0
         while time.monotonic() - began < args.seconds and not stop:
             tick = clock.wait()
-            (frame, state, _), arrived = stream.latest_timed(timeout=1.0)
+            if paused[0]:  # the game is paused: hold nothing, and the pause does not count toward the run's length
+                if broker.holding:
+                    broker.release_all()
+                    log.write(json.dumps({"event": "paused", "t": time.time()}) + "\n")
+                began += 1 / args.hz
+                continue
+            try:
+                (frame, state, _), arrived = stream.latest_timed(timeout=1.0)
+            except TimeoutError:  # no state (paused from elsewhere, or the stream reconnecting): skip the tick
+                began += 1 / args.hz
+                continue
             t = tick.began - began
             t0 = time.perf_counter()
             facts = derive(state)
@@ -155,6 +205,15 @@ def main(argv=None):
             kills += any(c.startswith("score") for c in record["changes"])  # a tank, missile or saucer destroyed
             previous, last_frame = state, frame
             if previous.playing is False and t > 5:
+                broker.release_all()
+                for _ in range(40):  # a high score: the initials screen follows the game within a few seconds
+                    (_, state, _), _ = stream.latest_timed()
+                    if state.entering_initials:
+                        entered, attempts = enter_initials(stream, broker)
+                        log.write(json.dumps({"event": "initials", "entered": entered, "attempts": attempts,
+                                              "t": time.time()}) + "\n")
+                        break
+                    time.sleep(0.25)
                 break  # the game ended
     except KeyboardInterrupt:
         pass

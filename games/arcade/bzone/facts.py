@@ -17,8 +17,8 @@ hit. The miss distance assumes the enemy stays put while the shell flies (341 un
 
 The enemy's fire (FIREIT, SHUPDT): it fires only when its heading is within 2 units of the bearing to the player, so the
 shell flies straight at where the player was when it fired, and never before $20 game frames after it appeared. A player
-hears the shot (the sound) wherever the enemy is and knows where it came from (the radar or the warning), so where the
-shell will pass is something a player can work out; it is given whenever a shell is flying. The shell moves about 253
+hears the shot (the sound) wherever the enemy is, so that it is flying is always a fact; where it will pass is a fact
+only while the shell is on screen, where it can be seen. The shell moves about 253
 units an update, about 90 updates a second (measured on the two shots of the scripted recording, both of which killed:
 each was fired with the enemy aimed exactly, 0 units, and each exploded where the tank stood as a life was lost), and
 gives out after 127 updates (about 32,000 units, the radar's range). The enemy's own heading is a fact while it is on
@@ -77,7 +77,7 @@ def miss_distance(state, angle9):
 @dataclass(frozen=True)
 class Facts:
     heading_deg: float
-    enemy_side: str  # "ahead" (on screen), "left", "right", "rear": what the screen says
+    enemy_side: str  # "ahead" (on screen), "left", "right", "rear": what the screen says; "none" while it explodes
     enemy_on_radar: bool  # in firing range: the radar shows its blip and "ENEMY IN RANGE" flashes
     enemy_bearing: int | None  # relative, angle units, + left; only when on the radar or on screen
     enemy_bearing_deg: float | None
@@ -91,16 +91,24 @@ class Facts:
     enemy_aim: int | None  # angle units from the enemy's heading to the bearing to the player (+ = it must turn left);
     #                        only while it is on screen; it fires when this is within AIMED
     enemy_shell: str  # "none", "flying" or "exploding": the shot is heard
-    shell_miss: int | None  # how far from the tank the flying shell's path passes (+ = on the tank's left); None once
-    #                         it has passed or when there is none
+    shell_miss: int | None  # how far from the tank the flying shell's path passes (+ = on the tank's left); only
+    #                         while the shell is on screen and still coming
     shell_arrives_s: float | None  # seconds until it is closest to the tank (None as shell_miss)
 
 
-def shell_pass(state):
+def in_view(state, point):
+    """Whether a world point is in the window: ahead, within IN_VIEW of the heading."""
+    rel = relative(state.tank, point)
+    dx, dy = wrap16(point[0] - state.tank.x), wrap16(point[1] - state.tank.y)
+    h = state.tank.angle * math.pi / 128
+    return abs(rel) < IN_VIEW and dx * math.cos(h) + dy * math.sin(h) > 0
+
+
+def shell_pass(state, seen_only=True):
     """(passes by, seconds until closest) for the enemy's flying shell against the tank where it is now, or (None, None).
     Passes by is + when the shell goes by on the tank's left."""
     e = state.enemy
-    if not 0 < e.fire < 0x80 or e.shell_step == (0, 0):
+    if not 0 < e.fire < 0x80 or e.shell_step == (0, 0) or (seen_only and not in_view(state, e.shell)):
         return None, None
     rx, ry = wrap16(state.tank.x - e.shell[0]), wrap16(state.tank.y - e.shell[1])  # shell -> tank
     sx, sy = e.shell_step
@@ -118,6 +126,8 @@ def derive(state):
     size = abs(rel)
     side = "ahead" if size < IN_VIEW else "rear" if size > REAR else ("left" if rel >= 0 else "right")
     on_radar = state.enemy_distance < RADAR_RANGE
+    if state.enemy_destroyed:  # it is exploding: no warning, no blip; its position is the wreck's
+        side, on_radar = "none", False
     known = on_radar or side == "ahead"
     distance = round(math.hypot(wrap16(state.enemy.x - state.tank.x), wrap16(state.enemy.y - state.tank.y)))
     side_miss, ahead = miss_distance(state, state.angle9)

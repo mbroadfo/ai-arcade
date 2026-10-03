@@ -337,9 +337,12 @@
   <div class="actions control-only" id="actions">
     <label class="speed hidden" id="speedbox" title="How fast the game runs. Slower gives the model more time per decision; the run logs every change.">
       SPEED <input type="range" id="speed" min="0.3" max="1" step="0.05" value="0.85"><b id="speed-v">85%</b></label>
-    <button class="hbtn" id="b-games">☰ GAMES</button>
-    <button class="hbtn hidden" id="b-again">RUN AGAIN</button>
-    <button class="hbtn warnbtn hidden" id="b-stop">STOP</button>
+    <button class="hbtn hidden" id="b-pause" title="Pause or resume the game (and the AI with it)">❚❚ PAUSE</button>
+    <button class="hbtn hidden" id="b-restart" title="Start this game again from the beginning">↻ RESTART</button>
+    <button class="hbtn primary hidden" id="b-again" title="The same AI run again, on a fresh game">▶ PLAY AGAIN</button>
+    <button class="hbtn" id="b-games" title="Choose a game">☰ GAMES</button>
+    <button class="hbtn warnbtn hidden" id="b-stop" title="Stop the AI; the game stays on the screen">STOP AI</button>
+    <button class="hbtn hidden" id="b-exit" title="End the game and go back to the cabinet's menu">⏏ EXIT GAME</button>
     <button class="hbtn hidden" id="b-menu">BACK TO MENU</button>
   </div>
   <div class="links"><span><i id="d-page"></i>page</span><span class="ai-only"><i id="d-video"></i>video <span id="fps"></span></span></div>
@@ -910,11 +913,20 @@ function applyMode() {
   document.body.classList.toggle("has-control", ctl.features.control);
   $("now-text").textContent = nowText(m);
   const run = ctl.control.state;
-  $("b-stop").classList.toggle("hidden", !(m === "human" || m === "ai-live"));
-  $("b-stop").textContent = m === "ai-live" ? (run === "stopping" ? "STOPPING…" : "STOP AI") : "STOP GAME";
+  // The controls a moment calls for: a game being played can be paused (AI mode), restarted or left; a finished
+  // AI run can be played again or another game chosen; GAMES is always there.
+  const paused = !!ctl.cabinet?.ai?.paused, again = !!ctl.control.again;
+  $("b-pause").classList.toggle("hidden", !(m === "ai-live" || m === "ai-idle"));
+  $("b-pause").textContent = paused ? "▶ RESUME" : "❚❚ PAUSE";
+  $("b-pause").classList.toggle("primary", paused);
+  $("b-restart").classList.toggle("hidden", !(m === "human" || m === "ai-live" && again));
+  $("b-again").classList.toggle("hidden", !(m === "ai-idle" && again));
+  $("b-games").textContent = m === "ai-idle" || m === "human" ? "☰ NEW GAME" : "☰ GAMES";
+  $("b-stop").classList.toggle("hidden", m !== "ai-live");
+  $("b-stop").textContent = run === "stopping" ? "STOPPING…" : "STOP AI";
   $("b-stop").disabled = run === "stopping";
-  $("b-menu").classList.toggle("hidden", !(m === "ai-idle" || m === "idle" || m === "ai-starting" && run === "failed"));
-  $("b-again").classList.toggle("hidden", !(m === "ai-idle" && ctl.answers && ctl.control.game));
+  $("b-exit").classList.toggle("hidden", !(m === "human" || m === "ai-live" || m === "ai-idle"));
+  $("b-menu").classList.toggle("hidden", !(m === "idle" || m === "ai-starting" && run === "failed"));
   $("actions").classList.toggle("hidden", !ctl.features.control);
   if (!ai || m === "ai-starting") showHome(m);
   runState();
@@ -985,7 +997,17 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") openDrawer(n
 $("b-games").addEventListener("click", openPicker);
 $("b-stop").addEventListener("click", () => act("/api/stop"));
 $("b-menu").addEventListener("click", () => act("/api/menu"));
-$("b-again").addEventListener("click", () => startAi(ctl.control.game, ctl.answers));
+$("b-exit").addEventListener("click", () => act("/api/menu"));
+$("b-again").addEventListener("click", () => act("/api/again"));
+$("b-pause").addEventListener("click", async () => {
+  const r = await act("/api/pause", { on: !ctl.cabinet?.ai?.paused });
+  if (r && ctl.cabinet?.ai) { ctl.cabinet.ai.paused = r.paused; applyMode(); }
+});
+$("b-restart").addEventListener("click", () => {
+  const m = mode(), h = ctl.cabinet?.human;
+  if (m === "human" && h) act("/api/play", { system: h.system, path: h.rom });
+  else act("/api/again");
+});
 
 function renderPicker() {
   const systems = ctl.catalog?.systems || [];

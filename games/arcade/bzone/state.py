@@ -15,6 +15,7 @@ TPOSX, TPOSY = 0x2D, 0x31  # 2 bytes each: tank at +0, enemy at +2
 FIRECT = 0x24  # shell state: 0 none, 1-$7F in flight (counts down), $80 and up exploding; tank +0, enemy +2
 SHELLX, SHELLY = 0xA8, 0xAC
 SINCX, SINCY = 0xB0, 0xB4  # the shell's step (world units an update), set when it is fired
+COLFLG = 0x12  # "blown up": the tank at +0, the enemy at +2; set by a shell hit, cleared when the explosion ends
 FTIMER = 0xD1  # counts up from 0 when an enemy appears, stops at $FF; the enemy holds fire below $20 (FIREIT)
 HITS = 0xB8  # 2 bytes each: the score in thousands (BCD) at +0, the enemy's hits on the tank at +2
 CRACK, EIRNGE, R2D3FL, LIVES, GOVER, ATRACT = 0xC7, 0xC9, 0xCB, 0xCC, 0xCD, 0xCE
@@ -22,6 +23,8 @@ PTURN = 0xD0  # the game's own |enemy bearing - heading|, for its warnings
 SAPOSX, SAPOSY, SAUCER = 0xD5, 0xD7, 0xDE
 FRAME = 0xC6
 TDIST = 0x02E8
+STINTL, LETR = 0x033D, 0x0342  # the initials being entered (3 letter codes) and which one (0-2)
+LETTERS = {chr(65 + i): 0x16 + 2 * i for i in range(26)} | {" ": 0x4A}  # the only codes LETCHK steps through
 
 
 def u16(image, address):
@@ -69,6 +72,10 @@ class BattlezoneState:
     frame: int
     game_turn: int  # PTURN: the game's own size of the enemy's bearing from the heading (to check facts.py against)
     enemy_timer: int  # FTIMER: game frames since this enemy appeared, up to 255
+    enemy_destroyed: bool  # COLFLG+2: the enemy was hit and is exploding; its position is stale until the next one
+    entering_initials: bool  # GOVER bit 7: the high-score screen is waiting for initials (START is ignored)
+    initials: tuple  # the three letter codes on it (LETTERS)
+    initial_index: int  # which of them the stick changes now
 
 
 def decode(image):
@@ -82,4 +89,6 @@ def decode(image):
         enemy_in_range=image[EIRNGE], missile=image[R2D3FL], saucer=image[SAUCER],
         saucer_pos=(s16(image, SAPOSX), s16(image, SAPOSY)), tank=tank, enemy=enemy,
         enemy_distance=image[TDIST], angle9=image[TANGLE] << 1 | image[LANGLE] >> 7, frame=image[FRAME],
-        game_turn=image[PTURN], enemy_timer=image[FTIMER])
+        game_turn=image[PTURN], enemy_timer=image[FTIMER], enemy_destroyed=bool(image[COLFLG + 2]),
+        entering_initials=bool(image[GOVER] & 0x80), initials=tuple(image[STINTL:STINTL + 3]),
+        initial_index=image[LETR])
