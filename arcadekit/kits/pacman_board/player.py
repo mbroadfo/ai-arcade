@@ -46,6 +46,9 @@ LATE_DEFAULTS = ("rule", "keep")  # with no answer on arrival: the rule decides,
 # day on Ms. Pac-Man: with fifo, 434 of 537 late junctions had their question still waiting behind chained ones, though
 # answers took only 258 ms. "Idle" first meant only "nothing queued", which is nearly always true (the model takes a
 # question at once), so guesses still held up the next real question: none of 425 chained guesses were skipped.
+# With guesses only when idle, 140 of 292 late junctions came under 0.8 s after the previous one (a guess refused
+# when its answer arrived was never asked again) and 114 within 1.5 s of a turn-around (the junction behind him had
+# not been asked). So in spare time (_spare_guess) the path ahead is filled each tick, then the junction behind him.
 ASK_ORDERS = ("nearest", "fifo")
 
 
@@ -108,6 +111,8 @@ class Player:
             raise ValueError(f"ask_order must be one of {ASK_ORDERS}")
         self.nearest = ask_order == "nearest"
         self.stats["queue"] = self.book.counts  # promoted, withdrawn, spare_skipped
+        self.stats["spare"] = {"ahead": 0, "behind": 0, "behind_used": 0}  # guesses asked in spare time (_spare_guess)
+        self.behind_asked = set()
         # a model slow layer shares the model server: tell it when no junction question waits (strategy.TIMINGS)
         if hasattr(strategy, "configure"):
             strategy.configure(timing=strategy_timing, quiet=self._quiet)
@@ -418,6 +423,42 @@ class Player:
                     self.stats["queries"] += 1
                     self.stats["chained"] += 1
 
+    def _model_idle(self):
+        return not getattr(self.worker, "busy", lambda: True)()
+
+    def _spare_guess(self, state, image, maze, key, heading):
+        """With the model idle, ask one guess: the first junction on his way without an answer (following the
+        stored answers, chain_depth deep), else the junction behind him, which a turn-around (his own choice or the
+        reflex) makes the next one. A timing choice: what is asked about, never what is chosen."""
+        k = key
+        for depth in range(1, self.chain_depth + 1):
+            stored = self.book.get(k)
+            if stored is None:
+                break
+            choice = stored[0].choice
+            junction, steps, path = maze.walk_to_decision(step(k[0], choice), choice)
+            if junction is None or steps > CHAIN_MAX_STEPS:
+                break
+            k = (junction, path[-1] if path else choice)
+            if not self.book.has(k) and not self.book.pending(k):
+                if self.book.ask(k, self.goal, self._facts(state, image, junction, k[1]), depth=depth, spare=True):
+                    self.stats["queries"] += 1
+                    self.stats["chained"] += 1
+                    self.stats["spare"]["ahead"] += 1
+                return
+        back = OPPOSITE.get(heading)
+        if back is None:
+            return
+        junction, steps, path = maze.walk_to_decision(state.pacman.tile, back)
+        if junction is None or steps > CHAIN_MAX_STEPS:
+            return
+        k = (junction, path[-1] if path else back)
+        if not self.book.has(k) and not self.book.pending(k):
+            if self.book.ask(k, self.goal, self._facts(state, image, junction, k[1]), depth=1, spare=True):
+                self.stats["queries"] += 1
+                self.stats["spare"]["behind"] += 1
+                self.behind_asked.add(k)
+
     def _danger_answered(self, key, decision, finished_at):
         self.danger_out = None
         self.danger_answer = (key, decision, finished_at)
@@ -558,6 +599,8 @@ class Player:
                 if self.book.ask(key, self.goal, facts, next_point=self.nearest):
                     self.stats["queries"] += 1
                     asked_now = True
+            if self.nearest and not asked_now and self._model_idle():
+                self._spare_guess(state, image, maze, key, heading)
 
         # A junction is decided once per visit. Pac-Man spends several frames on its tile, and each change of his
         # heading would otherwise look like arriving at a new junction and decide again: two answers that disagree
@@ -578,6 +621,8 @@ class Player:
             if first:
                 self.applied.add(key)
                 self.stats["on_time"] += 1
+                if key in self.behind_asked:
+                    self.stats["spare"]["behind_used"] += 1
             final = self._go(state, image, junction, arriving, decision.choice, "junction", decision.source)
             if first:
                 extra = {}

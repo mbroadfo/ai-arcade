@@ -328,3 +328,27 @@ def test_pacman_tiles_map_onto_the_upright_screen():
     assert screen.apply(screen.TILE_TO_PX, (0x20, 0x20)) == (27 * 8 + 4, 2 * 8 + 4)
     # h rises leftward: tile 0x3B is column 0
     assert screen.apply(screen.TILE_TO_PX, (0x20, 0x3B))[0] == 4
+
+
+class IdleWorker(FakeWorker):
+    def busy(self):
+        return False
+
+
+def test_spare_time_fills_the_path_ahead_then_asks_about_the_junction_behind():
+    p = player.Player(None, None, IdleWorker(), goals.GoalManager("clear_dots"), io.StringIO())
+    maze = Maze(IMAGE)
+    heading = player.LOWER_TO_UPPER[STATE.pacman.direction]
+    junction, _, path = maze.walk_to_decision(STATE.pacman.tile, heading)
+    key = (junction, path[-1] if path else heading)
+    p._spare_guess(STATE, IMAGE, maze, key, heading)  # nothing known ahead: the junction behind him
+    back = player.OPPOSITE[heading]
+    behind, _, bpath = maze.walk_to_decision(STATE.pacman.tile, back)
+    assert p.worker.submitted == [(behind, bpath[-1] if bpath else back)] and p.stats["spare"]["behind"] == 1
+    decision = p.rule.decide(p._facts(STATE, IMAGE, *key), p.goal)
+    p.book.put(key, decision, p.goal)  # the next junction's answer is stored
+    p.worker.submitted.clear()
+    p._spare_guess(STATE, IMAGE, maze, key, heading)
+    nxt, _, npath = maze.walk_to_decision(step(key[0], decision.choice), decision.choice)
+    assert p.worker.submitted == [(nxt, npath[-1] if npath else decision.choice)]  # where that answer leads
+    assert p.stats["spare"]["ahead"] == 1
