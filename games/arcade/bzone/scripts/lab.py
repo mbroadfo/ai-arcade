@@ -60,14 +60,18 @@ def start_game(stream, broker, coins):
     for _ in range(coins):
         broker.tap("COIN")
         time.sleep(0.6)
-    broker.tap("START")
-    deadline = time.time() + 10
+    # After a game with a high score the game asks for three initials, each entered with fire, and ignores START until
+    # they are in: press fire, then start, until a game begins.
+    deadline = time.time() + 45
     while time.time() < deadline:
+        broker.tap("START")
+        time.sleep(1.0)
         (_, state, _), _ = stream.latest_timed()
         if state.playing:
             return
-        time.sleep(0.2)
-    raise RuntimeError("the game did not start (coins, start)")
+        broker.tap("BUTTON_1")
+        time.sleep(0.5)
+    raise RuntimeError("the game did not start (coins, start, initials)")
 
 
 def main(argv=None):
