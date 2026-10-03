@@ -157,9 +157,11 @@ def _flank_and_fire(state, facts, t, last):
     onto it and fire. The enemy has one shell (FIREIT fires only when FIRECT+2 is 0): once a heard shot has been
     dodged, it cannot fire again while that shell flies or explodes, so that is the moment to turn in, as is a new
     enemy's first 32 frames. Uses the skills (skills.py) a model would ask for."""
-    from .skills import broadside, dodge, flank
+    from .skills import broadside, dodge, flank, missile_defense
     if facts.dying:
         return NOTHING, "dying: nothing to steer"
+    if facts.enemy_kind == "missile" and facts.enemy_side != "none" and facts.enemy_shell != "flying":
+        return missile_defense(facts, last)  # it fires nothing: all that matters is shooting it before it lands on us
     known = facts.enemy_distance is not None and facts.enemy_side != "none"
     if facts.enemy_shell == "flying":
         since = (0x7F - state.enemy.fire) / SHELL_UPDATES_PER_S

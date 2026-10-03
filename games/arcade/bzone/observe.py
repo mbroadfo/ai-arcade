@@ -84,7 +84,10 @@ def status(state, facts, frame, held, why, kills):
         return record
     record["marks"] = marks(state, facts)
     record["facts"] = [
-        {"label": "enemy", "value": facts.enemy_side, "tone": "warn" if facts.enemy_side == "rear" else None},
+        {"label": "enemy", "value": facts.enemy_side if facts.enemy_kind == "tank" else
+         f"MISSILE {facts.enemy_side}, height {facts.missile_height}" + (" (shootable)" if facts.missile_low else "")
+         + (", weaving" if facts.missile_weaving else ""),
+         "tone": "bad" if facts.enemy_kind == "missile" else "warn" if facts.enemy_side == "rear" else None},
         {"label": "on radar", "value": "yes" if facts.enemy_on_radar else "no", "tone": None},
         {"label": "bearing", "value": "-" if facts.enemy_bearing_deg is None else f"{facts.enemy_bearing_deg:+.0f} deg",
          "tone": None},

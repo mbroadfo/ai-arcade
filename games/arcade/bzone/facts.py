@@ -24,6 +24,13 @@ each was fired with the enemy aimed exactly, 0 units, and each exploded where th
 gives out after 127 updates (about 32,000 units, the radar's range). The enemy's own heading is a fact while it is on
 screen, where its shape shows which way it faces.
 
+The missile (BUZBOM, R2D3CK, SHRTCK): it takes the enemy's slot, so the enemy facts describe it while it is out. It is
+launched in front of the player (within about 21 degrees of the heading) at height 6,144 and falls 256 a frame, so it
+lands in about 0.6 s; it hops up over obstacles and kills only on the ground. A shell hits it only while it is below
+512 (TOP), within a wider radius than a tank: (a + a/2 + $38) x 4 with a = |2 x angle difference| / 4 + $18, 368 to
+752. While more than 2,048 units away it weaves (up to 31 angle units either side of its homing heading, switching
+every 16 frames), except the first missile of a game; closer in it comes straight.
+
 Angles are 256 to a full circle, counterclockwise (turning left raises the heading); a relative bearing is positive to
 the left. The bearing computed here matches the game's own (PTURN, its size) within 1 unit on 379 of 383 recorded frames.
 """
@@ -59,13 +66,17 @@ def relative(tank, other):
     return (bearing(tank, other) - tank.angle + 128) % 256 - 128
 
 
-def hit_radius(tank_angle, enemy_angle):
-    """World units within which the player's shell hits the enemy tank (SHRTCK, for a tank; not the missile)."""
+def hit_radius(tank_angle, enemy_angle, missile=False):
+    """World units within which the player's shell hits the enemy (SHRTCK): a tank, or the missile (wider)."""
     a = ((tank_angle - enemy_angle) << 1) & 0xFF
     if a & 0x80:
         a = (-a) & 0xFF
-    a >>= 3
+    a = (a >> 2) + 0x18 if missile else a >> 3
     return (a + (a >> 1) + 0x38) * 4
+
+
+MISSILE_SHOOTABLE = 0x200  # TOP: a shell passes under the missile at this height or above
+MISSILE_WEAVES = 2048  # beyond this distance the missile weaves (not the first one of a game)
 
 
 def miss_distance(state, angle9):
@@ -96,6 +107,10 @@ class Facts:
     shell_miss: int | None  # how far from the tank the flying shell's path passes (+ = on the tank's left); only
     #                         while the shell is on screen and still coming
     shell_arrives_s: float | None  # seconds until it is closest to the tank (None as shell_miss)
+    enemy_kind: str  # "tank" or "missile" (the screen shows which)
+    missile_height: int | None  # while the missile is out
+    missile_low: bool | None  # low enough for a shell to hit it (below 512)
+    missile_weaving: bool | None  # far enough to weave (and not the first missile of the game)
     # Obstacles (obstacles.py: the field is fixed, the same every game, so a player learns it)
     blocked: bool  # driving into an obstacle: the move is undone and the game says "boing"
     obstacle_ahead: int | None  # world units the tank can drive forward before touching an obstacle (within 6,000)
@@ -140,7 +155,8 @@ def derive(state):
     known = on_radar or side == "ahead"
     distance = round(math.hypot(wrap16(state.enemy.x - state.tank.x), wrap16(state.enemy.y - state.tank.y)))
     side_miss, ahead = miss_distance(state, state.angle9)
-    radius = hit_radius(state.tank.angle, state.enemy.angle)
+    radius = hit_radius(state.tank.angle, state.enemy.angle, missile=state.missile_active)
+    low = state.missile_height < MISSILE_SHOOTABLE if state.missile_active else None
     miss, arrives = shell_pass(state)
     ahead_run, ahead_ob = path_clear(state.tank)
     behind_run, _ = path_clear(state.tank, reverse=True)
@@ -155,11 +171,14 @@ def derive(state):
                  enemy_bearing=rel if known else None, enemy_bearing_deg=round(degrees(rel), 1) if known else None,
                  enemy_distance=distance if on_radar else None,
                  miss_by=round(side_miss) if on_radar else None, hit_radius=radius if on_radar else None,
-                 on_target=(abs(side_miss) <= radius and ahead > 0) if on_radar else None,
+                 on_target=(abs(side_miss) <= radius and ahead > 0 and low is not False) if on_radar else None,
                  dying=bool(state.dying), enemy_age=state.enemy_timer, enemy_holds_fire=state.enemy_timer < HOLDS_FIRE,
                  enemy_aim=(relative(state.enemy, (state.tank.x, state.tank.y)) if side == "ahead" else None),
                  enemy_shell="none" if not state.enemy.fire else "flying" if state.enemy.fire < 0x80 else "exploding",
-                 shell_miss=miss, shell_arrives_s=arrives, blocked=state.blocked, obstacle_ahead=ahead_run,
+                 shell_miss=miss, shell_arrives_s=arrives, enemy_kind="missile" if state.missile_active else "tank",
+                 missile_height=state.missile_height if state.missile_active else None, missile_low=low,
+                 missile_weaving=(distance > MISSILE_WEAVES and state.missile_number > 1)
+                 if state.missile_active else None, blocked=state.blocked, obstacle_ahead=ahead_run,
                  obstacle_ahead_left=round(offset(state.tank, ahead_ob)[1]) if ahead_ob else None,
                  obstacle_behind=behind_run, cover=shield.shape if shield else None,
                  obstacles_in_view=tuple(sorted(seen, key=lambda o: o[1])))

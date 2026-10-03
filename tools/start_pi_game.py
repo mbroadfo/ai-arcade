@@ -47,11 +47,19 @@ def main():
                         help="video frames a second for the Observatory (default: the game's VIDEO_FPS, else 15)")
     parser.add_argument("--video-port", type=int, default=8767)
     parser.add_argument("--no-video", action="store_true", help="no video stream: the state exporter alone")
+    parser.add_argument("--set", action="append", default=[], metavar="SWITCH=SETTING",
+                        help="an operator setting for this start only, over the game's SETTINGS (e.g. for an "
+                             "experiment: --set 'Missile appears at=5000'); the run's settings are printed")
     args = parser.parse_args()
     system, _ = split_spec(args.game)
     romset = load_profile(args.game)["romset"]
     AGENT_REGIONS = load_game(args.game).AGENT_REGIONS
-    SETTINGS = getattr(load_game(args.game), "SETTINGS", {})  # operator settings; all others at factory default
+    SETTINGS = dict(getattr(load_game(args.game), "SETTINGS", {}))  # operator settings; all others at factory default
+    for item in args.set:
+        name, sep, value = item.partition("=")
+        if not sep:
+            parser.error(f"--set {item!r}: expected SWITCH=SETTING")
+        SETTINGS[name.strip()] = value.strip()
     snap = getattr(load_game(args.game), "VIDEO_SIZE", None)  # a vector game's video is MAME's snapshot, this size
     video_fps = args.video_fps or getattr(load_game(args.game), "VIDEO_FPS", 15)
 

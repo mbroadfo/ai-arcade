@@ -9,7 +9,7 @@ one tread forward (arc) 10.8 degrees while moving 1,440 units; one tread back th
 """
 import math
 
-from .controls import ARC_LEFT, ARC_RIGHT, DRIVE, REVERSE, TURN_LEFT, TURN_RIGHT
+from .controls import ARC_LEFT, ARC_RIGHT, BACK_ARC_LEFT, BACK_ARC_RIGHT, DRIVE, REVERSE, TURN_LEFT, TURN_RIGHT
 from .facts import SHELL_UPDATES_PER_S
 
 UNIT = 360 / 256  # degrees per angle unit
@@ -104,3 +104,26 @@ def steer_clear(facts, names, why):
     if treads == REVERSE and (facts.blocked or (facts.obstacle_behind is not None and facts.obstacle_behind < BACK_ROOM)):
         return DRIVE | fire, why + "; no room behind: drive forward instead"
     return names, why
+
+
+MISSILE_ALIGN = 4  # angle units: lined up closely enough to back straight away and wait for the shot
+
+
+def missile_defense(facts, last):
+    """The missile is out (the doctrine of 3 October): back up, keep it on the nose, fire when a shell can hit it.
+    It lands in front of the tank about 0.6 s after launch (the touchdown shot); a shell passes under it until it is
+    below 512; if the first shot misses, keep backing while it weaves, and take it point-blank when it comes straight.
+    Backing up buys time; the pivot is the fastest way to bring it onto the nose."""
+    rel = facts.enemy_bearing
+    if rel is None:  # not on the radar yet: only the warning's side is known
+        return (BACK_ARC_LEFT if facts.enemy_side == "left" else BACK_ARC_RIGHT), \
+            f"missile to the {facts.enemy_side}: back up, swinging toward it"
+    height = f"height {facts.missile_height}" + (", low: shootable" if facts.missile_low else ", too high to hit")
+    if facts.on_target:  # on target already requires it to be low
+        if "FIRE" in last:
+            return REVERSE, f"missile on target ({height}): release fire, keep backing"
+        return REVERSE | {"FIRE"}, f"missile on target ({height}): fire, keep backing"
+    if abs(rel) > MISSILE_ALIGN:
+        return (TURN_LEFT if rel > 0 else TURN_RIGHT), f"missile {rel * UNIT:+.0f} deg ({height}): pivot onto it"
+    return REVERSE, f"missile on the nose ({height}" + (", weaving" if facts.missile_weaving else "") + \
+        "): back up and wait for the shot"

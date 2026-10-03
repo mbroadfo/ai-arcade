@@ -24,6 +24,7 @@ PTURN = 0xD0  # the game's own |enemy bearing - heading|, for its warnings
 SAPOSX, SAPOSY, SAUCER = 0xD5, 0xD7, 0xDE
 FRAME = 0xC6
 TDIST = 0x02E8
+MISSILE_Z, NOR2D3 = 0x02E4, 0x02EC  # the missile's height (EXPOSZ+$C, 16-bit) and missiles this game - 1 ($FF: none)
 STINTL, LETR = 0x033D, 0x0342  # the initials being entered (3 letter codes) and which one (0-2)
 LETTERS = {chr(65 + i): 0x16 + 2 * i for i in range(26)} | {" ": 0x4A}  # the only codes LETCHK steps through
 
@@ -63,7 +64,10 @@ class BattlezoneState:
     hits_taken: int  # the enemy's hits on the player
     dying: int  # CRACK: the cracked-windshield counter, nonzero while the death plays
     enemy_in_range: int  # EIRNGE, raw
-    missile: int  # R2D3FL, raw: the homing missile ("buzz bomb")
+    missile: int  # R2D3FL, raw: the homing missile ("buzz bomb"); bit 7 set while it is out
+    missile_active: bool  # the missile is out: it uses the enemy's slot (position, heading), so `enemy` is the missile
+    missile_height: int  # its height: 6,144 when launched in front of the player, down 256 a frame to 0
+    missile_number: int  # 1 for the first missile of the game (which flies straight), 2, 3 ... (0: none yet)
     saucer: int  # SAUCER flag, raw
     saucer_pos: tuple
     tank: Tank
@@ -88,7 +92,8 @@ def decode(image):
     return BattlezoneState(
         playing=image[ATRACT] == 0xFF, game_over=bool(image[GOVER]), credits=image[CREDITS], coins=image[COINS],
         lives=image[LIVES], hits=u16(image, HITS), score=bcd(u16(image, HITS)) * 1000, hits_taken=u16(image, HITS + 2), dying=image[CRACK],
-        enemy_in_range=image[EIRNGE], missile=image[R2D3FL], saucer=image[SAUCER],
+        enemy_in_range=image[EIRNGE], missile=image[R2D3FL], missile_active=bool(image[R2D3FL] & 0x80),
+        missile_height=s16(image, MISSILE_Z), missile_number=(image[NOR2D3] + 1) & 0xFF, saucer=image[SAUCER],
         saucer_pos=(s16(image, SAPOSX), s16(image, SAPOSY)), tank=tank, enemy=enemy,
         enemy_distance=image[TDIST], angle9=image[TANGLE] << 1 | image[LANGLE] >> 7, frame=image[FRAME],
         game_turn=image[PTURN], enemy_timer=image[FTIMER], enemy_destroyed=bool(image[COLFLG + 2]),
