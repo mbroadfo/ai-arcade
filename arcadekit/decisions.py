@@ -75,10 +75,12 @@ class DecisionWorker:
             return True
 
     def promote(self, key):
-        """Move a queued (not started) request to the front. True if it was queued."""
+        """Move a queued (not started) request to the front. True if it moved (False if not queued or already first)."""
         with self.cond:
             for i, item in enumerate(self.queue):
                 if item[0] == key:
+                    if i == 0:
+                        return False
                     del self.queue[i]
                     self.queue.appendleft(item)
                     return True

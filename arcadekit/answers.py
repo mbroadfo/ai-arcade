@@ -11,8 +11,10 @@ answer when it gets there. The book keeps that bookkeeping the same for every ga
   drop_stale() drops any older than `ttl` seconds.
 - late_reason(key): why there was no answer on arrival, in a fixed vocabulary.
 - Order (a timing choice, never what is chosen): `next_point=True` puts a question at the front of the model's queue
-  (the decision point the player is heading to), `spare=True` asks only when nothing is queued (a guess further
-  ahead must not delay a real question), and withdraw(keep) drops queued questions no longer on the player's way.
+  (the decision point the player is heading to), `spare=True` asks only when the model is idle, nothing queued and
+  nothing being answered (a guess further ahead must not delay a real question: the model answers one at a time, so
+  a guess it has started holds up the next real question until it is done), and withdraw(keep) drops queued
+  questions no longer on the player's way.
 
 The game decides what a key is (Pac-Man: a junction tile and the direction he arrives from) and what to ask.
 """
@@ -56,7 +58,9 @@ class AnswerBook:
             if next_point and hasattr(self.worker, "promote") and self.worker.promote(key):
                 self.counts["promoted"] += 1
             return False
-        if spare and getattr(self.worker, "queued", lambda: 0)():
+        idle = (lambda: not self.worker.busy()) if hasattr(self.worker, "busy") else (
+            lambda: not getattr(self.worker, "queued", lambda: 0)())
+        if spare and not idle():
             self.counts["spare_skipped"] += 1
             return False
         ordered = next_point and hasattr(self.worker, "promote")  # a worker that keeps an order (DecisionWorker)

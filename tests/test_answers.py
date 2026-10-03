@@ -126,6 +126,8 @@ def test_the_next_decision_point_goes_ahead_of_guesses_and_off_path_questions_ar
     book = AnswerBook(worker, time.time)
     book.ask("first", "g", "first")  # taken at once by the worker thread, which waits at the gate
     time.sleep(0.1)
+    assert queued_keys(worker) == []
+    assert book.ask("guess-0", "g", "0", depth=1, spare=True) is False  # nothing queued, but the model is answering
     book.ask("guess-a", "g", "a", depth=1)
     book.ask("guess-b", "g", "b", depth=1)
     book.ask("next", "g", "next", next_point=True)
@@ -133,6 +135,8 @@ def test_the_next_decision_point_goes_ahead_of_guesses_and_off_path_questions_ar
     assert book.ask("guess-c", "g", "c", depth=1, spare=True) is False  # questions are waiting: no more guesses
     book.ask("guess-b", "g", "b", next_point=True)  # already queued: moved to the front instead
     assert queued_keys(worker)[0] == "guess-b" and book.counts["promoted"] == 1
+    book.ask("guess-b", "g", "b", next_point=True)  # already first: nothing moves, nothing counted
+    assert book.counts["promoted"] == 1 and book.counts["spare_skipped"] == 2
     assert book.withdraw(lambda k: k != "guess-a") == 1 and "guess-a" not in queued_keys(worker)
     assert not worker.pending("guess-a")  # it can be asked again later
     gate.go.set()

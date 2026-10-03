@@ -41,9 +41,11 @@ GHOST_SCORES = (200, 400, 800, 1600)
 PAUSE_FRAMES = 60  # the game freezes for about this many frames when a ghost is eaten
 LATE_DEFAULTS = ("rule", "keep")  # with no answer on arrival: the rule decides, or nothing changes (see _late_keep)
 # ask_order (a timing switch): "nearest" puts the question for the junction he is heading to at the front of the model's
-# queue, asks chained junctions only when nothing is queued, and withdraws queued questions no longer on his way;
-# "fifo" asks in the order questions come up (before 2 October 2026). Measured that day on Ms. Pac-Man: with fifo, 434
-# of 537 late junctions had their question still waiting behind chained ones, though answers took only 258 ms.
+# queue, asks chained junctions only when the model is idle (nothing queued or being answered), and withdraws queued
+# questions no longer on his way; "fifo" asks in the order questions come up (before 2 October 2026). Measured that
+# day on Ms. Pac-Man: with fifo, 434 of 537 late junctions had their question still waiting behind chained ones, though
+# answers took only 258 ms. "Idle" first meant only "nothing queued", which is nearly always true (the model takes a
+# question at once), so guesses still held up the next real question: none of 425 chained guesses were skipped.
 ASK_ORDERS = ("nearest", "fifo")
 
 
