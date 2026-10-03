@@ -26,9 +26,11 @@ class Advice:
     orders: int = None  # the standing orders' version the question was asked under (arcadekit.orders), if any
 
 
-def build_questions(schema, only=None):
-    """The goal question and one per modifier; only: the names to ask (default all), e.g. ("goal",)."""
-    questions = {"goal": {"type": "choice", "criteria": dict(schema["goals"]),
+def build_questions(schema, only=None, goals=None):
+    """The goal question and one per modifier; only: the names to ask (default all), e.g. ("goal",).
+    goals: the goals on offer (default all), e.g. only those with something to aim at right now."""
+    offered = {g: text for g, text in schema["goals"].items() if goals is None or g in goals}
+    questions = {"goal": {"type": "choice", "criteria": offered,
                           "instructions": f"{schema['instructions']} Which goal should be pursued now?"}}
     for name, mod in schema["modifiers"].items():
         questions[name] = {"type": "choice", "criteria": dict(mod["levels"]),
@@ -36,12 +38,12 @@ def build_questions(schema, only=None):
     return questions if only is None else {k: q for k, q in questions.items() if k in only}
 
 
-def parse_reply(reply, schema, asked=None):
-    """(Advice or None, problems). A bad goal voids the advice; a bad modifier is just left out."""
+def parse_reply(reply, schema, asked=None, goals=None):
+    """(Advice or None, problems). A bad goal (or one not on offer) voids the advice; a bad modifier is left out."""
     answers, problems = reply.get("answers", {}), []
     goal = answers.get("goal", {})
-    if goal.get("choice") not in schema["goals"]:
-        return None, [f"goal {goal.get('choice')!r} is not one of the goals"]
+    if goal.get("choice") not in schema["goals"] or (goals is not None and goal.get("choice") not in goals):
+        return None, [f"goal {goal.get('choice')!r} is not one of the goals on offer"]
     mods = {}
     for name, mod in schema["modifiers"].items():
         if asked is not None and name not in asked:
@@ -62,23 +64,24 @@ class Strategist:
         self.stats = {"asked": 0, "answered": 0, "errors": 0, "low_confidence": 0, "invalid": 0}
         self.last_error = ""
 
-    def request(self, text, hint=None, only=None):
+    def request(self, text, hint=None, only=None, goals=None):
         """Ask in the background. False (and nothing asked) if the previous question is still out.
-        only: which questions (default all); asking the goal alone is several times quicker."""
+        only: which questions (default all); asking the goal alone is several times quicker.
+        goals: the goals on offer (default all)."""
         with self.lock:
             if self.busy:
                 return False
             self.busy = True
             self.stats["asked"] += 1
-        threading.Thread(target=self._ask, args=(text, hint, only), daemon=True).start()
+        threading.Thread(target=self._ask, args=(text, hint, only, goals), daemon=True).start()
         return True
 
-    def _ask(self, text, hint, only=None):
+    def _ask(self, text, hint, only=None, goals=None):
         advice = None
         try:
-            questions = build_questions(self.schema, only)
+            questions = build_questions(self.schema, only, goals)
             reply = self.client.ask(text, questions, hint=hint)
-            advice, problems = parse_reply(reply, self.schema, asked=set(questions))
+            advice, problems = parse_reply(reply, self.schema, asked=set(questions), goals=goals)
             if advice is None:
                 self.stats["invalid"] += 1
                 self.last_error = "; ".join(problems)

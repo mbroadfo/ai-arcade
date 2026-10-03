@@ -21,8 +21,9 @@ class FakeStrategist:
     def __init__(self):
         self.asked, self.advice, self.stats = [], None, {}
 
-    def request(self, text, hint=None, only=None):
+    def request(self, text, hint=None, only=None, goals=None):
         self.asked.append((text, hint))
+        self.goals = goals
         self.only = getattr(self, "only_log", [])
         self.only.append(only)
         self.only_log = self.only
@@ -151,16 +152,28 @@ def events_manager(quiet=True):
     return m, clock
 
 
-def test_events_timing_asks_goal_and_stance_first_then_waits_for_the_heartbeat():
+def test_events_timing_asks_the_goal_with_one_stance_setting_per_heartbeat_in_turn():
     m, clock = events_manager()
     m.choose(STATE, IMAGE, 0)
-    assert len(m.strategist.asked) == 1 and m.strategist.only_log[-1] is None  # first: everything
+    settings = list(goals.STANCE)
+    assert len(m.strategist.asked) == 1 and m.strategist.only_log[-1] == ("goal", settings[0])
     clock.now += 1.0
     m.choose(STATE, IMAGE, 60)
     assert len(m.strategist.asked) == 1  # nothing new happened, heartbeat not due
+    for i in range(1, len(settings) + 1):
+        clock.now += strategy.HEARTBEAT
+        m.choose(STATE, IMAGE, 400)
+        assert m.strategist.only_log[-1] == ("goal", settings[i % len(settings)])
+    assert strategy.STANCE_EVERY == strategy.HEARTBEAT * len(settings)
+
+
+def test_only_goals_with_something_to_aim_at_are_offered():
+    m, clock = events_manager()
+    m.choose(with_blue(STATE, blue=False), IMAGE, 0)
+    assert "hunt_ghosts" not in m.strategist.goals and "clear_dots" in m.strategist.goals
     clock.now += strategy.HEARTBEAT
-    m.choose(STATE, IMAGE, 400)
-    assert len(m.strategist.asked) == 2 and m.strategist.only_log[-1] == ("goal",)  # heartbeat: the goal alone
+    m.choose(with_blue(STATE), IMAGE, 400)
+    assert "hunt_ghosts" in m.strategist.goals
 
 
 def test_a_game_event_asks_the_goal_at_once_even_while_junction_questions_wait():

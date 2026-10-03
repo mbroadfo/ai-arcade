@@ -24,7 +24,7 @@ OPTIONS = (
            "changes and he waits for the model's answer (with --no-reflex, the model alone)",
            default="rule", parse=str, choices=("rule", "keep"), tag="late-{}"),
     Option("strategy_timing", "timing", "with a model setting the goal and stance (--strategist ollama): events = the "
-           "goal on game events and every 5 s, the stance every 15 s when no junction question waits; always = goal "
+           "goal on game events, and every 5 s the goal with one stance setting in turn when no junction question waits; always = goal "
            "and stance as often as answers come (the slow layer then keeps the model server busy)",
            default="events", parse=str, choices=("events", "always"), tag="strat-{}"),
     Option("ask_order", "timing", "the model's queue: nearest = the junction he is heading to first, chained "

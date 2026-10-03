@@ -101,3 +101,12 @@ def test_asking_the_goal_alone_leaves_the_stance_unanswered_without_complaint():
     assert set(build_questions(schema, only=("goal",))) == {"goal"}
     advice, problems = parse_reply({"answers": {"goal": {"choice": "b", "confidence": 0.8}}}, schema, asked={"goal"})
     assert advice.goal == "b" and advice.mods == {} and problems == []
+
+
+def test_only_the_goals_on_offer_are_asked_and_accepted():
+    from arcadekit.strategist import build_questions, parse_reply
+    schema = {"instructions": "x", "goals": {"a": "A", "b": "B", "c": "C"}, "modifiers": {}}
+    assert set(build_questions(schema, goals=("a", "c"))["goal"]["criteria"]) == {"a", "c"}
+    reply = {"answers": {"goal": {"choice": "b", "confidence": 0.8}}}
+    assert parse_reply(reply, schema, goals=("a", "c"))[0] is None
+    assert parse_reply(reply, schema)[0].goal == "b"

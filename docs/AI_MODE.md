@@ -232,12 +232,16 @@ never sees or sets a raw number, and the scale is bounded.
   fruit with none on screen, ambush with no energizer left). A model goal is held at least 3 s.
 - Every answer is logged as an `advice` event beside the goal the code would have chosen and what became of it
   (`taken`, `held`, `gated`); the run summary counts them, including how often the model agreed with the code.
+- Only the goals with something to aim at are offered (no hunting with no blue ghost, and so on): which goals are
+  possible is a fact about the board, which to pursue is still the model's. The gate stays, for a board that changes
+  while the question is out.
 - Survival still overrides everything.
 - When it asks (`--strategy-timing`, a timing switch). The model server answers one question at a time, so the slow
   layer's questions and the junction questions wait for each other. `events` (the default): the goal alone on a game
-  event (energizers, ghosts turning blue or back, fruit, a life, a level), at once, and otherwise every 5 s; goal and
-  stance every 15 s; heartbeats only when no junction question waits or is being answered. A stance not renewed in 30 s
-  lapses to normal. `always`: goal and stance as often as answers come (the behaviour before 2 October 2026). Each
+  event (energizers, ghosts turning blue or back, fruit, a life, a level), at once; otherwise every 5 s the goal with
+  one stance setting, in turn (caution, chase, greed: each renewed every 15 s, in smaller pieces than
+  the 665 ms of all three, which held up junction questions arriving behind it); heartbeats only when no junction
+  question waits or is being answered. A stance not renewed in 30 s lapses to normal. `always`: goal and stance as often as answers come (the behaviour before 2 October 2026). Each
   `advice` record says why it was asked. Measured on nimble with an idle server: the goal alone 95 ms, goal and stance
   665 ms; with `always`, one Ms. Pac-Man run kept the server busy 78% of the time and junction answers took a median
   1.9 s, so code's late default made 98% of the moves.

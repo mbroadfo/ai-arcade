@@ -17,10 +17,12 @@ ADVICE_TTL = 8.0  # seconds a piece of advice is trusted; after that the code's 
 DWELL = 3.0  # a model-chosen goal is held at least this long (a goal whose precondition has vanished is dropped)
 # timing "events" (the default for runs): the slow layer shares the model server with the junction questions, which
 # answers one question at a time, so it asks only when it is worth it. Measured 2026-10-02 on nimble, idle server:
-# goal alone 95 ms, goal and the three stance questions 665 ms.
+# goal alone 95 ms, goal and the three stance questions 665 ms. A junction question arriving behind the full set
+# waited for it (the slowest tenth of junction answers took ~750 ms), so each heartbeat now asks the goal and one
+# stance setting, in turn: every setting is still renewed every STANCE_EVERY seconds, in smaller pieces.
 TIMINGS = ("events", "always")
-HEARTBEAT = 5.0  # seconds: the goal is asked at least this often (and at once on a game event)
-STANCE_EVERY = 15.0  # seconds: the stance is asked this often, only when no junction question is waiting
+HEARTBEAT = 5.0  # seconds: the goal and the next stance setting are asked this often, only when no junction question waits
+STANCE_EVERY = HEARTBEAT * len(STANCE)  # seconds: how often each stance setting is renewed (it lapses after twice this)
 
 
 def schema(name):
@@ -112,12 +114,14 @@ class ModelGoalManager:
         self.events = []
         self.stats = {"advice": 0, "agreed_with_code": 0, "gated": 0, "held": 0, "expired": 0}
         self.configure(timing, quiet)
-        self.stance_at, self.signature, self.why = -1e9, None, None
+        self.stance_turn, self.signature, self.why = 0, None, None
 
     def configure(self, timing=None, quiet=None):
         """timing: "always" asks goal and stance as often as answers come (every `interval`); "events" asks the
         goal on game events and every HEARTBEAT seconds, the stance every STANCE_EVERY seconds when quiet().
-        quiet: the player's "no junction question is waiting" (a timing switch: when to ask, never what to choose)."""
+        quiet: the player's "no junction question is waiting" (a timing switch: when to ask, never what to choose).
+        Either way only the goals with something to aim at are offered (legal()): which goals are possible is a
+        fact about the board; which of them to pursue stays the model's."""
         if timing is not None:
             if timing not in TIMINGS:
                 raise ValueError(f"timing must be one of {TIMINGS}")
@@ -139,10 +143,9 @@ class ModelGoalManager:
         if before is not None and signature != before:
             changed = [n for n, a, b in zip(("energizers", "blue", "fruit", "lives", "level"), before, signature) if a != b]
             return True, ("goal",), "event: " + ", ".join(changed)
-        if now - self.stance_at >= STANCE_EVERY and self.quiet():
-            return True, None, "stance heartbeat"
         if now - self.asked_at >= HEARTBEAT and self.quiet():
-            return True, ("goal",), "heartbeat"
+            setting = list(STANCE)[self.stance_turn % len(STANCE)]
+            return True, ("goal", setting), f"heartbeat, stance: {setting}"
         return False, None, None
 
     def drain(self):
@@ -182,13 +185,14 @@ class ModelGoalManager:
             left = None
             if sit["blue"] and self.code.fright_left:
                 left = self.code.fright_left / GAME_FPS  # frames of blue left, in game seconds
+            offered = tuple(g for g in MODEL_GOALS if legal(g, sit))
             asked = self.strategist.request(describe(state, sit, self.goal, self.mods, left, self.name),
                                             hint={"code_goal": code_goal, "mods": dict(self.mods)},
-                                            **({"only": only} if only else {}))
+                                            goals=offered, **({"only": only} if only else {}))
             if asked:
                 self.asked_at, self.why = now, why
-                if only is None:
-                    self.stance_at = now
+                if only and len(only) > 1:
+                    self.stance_turn += 1
             elif why and why.startswith("event"):
                 self.signature = None  # the previous question was still out: try the event again next time
         advice = self.strategist.take()
