@@ -97,3 +97,42 @@ def test_forget_and_a_late_default_stored_like_an_answer():
     assert not book.has("A")
     book.clear_queued()
     assert book.worker.cleared == 1
+
+
+class Gate:
+    """A decider that answers only when let through, so the queue can be inspected while one question is out."""
+
+    def __init__(self):
+        import threading
+        self.go, self.seen = threading.Event(), []
+
+    def decide(self, facts, goal):
+        from arcadekit.decisions import Decision
+        self.seen.append(facts)
+        self.go.wait(2)
+        return Decision("UP", "model")
+
+
+def queued_keys(worker):
+    return [item[0] for item in worker.queue]
+
+
+def test_the_next_decision_point_goes_ahead_of_guesses_and_off_path_questions_are_withdrawn():
+    import time
+    from arcadekit.answers import AnswerBook
+    from arcadekit.decisions import DecisionWorker
+    gate = Gate()
+    worker = DecisionWorker(gate)
+    book = AnswerBook(worker, time.time)
+    book.ask("first", "g", "first")  # taken at once by the worker thread, which waits at the gate
+    time.sleep(0.1)
+    book.ask("guess-a", "g", "a", depth=1)
+    book.ask("guess-b", "g", "b", depth=1)
+    book.ask("next", "g", "next", next_point=True)
+    assert queued_keys(worker) == ["next", "guess-a", "guess-b"]
+    assert book.ask("guess-c", "g", "c", depth=1, spare=True) is False  # questions are waiting: no more guesses
+    book.ask("guess-b", "g", "b", next_point=True)  # already queued: moved to the front instead
+    assert queued_keys(worker)[0] == "guess-b" and book.counts["promoted"] == 1
+    assert book.withdraw(lambda k: k != "guess-a") == 1 and "guess-a" not in queued_keys(worker)
+    assert not worker.pending("guess-a")  # it can be asked again later
+    gate.go.set()

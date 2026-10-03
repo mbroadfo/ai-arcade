@@ -62,17 +62,40 @@ class DecisionWorker:
         for _ in range(threads):
             threading.Thread(target=self._loop, daemon=True).start()
 
-    def submit(self, key, goal, facts, urgent=False):
+    def submit(self, key, goal, facts, urgent=False, front=False):
         """Queue a request. False if the key is already known or the queue is full.
         urgent: goes to the front (and is accepted even when the queue is full), for questions whose answer is
-        worthless a moment later."""
+        worthless a moment later. front: goes to the front too (the decision point the player is heading to)."""
         with self.cond:
-            if key in self.keys or (len(self.queue) >= self.max_queue and not urgent):
+            if key in self.keys or (len(self.queue) >= self.max_queue and not (urgent or front)):
                 return False
             self.keys.add(key)
-            (self.queue.appendleft if urgent else self.queue.append)((key, goal, facts))
+            (self.queue.appendleft if urgent or front else self.queue.append)((key, goal, facts))
             self.cond.notify()
             return True
+
+    def promote(self, key):
+        """Move a queued (not started) request to the front. True if it was queued."""
+        with self.cond:
+            for i, item in enumerate(self.queue):
+                if item[0] == key:
+                    del self.queue[i]
+                    self.queue.appendleft(item)
+                    return True
+            return False
+
+    def withdraw(self, keep):
+        """Drop queued (not started) requests whose key fails keep(key). Returns the dropped keys."""
+        with self.cond:
+            dropped = [item[0] for item in self.queue if not keep(item[0])]
+            if dropped:
+                self.queue = deque(item for item in self.queue if keep(item[0]))
+                self.keys.difference_update(dropped)
+            return dropped
+
+    def queued(self):
+        with self.cond:
+            return len(self.queue)
 
     def pending(self, key):
         with self.cond:

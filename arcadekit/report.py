@@ -10,7 +10,8 @@ def summary_lines(player, results, broker=None, metrics=(), extra_lines=()):
         lines.append(f"decisions: {s.get('on_time', 0)} on time, {s.get('late_rule', 0)} late (rule filled in), "
                      f"{s.get('late_keep', 0)} late (kept going or waited), {s.get('queries', 0)} queries "
                      f"({s.get('chained', 0)} chained), {s.get('revised', 0)} stale answers revised; "
-                     f"late because {s.get('late_why', {})}; sources {getattr(player, 'sources', {})}")
+                     f"late because {s.get('late_why', {})}; sources {getattr(player, 'sources', {})}"
+                     + (f"; queue {s['queue']}" if s.get("queue") else ""))
     if hasattr(player, "ledger"):
         lines.append(player.ledger.summary())
     strategy = getattr(player, "strategy", None)

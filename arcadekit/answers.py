@@ -10,6 +10,9 @@ answer when it gets there. The book keeps that bookkeeping the same for every ga
 - An answer is single-use: use(key) marks it, retire_except(key) drops used ones once the player has moved on, and
   drop_stale() drops any older than `ttl` seconds.
 - late_reason(key): why there was no answer on arrival, in a fixed vocabulary.
+- Order (a timing choice, never what is chosen): `next_point=True` puts a question at the front of the model's queue
+  (the decision point the player is heading to), `spare=True` asks only when nothing is queued (a guess further
+  ahead must not delay a real question), and withdraw(keep) drops queued questions no longer on the player's way.
 
 The game decides what a key is (Pac-Man: a junction tile and the direction he arrives from) and what to ask.
 """
@@ -26,6 +29,7 @@ class AnswerBook:
         self.depth = {}  # key -> how far ahead it was asked
         self.consumed = set()  # keys whose answer has been used at their decision point
         self.urgent = set()  # keys asked as urgent questions
+        self.counts = {"promoted": 0, "withdrawn": 0, "spare_skipped": 0}
 
     def has(self, key):
         return key in self.plan
@@ -37,17 +41,26 @@ class AnswerBook:
     def pending(self, key):
         return self.worker.pending(key) or (self.urgent_worker is not None and self.urgent_worker.pending(key))
 
-    def ask(self, key, goal, facts, depth=0, urgent=False):
-        """True if the question went out. Not asked again while an answer is stored or on its way."""
+    def ask(self, key, goal, facts, depth=0, urgent=False, next_point=False, spare=False):
+        """True if the question went out. Not asked again while an answer is stored or on its way (a queued
+        next_point question is moved to the front instead)."""
         if urgent:
             worker = self.urgent_worker or self.worker
             if worker.submit(key, goal, facts, urgent=True):
                 self.urgent.add(key)
                 return True
             return False
-        if key in self.plan or self.worker.pending(key):
+        if key in self.plan:
             return False
-        if self.worker.submit(key, goal, facts):
+        if self.worker.pending(key):
+            if next_point and hasattr(self.worker, "promote") and self.worker.promote(key):
+                self.counts["promoted"] += 1
+            return False
+        if spare and getattr(self.worker, "queued", lambda: 0)():
+            self.counts["spare_skipped"] += 1
+            return False
+        ordered = next_point and hasattr(self.worker, "promote")  # a worker that keeps an order (DecisionWorker)
+        if self.worker.submit(key, goal, facts, **({"front": True} if ordered else {})):
             self.depth[key] = depth
             return True
         return False
@@ -93,6 +106,14 @@ class AnswerBook:
 
     def clear_queued(self):
         self.worker.clear_queued()
+
+    def withdraw(self, keep):
+        """Drop queued questions whose key fails keep(key) (no longer on the player's way). Returns how many."""
+        dropped = self.worker.withdraw(keep) if hasattr(self.worker, "withdraw") else []
+        for key in dropped:
+            self.depth.pop(key, None)
+        self.counts["withdrawn"] += len(dropped)
+        return len(dropped)
 
     def late_reason(self, key, asked_now=False):
         """Why there was no stored answer on arrival. asked_now: this very tick was the first chance to ask (the decision

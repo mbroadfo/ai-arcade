@@ -40,13 +40,19 @@ REVISE_REGRET = 2.5  # with revise on, a stored answer is replaced if another ex
 GHOST_SCORES = (200, 400, 800, 1600)
 PAUSE_FRAMES = 60  # the game freezes for about this many frames when a ghost is eaten
 LATE_DEFAULTS = ("rule", "keep")  # with no answer on arrival: the rule decides, or nothing changes (see _late_keep)
+# ask_order (a timing switch): "nearest" puts the question for the junction he is heading to at the front of the model's
+# queue, asks chained junctions only when nothing is queued, and withdraws queued questions no longer on his way;
+# "fifo" asks in the order questions come up (before 2 October 2026). Measured that day on Ms. Pac-Man: with fifo, 434
+# of 537 late junctions had their question still waiting behind chained ones, though answers took only 258 ms.
+ASK_ORDERS = ("nearest", "fifo")
 
 
 class Player:
     def __init__(self, stream, broker, worker, strategy, decisions_log, strategy_interval=0.5,
                  lookahead=LOOKAHEAD_STEPS, knowledge=None, revise=False, reflex=True,
                  chain_depth=CHAIN_DEPTH, park=False, refuge=False, danger_query=False,
-                 danger_worker=None, clock=time.time, late="rule", strategy_timing="events", *, spec):
+                 danger_worker=None, clock=time.time, late="rule", strategy_timing="events", ask_order="nearest",
+                 *, spec):
         # Ablation switches. revise: code re-checks each stored answer against fresh facts (code overruling the
         # decider, so off by default). reflex: the survival instinct. chain_depth: look-ahead chain, 0 = off.
         self.clock = clock  # wall-clock seconds; a replay passes recorded time
@@ -96,6 +102,10 @@ class Player:
         self.last_how = None  # how the last _go() changed the proposed direction: None, "revise" or "reflex"
         self.latencies, self.sources = [], {}
         self.ledger = Ledger(self.log)  # who executed each move (arcadekit.ledger)
+        if ask_order not in ASK_ORDERS:
+            raise ValueError(f"ask_order must be one of {ASK_ORDERS}")
+        self.nearest = ask_order == "nearest"
+        self.stats["queue"] = self.book.counts  # promoted, withdrawn, spare_skipped
         # a model slow layer shares the model server: tell it when no junction question waits (strategy.TIMINGS)
         if hasattr(strategy, "configure"):
             strategy.configure(timing=strategy_timing, quiet=self._quiet)
@@ -131,6 +141,21 @@ class Player:
         record.update(score=state.score, level=state.level, lives=state.lives, dots=state.dots_eaten, lines=lines,
                       facts=observing.facts(state, self.last_image, here), series=observing.series(state, here))
         return record
+
+    def _ahead(self, maze, key):
+        """The junction he is heading to and the ones its stored answers lead to (the chain still on his way)."""
+        keys, k = {key}, key
+        for _ in range(CHAIN_DEPTH_PAUSE + 1):
+            stored = self.book.get(k)
+            if stored is None:
+                break
+            choice = stored[0].choice
+            junction, steps, path = maze.walk_to_decision(step(k[0], choice), choice)
+            if junction is None or steps > CHAIN_MAX_STEPS:
+                break
+            k = (junction, path[-1] if path else choice)
+            keys.add(k)
+        return keys
 
     def _facts(self, state, image, tile, arriving):
         facts = junction_facts(state, image, tile=tile, arriving=arriving, park=self.park)
@@ -386,7 +411,8 @@ class Player:
                 continue
             key2 = (junction, path[-1] if path else decision.choice)
             if not self.book.has(key2) and not self.book.pending(key2):
-                if self.book.ask(key2, self.goal, self._facts(state, image, junction, key2[1]), depth=depth + 1):
+                if self.book.ask(key2, self.goal, self._facts(state, image, junction, key2[1]), depth=depth + 1,
+                                 spare=self.nearest):
                     self.stats["queries"] += 1
                     self.stats["chained"] += 1
 
@@ -518,13 +544,16 @@ class Player:
         key = (junction, arriving)
         for done in self.book.retire_except(key):  # an answer is used once, at its junction
             self.revised_keys.discard(done)
+        if self.nearest and junction is not None:  # questions about junctions he is no longer heading for
+            ahead = self._ahead(maze, key)
+            self.book.withdraw(lambda k: k in ahead or isinstance(k[0], str))  # ("danger", ...) questions stay
 
         asked_now = False
         if junction is not None:
             self.applied = {k for k in self.applied if k == key}
             if not self.book.has(key) and steps <= self.lookahead:
                 facts = self._facts(state, image, junction, arriving)
-                if self.book.ask(key, self.goal, facts):
+                if self.book.ask(key, self.goal, facts, next_point=self.nearest):
                     self.stats["queries"] += 1
                     asked_now = True
 

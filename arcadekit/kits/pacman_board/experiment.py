@@ -27,6 +27,9 @@ OPTIONS = (
            "goal on game events and every 5 s, the stance every 15 s when no junction question waits; always = goal "
            "and stance as often as answers come (the slow layer then keeps the model server busy)",
            default="events", parse=str, choices=("events", "always"), tag="strat-{}"),
+    Option("ask_order", "timing", "the model's queue: nearest = the junction he is heading to first, chained "
+           "junctions only in spare time, questions off his way withdrawn; fifo = in the order they come up",
+           default="nearest", parse=str, choices=("nearest", "fifo"), tag="order-{}"),
     Option("chain_depth", "timing", "look-ahead chain depth, 0 = off (player default 2)", default=None, flag="--chain",
            parse=int, tag="chain{}"),
 )
