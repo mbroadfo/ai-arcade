@@ -103,10 +103,13 @@ def mobile_track_and_fire(state, facts, t, last):
     tread (moving), drives straight while on target, and drives across the shell's line when a shot is heard."""
     if facts.dying:
         return NOTHING, "dying: nothing to steer"
-    if facts.enemy_side == "none":
-        return DRIVE, "no enemy (it is exploding): keep moving"
     bearing = facts.enemy_bearing  # + left; None when only the warning's side is known
     left = bearing >= 0 if bearing is not None else facts.enemy_side == "left"
+    # A shell outlives the enemy that fired it: a shot heard comes before "no enemy"
+    if facts.enemy_shell == "flying" and facts.enemy_side == "none":
+        return DRIVE, "shot heard (its tank is exploding): keep driving, off the line it was fired along"
+    if facts.enemy_side == "none":
+        return DRIVE, "no enemy (it is exploding): keep moving"
     if facts.enemy_shell == "flying":  # heard: it was aimed at where the tank is now; do not stay on that line
         if bearing is not None and abs(bearing) >= ACROSS:
             return fire_on_press(DRIVE, f"shot heard, enemy {facts.enemy_bearing_deg:+.0f} deg off the nose: drive "

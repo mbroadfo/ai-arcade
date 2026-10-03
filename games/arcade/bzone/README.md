@@ -42,6 +42,24 @@ The enemy's fire, 3 October 2026 (Atari's FIREIT and SHUPDT, checked on the scri
 - All three deaths in the lab game (`track_and_fire`, 6 kills, 6,000 points) came while the tank stood still:
   `track_and_fire` pivots in place. Moving off the line during that second is the obvious test.
 
+Track & Fire against Mobile Track & Fire, 3 October 2026 (3 games each, alternating, 10 Hz, full speed):
+
+| | Track & Fire | Mobile Track & Fire |
+|---|---|---|
+| Score (each game) | 6,000 / 25,000 / 6,000 | 8,000 / 6,000 / 6,000 |
+| Survived (s) | 50 / 173 / 79 | 89 / 61 / 152 |
+| Distance moved | 666 / 288 / 0 | 116,980 / 114,515 / 285,603 |
+| Still while the enemy may fire (s) | 21 / 63 / 40 | 4 / 1 / 7 |
+| Enemy shots survived | 11 of 20 (55 %) | 15 of 22 (68 %) |
+
+- Moving survived more shots but not longer games, and scored less: aiming while arcing is coarser (on target 9-51 %
+  of radar time against 47-60 %).
+- Arcing away from a shot fired from near the nose failed 3 times out of 3: the shell comes along the nose line and
+  an arc barely leaves it. Driving forward works when the enemy is well off the nose. This is the doctrine's case for
+  flanking: approach off the enemy's line, turn in only to fire.
+- One death was a shell fired by an enemy that was then destroyed (the policy ignored the shell once it saw no
+  enemy: fixed); three deaths in all were the homing missile (`R2D3FL` = `FF`), which neither policy handles.
+
 ## Getting the ROM
 
 The collection's `bzone.zip` matches an older MAME and lacks 8 lookup chips. A newer `bzone.zip` was added with
