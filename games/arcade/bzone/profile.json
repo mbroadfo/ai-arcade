@@ -1,0 +1,69 @@
+{
+  "romset": "bzone",
+  "description": "Battle Zone (rev 2)",
+  "controls": {
+    "player1": [
+      "BUTTON_1"
+    ],
+    "coin_slots": [
+      1,
+      2
+    ],
+    "start_buttons": [
+      1,
+      2
+    ]
+  },
+  "analog_inputs": [],
+  "other_inputs": [
+    "Language",
+    "Bonus Life",
+    "Missile appears at",
+    "Lives",
+    "Bonus Coins",
+    "Coin A",
+    "Coin B",
+    "Coinage",
+    "Service Mode",
+    "Diagnostic Step",
+    "P1 Left Stick/Down",
+    "P1 Right Stick/Down",
+    "P1 Right Stick/Up",
+    "P1 Left Stick/Up",
+    "R11 - Engine Frequency"
+  ],
+  "score_ram": [
+    {
+      "cpu": "maincpu",
+      "space": "program",
+      "address": 768,
+      "length": 60
+    }
+  ],
+  "named_ram": [
+    {
+      "cpu": 0,
+      "address": 14,
+      "value": 255,
+      "description": "Infinite Credits"
+    },
+    {
+      "cpu": 0,
+      "address": 204,
+      "value": 6,
+      "description": "Infinite Lives"
+    },
+    {
+      "cpu": 0,
+      "address": 38,
+      "value": 0,
+      "description": "Enemy Tanks Can't Fire"
+    },
+    {
+      "cpu": 0,
+      "address": 203,
+      "value": 0,
+      "description": "No Homing Missiles"
+    }
+  ]
+}

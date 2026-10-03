@@ -31,10 +31,13 @@ STRATEGISTS = [
 
 
 def ai_games():
-    """{"<system>/<name>": {"romset", "title"}} for every game package with an AI player."""
+    """{"<system>/<name>": {"romset", "title"}} for every game package with an AI player. A game still in the workshop
+    (a profile and a RAM map, no player yet) is left out: it can be played by a human only."""
     out = {}
     for profile in sorted(GAMES_DIR.glob("*/*/profile.json")):
         system, name = profile.parent.parent.name, profile.parent.name
+        if getattr(load_game(f"{system}/{name}"), "player", None) is None:
+            continue
         data = json.loads(profile.read_text())
         out[f"{system}/{name}"] = {"romset": data.get("romset", name), "title": data.get("description", name)}
     return out

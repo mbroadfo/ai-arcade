@@ -64,6 +64,18 @@ def test_position_axes_are_separated():
     assert [v[0] for v in vert] == [2]
 
 
+def test_moves_name_two_axes_of_held_controls():
+    moves = ds.parse_moves("turn:L=1.DOWN+2.UP/R=1.UP+2.DOWN;drive:F=1.UP+2.UP/B=1.DOWN+2.DOWN")
+    assert moves[0] == ("turn", ("L", [(1, "DOWN"), (2, "UP")]), ("R", [(1, "UP"), (2, "DOWN")]))
+    assert [m[0] for m in moves] == ["turn", "drive"]
+    holds = {}
+    for n in range(1, 5):
+        for key, dx, dy in (("L", 5, 0), ("R", -5, 0), ("F", 0, 3), ("B", 0, -3)):
+            holds[f"{key}{n}"] = (snap(c1=100, c2=100), snap(c1=100 + dx, c2=100 + dy))
+    turn, drive = ds.find_position(holds, moves)
+    assert [t[0] for t in turn] == [1] and [d[0] for d in drive] == [2]
+
+
 def mirrored(value):
     """64-byte image whose second half mirrors the first (like 4Cxx == 6Cxx), cell 5 = value."""
     half = bytearray(32)

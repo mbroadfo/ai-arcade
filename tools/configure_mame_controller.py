@@ -51,6 +51,29 @@ CFG = """<?xml version="1.0"?>
 
         </input>
     </system>
+    <system name="bzone">
+        <input>
+            <!-- Battlezone's two tread sticks, as on a two-player panel: the left tread on Player 1's stick, the right
+                 tread on Player 2's (forward = up). The keyboard keeps MAME's own keys: E/D left, I/K right. -->
+
+            <port type="P1_JOYSTICKLEFT_UP">
+                <newseq type="standard">JOYCODE_1_YAXIS_UP_SWITCH OR KEYCODE_E</newseq>
+            </port>
+
+            <port type="P1_JOYSTICKLEFT_DOWN">
+                <newseq type="standard">JOYCODE_1_YAXIS_DOWN_SWITCH OR KEYCODE_D</newseq>
+            </port>
+
+            <port type="P1_JOYSTICKRIGHT_UP">
+                <newseq type="standard">JOYCODE_2_YAXIS_UP_SWITCH OR KEYCODE_I</newseq>
+            </port>
+
+            <port type="P1_JOYSTICKRIGHT_DOWN">
+                <newseq type="standard">JOYCODE_2_YAXIS_DOWN_SWITCH OR KEYCODE_K</newseq>
+            </port>
+
+        </input>
+    </system>
 </mameconfig>
 """
 

@@ -108,6 +108,11 @@ Steps:
 
 1. `python tools/discover_state.py <romset> --system <system>` finds candidates for credits, lives, score and
    position by scripted experiment. Treat position as a shortlist; enemies that chase the player correlate with it.
+   Look at the screen first: Battlezone's first run found nothing because its default coinage is 2 coins, 1 play
+   (`--coins 2`). A game that does not move by one stick names its two movement axes with `--moves` (Battlezone:
+   turn = the treads opposite ways, drive = both together).
+   Search for the game's source or a full disassembly before guessing: Atari's Battlezone source names every RAM
+   variable, so discovery became a check of named fields instead of a hunt.
 2. Write the RAM map with a provenance for every field: `source` (original source code), `disassembly`, `mame` (the
    driver), `observed` (validated by experiment), `inferred` (believed, not checked). Never let `inferred` pass as
    fact. Today that is `RAM_MAP.md`; from phase 4 it is `ram_map.json`, and the simple fields are decoded from it.

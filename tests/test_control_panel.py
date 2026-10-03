@@ -65,6 +65,7 @@ def test_the_ai_setup_is_read_from_the_game_package():
     kinds = {f["name"]: f["kind"] for f in s["switches"]}
     assert kinds["reflex"] == "override" and kinds["park"] == "skill"
     assert set(ai_setup.ai_games()) >= {"arcade/pacman", "arcade/mspacman"}
+    assert "arcade/bzone" not in ai_setup.ai_games()  # in the workshop: a profile and a RAM map, no player yet
 
 
 def test_answers_become_plays_command_line():
