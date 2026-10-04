@@ -41,6 +41,12 @@ def send(host, port, payload):
     return json.loads(response.decode("utf-8").strip())
 
 
+def dismiss_warning(host, port=8765):
+    """Tap Player 1's button 1 once. MAME shows a warning screen before a game its driver marks imperfect (Vanguard) and
+    runs no Lua script until a key is pressed; start-up code calls this when the game has not begun reporting."""
+    return send(host, port, {"op": "tap", "player": 1, "action": "BUTTON_1", "ms": 120})
+
+
 def main():
     parser = argparse.ArgumentParser(description="AI Arcade controller client")
     parser.add_argument("--host", default=DEFAULT_PI_HOST)

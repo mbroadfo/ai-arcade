@@ -11,6 +11,7 @@ import time
 
 import paramiko
 
+from controller_client import dismiss_warning
 from gamelib import DEFAULT_GAME, DEFAULT_PI_HOST, ROOT, load_game, load_profile, pi_rompath, split_spec
 from probe_mame_input import MAME_LOG, run
 from state_regions import regions_lua
@@ -102,10 +103,12 @@ def main():
                  "-ctrlrpath /home/pi/.mame/ctrlr -ctrlr aiarcade "
                  f"-autoboot_script {REMOTE_DIR}/autoboot.lua "
                  f"> {MAME_LOG} 2>&1 < /dev/null &")
-        for _ in range(40):
+        for waited in range(40):
             time.sleep(1)
             if run(ssh, f"test -s {STATE_FILE} && echo ok || true").strip() == "ok":
                 break
+            if waited == 5:  # no state yet: MAME may be on a warning screen (imperfect driver), which any key clears
+                dismiss_warning(args.host)
         else:
             print("exporter never produced state:\n" + run(ssh, f"tail -20 {MAME_LOG}"))
             return 1

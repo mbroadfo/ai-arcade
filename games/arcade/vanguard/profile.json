@@ -1,0 +1,70 @@
+{
+  "romset": "vanguard",
+  "description": "Vanguard (SNK)",
+  "controls": {
+    "player1": [
+      "BUTTON_1",
+      "BUTTON_2",
+      "BUTTON_3",
+      "BUTTON_4",
+      "DOWN",
+      "LEFT",
+      "RIGHT",
+      "UP"
+    ],
+    "player2": [
+      "BUTTON_1",
+      "BUTTON_2",
+      "BUTTON_3",
+      "BUTTON_4",
+      "DOWN",
+      "LEFT",
+      "RIGHT",
+      "UP"
+    ],
+    "coin_slots": [
+      1,
+      2
+    ],
+    "start_buttons": [
+      1,
+      2
+    ]
+  },
+  "analog_inputs": [],
+  "other_inputs": [
+    "Coinage Bonus",
+    "Cabinet",
+    "Unused",
+    "Lives",
+    "Coinage"
+  ],
+  "score_ram": [
+    {
+      "cpu": "maincpu",
+      "space": "program",
+      "address": 544,
+      "length": 112
+    },
+    {
+      "cpu": "maincpu",
+      "space": "program",
+      "address": 37,
+      "length": 3
+    }
+  ],
+  "named_ram": [
+    {
+      "cpu": 0,
+      "address": 190,
+      "value": 8,
+      "description": "Infinite Lives"
+    },
+    {
+      "cpu": 0,
+      "address": 160,
+      "value": 3,
+      "description": "Invincibility"
+    }
+  ]
+}

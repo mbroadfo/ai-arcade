@@ -1,0 +1,86 @@
+{
+  "credits": [
+    "0x002B",
+    "0x02E1"
+  ],
+  "lives": [
+    {
+      "addr": "0x00A9",
+      "start": 4,
+      "end": 255,
+      "drops": 5
+    },
+    {
+      "addr": "0x00C4",
+      "start": 3,
+      "end": 0,
+      "drops": 3
+    }
+  ],
+  "position_horizontal": [
+    {
+      "addr": "0x0043",
+      "axis_score": 0.875
+    },
+    {
+      "addr": "0x0046",
+      "axis_score": -0.875
+    },
+    {
+      "addr": "0x0012",
+      "axis_score": 0.75
+    },
+    {
+      "addr": "0x01F6",
+      "axis_score": -0.75
+    },
+    {
+      "addr": "0x004B",
+      "axis_score": -0.625
+    },
+    {
+      "addr": "0x00B1",
+      "axis_score": 0.5
+    },
+    {
+      "addr": "0x01EF",
+      "axis_score": -0.5
+    },
+    {
+      "addr": "0x01FC",
+      "axis_score": 0.5
+    }
+  ],
+  "position_vertical": [
+    {
+      "addr": "0x0042",
+      "axis_score": -0.875
+    },
+    {
+      "addr": "0x0045",
+      "axis_score": -0.75
+    },
+    {
+      "addr": "0x0010",
+      "axis_score": 0.625
+    },
+    {
+      "addr": "0x0013",
+      "axis_score": 0.5
+    }
+  ],
+  "progress_counters": [
+    {
+      "addr": "0x0045",
+      "changed_intervals": 9
+    },
+    {
+      "addr": "0x0046",
+      "changed_intervals": 7
+    },
+    {
+      "addr": "0x01E3",
+      "changed_intervals": 6
+    }
+  ]
+}

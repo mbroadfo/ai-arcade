@@ -16,6 +16,7 @@ from pathlib import Path
 
 import paramiko
 
+from controller_client import dismiss_warning
 from probe_mame_input import run
 from gamelib import DEFAULT_PI_HOST, pi_rompath
 
@@ -126,9 +127,11 @@ def main():
                  f"-nowindow -skip_gameinfo -autoboot_script /home/pi/ai-arcade/{PORTS_LUA} "
                  "> /tmp/ai-arcade-mame.log 2>&1 < /dev/null &")
         ports_text = ""
-        for _ in range(40):
+        for waited in range(40):
             time.sleep(1)
             ports_text = run(ssh, f"cat {PORTS_LOG} 2>/dev/null || true")
+            if waited == 5 and not ports_text:
+                dismiss_warning(args.host)  # a warning screen (imperfect driver) holds every script until a key
             if ports_text.rstrip().endswith("done"):
                 break
         else:

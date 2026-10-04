@@ -21,7 +21,7 @@ from pathlib import Path
 
 import paramiko
 
-from controller_client import send
+from controller_client import dismiss_warning, send
 from probe_mame_input import MAME_LOG, run
 from gamelib import DEFAULT_PI_HOST, pi_rompath
 
@@ -54,7 +54,9 @@ class Session:
                       "-joystickprovider sdl -ctrlrpath /home/pi/.mame/ctrlr -ctrlr aiarcade "
                       f"-autoboot_script {REMOTE_DIR}/mame_snapshot_service.lua "
                       f"> {MAME_LOG} 2>&1 < /dev/null &")
-        time.sleep(15)
+        time.sleep(6)
+        dismiss_warning(self.args.host, self.args.broker_port)  # a warning screen (imperfect driver) holds the script
+        time.sleep(9)
 
     def snap(self):
         """Request a snapshot and return the memory bytes (frame header stripped)."""
