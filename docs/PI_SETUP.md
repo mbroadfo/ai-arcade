@@ -35,8 +35,8 @@ defaults to `DEFAULT_PI_HOST` in `tools/gamelib.py` (override with the `ARCADE_P
    `setup_pi5.sh autostart` boots straight into EmulationStation (console autologin, then ES). Only one program can
    hold the Pi 5's screen, so `tools/start_pi_game.py` (AI mode) closes ES first, and `python tools/human_mode.py`
    stops AI mode and brings ES back.
-   Sound: the Pi 5 has no headphone jack, so plug in a USB audio adapter (a UGREEN USB-to-3.5 mm, then a 3.5 mm-to-RCA
-   cable to the speakers) and run `setup_pi5.sh audio` to make it the default card.
+   Sound: the Pi 5 has no headphone jack, so plug in the USB audio adapter (USB to RCA, to the cabinet's amplifier) and
+   run `python tools/install_audio.py` (see "Sound" below).
 4. ROMs and BIOS, straight from the old Pi through this PC (nothing is stored in the repository):
    `ssh pi@<old> 'tar cf - -C ~/RetroPie roms BIOS' | ssh pi@<pi> 'tar xf - -C ~/RetroPie'`.
 5. `python tools/install_pi.py --host <pi>` (the broker, below) and `python tools/configure_mame_controller.py`.
@@ -69,6 +69,25 @@ Shift (coin) beside the joystick codes.
 per-game ones), translating the Pi 3's MAME4All to lr-mame2000 and its AdvanceMAME versions to AdvanceMAME 3. Vector
 games that would land on lr-mame2000 go to lr-mame2003 instead, drawn at 1440x1080 and antialiased (lr-mame2000 draws
 them small, and a 1080p screen stretches them jagged).
+
+### Sound: the USB audio adapter
+
+All sound goes out of a USB audio adapter with RCA outputs (it shows as card `Audio`, "KT USB Audio", with one volume
+control, `Headphone`). `python tools/install_audio.py` sets it up and is safe to re-run:
+
+- `pi/audio/asound.conf` becomes `/etc/asound.conf` (the original is kept as `asound.conf.before-ai-arcade`): the adapter
+  is ALSA's default output, found by its name rather than its card number, and shared through dmix so EmulationStation
+  and a starting game can both play. EmulationStation, the games people play (MAME and the RetroArch emulators through
+  runcommand) and AI mode (`start_pi_game.py` runs MAME with `SDL_AUDIODRIVER=alsa`) all use it with no settings of
+  their own.
+- The volume is set to 90 % (`--volume N`), unmuted, and saved with `alsactl store`, so it survives a reboot.
+- EmulationStation's volume setting uses the adapter's `Headphone` control (`AudioDevice` in
+  `/opt/retropie/configs/all/emulationstation/es_settings.cfg`).
+- It ends with a three-second test tone on each channel (`--no-tone` to skip). A program already running keeps the
+  output it opened: restart it (for AI mode, run `start_pi_game.py` again).
+
+Set up and heard on 3 October 2026; AI-mode MAME was then seen playing through the adapter
+(`/proc/asound/Audio/pcm0p/sub0/status`: RUNNING, held by MAME).
 
 ### Arcade games in MAME 0.251 (human mode)
 

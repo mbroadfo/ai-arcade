@@ -77,17 +77,10 @@ step_autostart() {
 }
 
 step_audio() {
-    card=$(sed -n 's/^ *[0-9]* \[\([^ ]*\) *\]: USB-Audio.*/\1/p' /proc/asound/cards | head -n 1)
-    if [ -z "$card" ]; then
-        echo "no USB audio adapter found; plug it in and run this step again" >&2
-        cat /proc/asound/cards >&2
-        exit 1
-    fi
-    printf 'defaults.pcm.card %s\ndefaults.ctl.card %s\n' "$card" "$card" | sudo tee /etc/asound.conf
-    for control in PCM Speaker Headphone; do
-        amixer -q -c "$card" sset "$control" 90% unmute 2>/dev/null || true
-    done
-    echo "default sound card is now $card; test with: speaker-test -c 2 -t sine -l 1"
+    # Replaced by tools/install_audio.py (run from the PC): it installs pi/audio/asound.conf (the adapter by name,
+    # shared with dmix), saves the volume across reboots and points EmulationStation's volume at the adapter.
+    echo "sound is set up from the PC now: python tools/install_audio.py (see docs/PI_SETUP.md)" >&2
+    exit 1
 }
 
 case "${1:-}" in
