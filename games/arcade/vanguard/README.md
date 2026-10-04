@@ -20,8 +20,12 @@ executes, docs/GAME_WORKSHOP.md).
 | `$40` | fire buttons held: button 1 `08`, 2 `04`, 3 `01`, 4 `02` | latches exactly with each press (`scripts/probe.py`) |
 | `$42-$43` | the ship's position (16 bits) | UP/DOWN step it by 1, RIGHT by `$20` |
 | `$2B`, `$02E1` | credits | discovery |
-| `$A9`, `$C4` | lives or a zone counter | both drop on a death and reset on the next life; not yet told apart |
-| `$25-$27` | the score (BCD, 3 bytes) | hiscore.dat |
+| `$BE` | spare ships (the HUD shows it + 1); `$FF` when the game is over | matches the displayed 3, 2, 1 across a game and the MAME cheat list's "Infinite Lives" address |
+| `$50` | the THE END countdown: 14, 4, 3, 2, 1, 0, `$FF` | timed against the video |
+| `$25-$27` | the HI-SCORE (BCD, 3 bytes: `00 10 00` is the 10000 shown), not the player's score | hiscore.dat and the screen |
+| `$A9`, `$C4` | not lives (they stayed at 4 and 7 while the HUD lives fell); unknown | |
+
+**Firing:** a held fire button fires one shot; the ship must be pulsed (press, release, again). The player's score has not been found yet: two scripted games (`scripts/drive.py`, `scripts/record.py`) never hit anything. The HUD also shows `COIN`, `ROUND` and the lives.
 
 The screen: the ship sits near x = 105 and the world scrolls past; white ships fly in from the right; energy depots sit on
 the ground (fuel is a timer: the energy bar drains).
