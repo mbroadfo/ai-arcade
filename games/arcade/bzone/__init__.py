@@ -26,7 +26,7 @@ VIDEO_FPS = 20  # every other frame of the screen's 41 a second
 # policies on a fixed-rate clock, labelled as code (scripts/lab.py, policies.py).
 LAB = {"ai_player": True,
        "ai_modes": [
-           {"value": "pilot", "policy": "pilot", "model": "tev1:latest", "label": "AI drives",
+           {"value": "pilot", "policy": "pilot", "model": "nimble", "label": "AI drives",
             "help": "The model chooses every tread and fire command, about twice a second (pilot.py). No skills."},
            {"value": "tactics", "policy": "s1m", "model": "nimble", "label": "AI picks tactics, skills drive",
             "help": "The model chooses the tactic and what to do if fired on; code skills carry it out (s1m.py)."}],

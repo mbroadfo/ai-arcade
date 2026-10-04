@@ -13,6 +13,7 @@ Why: a model answering in ~0.3 s cannot steer tick by tick (a turn held until it
 asked for a duration as a plain number it barely varied (tev1: 1.3-1.5 s whether the enemy was 5 or 60 degrees off),
 but choosing among durations described by their effect it picked the right one 4 times in 5 (3 October 2026).
 """
+import dataclasses
 import math
 import random
 import time
@@ -147,6 +148,39 @@ def goals_now(f):
     return out
 
 
+def duration_text(f, b, cmd, d):
+    """A duration option: for a turn with the enemy in front, how much turn is left or overshot (benchmark D1: the best
+    duration 39 times in 54 and within one step 50, against 30 and 40 for "enemy ends up ... (closer)"); otherwise the
+    effect. A move into an obstacle says so either way."""
+    full = effect(f, b, cmd, d, f.obstacle_ahead, f.obstacle_behind)
+    swing = TREADS[cmd][2]
+    if b is None or not swing or abs(b) >= 90:
+        return f"{cmd} for {d:g} s: {full}"
+    after = b - swing * d
+    if abs(after) < 1.5:
+        words = "the enemy ends IN YOUR SIGHTS"
+    elif (after > 0) == (b > 0):
+        words = f"{abs(after):.0f} deg still to turn"
+    else:
+        words = f"turns PAST it by {abs(after):.0f} deg"
+    return f"{cmd} for {d:g} s: {words}" + (", INTO AN OBSTACLE" if "INTO AN OBSTACLE" in full else "")
+
+
+def verdict_words(verdict):
+    return "HITS" if verdict == "HITS" else f"{verdict}: it would be wasted"
+
+
+def fire_question(f, b, cmd=None, seconds=None):
+    """(options, words for the state) for the fire question: the verdict in the state, the options plain (benchmark
+    F2: right 62 times in 62, firing at every hit and holding every miss; with the verdict in the options, 44)."""
+    options = {"now": "fire now", "hold": "hold fire"}
+    words = f" A shot fired now {verdict_words(shot(f, b))}."
+    if cmd is not None and TREADS[cmd][2]:
+        options["after"] = f"fire at the end of {cmd}"
+        words += f" A shot fired at the end of {cmd} {verdict_words(shot(f, b - TREADS[cmd][2] * seconds))}."
+    return options, words
+
+
 def shuffled(options):
     items = list(options.items())
     random.shuffle(items)  # a small model favours the first option listed: no option is always first
@@ -169,7 +203,16 @@ class PlanDecider:
 
     def decide(self, facts, goal):
         f, state = facts["facts"], facts["state"]
-        text = situation(state, f)
+        # Where the enemy will be when this plan starts: a plan takes ~1.4 s to make, while the tank carries on with
+        # what it holds and the enemy keeps moving (physics worked forward: the tank's own turn, and the enemy's drift
+        # seen over the last half second). Live, without this, the plans aimed where the enemy had been.
+        lead = facts.get("lead_s", 0.0)
+        if f.enemy_bearing_deg is not None and f.enemy_side != "none" and lead:
+            ahead_b = f.enemy_bearing_deg + (facts.get("drift_deg_s", 0.0) - facts.get("held_swing", 0.0)) * lead
+            ahead_b = (ahead_b + 180) % 360 - 180
+            f = dataclasses.replace(f, enemy_bearing_deg=round(ahead_b, 1))
+        text = situation(state, f) + (f" (Where things will be in {lead:.1f} s, when these moves start.)" if lead
+                                      else "")
         b = f.enemy_bearing_deg if f.enemy_side != "none" else None
         ahead, behind = f.obstacle_ahead, f.obstacle_behind
         t0, latency = time.time(), []
@@ -190,16 +233,14 @@ class PlanDecider:
             latency.append(ms)
             # 2. how long (each duration described by its effect), then fire: now / at the end of step 1 / hold
             swing = TREADS[cmd1][2]
-            durations = {f"{d:g}s": f"{cmd1} for {d:g} s: {effect(f, b, cmd1, d, ahead, behind)}" for d in DURATIONS}
+            durations = {f"{d:g}s": duration_text(f, b, cmd1, d) for d in DURATIONS}
             how_long, c2, ms = self.ask(text, "duration", instruction + f" You chose {cmd1}. For how long?", durations)
             latency.append(ms)
             seconds = float(how_long[:-1])
             fire_when = "hold"
             if state.tank.fire == 0 and b is not None and f.enemy_distance is not None:
-                fire_options = {"now": f"fire now: the shot {shot(f, b)}",
-                                "after": f"fire at the end of {cmd1}: the shot {shot(f, b - swing * seconds)}",
-                                "hold": "hold fire: keep the shell for a shot that hits"}
-                fire_when, _, ms = self.ask(text, "fire", "Fire only if the shot HITS. When?", fire_options)
+                fire_options, words = fire_question(f, b, cmd1, seconds)
+                fire_when, _, ms = self.ask(text + words, "fire", "Fire only if the shot HITS. When?", fire_options)
                 latency.append(ms)
             # 3. step 2: what next, from where step 1 leaves the tank
             b2 = None if b is None else b - swing * seconds
@@ -228,14 +269,30 @@ class S1MPilot:
         self.plan, self.plan_t, self.n, self.asked = None, 0.0, 0, []
         self.fired = False  # the current plan's fire was pressed
         self.ticks_by_source = {}
+        self.lead_s = 1.4  # how long a plan takes to make (updated from each plan)
+        self.seen = []  # (t, enemy world bearing in degrees) over the last half second: its drift
 
     def __call__(self, state, facts, t, last):
         for _, _, _, decision, _ in self.worker.take_all():
             self.plan, self.plan_t, self.fired = decision, t, False
+            if decision["source"] == "model":
+                self.lead_s = min(2.5, decision["latency_ms"] / 1000)
             self.asked.append({"t": round(t, 3), "event": "plan", "decision": decision})
+        if facts.enemy_bearing_deg is not None and facts.enemy_side != "none":
+            world = state.angle9 * 360 / 512 + facts.enemy_bearing_deg  # where it is, not relative to the nose
+            self.seen = [(ts, w) for ts, w in self.seen if t - ts <= 0.5] + [(t, world)]
+        else:
+            self.seen = []
         if not self.worker.busy():
+            drift = 0.0
+            if len(self.seen) >= 2 and self.seen[-1][0] - self.seen[0][0] >= 0.2:
+                dw = (self.seen[-1][1] - self.seen[0][1] + 180) % 360 - 180
+                drift = dw / (self.seen[-1][0] - self.seen[0][0])
+            held = self.holding_name(t)
             self.n += 1
-            self.worker.submit((self.n, "plan"), None, {"facts": facts, "state": state}, urgent=True)
+            self.worker.submit((self.n, "plan"), None, {"facts": facts, "state": state, "lead_s": self.lead_s,
+                                                       "drift_deg_s": drift,
+                                                       "held_swing": TREADS[held][2] if held else 0.0}, urgent=True)
         if facts.dying:
             return frozenset(), "dying: nothing to steer"
         if self.plan is None:
@@ -255,6 +312,13 @@ class S1MPilot:
         return names, (f"[{src}] {self.plan.get('goal', '').upper()} step {1 if in_first else 2}: {name}"
                        + (" + FIRE" if "FIRE" in names else "")
                        + f" | plan: {plan_words}")
+
+    def holding_name(self, t):
+        """The tread command the current plan holds from now on (its step 2, or step 1 while that lasts)."""
+        if self.plan is None:
+            return None
+        steps = self.plan["plan"]
+        return steps[-1][0] if len(steps) == 1 or t - self.plan_t >= (steps[0][1] or 0) else steps[0][0]
 
     def model_share(self):
         total = sum(self.ticks_by_source.values()) or 1
