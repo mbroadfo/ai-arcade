@@ -10,7 +10,7 @@ executes, docs/GAME_WORKSHOP.md).
 | Stage | Status |
 |---|---|
 | 0 Feasibility | not measured |
-| 1 Controls | `profile.json`: stick (8-way) and four buttons, coin, start. Checked on the screen, 4 October 2026: **button 1 fires left, 2 right, 3 down, 4 up** (`scripts/shots.py`). Default coinage is 2 coins a play. MAME's driver is "imperfect", so it opens on a warning screen that holds every script until a key: the start-up tools tap button 1 (`controller_client.dismiss_warning`) |
+| 1 Controls | `profile.json`: stick (8-way) and four buttons, coin, start. Checked on the screen, 4 October 2026: **button 1 fires left, 2 right, 3 down, 4 up** (`scripts/shots.py`). On the keyboard (MAME's Input Assignments, read with `tools/mame_seq_probe.lua`): arrows move, **Left Ctrl** = button 1 (left), **Left Alt** = 2 (right), **Space** = 3 (down), **Left Shift** = 4 (up), `5` coin, `1` or Enter start. Default coinage is 2 coins a play (`SETTINGS` makes it 1; the board has no free play). MAME's driver is "imperfect", so it opens on a warning screen that holds every script until a key: the start-up tools tap button 1 (`controller_client.dismiss_warning`) |
 | 2 State | candidates only (below); `state.py` decodes them raw |
 
 ## RAM found so far (work RAM `$0000-$03FF`; candidates, not validated)

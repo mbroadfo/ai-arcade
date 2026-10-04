@@ -8,5 +8,5 @@ from .state import IMAGE, decode  # noqa: F401
 
 REGIONS = [(0x0000, 0x03FF)]
 AGENT_REGIONS = REGIONS
-SETTINGS = {}  # operator settings: none yet (coinage is left at the factory setting)
+SETTINGS = {"Coinage": "1 Coin/1 Credit"}  # no free play on this board: the factory 2 coins a play becomes 1
 COINS_PER_PLAY = 1
