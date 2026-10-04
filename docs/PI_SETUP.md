@@ -39,6 +39,12 @@ defaults to `DEFAULT_PI_HOST` in `tools/gamelib.py` (override with the `ARCADE_P
    run `python tools/install_audio.py` (see "Sound" below).
 4. ROMs and BIOS, straight from the old Pi through this PC (nothing is stored in the repository):
    `ssh pi@<old> 'tar cf - -C ~/RetroPie roms BIOS' | ssh pi@<pi> 'tar xf - -C ~/RetroPie'`.
+   Then check the move: `python tools/verify_migration.py` (read-only, both Pis) lists every old file that is missing or
+   different, every file EmulationStation will not list (its extension is not accepted), every emulator or launch command
+   that did not carry over, and every gamelist left behind. `python tools/migrate_pi_settings.py --only trs-80` makes the
+   TRS-80 programs (Time Trek, Air Traffic) listed and launchable, and `--only gamelists` copies the old names and play
+   counts for systems the new Pi has none for (ES is stopped for that and started again). Neither undoes later choices,
+   unlike the full run.
 5. `python tools/install_pi.py --host <pi>` (the broker, below) and `python tools/configure_mame_controller.py`.
    For the Observatory's control panel: `python tools/install_cabinet.py` (pi/cabinet/ to `~/ai-arcade/cabinet`, and one
    line at the top of `/opt/retropie/configs/all/autostart.sh` that runs a game the page asked for before the menu; the

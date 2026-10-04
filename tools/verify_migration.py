@@ -123,6 +123,9 @@ def check_system(old, new, system, args, old_ext, new_ext, old_games, new_games)
             if target not in new_cmds:
                 launch += 1
                 bad.append(f"emulator '{name}' (old Pi) is not offered on the new Pi")
+            elif target == name and new_cmds[target] != command and command in new_cmds.values():
+                notes.append(f"'{name}' now launches differently; the old command is kept as "
+                             f"'{next(k for k, v in new_cmds.items() if v == command)}'")
             elif target == name and new_cmds[target] != command:
                 launch += 1
                 bad.append(f"launch command for '{name}' changed:\n        old: {command}\n        new: {new_cmds[target]}")
