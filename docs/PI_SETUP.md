@@ -89,6 +89,11 @@ control, `Headphone`). `python tools/install_audio.py` sets it up and is safe to
 Set up and heard on 3 October 2026; AI-mode MAME was then seen playing through the adapter
 (`/proc/asound/Audio/pcm0p/sub0/status`: RUNNING, held by MAME).
 
+Many games are silent in their attract demo, as the real cabinets were: test sound in a game that has started.
+Battlezone's driver mutes MAME itself through the game's sound-enable bit (`bzone_a.cpp`:
+`machine().sound().system_mute(!BIT(data, 5))`, so MAME reports `system_mute` on until a game starts), and Pac-Man
+and Ms. Pac-Man switch their sound chip on only in a game (`namco_device::sound_enable_w`).
+
 ### Arcade games in MAME 0.251 (human mode)
 
 Arcade games EmulationStation runs in standalone MAME 0.251, the same emulator as AI mode, go through
