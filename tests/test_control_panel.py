@@ -124,3 +124,80 @@ def test_a_lab_setup_leads_with_the_run_type_and_the_baselines():
     assert s["groups"][0] == "Targeting baselines" and {p["group"] for p in s["policies"]} == set(s["groups"])
     baseline = next(p for p in s["policies"] if p["value"] == "track_and_fire")
     assert baseline["tag"] == "baseline" and baseline["limitation"] and s["measures"]
+
+
+class FakeRunner:
+    """Stands in for ai_runner.Runner: a run lasts until `finish()` is called; every start is recorded."""
+
+    def __init__(self):
+        self.state, self.started, self.running = {"state": "idle"}, [], False
+
+    def busy(self):
+        return self.running
+
+    def start(self, game, args, speed, script):
+        self.started.append((game, script))
+        self.running, self.state = True, {"state": "running", "game": game}
+
+    def stop(self):
+        self.running = False
+        self.state = {"state": "ended"}
+        return True
+
+    def finish(self):
+        self.running, self.state = False, {"state": "ended"}
+
+
+def make_control(monkeypatch):
+    import time
+    import observatory
+    from types import SimpleNamespace
+    hub = observatory.Hub()
+    control = observatory.Control.__new__(observatory.Control)
+    control.hub, control.host, control.last = hub, "test", None
+    control.auto, control.auto_token = {"on": False}, 0
+    control.runner = FakeRunner()
+    control.cabinet = SimpleNamespace(clear=lambda: None)
+    monkeypatch.setattr(time, "sleep", lambda s: __import__("threading").Event().wait(0.01))
+    return control
+
+
+def wait_for(check, seconds=5):
+    import time
+    end = time.time() + seconds
+    while time.time() < end:
+        if check():
+            return True
+        time.sleep(0.02)
+    return False
+
+
+def test_autoplay_plays_each_game_in_turn_and_stops_when_a_person_chooses(monkeypatch):
+    control = make_control(monkeypatch)
+    state = control.autoplay(True, minutes=5)
+    assert state["on"] and set(state["games"]) >= {"arcade/pacman", "arcade/mspacman", "arcade/bzone"}
+    assert wait_for(lambda: len(control.runner.started) == 1)
+    first = control.runner.started[0][0]
+    control.runner.finish()  # that game ends: the next one starts
+    assert wait_for(lambda: len(control.runner.started) == 2)
+    assert control.runner.started[1][0] != first
+    assert control.hub.panels["control"]["autoplay"]["on"]
+    control.stop()  # a person pressing STOP wins
+    assert not control.auto["on"] and not control.hub.panels["control"]["autoplay"]["on"]
+    count = len(control.runner.started)
+    control.runner.finish()
+    assert not wait_for(lambda: len(control.runner.started) > count, seconds=0.5)
+
+
+def test_autoplay_gives_way_to_a_person_playing_on_the_cabinet(monkeypatch):
+    control = make_control(monkeypatch)
+    control.hub.set_panel("cabinet", {"mode": "human"})
+    control.autoplay(True)
+    assert wait_for(lambda: not control.auto["on"])
+    assert control.runner.started == [] and "Someone started playing" in control.auto["note"]
+
+
+def test_autoplay_refuses_a_silly_time(monkeypatch):
+    control = make_control(monkeypatch)
+    with pytest.raises(ValueError):
+        control.autoplay(True, minutes=0)
