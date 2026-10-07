@@ -135,8 +135,8 @@ class FakeRunner:
     def busy(self):
         return self.running
 
-    def start(self, game, args, speed, script):
-        self.started.append((game, script))
+    def start(self, game, args, speed, script, fresh=True):
+        self.started.append((game, script, fresh))
         self.running, self.state = True, {"state": "running", "game": game}
 
     def stop(self):
@@ -172,32 +172,48 @@ def wait_for(check, seconds=5):
     return False
 
 
-def test_autoplay_plays_each_game_in_turn_and_stops_when_a_person_chooses(monkeypatch):
+def start_run(control, game="arcade/pacman"):
+    control.last = (game, {"games": 1})
+    control.runner.running, control.runner.state = True, {"state": "running", "game": game}
+
+
+def test_autoplay_restarts_the_same_game_without_restarting_mame(monkeypatch):
     control = make_control(monkeypatch)
-    state = control.autoplay(True, minutes=5)
-    assert state["on"] and set(state["games"]) >= {"arcade/pacman", "arcade/mspacman", "arcade/bzone"}
+    start_run(control)
+    assert control.autoplay(True)["game"] == "arcade/pacman"
+    control.runner.finish()  # its games are done: the player starts again, in the same MAME
     assert wait_for(lambda: len(control.runner.started) == 1)
-    first = control.runner.started[0][0]
-    control.runner.finish()  # that game ends: the next one starts
+    assert control.runner.started[0] == ("arcade/pacman", "play.py", False)
+    control.runner.finish()
     assert wait_for(lambda: len(control.runner.started) == 2)
-    assert control.runner.started[1][0] != first
-    assert control.hub.panels["control"]["autoplay"]["on"]
+    assert control.hub.panels["control"]["autoplay"]["on"] and control.auto["played"] >= 1
     control.stop()  # a person pressing STOP wins
-    assert not control.auto["on"] and not control.hub.panels["control"]["autoplay"]["on"]
+    assert not control.hub.panels["control"]["autoplay"]["on"]
     count = len(control.runner.started)
     control.runner.finish()
     assert not wait_for(lambda: len(control.runner.started) > count, seconds=0.5)
 
 
+def test_autoplay_needs_an_ai_game_running(monkeypatch):
+    control = make_control(monkeypatch)
+    with pytest.raises(RuntimeError, match="start one first"):
+        control.autoplay(True)
+
+
 def test_autoplay_gives_way_to_a_person_playing_on_the_cabinet(monkeypatch):
     control = make_control(monkeypatch)
-    control.hub.set_panel("cabinet", {"mode": "human"})
+    start_run(control)
     control.autoplay(True)
+    control.hub.set_panel("cabinet", {"mode": "human"})
+    control.runner.finish()
     assert wait_for(lambda: not control.auto["on"])
     assert control.runner.started == [] and "Someone started playing" in control.auto["note"]
 
 
-def test_autoplay_refuses_a_silly_time(monkeypatch):
+def test_choosing_another_run_switches_autoplay_off(monkeypatch):
     control = make_control(monkeypatch)
-    with pytest.raises(ValueError):
-        control.autoplay(True, minutes=0)
+    start_run(control)
+    control.autoplay(True)
+    with pytest.raises(Exception):
+        control.start_ai("arcade/nothing", {})  # refused, but a person chose something
+    assert not control.auto["on"]

@@ -10,8 +10,8 @@ Inputs, each independent of the others:
 What goes the other way, all on the operator's request:
   /api/play     start a game for a person (as EmulationStation would)
   /api/ai       start an AI run: MAME for the game, then play.py with the AI setup's answers (tools/ai_runner.py)
-  /api/autoplay the AI entertains: it plays each game it can, one after another, until switched off (or until a person
-                starts something); {"on": true, "minutes": 6}
+  /api/autoplay keep the AI playing the game that is up, run after run in the same MAME (its high score keeps
+                building), until switched off or a person chooses something; {"on": true}
   /api/stop     end what is playing (an AI run is asked to finish its files first); /api/menu: back to the menu
   /api/speed    AI mode's game speed, while it runs (the player logs the speed it measures)
   /orders       standing orders for the running player (arcadekit/orders.py), which confirms with an `orders` event
@@ -246,79 +246,61 @@ class Control:
         self._end_ai()
         return self.cabinet.launch(system, path)
 
-    AUTOPLAY_ANSWERS = {"model": {"games": 1}, "lab": {"runtype": "ai"}}  # one game each; a lab run is capped by time
-
-    def autoplay(self, on, minutes=6, note=None):
-        """Switch autoplay on or off. On: the AI plays every game it can in turn, `minutes` at most each, until
-        switched off, a person plays or starts anything, or three runs in a row fail to start."""
-        import ai_setup
+    def autoplay(self, on, note=None):
+        """Autoplay: keep the AI playing the game that is up now, for as long as it likes. Whenever the player's run
+        ends (its games are done, or its time), the same run starts again against the same MAME, which is not
+        restarted, so the game's high score keeps building. Switched off by STOP, EXIT, choosing anything, a person
+        playing on the cabinet, or three runs in a row that fail. Only offered while an AI run is on."""
         if not on:
             if self.auto.get("on"):
                 self.auto_token += 1
                 self.auto = {"on": False, "note": note}
                 self.publish(self.runner.state)
             return dict(self.auto)
-        minutes = float(minutes)
-        if not 1 <= minutes <= 30:
-            raise ValueError("minutes: 1 to 30")
         if self.auto.get("on"):
             return dict(self.auto)
-        games = ai_setup.ai_games()
-        if not games:
-            raise RuntimeError("no game has an AI player")
+        if self.runner.state["state"] != "running" or not self.last:
+            raise RuntimeError("autoplay keeps an AI game going: start one first")
+        game, answers = self.last
         self.auto_token += 1
         token = self.auto_token
-        self.auto = {"on": True, "minutes": minutes, "games": list(games), "played": 0, "game": None, "note": None}
+        self.auto = {"on": True, "game": game, "played": 0, "note": None}
         self.publish(self.runner.state)
-        threading.Thread(target=self._autoplay_loop, args=(token, games, minutes), daemon=True).start()
+        threading.Thread(target=self._autoplay_loop, args=(token, game, answers), daemon=True).start()
         return dict(self.auto)
 
-    def _autoplay_loop(self, token, games, minutes):
+    def _autoplay_loop(self, token, game, answers):
         import ai_setup
-        order, turn, failures = list(games), 0, 0
         live = lambda: self.auto_token == token and self.auto.get("on")  # noqa: E731
-
-        def say(**fields):
-            if live():
-                self.auto = {**self.auto, **fields}
-                self.publish(self.runner.state)
+        args = ai_setup.command_line(game, answers)
+        script = "run_lab.py" if ai_setup.schema(game).get("kind") == "lab" else "play.py"
+        speed = float(answers.get("speed", 0.85))
+        failures = 0
         while live():
-            if self.hub.panels.get("cabinet", {}).get("mode") == "human":
-                self.autoplay(False, note="Someone started playing on the cabinet, so autoplay stopped.")
-                return
-            game = order[turn % len(order)]
-            turn += 1
-            answers = dict(self.AUTOPLAY_ANSWERS[games[game]["kind"]])
-            schema = ai_setup.schema(game)
-            if games[game]["kind"] == "lab":
-                answers["seconds"] = int(min(minutes * 60, schema["seconds"]["max"]))
-                answers["speed"] = schema["speed"]["default"]
-            say(game=game, title=games[game]["title"], until=round(time.time() + minutes * 60))
-            try:
-                self._start_ai(game, answers)
-            except (ValueError, RuntimeError) as exc:
-                failures += 1
-                say(note=f"{games[game]['title']} did not start: {exc}")
-                if failures >= 3:
-                    self.autoplay(False, note=f"Autoplay stopped: three runs in a row failed ({exc}).")
-                    return
-                time.sleep(5)
-                continue
-            deadline = time.time() + minutes * 60
-            time.sleep(2)
-            while live() and (self.runner.busy() or self.hub.players):
-                if time.time() > deadline:
-                    self._end_ai()
-                    break
+            while live() and (self.runner.busy() or self.hub.players):  # the run on now
                 time.sleep(1)
             if not live():
                 return
-            failures = failures + 1 if self.runner.state["state"] == "failed" else 0
+            if self.runner.state["state"] == "failed":
+                failures += 1
+            else:
+                failures = 0
+                self.auto = {**self.auto, "played": self.auto.get("played", 0) + 1}
             if failures >= 3:
                 self.autoplay(False, note="Autoplay stopped: three runs in a row failed.")
                 return
-            say(played=self.auto.get("played", 0) + 1, note=None)
+            if self.hub.panels.get("cabinet", {}).get("mode") == "human":
+                self.autoplay(False, note="Someone started playing on the cabinet, so autoplay stopped.")
+                return
             time.sleep(3)
+            if not live():
+                return
+            try:  # the same game, MAME left running: only the player starts again
+                self.runner.start(game, args, speed, script, fresh=False)
+            except RuntimeError:
+                time.sleep(2)
+            self.publish(self.runner.state)
+            time.sleep(2)
 
     def start_ai(self, game, answers):
         self.autoplay(False)  # a person choosing a run wins
@@ -448,7 +430,7 @@ def make_handler(hub, control=None):
             elif control and self.path == "/api/ai":
                 self.guarded(lambda: control.start_ai(str(body["game"]), body.get("answers") or {}))
             elif control and self.path == "/api/autoplay":
-                self.guarded(lambda: control.autoplay(bool(body.get("on")), body.get("minutes", 6)))
+                self.guarded(lambda: control.autoplay(bool(body.get("on"))))
             elif control and self.path == "/api/stop":
                 self.guarded(control.stop)
             elif control and self.path == "/api/speed":

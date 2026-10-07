@@ -36,24 +36,27 @@ class Runner:
     def busy(self):
         return self.state["state"] in ("starting", "running", "stopping")
 
-    def start(self, game, play_args, speed=0.85, script="play.py"):
+    def start(self, game, play_args, speed=0.85, script="play.py", fresh=True):
+        """fresh=False: the game is already up (an earlier run left it): start only the player, not MAME again."""
         if self.busy():
             raise RuntimeError("an AI run is already going")
         self.tail.clear()
-        self._set(state="starting", game=game, step="Clearing the screen", args=play_args)
-        threading.Thread(target=self._run, args=(game, play_args, speed, script), daemon=True).start()
+        self._set(state="starting", game=game, step="Clearing the screen" if fresh else "Starting the player",
+                  args=play_args)
+        threading.Thread(target=self._run, args=(game, play_args, speed, script, fresh), daemon=True).start()
 
-    def _run(self, game, play_args, speed, script="play.py"):
+    def _run(self, game, play_args, speed, script="play.py", fresh=True):
         try:
-            self.cabinet.clear()
-            self._set(state="starting", game=game, step="Starting MAME and the streams", args=play_args)
-            p = subprocess.run([sys.executable, str(TOOLS / "start_pi_game.py"), "--game", game, "--host", self.host,
-                                "--speed", f"{speed:.2f}"],
-                               cwd=TOOLS, capture_output=True, text=True, timeout=120)
-            self.tail.extend((p.stdout + p.stderr).strip().splitlines()[-6:])
-            if p.returncode != 0:
-                self._set(state="failed", game=game, step="MAME did not start", args=play_args)
-                return
+            if fresh:
+                self.cabinet.clear()
+                self._set(state="starting", game=game, step="Starting MAME and the streams", args=play_args)
+                p = subprocess.run([sys.executable, str(TOOLS / "start_pi_game.py"), "--game", game, "--host",
+                                    self.host, "--speed", f"{speed:.2f}"],
+                                   cwd=TOOLS, capture_output=True, text=True, timeout=120)
+                self.tail.extend((p.stdout + p.stderr).strip().splitlines()[-6:])
+                if p.returncode != 0:
+                    self._set(state="failed", game=game, step="MAME did not start", args=play_args)
+                    return
             self._set(state="starting", game=game, step="Starting the player", args=play_args)
             LOGS.mkdir(parents=True, exist_ok=True)
             log_path = LOGS / f"{time.strftime('%Y%m%d-%H%M%S')}-{game.replace('/', '_')}.log"

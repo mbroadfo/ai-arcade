@@ -363,7 +363,7 @@
     <button class="hbtn hidden" id="b-pause" title="Pause or resume the game (and the AI with it)">❚❚ PAUSE</button>
     <button class="hbtn hidden" id="b-restart" title="Start this game again from the beginning">↻ RESTART</button>
     <button class="hbtn primary hidden" id="b-again" title="The same AI run again, on a fresh game">▶ PLAY AGAIN</button>
-    <button class="hbtn hidden" id="b-auto" title="Let the AI entertain: it plays each game it can, one after another, until you switch it off">✦ AUTOPLAY</button>
+    <button class="hbtn hidden" id="b-auto" title="Keep the AI playing this game, run after run, to see how high its score gets. The game is not restarted, so its high score builds.">✦ AUTOPLAY</button>
     <button class="hbtn" id="b-games" title="Choose a game">☰ GAMES</button>
     <button class="hbtn warnbtn hidden" id="b-stop" title="Stop the AI; the game stays on the screen">STOP AI</button>
     <button class="hbtn hidden" id="b-exit" title="End the game and go back to the cabinet's menu">⏏ EXIT GAME</button>
@@ -946,9 +946,9 @@ function applyMode() {
   $("b-restart").classList.toggle("hidden", !(m === "human" || m === "ai-live" && again));
   $("b-again").classList.toggle("hidden", !(m === "ai-idle" && again));
   const auto = ctl.control.autoplay || {};
-  $("b-auto").classList.toggle("hidden", !ctl.features.control || m === "offline" || m === "watch");
+  $("b-auto").classList.toggle("hidden", !ctl.features.control || !(m === "ai-live" && run !== "stopping" || auto.on));
   $("b-auto").classList.toggle("primary", !!auto.on);
-  $("b-auto").textContent = auto.on ? `✦ AUTOPLAY ON${auto.title ? " · " + auto.title : ""} — STOP` : "✦ AUTOPLAY";
+  $("b-auto").textContent = auto.on ? `✦ AUTOPLAY ON${auto.played ? " · run " + (auto.played + 1) : ""} — STOP` : "✦ AUTOPLAY";
   $("b-games").textContent = m === "ai-idle" || m === "human" ? "☰ NEW GAME" : "☰ GAMES";
   $("b-stop").classList.toggle("hidden", m !== "ai-live");
   $("b-stop").textContent = run === "stopping" ? "STOPPING…" : "STOP AI";
@@ -984,7 +984,7 @@ function showHome(m) {
   else if (m === "idle") hero = `<small>THE SCREEN IS FREE</small><h1>NOTHING IS RUNNING</h1><p>Neither the menu nor a game is on the cabinet's screen.</p>
       <div class="actions"><button class="hbtn primary" data-act="games">CHOOSE A GAME</button><button class="hbtn" data-act="menu">BACK TO MENU</button></div>`;
   else hero = `<small>THE CABINET IS AT THE MENU</small><h1>WHAT'S NEXT?</h1><p>Pick a game for a person to play on the cabinet, or one the AI can play: you choose who decides and what it is told, then watch it think here.</p>
-      <div class="actions"><button class="hbtn primary" data-act="games">CHOOSE A GAME</button><button class="hbtn" data-act="autoplay">✦ AUTOPLAY: LET THE AI ENTERTAIN</button></div>`;
+      <div class="actions"><button class="hbtn primary" data-act="games">CHOOSE A GAME</button></div>`;
   if (c.state === "failed") hero += `<p style="color:var(--bad);margin-top:14px">The last AI run failed: ${esc(c.step || "")}</p><div class="tail">${esc((c.tail || []).join("\n"))}</div>`;
   $("home").innerHTML = `<div class="hero">${hero}</div>` +
     (aiGames.length ? `<div class="card"><h2>THE AI CAN PLAY</h2><div class="tiles">${quickTiles(aiGames)}</div></div>` : "") +
@@ -996,7 +996,6 @@ $("home").addEventListener("click", e => {
   else if (t.dataset.act === "games") openPicker();
   else if (t.dataset.act === "stop") act("/api/stop");
   else if (t.dataset.act === "menu") act("/api/menu");
-  else if (t.dataset.act === "autoplay") $("b-auto").click();
 });
 
 async function api(path, body) {
@@ -1026,8 +1025,8 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") openDrawer(n
 $("b-games").addEventListener("click", openPicker);
 $("b-auto").addEventListener("click", async () => {
   const on = !ctl.control.autoplay?.on;
-  const r = await act("/api/autoplay", { on, minutes: 6 });
-  if (r) { ctl.control = { ...ctl.control, autoplay: r }; applyMode(); if (on) toast("Autoplay: the AI plays each game it can in turn, about 6 minutes each. Click again to stop.", "info"); }
+  const r = await act("/api/autoplay", { on });
+  if (r) { ctl.control = { ...ctl.control, autoplay: r }; applyMode(); if (on) toast("Autoplay: the AI keeps playing this game, run after run, without restarting it. Click again to stop.", "info"); }
 });
 $("b-stop").addEventListener("click", () => act("/api/stop"));
 $("b-menu").addEventListener("click", () => act("/api/menu"));
