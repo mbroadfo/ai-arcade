@@ -217,3 +217,20 @@ def test_choosing_another_run_switches_autoplay_off(monkeypatch):
     with pytest.raises(Exception):
         control.start_ai("arcade/nothing", {})  # refused, but a person chose something
     assert not control.auto["on"]
+
+
+def test_autoplay_adopts_a_run_the_server_did_not_start(monkeypatch):
+    control = make_control(monkeypatch)
+    control.hub.players.append(object())  # a player is connected, though this server never started it
+    control.hub.sticky["run"] = {"game": "arcade/mspacman", "decider": "ollama", "model": "nimble:latest",
+                                 "knowledge": "L2", "goal": "auto", "strategist": "code", "games": 3, "switches": {}}
+    assert control.autoplay(True)["game"] == "arcade/mspacman"
+    assert control.last[0] == "arcade/mspacman" and control.last[1]["model"] == "nimble:latest"
+    control.autoplay(False)
+
+
+def test_autoplay_cannot_adopt_a_run_it_cannot_describe(monkeypatch):
+    control = make_control(monkeypatch)
+    control.hub.players.append(object())
+    with pytest.raises(RuntimeError, match="start it from GAMES"):
+        control.autoplay(True)

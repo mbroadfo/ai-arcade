@@ -259,15 +259,29 @@ class Control:
             return dict(self.auto)
         if self.auto.get("on"):
             return dict(self.auto)
-        if self.runner.state["state"] != "running" or not self.last:
+        if self.runner.state["state"] != "running" and not self.hub.players:
             raise RuntimeError("autoplay keeps an AI game going: start one first")
-        game, answers = self.last
+        game, answers = self.last or self._adopt_run()
         self.auto_token += 1
         token = self.auto_token
         self.auto = {"on": True, "game": game, "played": 0, "note": None}
         self.publish(self.runner.state)
         threading.Thread(target=self._autoplay_loop, args=(token, game, answers), daemon=True).start()
         return dict(self.auto)
+
+    def _adopt_run(self):
+        """A run this server did not start (it was restarted, or play.py was run by hand): its way of starting again
+        is read back from the run record the player sent. Only for a model player with the code strategist."""
+        run = self.hub.sticky.get("run") or {}
+        if not run.get("game") or run.get("strategist", "code") != "code" or "decider" not in run:
+            raise RuntimeError("this run was not started from here, so autoplay cannot start it again: "
+                               "start it from GAMES instead")
+        answers = {"decider": run["decider"], "knowledge": run.get("knowledge"), "goal": run.get("goal", "auto"),
+                   "games": run.get("games", 3), "switches": run.get("switches") or {}}
+        if run.get("model"):
+            answers["model"] = run["model"]
+        self.last = (run["game"], answers)
+        return self.last
 
     def _autoplay_loop(self, token, game, answers):
         import ai_setup
