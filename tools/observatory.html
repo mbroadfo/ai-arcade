@@ -24,7 +24,7 @@
                            radial-gradient(circle at 110% 110%, #3a0f4a44 0, transparent 40%); }
 
   /* ---------- header ---------- */
-  header { height: var(--head); display: flex; align-items: center; gap: 22px; padding: 0 20px;
+  header { height: var(--head); display: flex; align-items: center; gap: 16px; padding: 0 16px; min-width: 0;
            border-bottom: 1px solid var(--line); background: #090b12cc; backdrop-filter: blur(6px); }
   .brand { display: flex; flex-direction: column; line-height: 1.15; }
   .brand b { font-family: var(--pixel); font-size: 13px; color: var(--accent); letter-spacing: .06em;
@@ -42,7 +42,8 @@
   .score small { font-size: 9px; letter-spacing: .22em; color: var(--dim); }
   .score b { font: 13px var(--pixel); color: var(--text); }
   .score .lives b { color: var(--accent); letter-spacing: 3px; }
-  .runinfo { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+  .runinfo { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 8px; }
+  .runinfo .chip { font-size: 11px; padding: 2px 8px; }
   .chip { font: 500 12px var(--mono); padding: 3px 9px; border-radius: 6px; background: var(--panel-2);
           border: 1px solid var(--line); color: #c9cfdc; white-space: nowrap; }
   .chip.k { color: var(--dim); }
@@ -77,8 +78,13 @@
   .toggles input { accent-color: var(--accent); }
   .speed { display: flex; align-items: center; gap: 8px; font: 600 11px var(--mono); letter-spacing: .1em; color: var(--dim);
            padding: 6px 10px; border: 1px solid var(--line-2); border-radius: 9px; background: var(--panel-2); }
-  .speed input[type=range] { width: 130px; accent-color: var(--accent); }
-  .speed b { color: var(--text); min-width: 40px; text-align: right; }
+  .speed input[type=range] { width: 84px; accent-color: var(--accent); }
+  .speed b { color: var(--text); min-width: 34px; text-align: right; }
+  header .actions { margin-left: auto; display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center;
+                    gap: 6px; min-width: 0; }
+  header .hbtn { padding: 7px 10px; font-size: 11px; letter-spacing: .05em; white-space: nowrap; }
+  header .links { flex: none; }
+  @media (max-width: 1500px) { header .links, .brand span { display: none; } header { gap: 12px; } }
   .rangefield { display: grid; grid-template-columns: 1fr 56px; gap: 12px; align-items: center; }
   .rangefield input { accent-color: var(--accent); width: 100%; }
   .rangefield b { font: 600 14px var(--mono); text-align: right; }
@@ -334,7 +340,6 @@
     .now b { max-width: 70vw; }
     body { overflow: auto; }
     header { height: auto; flex-wrap: wrap; padding: 10px 16px; gap: 12px; }
-    .runinfo { margin-left: 0; flex-wrap: wrap; }
     main { height: auto; grid-template-columns: minmax(0, 1fr); padding: 12px 16px; }
     body { overflow-x: hidden; }
     .prov { grid-template-columns: minmax(0, 1fr); gap: 10px; }
@@ -356,7 +361,6 @@
     <div><small>LEVEL</small><b id="h-level">–</b></div>
     <div class="lives"><small>LIVES</small><b id="h-lives">–</b></div>
   </div>
-  <div class="runinfo ai-only" id="runinfo"></div>
   <div class="actions control-only" id="actions">
     <label class="speed hidden" id="speedbox" title="How fast the game runs. Slower gives the model more time per decision; the run logs every change.">
       SPEED <input type="range" id="speed" min="0.3" max="1" step="0.05" value="0.85"><b id="speed-v">85%</b></label>
@@ -365,8 +369,8 @@
     <button class="hbtn primary hidden" id="b-again" title="The same AI run again, on a fresh game">▶ PLAY AGAIN</button>
     <button class="hbtn hidden" id="b-auto" title="Keep the AI playing this game, run after run, to see how high its score gets. The game is not restarted, so its high score builds.">✦ AUTOPLAY</button>
     <button class="hbtn" id="b-games" title="Choose a game">☰ GAMES</button>
-    <button class="hbtn warnbtn hidden" id="b-stop" title="Stop the AI; the game stays on the screen">STOP AI</button>
-    <button class="hbtn hidden" id="b-exit" title="End the game and go back to the cabinet's menu">⏏ EXIT GAME</button>
+    <button class="hbtn warnbtn hidden" id="b-stop" title="Stop the AI; the game stays on the screen">■ STOP AI</button>
+    <button class="hbtn hidden" id="b-exit" title="End the game and go back to the cabinet's menu">⏏ EXIT</button>
     <button class="hbtn hidden" id="b-menu">BACK TO MENU</button>
   </div>
   <div class="links"><span><i id="d-page"></i>page</span><span class="ai-only"><i id="d-video"></i>video <span id="fps"></span></span></div>
@@ -385,6 +389,7 @@
       <label><input type="checkbox" id="o-choice" checked> choices</label>
       <label><input type="checkbox" id="o-ahead" checked> answers ahead</label>
     </div>
+    <div class="runinfo ai-only" id="runinfo"></div>
   </section>
 
   <section class="home home-only" id="home"></section>
@@ -948,7 +953,7 @@ function applyMode() {
   const auto = ctl.control.autoplay || {};
   $("b-auto").classList.toggle("hidden", !ctl.features.control || !(m === "ai-live" && run !== "stopping" || auto.on));
   $("b-auto").classList.toggle("primary", !!auto.on);
-  $("b-auto").textContent = auto.on ? `✦ AUTOPLAY ON${auto.played ? " · run " + (auto.played + 1) : ""} — STOP` : "✦ AUTOPLAY";
+  $("b-auto").textContent = auto.on ? `✦ AUTOPLAY ON${auto.played ? " · " + (auto.played + 1) : ""}` : "✦ AUTOPLAY";
   $("b-games").textContent = m === "ai-idle" || m === "human" ? "☰ NEW GAME" : "☰ GAMES";
   $("b-stop").classList.toggle("hidden", m !== "ai-live");
   $("b-stop").textContent = run === "stopping" ? "STOPPING…" : "STOP AI";
