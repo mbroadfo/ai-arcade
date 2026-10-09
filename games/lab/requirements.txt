@@ -1,0 +1,7 @@
+# Install this file first, then reinstall torch from the CUDA index (see README.md).
+# Doing it the other way around replaces the CUDA build with the CPU wheel from PyPI.
+gymnasium>=1.0,<1.3
+numpy>=1.26,<3
+stable-baselines3>=2.4,<3
+sb3-contrib>=2.4,<3
+Pillow>=10,<13
