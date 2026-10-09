@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Training Lab</title>
+<style>
+  :root { color-scheme: dark; }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; }
+  body { margin: 0; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; font: 13px/1.3 "Segoe UI", sans-serif; background: #12110f; color: #f3efe6; }
+  header { flex: 0 0 10%; height: 10%; box-sizing: border-box; display: flex; flex-direction: column; gap: 4px; padding: 4px 8px; overflow: hidden; }
+  .bar { display: flex; align-items: center; gap: 8px; min-height: 0; }
+  .bar h1 { font-size: 16px; font-weight: 600; margin: 0; white-space: nowrap; }
+  .bar select { max-width: 280px; }
+  .bar label { display: flex; align-items: center; gap: 4px; color: #a89f90; white-space: nowrap; }
+  .bar input[type="number"] { width: 88px; }
+  #budget-label, #game-note, #error { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #game-note { flex: 1; }
+  select, input { background: #1d1b17; color: #f3efe6; border: 1px solid #3a352c; border-radius: 4px; padding: 2px 6px; font: inherit; }
+  button { background: #e6d3a3; color: #1a150e; border: 0; border-radius: 4px; padding: 4px 10px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  button:disabled { opacity: 0.45; cursor: default; }
+  .seats { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; }
+  .seat-row { display: grid; grid-template-columns: auto minmax(0, 1fr) 46px; gap: 4px; align-items: center; min-width: 0; }
+  .swatch { height: 22px; padding: 0 6px; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #1a150e; font-weight: 600; font-size: 11px; }
+  .stage { flex: 1 1 auto; min-height: 0; overflow: hidden; display: flex; }
+  .play { flex: 0 0 80%; width: 80%; min-width: 0; min-height: 0; display: flex; }
+  .wall { flex: 1; min-width: 0; min-height: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 6px; padding: 6px; box-sizing: border-box; }
+  .card { min-width: 0; min-height: 0; border: 3px solid #333; border-radius: 8px; overflow: hidden; background: #000; }
+  .card img, .card video { display: block; width: 100%; height: 100%; object-fit: contain; background: #000; image-rendering: pixelated; }
+  .empty { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
+  .empty span { color: #a89f90; font-size: 16px; }
+  .empty b { font-size: 42px; font-weight: 600; }
+  .stats-col { flex: 0 0 20%; width: 20%; min-width: 0; min-height: 0; overflow: auto; box-sizing: border-box; padding: 8px 10px; border-left: 1px solid #2c2822; }
+  #round-note { margin: 0 0 8px; }
+  #round-note:empty { display: none; }
+  h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: #a89f90; margin: 0 0 6px; }
+  .stat { margin: 0 0 8px; padding-left: 8px; border-left: 4px solid #333; }
+  .stat b { font-weight: 600; }
+  .dim { color: #a89f90; }
+  .error { color: #ffb4a8; }
+  .fame { display: grid; gap: 4px; }
+  .fame p { margin: 0; }
+  .fame table { width: 100%; border-collapse: collapse; }
+  .fame th { font-size: 10px; font-weight: 600; color: #a89f90; text-align: left; }
+  .fame td, .fame th { padding: 1px 6px 1px 0; white-space: nowrap; }
+  .fame td.num, .fame th.num { text-align: right; }
+</style>
+</head>
+<body>
+<header id="setup">
+  <div class="bar">
+    <h1>Training Lab</h1>
+    <select id="game" aria-label="Game"></select>
+    <label>Steps <input id="steps" type="number" min="256" max="5000000" value="200000"></label>
+    <button id="start" type="button">Start</button>
+    <button id="stop" type="button" disabled>Stop</button>
+    <span id="budget-label" class="dim"></span>
+    <span id="game-note" class="dim"></span>
+    <span class="error" id="error"></span>
+  </div>
+  <div class="seats" id="seats"></div>
+</header>
+<div class="stage">
+  <section class="play" id="live">
+    <div class="wall" id="wall"></div>
+  </section>
+  <aside class="stats-col">
+    <h2>Stats</h2>
+    <p id="round-note" class="dim"></p>
+    <div id="stats"></div>
+    <h2>Hall of fame</h2>
+    <div id="fame" class="dim">No finished round yet.</div>
+  </aside>
+</div>
+<script>
+const errorEl = document.querySelector("#error");
+const gameEl = document.querySelector("#game");
+const noteEl = document.querySelector("#game-note");
+const seatsEl = document.querySelector("#seats");
+const startEl = document.querySelector("#start");
+const stopEl = document.querySelector("#stop");
+const wallEl = document.querySelector("#wall");
+const statsEl = document.querySelector("#stats");
+const fameEl = document.querySelector("#fame");
+const budgetEl = document.querySelector("#budget-label");
+const roundNoteEl = document.querySelector("#round-note");
+let models = [];
+let seatMeta = [];
+let games = [];
+let showing = false;
+
+function showError(text) { errorEl.textContent = text || ""; }
+
+function selectedGame() { return games.find((g) => g.id === gameEl.value); }
+
+function fillGames() {
+  gameEl.replaceChildren();
+  for (const grade of ["scored", "bootable", "unavailable"]) {
+    const group = document.createElement("optgroup");
+    group.label = grade;
+    for (const game of games.filter((g) => g.grade === grade)) {
+      const option = document.createElement("option");
+      option.value = game.id;
+      option.textContent = game.system + " / " + game.name;
+      option.disabled = !game.selectable;
+      option.title = game.reason || game.grade;
+      group.appendChild(option);
+    }
+    if (group.children.length) gameEl.appendChild(group);
+  }
+  note();
+}
+
+function note() {
+  const game = selectedGame();
+  if (!game) { noteEl.textContent = ""; return; }
+  noteEl.textContent = game.grade === "scored"
+    ? "Scored on distance to the right. Farther along the level wins."
+    : game.grade === "bootable"
+      ? "Bootable only. The score is steps survived, which is not beating the game."
+      : game.reason;
+  for (const select of seatsEl.querySelectorAll("select")) {
+    for (const option of select.options) {
+      const model = models.find((item) => item.id === option.value);
+      const blocked = game.grade !== "scored" && model && model.needs_ram;
+      option.disabled = blocked;
+      if (blocked && select.value === option.value) select.value = "ppo_cnn";
+    }
+  }
+}
+
+function fillSeats() {
+  seatsEl.replaceChildren();
+  seatMeta.forEach((seat, index) => {
+    const row = document.createElement("div");
+    row.className = "seat-row";
+    const swatch = document.createElement("div");
+    swatch.className = "swatch";
+    swatch.style.background = seat.color;
+    swatch.textContent = seat.name;
+    const select = document.createElement("select");
+    select.dataset.seat = String(index);
+    select.setAttribute("aria-label", seat.name + " model");
+    for (const model of models) {
+      const option = document.createElement("option");
+      option.value = model.id;
+      option.textContent = model.label;
+      option.title = model.detail;
+      select.appendChild(option);
+    }
+    select.value = "ppo_cnn";
+    const seed = document.createElement("input");
+    seed.type = "number";
+    seed.value = String(index + 1);
+    seed.dataset.seed = String(index);
+    seed.setAttribute("aria-label", seat.name + " seed");
+    row.append(swatch, select, seed);
+    seatsEl.appendChild(row);
+  });
+  paintWindows(null);
+}
+
+function seatPayload() {
+  return [...seatsEl.querySelectorAll(".seat-row")].map((row) => ({
+    model: row.querySelector("select").value,
+    seed: Number(row.querySelector("input").value),
+  }));
+}
+
+async function startRound() {
+  showError("");
+  startEl.disabled = true;
+  try {
+    const response = await fetch("/api/start", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        game_id: gameEl.value,
+        steps: Number(document.querySelector("#steps").value),
+        seats: seatPayload(),
+      }),
+    });
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.error || "could not start");
+  } catch (exc) {
+    showError(String(exc.message || exc));
+    startEl.disabled = false;
+  }
+}
+
+async function stopRound() {
+  showError("");
+  stopEl.disabled = true;
+  try {
+    const response = await fetch("/api/stop", {method: "POST"});
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.error || "could not stop");
+  } catch (exc) {
+    showError(String(exc.message || exc));
+    stopEl.disabled = false;
+  }
+}
+
+let wallKey = "";
+
+function viewMode(current) {
+  if (!current || !current.state) return "idle";
+  if (current.phase === "between") return "between";
+  if (current.running || current.state.status === "recording") return "live";
+  if (current.state.status === "done" || current.state.status === "failed") return "scores";
+  return "idle";
+}
+
+function paintWindows(current, stopRequested, live) {
+  const seats = (current && current.seats && current.seats.length)
+    ? current.seats
+    : seatMeta.map((seat) => ({ name: seat.name, color: seat.color, model: "" }));
+  const mode = viewMode(current);
+  const key = ((current && current.state && current.state.id) || "idle") + ":" + seats.length + ":" + mode;
+  if (key !== wallKey || wallEl.children.length !== seats.length) {
+    wallKey = key;
+    wallEl.replaceChildren();
+    seats.forEach((seat, index) => {
+      const card = document.createElement("article");
+      card.className = "card";
+      card.style.borderColor = seat.color || "#333";
+      if (mode === "scores" || mode === "between") {
+        const label = document.createElement("div");
+        label.className = "empty";
+        const name = document.createElement("span");
+        name.textContent = seat.name || "";
+        const score = document.createElement("b");
+        score.textContent = seat.score == null ? "—" : String(seat.score);
+        label.append(name, score);
+        card.appendChild(label);
+      } else {
+        const img = document.createElement("img");
+        img.alt = seat.name || ("seat " + index);
+        img.onerror = () => { img.style.visibility = "hidden"; };
+        img.onload = () => { img.style.visibility = "visible"; };
+        card.appendChild(img);
+      }
+      wallEl.appendChild(card);
+    });
+  }
+  const manifestNote = current && current.manifest;
+  const generation = live && live.generation != null ? live.generation : (manifestNote && manifestNote.generation);
+  const parent = live && live.parent_score != null ? live.parent_score : (manifestNote && manifestNote.parent_score);
+  if (stopRequested && (mode === "live" || mode === "between")) {
+    roundNoteEl.textContent = "Stopping when this generation finishes. The windows stay on the live game.";
+  } else if (mode === "between") {
+    roundNoteEl.textContent = parent == null
+      ? "Generation " + generation + " is starting from scratch. The windows switch to the live game when the seats are in the level."
+      : "Generation " + generation + " is loading the best weights (x " + parent + "). The windows switch to the live game when the seats are in the level.";
+  } else if (mode === "live") {
+    roundNoteEl.textContent = parent == null
+      ? "Generation " + generation + " is training live."
+      : "Generation " + generation + " is training live, starting from x " + parent + ".";
+  } else if (mode === "scores") {
+    roundNoteEl.textContent = "Training is stopped. Start continues from the best weights, and these windows show the live game.";
+  } else {
+    roundNoteEl.textContent = "";
+  }
+  const lines = seats.map((seat) => {
+    if (!current) return seat.name + " · waiting";
+    const score = seat.score == null ? "—" : seat.score;
+    return seat.name + " · " + (seat.model || "") + " · " + (seat.objective || (current.manifest && current.manifest.objective) || "")
+      + " " + score + " · " + (seat.steps || 0) + " steps";
+  });
+  if (statsEl.children.length !== lines.length) {
+    statsEl.replaceChildren();
+    lines.forEach((text, index) => {
+      const row = document.createElement("div");
+      row.className = "stat";
+      row.style.borderColor = (seats[index] && seats[index].color) || "#333";
+      row.textContent = text;
+      statsEl.appendChild(row);
+    });
+  } else {
+    lines.forEach((text, index) => {
+      const row = statsEl.children[index];
+      row.style.borderColor = (seats[index] && seats[index].color) || "#333";
+      if (row.textContent !== text) row.textContent = text;
+    });
+  }
+}
+
+function renderLive(current, stopRequested, live) {
+  const mode = viewMode(current);
+  showing = mode === "live";
+  const running = Boolean(current && current.running);
+  startEl.disabled = running;
+  stopEl.disabled = !running;
+  const manifest = current && current.manifest;
+  const genBit = live && live.generation != null ? " · generation " + live.generation : "";
+  budgetEl.textContent = manifest
+    ? manifest.game + " · " + manifest.objective + genBit + " · " + manifest.steps + " steps"
+    : "";
+  paintWindows(current, stopRequested, live);
+}
+
+function refreshPictures() {
+  if (!showing) return;
+  const stamp = Date.now();
+  wallEl.querySelectorAll("img").forEach((img, index) => {
+    img.src = "/thumb/" + index + "?t=" + stamp;
+  });
+}
+
+let fameKey = "";
+
+function renderFame(hall) {
+  hall = hall || {};
+  const rows = hall.rows || [];
+  const live = hall.live;
+  const record = hall.record;
+  const shown = rows.slice(-8);
+  const key = JSON.stringify({shown: shown, live: live, record: record});
+  if (key === fameKey) return;
+  fameKey = key;
+  if (!rows.length && !live) {
+    fameEl.textContent = "No finished generation yet.";
+    fameEl.className = "dim";
+    return;
+  }
+  fameEl.className = "fame";
+  fameEl.replaceChildren();
+  const best = document.createElement("p");
+  best.textContent = record
+    ? "Best so far: " + record.winner_name + " · x " + record.score + " · generation " + record.generation
+    : "No record yet.";
+  fameEl.appendChild(best);
+  if (live) {
+    const now = document.createElement("p");
+    if (live.phase === "between") {
+      now.textContent = live.parent_score == null
+        ? "Generation " + live.generation + " is starting from scratch."
+        : "Generation " + live.generation + " is starting from " + (live.parent_name || "the record") + " at x " + live.parent_score + ".";
+    } else {
+      const budget = live.budget || 0;
+      const pct = budget ? Math.min(100, Math.round(100 * (live.steps || 0) / budget)) : 0;
+      now.textContent = "Now: generation " + live.generation + " · " + (live.leader || "—") + " · x " + live.score + " · " + pct + "%";
+    }
+    fameEl.appendChild(now);
+  }
+  if (rows.length < 2) return;
+  const table = document.createElement("table");
+  const head = document.createElement("tr");
+  ["Gen", "Winner", "Best x", "Change"].forEach((label, index) => {
+    const cell = document.createElement("th");
+    cell.textContent = label;
+    if (index >= 2) cell.className = "num";
+    head.appendChild(cell);
+  });
+  table.appendChild(head);
+  for (const row of shown) {
+    const tr = document.createElement("tr");
+    const change = row.delta == null ? "—" : (row.delta > 0 ? "+" + row.delta : String(row.delta));
+    [String(row.generation), row.winner_name || "—", String(row.score), change].forEach((value, index) => {
+      const cell = document.createElement("td");
+      cell.textContent = value;
+      if (index >= 2) cell.className = "num";
+      tr.appendChild(cell);
+    });
+    tr.title = (row.deaths || 0) + " deaths, " + (row.life || 0) + " steps per life";
+    table.appendChild(tr);
+  }
+  fameEl.appendChild(table);
+}
+
+async function poll() {
+  try {
+    const response = await fetch("/api/status");
+    const body = await response.json();
+    showError("");
+    const hall = body.hall || {};
+    renderLive(body.current, body.stop_requested, hall.live);
+    renderFame(hall);
+  } catch (exc) {
+    showError(String(exc.message || exc));
+  }
+}
+
+async function boot() {
+  const [catalog, menu] = await Promise.all([fetch("/api/catalog"), fetch("/api/models")]);
+  const catalogBody = await catalog.json();
+  const menuBody = await menu.json();
+  if (!catalog.ok) { showError(catalogBody.error || "no catalog"); return; }
+  games = catalogBody.games;
+  models = menuBody.models;
+  seatMeta = menuBody.seats;
+  fillSeats();
+  fillGames();
+  gameEl.addEventListener("change", note);
+  startEl.addEventListener("click", startRound);
+  stopEl.addEventListener("click", stopRound);
+  poll();
+  setInterval(poll, 500);
+  setInterval(refreshPictures, 100);
+}
+boot();
+</script>
+</body>
+</html>
