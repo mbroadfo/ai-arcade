@@ -15,6 +15,30 @@ def runs_root() -> Path:
     return Path(os.environ.get("LAB_RUNS", Path.home() / "mario-runs"))
 
 
+def stop_requested() -> bool:
+    """The page writes this file. Seats leave and the chain ends."""
+    return (runs_root() / "stop.request").is_file()
+
+
+def pause_requested() -> bool:
+    """The page writes this file. Seats save checkpoints and the generation waits."""
+    return (runs_root() / "pause.request").is_file()
+
+
+def hold_requested() -> bool:
+    """Either button asks the seats to leave the current learn() call."""
+    return stop_requested() or pause_requested()
+
+
+def chain_followup(stop: bool, pause: bool) -> str:
+    """Stop closes the chain. Pause freezes this generation. Otherwise training continues."""
+    if stop:
+        return "stop"
+    if pause:
+        return "pause"
+    return "continue"
+
+
 def cores_dir() -> Path:
     return lab_home() / "cores"
 

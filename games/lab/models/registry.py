@@ -1,9 +1,9 @@
 """The model menu. Adding a model is a module plus one line in MODULES."""
 from __future__ import annotations
 
-from games.lab.models import dqn_cnn, ppo_cnn, ppo_lstm, ppo_ram
+from games.lab.models import dqn_cnn, ppo_cnn, ppo_cnn_explore, ppo_cnn_steady, ppo_lstm, ppo_ram
 
-MODULES = (ppo_cnn, ppo_lstm, dqn_cnn, ppo_ram)
+MODULES = (ppo_cnn, ppo_cnn_explore, ppo_cnn_steady, ppo_lstm, dqn_cnn, ppo_ram)
 BY_ID = {module.ID: module for module in MODULES}
 
 
@@ -12,8 +12,15 @@ def ids() -> list[str]:
 
 
 def describe() -> list[dict]:
+    from games.lab.models.networks import network_for
     return [
-        {"id": module.ID, "label": module.LABEL, "detail": module.DETAIL, "needs_ram": module.NEEDS_RAM}
+        {
+            "id": module.ID,
+            "label": module.LABEL,
+            "detail": module.DETAIL,
+            "needs_ram": module.NEEDS_RAM,
+            "network": network_for(module.ID),
+        }
         for module in MODULES
     ]
 

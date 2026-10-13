@@ -17,7 +17,7 @@ from games.lab.models import registry
 from games.lab.publish import finalize
 from games.lab.ranking import winner
 from games.lab.roms import ssh_command, store_game, store_smb
-from games.lab.paths import runs_root
+from games.lab.paths import chain_followup, pause_requested, runs_root, stop_requested
 from games.lab.seats import SEATS
 from games.lab.worker import atomic_json
 
@@ -96,8 +96,60 @@ def chain_running() -> bool:
     return bool(chain) and chain.get("status") == "running" and _alive(int(chain.get("pid") or 0))
 
 
-def stop_requested() -> bool:
-    return (runs_root() / "stop.request").is_file()
+class _Paused(Exception):
+    """The seats saved their checkpoints. The generation is not finished."""
+
+    def __init__(self, run_dir: Path):
+        super().__init__(run_dir.name)
+        self.run_dir = run_dir
+
+
+def _budget_met(seat_dir: Path, steps: int) -> bool:
+    """A paused seat can say finished when its process exited. The budget is the step count."""
+    path = seat_dir / "status.json"
+    if not path.is_file():
+        return False
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False
+    return int(data.get("steps") or 0) >= int(steps)
+
+
+def read_pause() -> dict | None:
+    path = runs_root() / "pause.json"
+    if not path.is_file():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def _write_pause(game_id: str, seats: list[dict], steps: int, generation: int, run_id: str | None,
+                 phase: str, parent_score, parent_name: str | None) -> None:
+    atomic_json(runs_root() / "pause.json", {
+        "game_id": game_id,
+        "seats": seats,
+        "steps": steps,
+        "generation": generation,
+        "run_id": run_id,
+        "phase": phase,
+        "parent_score": parent_score,
+        "parent_name": parent_name,
+    })
+
+
+def abandon_pause() -> None:
+    """Stop, while nothing is training, drops the frozen generation."""
+    for name in ("pause.json", "pause.request", "stop.request"):
+        path = runs_root() / name
+        if path.is_file():
+            path.unlink()
+    chain = read_chain()
+    if chain and chain.get("status") == "paused":
+        _set_chain("stopped", "stopped", int(chain.get("generation") or 0), chain.get("parent_score"), chain.get("parent_name"))
 
 
 def _set_chain(status: str, phase: str, generation: int, parent_score, parent_name: str | None) -> None:
@@ -128,14 +180,21 @@ def _finished_rounds(root: Path) -> list[dict]:
     return found
 
 
-def _seed_sources(seats: list[dict]) -> list[dict | None]:
+def _game_stamp(game_id: str) -> dict | None:
+    game = by_id(load_catalog())[game_id]
+    integration = get(game.integration)
+    stamp = getattr(integration, "stamp", None)
+    return stamp() if stamp else None
+
+
+def _seed_sources(seats: list[dict], stamp: dict | None = None) -> list[dict | None]:
     """One champion per seat. The same model shares the best record-life zip."""
     cache: dict[str, dict | None] = {}
     sources = []
     for seat in seats:
         model = seat["model"]
         if model not in cache:
-            cache[model] = champion(runs_root(), model)
+            cache[model] = champion(runs_root(), model, stamp)
         sources.append(cache[model])
     return sources
 
@@ -150,7 +209,19 @@ def run_round(
     parent_score: int | None = None,
     parent_name: str | None = None,
     chained: bool = False,
+    resume_dir: Path | None = None,
 ) -> Path:
+    continuing = resume_dir is not None
+    if continuing:
+        run_dir = resume_dir
+        manifest = json.loads((run_dir / "manifest.json").read_text(encoding="utf-8"))
+        run_id = str(manifest["id"])
+        game_id = manifest["game_id"]
+        steps = int(manifest["steps"])
+        generation = int(manifest.get("generation") or generation)
+        parent_score = manifest.get("parent_score")
+        parent_name = manifest.get("parent_name")
+        seats = [{"model": seat["model"], "seed": int(seat["seed"])} for seat in manifest["seats"]]
     games = by_id(load_catalog())
     if game_id not in games:
         raise KeyError(f"unknown game {game_id}")
@@ -163,45 +234,62 @@ def run_round(
     for seat in seats:
         registry.check(seat["model"], integration)
 
-    run_id = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
-    run_dir = runs_root() / run_id
-    run_dir.mkdir(parents=True)
-    try:
-        rom = materialize(game)
-    except Exception as exc:
-        atomic_json(run_dir / "state.json", {"status": "failed", "pid": os.getpid(), "error": str(exc), "id": run_id})
-        atomic_json(runs_root() / "current.json", {"id": run_id, "path": str(run_dir)})
-        raise
-    objective = integration.objective if integration is not None else "steps"
-    manifest = {
-        "id": run_id,
-        "game_id": game.id,
-        "game": game.name,
-        "system": game.system,
-        "grade": game.grade,
-        "objective": objective,
-        "steps": steps,
-        "rom": str(rom),
-        "generation": generation,
-        "parent_score": parent_score,
-        "parent_name": parent_name,
-        "seats": [
-            {**SEATS[index], "seat": index, "model": seats[index]["model"], "seed": int(seats[index]["seed"])}
-            for index in range(6)
-        ],
-    }
-    atomic_json(run_dir / "manifest.json", manifest)
+    if not continuing:
+        run_id = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
+        run_dir = runs_root() / run_id
+        run_dir.mkdir(parents=True)
+        try:
+            rom = materialize(game)
+        except Exception as exc:
+            atomic_json(run_dir / "state.json", {"status": "failed", "pid": os.getpid(), "error": str(exc), "id": run_id})
+            atomic_json(runs_root() / "current.json", {"id": run_id, "path": str(run_dir)})
+            raise
+        objective = integration.objective if integration is not None else "steps"
+        manifest = {
+            "id": run_id,
+            "game_id": game.id,
+            "game": game.name,
+            "system": game.system,
+            "grade": game.grade,
+            "objective": objective,
+            "steps": steps,
+            "rom": str(rom),
+            "generation": generation,
+            "parent_score": parent_score,
+            "parent_name": parent_name,
+            "seats": [
+                {**SEATS[index], "seat": index, "model": seats[index]["model"], "seed": int(seats[index]["seed"])}
+                for index in range(6)
+            ],
+        }
+        atomic_json(run_dir / "manifest.json", manifest)
+    else:
+        rom = Path(manifest["rom"])
+        if not rom.is_file():
+            rom = materialize(game)
+        objective = manifest.get("objective") or (integration.objective if integration is not None else "steps")
     atomic_json(run_dir / "state.json", {"status": "running", "pid": os.getpid(), "id": run_id})
     atomic_json(runs_root() / "current.json", {"id": run_id, "path": str(run_dir)})
     if chained:
         _set_chain("running", "training", generation, parent_score, parent_name)
-    if seed_sources:
+    if seed_sources and not continuing:
         for index, source in enumerate(seed_sources):
             if not source:
                 continue
             seat_dir = run_dir / "seats" / str(index)
             seat_dir.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(source["path"], seat_dir / "seed.zip")
+            stamp_file = source["path"].with_suffix(".stamp.json")
+            if stamp_file.is_file():
+                shutil.copyfile(stamp_file, seat_dir / "seed.stamp.json")
+    if not continuing:
+        from games.lab.actions import for_system
+        from games.lab.tape import seed_run
+        if integration is not None and getattr(integration, "actions", None):
+            n_actions = len(integration.actions)
+        else:
+            n_actions = len(for_system(game.system))
+        seed_run(run_dir, runs_root(), n_actions, objective, int(parent_score or 0))
 
     child_env = os.environ.copy()
     child_env["OMP_NUM_THREADS"] = "1"
@@ -209,7 +297,10 @@ def run_round(
     child_env["SDL_AUDIODRIVER"] = "dummy"
     procs: dict[int, subprocess.Popen] = {}
     attempts = {index: 0 for index in range(6)}
-    pending = set(range(6))
+    pending = {
+        index for index in range(6)
+        if not (continuing and _budget_met(run_dir / "seats" / str(index), steps))
+    }
     failed = None
 
     def start(index: int) -> None:
@@ -232,7 +323,7 @@ def run_round(
         ]
         checkpoint = seat_dir / "checkpoint.zip"
         seed_file = seat_dir / "seed.zip"
-        if attempts[index] and checkpoint.is_file():
+        if checkpoint.is_file() and (attempts[index] or continuing):
             cmd.append("--resume")
         elif seed_file.is_file():
             cmd.extend(["--seed-from", str(seed_file)])
@@ -253,7 +344,8 @@ def run_round(
                 finished.append(index)
                 if code != 0:
                     attempts[index] += 1
-                    if attempts[index] < 2:
+                    # Stop or Pause already asked the seats to leave. Relaunching would keep training.
+                    if attempts[index] < 2 and not stop_requested() and not pause_requested():
                         pending.add(index)
                     else:
                         failed = f"seat {index} exited {code}"
@@ -265,6 +357,9 @@ def run_round(
                 time.sleep(0.2)
         if failed:
             raise RuntimeError(failed)
+        if chain_followup(stop_requested(), pause_requested()) == "pause":
+            atomic_json(run_dir / "state.json", {"status": "paused", "pid": os.getpid(), "id": run_id})
+            raise _Paused(run_dir)
 
         rows = []
         for index in range(6):
@@ -287,6 +382,8 @@ def run_round(
         atomic_json(run_dir / "results.json", results)
         atomic_json(run_dir / "state.json", {"status": "done", "pid": os.getpid(), "id": run_id})
         return run_dir
+    except _Paused:
+        raise
     except Exception as exc:
         atomic_json(run_dir / "state.json", {"status": "failed", "pid": os.getpid(), "error": str(exc), "id": run_id})
         for proc in procs.values():
@@ -316,41 +413,72 @@ def _remember(run_dir: Path, generation: int) -> dict:
     }
 
 
-def run_chain(game_id: str, seats: list[dict], steps: int) -> None:
+def run_chain(
+    game_id: str,
+    seats: list[dict],
+    steps: int,
+    *,
+    start_generation: int | None = None,
+    resume_dir: Path | None = None,
+) -> None:
     """Keep training. Each generation starts from the best record-life weights and new seeds."""
-    stop = runs_root() / "stop.request"
-    if stop.is_file():
-        stop.unlink()
+    if resume_dir is None:
+        for name in ("stop.request", "pause.request"):
+            path = runs_root() / name
+            if path.is_file():
+                path.unlink()
     rows = load_rows(runs_root())
     if not rows:
         rows = collapsed_history(_finished_rounds(runs_root()))
         save_rows(runs_root(), rows)
     generation = (int(rows[-1]["generation"]) + 1) if rows else 0
+    if start_generation is not None:
+        generation = start_generation
+    stamp = _game_stamp(game_id)
+    pending_resume = resume_dir
     try:
         while True:
-            sources = _seed_sources(seats)
-            present = [source for source in sources if source]
+            sources = None if pending_resume is not None else _seed_sources(seats, stamp)
+            present = [source for source in (sources or []) if source]
             parent_score = max((source["score"] for source in present), default=None)
             same_parent = len(present) == 6 and len({str(source["path"]) for source in present}) == 1
             parent_name = present[0]["name"] if same_parent else None
+            if pending_resume is None and pause_requested():
+                _write_pause(game_id, seats, steps, generation, None, "between", parent_score, parent_name)
+                _set_chain("paused", "paused", generation, parent_score, parent_name)
+                return
             _set_chain("running", "between", generation, parent_score, parent_name)
-            run_dir = run_round(
-                game_id,
-                seats_for_generation(seats, generation),
-                steps,
-                generation=generation,
-                seed_sources=sources,
-                parent_score=parent_score,
-                parent_name=parent_name,
-                chained=True,
-            )
+            try:
+                run_dir = run_round(
+                    game_id,
+                    seats_for_generation(seats, generation),
+                    steps,
+                    generation=generation,
+                    seed_sources=sources,
+                    parent_score=parent_score,
+                    parent_name=parent_name,
+                    chained=True,
+                    resume_dir=pending_resume,
+                )
+            except _Paused as paused:
+                _write_pause(game_id, seats, steps, generation, paused.run_dir.name, "training", parent_score, parent_name)
+                _set_chain("paused", "paused", generation, parent_score, parent_name)
+                return
+            pending_resume = None
+            pause_file = runs_root() / "pause.json"
+            if pause_file.is_file():
+                pause_file.unlink()
             row = _remember(run_dir, generation)
             previous = rows[-1]["score"] if rows else None
             row["delta"] = None if previous is None else row["score"] - previous
             rows.append(row)
             save_rows(runs_root(), rows)
-            if stop_requested():
+            if chain_followup(stop_requested(), pause_requested()) == "stop":
                 _set_chain("stopped", "stopped", generation, parent_score, parent_name)
+                return
+            if chain_followup(stop_requested(), pause_requested()) == "pause":
+                _write_pause(game_id, seats, steps, generation + 1, None, "between", parent_score, parent_name)
+                _set_chain("paused", "paused", generation + 1, parent_score, parent_name)
                 return
             generation += 1
     except Exception:
@@ -358,13 +486,43 @@ def run_chain(game_id: str, seats: list[dict], steps: int) -> None:
         raise
 
 
+def resume_chain() -> None:
+    """Continue the frozen generation, then keep the chain going."""
+    data = read_pause()
+    if data is None:
+        raise RuntimeError("nothing is paused")
+    for name in ("pause.request", "stop.request"):
+        path = runs_root() / name
+        if path.is_file():
+            path.unlink()
+    resume_dir = None
+    run_id = data.get("run_id")
+    if run_id:
+        folder = runs_root() / str(run_id)
+        if (folder / "manifest.json").is_file():
+            resume_dir = folder
+    run_chain(
+        data["game_id"],
+        list(data["seats"]),
+        int(data["steps"]),
+        start_generation=int(data.get("generation") or 0),
+        resume_dir=resume_dir,
+    )
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Run one lab round, or keep training")
-    parser.add_argument("--game", required=True)
+    parser.add_argument("--game")
     parser.add_argument("--steps", type=int, default=200_000)
-    parser.add_argument("--seats", required=True, help="JSON list of {model, seed}")
+    parser.add_argument("--seats", help="JSON list of {model, seed}")
     parser.add_argument("--chain", action="store_true")
+    parser.add_argument("--resume-chain", action="store_true")
     args = parser.parse_args(argv)
+    if args.resume_chain:
+        resume_chain()
+        return 0
+    if not args.game or args.seats is None:
+        parser.error("--game and --seats are required")
     seats = json.loads(args.seats)
     if args.chain:
         run_chain(args.game, seats, args.steps)

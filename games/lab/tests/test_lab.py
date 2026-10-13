@@ -4,13 +4,29 @@ import json
 import pytest
 
 from games.lab.catalog import games_from, load_path
-from games.lab.integrations.smb_1_1 import describe, ram_vector, skip_title
+from games.lab.integrations.smb_1_1 import (
+    DEATH_PENALTY,
+    FULL_CLOCK,
+    SMB_ACTIONS,
+    CLEAR_X,
+    STAGE_SPAN,
+    STALL_PENALTY,
+    describe,
+    note_clear,
+    progress,
+    ram_vector,
+    skip_title,
+    step_reward,
+)
+from games.lab.stamp import write_stamp
 from games.lab.lineage import champion, collapsed_history, seats_for_generation
 from games.lab.models import registry
-from games.lab.paths import REPO_ROOT
+from games.lab.paths import REPO_ROOT, chain_followup, pause_requested, stop_requested
+from games.lab.supervisor import _budget_met, resume_chain
 from games.lab.publish import finalize
 from games.lab.ranking import winner
-from games.lab.roms import SMB_SHA1, SMB_SHA256, RomRejected, accept_smb
+from games.lab.roms import SMB_SHA1, SMB_SHA256, RomRejected, accept_smb, pinned_smb
+from games.lab.worker import main as worker_main
 from games.lab.worker import train
 
 
@@ -94,7 +110,69 @@ def test_smb_ram_facts():
     ram[0x0016] = 0x31
     ram[0x001D] = 3
     assert describe(bytes(ram))["flag_get"] is True
-    assert len(ram_vector(bytes(ram))) == 7
+    assert len(ram_vector(bytes(ram))) == 9
+    assert ("DOWN",) in SMB_ACTIONS and ("UP",) in SMB_ACTIONS
+
+
+def test_later_level_beats_the_flag_and_death_is_a_loss():
+    flag = {"world": 1, "stage": 1, "x_pos": 3161, "time": 400, "flag_get": True, "dead": False, "dying": False, "game_over": False}
+    assert progress(flag) == 3161
+    next_level = {"world": 1, "stage": 2, "x_pos": 0, "time": 400, "flag_get": False, "dead": False, "dying": False, "game_over": False}
+    assert progress(next_level) == STAGE_SPAN
+    reward, high, dead = step_reward(3161, next_level, True)
+    gain = STAGE_SPAN - 3161
+    assert dead is False and high == STAGE_SPAN and reward == gain * (1 + 400 / FULL_CLOCK)
+    # The clear sequence counts the timer down while the flag is still set.
+    clearing = {**flag, "time": 0}
+    reward, high, dead = step_reward(3161, clearing, True)
+    assert dead is False and reward == 0 and high == 3161
+    timeout = {**flag, "time": 0, "flag_get": False, "x_pos": 200}
+    reward, high, dead = step_reward(200, timeout, True)
+    assert dead is True and reward == -DEATH_PENALTY and high == 200
+    warp = {"world": 4, "stage": 1, "x_pos": 40, "time": 400, "flag_get": False, "dead": False, "dying": False, "game_over": False}
+    assert progress(warp) > progress(next_level)
+    # The flag object is gone and the timer has hit 0, but Mario is still walking into the castle.
+    state = note_clear(None, flag)
+    assert state["cleared"] is True
+    castle = {**flag, "time": 0, "flag_get": False, "x_pos": 3266, "dying": True, "player_state": 0x08}
+    state = note_clear(state, castle)
+    assert state["cleared"] is True
+    reward, high, dead = step_reward(3266, castle, True, state["cleared"])
+    assert dead is False and high == 3266 and reward == 0
+    state = note_clear(state, next_level)
+    assert state["cleared"] is False
+    reward, high, dead = step_reward(3266, next_level, True, state["cleared"])
+    assert dead is False and high == STAGE_SPAN
+    # The level number ticks up while Mario is still at the castle.
+    bump = {**castle, "world": 1, "stage": 2, "x_pos": CLEAR_X}
+    latch = note_clear(None, flag)
+    latch = note_clear(latch, castle)
+    latch = note_clear(latch, bump)
+    assert latch["cleared"] is True
+    reward, high, dead = step_reward(CLEAR_X, bump, True, True, latch["at"])
+    assert dead is False and high == CLEAR_X and reward == 0
+    latch = note_clear(latch, {**bump, "time": 400})
+    assert latch["cleared"] is True
+    _, high, dead = step_reward(CLEAR_X, {**bump, "time": 400}, True, True, latch["at"])
+    assert dead is False and high == CLEAR_X
+    opened = {**next_level, "x_pos": 120}
+    assert note_clear(latch, opened)["cleared"] is False
+    _, high, dead = step_reward(CLEAR_X, opened, True, False)
+    assert dead is False and high == STAGE_SPAN + 120
+    crushed = {**castle, "player_state": 0x0B}
+    assert step_reward(3266, crushed, True, True)[2] is True
+    # The card score stays the position. A full clock doubles a gain. Half clock is 1.5x.
+    moving = {"world": 1, "stage": 1, "x_pos": 100, "time": FULL_CLOCK, "flag_get": False, "dead": False, "dying": False, "game_over": False}
+    reward, high, dead = step_reward(80, moving, True)
+    assert dead is False and high == 100 and reward == 40
+    late_reward, late_high, late_dead = step_reward(80, {**moving, "time": 200}, True)
+    assert late_dead is False and late_high == 100 and late_reward == 30 and late_reward < reward
+    # Standing still costs one demerit. The flag, the clear, and a death do not add it.
+    stall_reward, stall_high, stall_dead = step_reward(80, {**moving, "x_pos": 80}, True)
+    assert stall_dead is False and stall_high == 80 and stall_reward == -STALL_PENALTY
+    assert step_reward(3161, clearing, True)[0] == 0
+    assert step_reward(3266, castle, True, True)[0] == 0
+    assert step_reward(200, timeout, True)[0] == -DEATH_PENALTY
 
 
 def test_skip_title_stops_once_the_clock_runs():
@@ -155,6 +233,13 @@ def test_finalize_drops_thumbnails_and_keeps_the_video(tmp_path):
     assert not (seat / "latest.jpg").exists()
 
 
+def test_pinned_smb_skips_a_file_that_is_not_the_world_rom(tmp_path, monkeypatch):
+    monkeypatch.setenv("LAB_HOME", str(tmp_path))
+    (tmp_path / "roms").mkdir()
+    (tmp_path / "roms" / "smb.nes").write_bytes(b"NES\x1a" + b"\x00" * 32)
+    assert pinned_smb() is None
+
+
 def test_rom_pin_rejects_anything_else():
     assert SMB_SHA1 == "ea343f4e445a9050d4b4fbac2c77d0693b1d0922"
     assert len(SMB_SHA256) == 64
@@ -162,11 +247,32 @@ def test_rom_pin_rejects_anything_else():
         accept_smb(b"NES\x1a" + b"\x00" * 32)
 
 
-def test_registry_lists_four_and_ram_refuses_a_bootable_game():
-    assert registry.ids() == ["ppo_cnn", "ppo_lstm", "dqn_cnn", "ppo_ram"]
+def test_registry_lists_the_menu_and_ram_refuses_a_bootable_game():
+    assert registry.ids() == [
+        "ppo_cnn", "ppo_cnn_explore", "ppo_cnn_steady", "ppo_lstm", "dqn_cnn", "ppo_ram",
+    ]
     registry.check("ppo_cnn", None)
     with pytest.raises(ValueError):
         registry.check("ppo_ram", None)
+
+
+def test_default_lineup_is_six_different_models():
+    from games.lab.models.ppo_cnn import ENT_COEF as standard
+    from games.lab.models.ppo_cnn_explore import ENT_COEF as explore
+    from games.lab.models.ppo_cnn_steady import ENT_COEF as steady
+    from games.lab.seats import DEFAULT_MODELS, default_seat_specs
+
+    class _Scored:
+        def ram_vector(self, _ram):
+            return ()
+
+    specs = default_seat_specs()
+    assert [spec["model"] for spec in specs] == list(DEFAULT_MODELS)
+    assert len(set(DEFAULT_MODELS)) == 6
+    assert [spec["seed"] for spec in specs] == [1, 2, 3, 4, 5, 6]
+    for model_id in DEFAULT_MODELS:
+        registry.check(model_id, _Scored())
+    assert standard == 0.01 and explore == 0.05 and steady == 0.001
 
 
 def test_alive_check_leaves_the_process_running():
@@ -196,6 +302,12 @@ def test_page_mentions_six_seats():
     assert "/replay/" not in text
     assert "showWinner" not in text
     assert "repeat(3, minmax(0, 1fr))" in text
+    assert "defaultModels" in text and "openModel" in text
+    assert "practice the best run" in text
+    assert "This generation" in text and "Networks" in text and "Hints" in text
+    assert "window.open" in text and "/watch/" in text
+    watch = (REPO_ROOT / "games" / "lab" / "static" / "watch.html").read_text(encoding="utf-8")
+    assert "Full speed" in watch and "Training keeps going" in watch
 
 
 def _seat(seat, name, score, steps, deaths):
@@ -249,6 +361,12 @@ def test_champion_is_the_highest_long_run_with_a_zip(tmp_path):
     found = champion(tmp_path, "ppo_cnn")
     assert found["score"] == 1950 and found["seat"] == 0
     assert found["path"].parent.name == "0"
+    current = {"actions": [["RIGHT"]], "objective": "progress", "ram": 9}
+    assert champion(tmp_path, "ppo_cnn", current) is None
+    kept = tmp_path / "tie" / "seats" / "1" / "best.zip"
+    write_stamp(kept, current)
+    stamped = champion(tmp_path, "ppo_cnn", current)
+    assert stamped["score"] == 1950 and stamped["path"] == kept
 
 
 def test_seed_from_and_resume_are_exclusive(tmp_path):
@@ -264,3 +382,404 @@ def test_resume_without_a_checkpoint_raises(tmp_path):
 def test_missing_seed_zip_raises(tmp_path):
     with pytest.raises(FileNotFoundError):
         train(None, "ppo_cnn", 1, 10, tmp_path, {}, False, seed_from=tmp_path / "missing.zip")
+
+
+def test_stop_file_is_visible(tmp_path, monkeypatch):
+    monkeypatch.setenv("LAB_RUNS", str(tmp_path))
+    assert stop_requested() is False
+    (tmp_path / "stop.request").write_text("stop\n", encoding="utf-8")
+    assert stop_requested() is True
+    assert pause_requested() is False
+
+
+def test_pause_leaves_the_generation_and_stop_wins(tmp_path, monkeypatch):
+    monkeypatch.setenv("LAB_RUNS", str(tmp_path))
+    assert chain_followup(False, False) == "continue"
+    assert chain_followup(False, True) == "pause"
+    assert chain_followup(True, True) == "stop"
+    (tmp_path / "pause.request").write_text("pause\n", encoding="utf-8")
+    assert pause_requested() is True
+    code = worker_main([
+        "--system", "nes",
+        "--rom", str(tmp_path / "missing.nes"),
+        "--model", "ppo_cnn",
+        "--seed", "1",
+        "--steps", "256",
+        "--seat-dir", str(tmp_path / "seat"),
+        "--seat", "0",
+        "--name", "Red",
+        "--color", "#d64545",
+        "--objective", "progress",
+    ])
+    assert code == 0
+    assert not (tmp_path / "seat").exists()
+
+
+def test_paused_seat_still_owes_the_rest_of_its_budget(tmp_path):
+    seat = tmp_path / "seats" / "0"
+    seat.mkdir(parents=True)
+    (seat / "status.json").write_text(json.dumps({"steps": 50000, "finished": True}), encoding="utf-8")
+    assert _budget_met(seat, 200000) is False
+    (seat / "status.json").write_text(json.dumps({"steps": 200192, "finished": True}), encoding="utf-8")
+    assert _budget_met(seat, 200000) is True
+
+
+def test_resume_without_a_pause_raises(tmp_path, monkeypatch):
+    monkeypatch.setenv("LAB_RUNS", str(tmp_path))
+    with pytest.raises(RuntimeError):
+        resume_chain()
+
+
+def test_shared_run_replays_the_best_prefix_and_can_enter_1_2(tmp_path):
+    from games.lab.tape import (
+        Route,
+        applied_action,
+        best_saved,
+        compatible,
+        make_tape,
+        peak_prefix,
+        publish,
+        seed_run,
+        shield_reward,
+        write_tape,
+    )
+    actions = [1, 2, 3, 4, 5]
+    # The presses after the high-water mark are the death. They stay out of the run.
+    assert peak_prefix(actions, [10, 50, 3161, 3161, 100]) == [1, 2, 3]
+    # Entering 1-2 scores STAGE_SPAN, above the flag, so the run keeps those presses.
+    assert peak_prefix(actions, [10, 3161, STAGE_SPAN, STAGE_SPAN + 40, STAGE_SPAN + 40]) == [1, 2, 3, 4]
+    # A later world stays in the run up to the furthest step. The repeated score is the death.
+    assert peak_prefix(
+        [1, 2, 3, 4, 5, 6],
+        [3161, CLEAR_X, STAGE_SPAN + 40, STAGE_SPAN + 200, 2 * STAGE_SPAN + 15, 2 * STAGE_SPAN + 15],
+    ) == [1, 2, 3, 4, 5]
+
+    flag = make_tape([1, 2], 3161, 1, 1, 0, "Red", 12, "progress")
+    shared = tmp_path / "best.tape.json"
+    assert publish(shared, flag) is True
+    assert publish(shared, {**flag, "score": 3161, "actions": [0, 1]}) is False
+    assert publish(shared, {**flag, "score": 90, "actions": [0]}) is False
+    into_1_2 = make_tape([1, 2, 11], STAGE_SPAN, 1, 2, 2, "Blue", 12, "progress")
+    assert publish(shared, into_1_2) is True
+    saved = json.loads(shared.read_text(encoding="utf-8"))
+    assert saved["score"] == STAGE_SPAN and saved["world"] == 1 and saved["stage"] == 2
+    assert saved["actions"] == [1, 2, 11]
+
+    assert applied_action(saved, 0, 9, 12, "progress") == (1, True)
+    assert applied_action(saved, 1, 9, 12, "progress") == (2, True)
+    assert applied_action(saved, 3, 9, 12, "progress") == (9, False)
+    old_pad = {**saved, "n_actions": 7}
+    assert compatible(old_pad, 12, "progress") is False
+    assert applied_action(old_pad, 0, 9, 12, "progress") == (9, False)
+    assert applied_action(saved, 0, 9, 12, "steps") == (9, False)
+
+    matched = [8.0]
+    shield_reward(matched, [1], {"forced": True, "applied_action": 1}, True)
+    assert matched == [8.0]
+    missed = [STAGE_SPAN - 3161]
+    shield_reward(missed, [4], {"forced": True, "applied_action": 1}, True)
+    assert missed == [0.0]
+    dqn = [STAGE_SPAN - 3161]
+    shield_reward(dqn, [4], {"forced": True, "applied_action": 1}, False)
+    assert dqn == [STAGE_SPAN - 3161]
+    free = [3.0]
+    shield_reward(free, [4], {"forced": False, "applied_action": 4}, True)
+    assert free == [3.0]
+
+    route = Route(shared, 12, "progress")
+    route.on_reset()
+    assert route.on_step(9) == (1, True)
+    assert route.on_step(9) == (2, True)
+    assert route.on_step(9) == (11, True)
+    assert route.on_step(9) == (9, False)
+    route.on_reset()
+    write_tape(shared, make_tape([4], 7, 1, 1, 1, "Green", 7, "progress"))
+    # A different button count is not this seat's run. The loaded 1-2 run stays.
+    assert route.on_step(9) == (1, True)
+
+    adopted = tmp_path / "adopt.json"
+    seat = Route(adopted, 12, "progress")
+    seat.on_reset()
+    assert seat.on_step(3) == (3, False)
+    write_tape(adopted, into_1_2)
+    # Mid-life the buttons stay as they are. The next life takes the better run.
+    assert seat.on_step(3) == (3, False)
+    seat.on_reset()
+    assert seat.on_step(3) == (1, True)
+    fresh = Route(adopted, 12, "progress")
+    fresh.on_reset()
+    write_tape(adopted, make_tape([6, 6], STAGE_SPAN + 80, 1, 2, 4, "Gold", 12, "progress"))
+    # Published after reset, before the first press, so this life already follows it.
+    assert fresh.on_step(3) == (6, True)
+    assert fresh.on_step(3) == (6, True)
+    assert fresh.on_step(3) == (3, False)
+
+    runs = tmp_path / "runs"
+    early = runs / "20261001T000000Z"
+    early.mkdir(parents=True)
+    write_tape(early / "best.tape.json", flag)
+    later = runs / "20261002T000000Z" / "seats" / "2"
+    later.mkdir(parents=True)
+    write_tape(later / "best.tape.json", into_1_2)
+    (runs / "20261002T000000Z").mkdir(exist_ok=True)
+    other = runs / "other"
+    other.mkdir()
+    write_tape(other / "best.tape.json", make_tape([1], 99999, 1, 1, 0, "Red", 12, "steps"))
+    new_run = runs / "20261003T000000Z"
+    new_run.mkdir()
+    assert seed_run(new_run, runs, 12, "progress") is True
+    seeded = json.loads((new_run / "best.tape.json").read_text(encoding="utf-8"))
+    assert seeded["score"] == STAGE_SPAN and seeded["stage"] == 2
+    write_tape(new_run / "best.tape.json", flag)
+    # The generation had the flag life. The saved 1-2 run is better, so it replaces that file.
+    assert seed_run(new_run, runs, 12, "progress") is True
+    assert json.loads((new_run / "best.tape.json").read_text(encoding="utf-8"))["score"] == STAGE_SPAN
+    assert seed_run(new_run, runs, 12, "progress") is False
+    assert best_saved(runs, 7, "progress") is None
+
+
+def test_a_shorter_run_does_not_replace_the_flag_life(tmp_path):
+    from games.lab.tape import Route, make_tape, parent_floor, seed_run, write_tape
+    (tmp_path / "manifest.json").write_text(json.dumps({"parent_score": 3266}), encoding="utf-8")
+    assert parent_floor(tmp_path) == 3266
+    assert parent_floor(tmp_path / "missing") == 0
+    weak = make_tape([1, 2, 2], 1427, 1, 1, 0, "Red", 12, "progress")
+    path = tmp_path / "live" / "best.tape.json"
+    write_tape(path, weak)
+    route = Route(path, 12, "progress", min_score=3266)
+    route.on_reset()
+    # 1427 is behind the flag life, so the policy's own button is played.
+    assert route.on_step(4) == (4, False)
+    opened = make_tape([8, 8], STAGE_SPAN, 1, 2, 1, "Green", 12, "progress")
+    write_tape(path, opened)
+    route.on_reset()
+    assert route.on_step(4) == (8, True)
+    assert route.on_step(4) == (8, True)
+    assert route.on_step(4) == (4, False)
+
+    runs = tmp_path / "runs"
+    old = runs / "old"
+    old.mkdir(parents=True)
+    write_tape(old / "best.tape.json", weak)
+    fresh = runs / "new"
+    fresh.mkdir()
+    assert seed_run(fresh, runs, 12, "progress", 3266) is False
+    assert not (fresh / "best.tape.json").is_file()
+    write_tape(fresh / "best.tape.json", weak)
+    write_tape(old / "best.tape.json", opened)
+    assert seed_run(fresh, runs, 12, "progress", 3266) is True
+    saved = json.loads((fresh / "best.tape.json").read_text(encoding="utf-8"))
+    assert saved["score"] == STAGE_SPAN and saved["stage"] == 2
+    tied = make_tape([3, 3], 3266, 1, 1, 1, "Green", 12, "progress")
+    tied_root = tmp_path / "tied-runs"
+    source = tied_root / "old"
+    source.mkdir(parents=True)
+    write_tape(source / "best.tape.json", tied)
+    matched = tied_root / "matched"
+    matched.mkdir()
+    assert seed_run(matched, tied_root, 12, "progress", 3266) is True
+    assert json.loads((matched / "best.tape.json").read_text(encoding="utf-8"))["score"] == 3266
+    route = Route(matched / "best.tape.json", 12, "progress", min_score=3266)
+    route.on_reset()
+    assert route.on_step(4) == (3, True)
+
+
+def test_a_real_later_world_replaces_the_castle_bump(tmp_path):
+    from games.lab.tape import Route, comparable, floor_value, make_tape, publish, write_tape
+    glitch = make_tape([1, 2], STAGE_SPAN + CLEAR_X, 1, 2, 3, "Gold", 12, "progress")
+    assert comparable(glitch) == CLEAR_X
+    assert floor_value(STAGE_SPAN + CLEAR_X) == CLEAR_X
+    real = make_tape(
+        [1, 2, 3, 4], STAGE_SPAN + 120, 1, 2, 1, "Green", 12, "progress", scored_clear=True
+    )
+    assert comparable(real) == STAGE_SPAN + 120
+    path = tmp_path / "best.tape.json"
+    assert publish(path, glitch) is True
+    assert publish(path, real) is True
+    saved = json.loads(path.read_text(encoding="utf-8"))
+    assert saved["actions"] == [1, 2, 3, 4]
+    assert saved["score"] == STAGE_SPAN + 120 and saved["world"] == 1 and saved["stage"] == 2
+    # The old file is still practiced: its buttons clear 1-1, and the floor was the bump.
+    old = tmp_path / "old.json"
+    write_tape(old, glitch)
+    route = Route(old, 12, "progress", min_score=STAGE_SPAN + CLEAR_X)
+    route.on_reset()
+    assert route.on_step(9) == (1, True)
+    route = Route(path, 12, "progress", min_score=STAGE_SPAN + CLEAR_X)
+    route.on_reset()
+    assert route.on_step(9) == (1, True)
+    assert route.on_step(9) == (2, True)
+    assert route.on_step(9) == (3, True)
+    assert route.on_step(9) == (4, True)
+
+
+def test_the_same_place_with_more_time_or_fewer_presses_replaces(tmp_path):
+    from games.lab.tape import (
+        Route,
+        best_saved,
+        better,
+        further_or_faster,
+        make_tape,
+        pace,
+        publish,
+        search_life,
+        seed_run,
+        write_tape,
+    )
+    slow = make_tape([1, 2, 3, 4], 3161, 1, 1, 0, "Red", 12, "progress", time=200)
+    fast = make_tape([5, 6, 7, 8], 3161, 1, 1, 1, "Green", 12, "progress", time=340)
+    short = make_tape([1, 4], 3161, 1, 1, 2, "Blue", 12, "progress", time=200)
+    plain = make_tape([1, 2, 3, 4], 3161, 1, 1, 0, "Red", 12, "progress")
+    assert pace(plain) is None and pace(slow) == 200
+    assert better(fast, slow) is True
+    assert better(slow, fast) is False
+    assert better(slow, slow) is False
+    # More time left wins even when that run used more presses.
+    assert better(fast, short) is True
+    assert better(short, fast) is False
+    # An older file has no clock. Fewer presses replaces it. More presses do not.
+    assert better(short, plain) is True
+    assert better(make_tape([1, 2, 3, 4, 5, 6], 3161, 1, 1, 0, "Red", 12, "progress"), plain) is False
+    further = make_tape([1], STAGE_SPAN, 1, 2, 2, "Blue", 12, "progress", time=10)
+    assert better(further, fast) is True
+    assert further_or_faster(3161, 340, 4, 3161, 200, 4) is True
+    assert further_or_faster(3161, 100, 2, 3161, 200, 4) is False
+    assert further_or_faster(STAGE_SPAN, 10, 9, 3161, 340, 2) is True
+    assert search_life(8) is True and search_life(16) is True
+    assert search_life(1) is False and search_life(7) is False and search_life(0) is False
+
+    path = tmp_path / "best.tape.json"
+    assert publish(path, slow) is True
+    assert publish(path, {**slow, "actions": [0, 1, 2, 3]}) is False
+    assert publish(path, fast) is True
+    saved = json.loads(path.read_text(encoding="utf-8"))
+    assert saved["time"] == 340 and saved["score"] == 3161 and saved["actions"] == [5, 6, 7, 8]
+    route = Route(path, 12, "progress", min_score=3161)
+    route.on_reset()
+    assert route.on_step(9) == (5, True)
+    write_tape(path, slow)
+    # A slower file on disk does not pull the loaded run backward.
+    assert route.on_step(9) == (6, True)
+    route.on_reset()
+    assert route.on_step(9) == (5, True)
+    route.on_reset(search=True)
+    assert route.on_step(9) == (9, False)
+    assert route.on_step(4) == (4, False)
+
+    runs = tmp_path / "runs"
+    early = runs / "a"
+    early.mkdir(parents=True)
+    write_tape(early / "best.tape.json", slow)
+    later = runs / "b" / "seats" / "1"
+    later.mkdir(parents=True)
+    write_tape(later / "best.tape.json", fast)
+    assert best_saved(runs, 12, "progress")["time"] == 340
+    dest = runs / "new"
+    dest.mkdir()
+    write_tape(dest / "best.tape.json", slow)
+    assert seed_run(dest, runs, 12, "progress", 3161) is True
+    assert json.loads((dest / "best.tape.json").read_text(encoding="utf-8"))["time"] == 340
+    assert seed_run(dest, runs, 12, "progress", 3161) is False
+
+
+def test_worker_exits_before_training_when_stop_is_set(tmp_path, monkeypatch):
+    monkeypatch.setenv("LAB_RUNS", str(tmp_path))
+    (tmp_path / "stop.request").write_text("stop\n", encoding="utf-8")
+    code = worker_main([
+        "--system", "nes",
+        "--rom", str(tmp_path / "missing.nes"),
+        "--model", "ppo_cnn",
+        "--seed", "1",
+        "--steps", "256",
+        "--seat-dir", str(tmp_path / "seat"),
+        "--seat", "0",
+        "--name", "Red",
+        "--color", "#d64545",
+        "--objective", "x_pos",
+    ])
+    assert code == 0
+    assert not (tmp_path / "seat").exists()
+
+
+def test_generation_rank_orders_the_six_models_by_score():
+    from games.lab.ranking import generation_rank
+    seats = [
+        {"seat": 0, "name": "Red", "model": "ppo_cnn", "score": 1127, "color": "#d64545"},
+        {"seat": 1, "name": "Green", "model": "ppo_lstm", "score": 7362, "color": "#3c9d5a"},
+        {"seat": 3, "name": "Gold", "model": "ppo_ram", "score": 7362, "color": "#d4a017"},
+    ]
+    ranked = generation_rank(seats, 3266)
+    assert [row["name"] for row in ranked] == ["Green", "Gold", "Red"]
+    assert ranked[0]["rank"] == 1 and ranked[0]["delta"] == 7362 - 3266
+    assert ranked[1]["delta"] == 7362 - 3266
+    assert ranked[2]["delta"] == 1127 - 3266
+    assert generation_rank(seats, None)[0]["delta"] is None
+
+
+def test_networks_show_the_shape_of_each_learner():
+    from games.lab.models.networks import layer_params
+    described = {item["id"]: item["network"] for item in registry.describe()}
+    assert set(described) == {
+        "ppo_cnn", "ppo_cnn_explore", "ppo_cnn_steady", "ppo_lstm", "dqn_cnn", "ppo_ram",
+    }
+    assert layer_params({"kind": "conv", "in": 4, "out": 32, "k": 8}) == 8224
+    assert layer_params({"kind": "linear", "in": 9, "out": 64}) == 640
+    assert layer_params({"kind": "lstm", "in": 512, "hidden": 128}) == 4 * 128 * (512 + 128 + 2)
+    cnn = described["ppo_cnn"]["parameters"]
+    assert described["ppo_cnn_explore"]["parameters"] == cnn
+    assert described["ppo_cnn_steady"]["parameters"] == cnn
+    assert described["ppo_cnn_explore"]["note"] != described["ppo_cnn_steady"]["note"]
+    assert described["dqn_cnn"]["parameters"] < cnn
+    assert described["ppo_lstm"]["parameters"] > cnn
+    assert described["ppo_ram"]["parameters"] < 20_000
+    assert cnn > 1_000_000
+    assert described["ppo_ram"]["input"].startswith("9")
+    assert described["ppo_cnn"]["input"].startswith("4 grayscale")
+
+
+def test_a_hint_plays_after_the_shared_run_and_a_note_does_not(tmp_path):
+    from games.lab.hints import add_hint, change_hint, hint_button, labels, parse_actions, read_hints
+    from games.lab.tape import Route, make_tape, write_tape
+    names = labels(SMB_ACTIONS)
+    assert parse_actions("RIGHT+B, DOWN", names) == [SMB_ACTIONS.index(("RIGHT", "B")), SMB_ACTIONS.index(("DOWN",))]
+    assert parse_actions("", names) == []
+    store = tmp_path / "hints.json"
+    note = add_hint(store, {"title": "World 1-2 warp", "world": 1, "stage": 2, "note": "along the ceiling", "actions": []})
+    assert note["actions"] == [] and note["enabled"] is True
+    assert hint_button(read_hints(store), 1, 2, 0, 12) is None
+    played = add_hint(store, {"title": "Down the pipe", "world": 1, "stage": 2, "note": "", "actions": [10, 10]})
+    assert hint_button(read_hints(store), 1, 2, 0, 12) == 10
+    change_hint(store, played["id"], enabled=False)
+    assert hint_button(read_hints(store), 1, 2, 0, 12) is None
+    change_hint(store, played["id"], enabled=True)
+    tape = tmp_path / "best.tape.json"
+    write_tape(tape, make_tape([1, 2], 3161, 1, 1, 0, "Red", 12, "progress"))
+    route = Route(tape, 12, "progress", hints_path=store)
+    route.on_reset()
+    assert route.on_step(9, 1, 1) == (1, True)
+    assert route.on_step(9, 1, 1) == (2, True)
+    assert route.on_step(9, 1, 1) == (9, False)
+    assert route.on_step(9, 1, 2) == (10, True)
+    assert route.on_step(9, 1, 2) == (10, True)
+    assert route.on_step(9, 1, 2) == (9, False)
+    change_hint(store, note["id"], remove=True)
+    change_hint(store, played["id"], remove=True)
+    assert read_hints(store) == []
+
+
+def test_playback_shows_every_frame_of_the_saved_buttons():
+    from games.lab.playback import drive, film_matches
+    seen = []
+    count = drive(
+        [1, 3],
+        lambda action: ("button", action),
+        4,
+        lambda buttons: seen.append(buttons) or buttons,
+        lambda frame: None,
+    )
+    assert count == 8
+    assert seen == [("button", 1)] * 4 + [("button", 3)] * 4
+    tape = {"actions": [1, 1], "score": 7362, "n_actions": 12}
+    assert film_matches({"score": 7362, "presses": 2, "n_actions": 12, "frames": 9}, tape) is True
+    assert film_matches({"score": 3161, "presses": 2, "n_actions": 12, "frames": 9}, tape) is False
+    assert film_matches(None, tape) is False

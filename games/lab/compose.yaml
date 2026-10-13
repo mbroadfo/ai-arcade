@@ -1,0 +1,23 @@
+# The page and every seat it starts. This file does not launch a training round.
+# `docker compose stop` ends the page and the seats together.
+services:
+  lab:
+    build: .
+    image: ai-arcade-lab
+    gpus: all
+    init: true
+    shm_size: 2gb
+    ports:
+      - "8790:8790"
+    working_dir: /src
+    command: ["python", "-m", "games.lab.server"]
+    environment:
+      LAB_HOME: /lab
+      LAB_RUNS: /runs
+      LAB_PORT: "8790"
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - C:\Users\Mike\Documents\Code\ai-arcade:/src
+      - C:\Users\Mike\mario-lab:/lab
+      - C:\Users\Mike\mario-runs:/runs
+      - C:\Users\Mike\.ssh:/root/.ssh:ro

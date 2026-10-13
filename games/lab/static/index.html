@@ -45,6 +45,18 @@
   .fame th { font-size: 10px; font-weight: 600; color: #a89f90; text-align: left; }
   .fame td, .fame th { padding: 1px 6px 1px 0; white-space: nowrap; }
   .fame td.num, .fame th.num { text-align: right; }
+  .card { position: relative; }
+  .card[data-run] { cursor: pointer; }
+  .rank { position: absolute; top: 4px; right: 4px; background: #e6d3a3; color: #1a150e; border-radius: 4px; padding: 0 6px; font-size: 12px; z-index: 1; }
+  .net { margin: 0 0 8px; }
+  .net .layers { display: flex; height: 14px; gap: 2px; margin: 2px 0; }
+  .net .layers i { display: block; height: 100%; min-width: 2px; }
+  .net .wide { height: 6px; background: #2c2822; border-radius: 3px; overflow: hidden; }
+  .net .wide b { display: block; height: 100%; }
+  .hint-row { margin: 0 0 8px; }
+  #hint-form { display: grid; gap: 4px; margin: 6px 0 10px; }
+  #hint-form input[type="text"], #hint-form input:not([type]) { width: 100%; box-sizing: border-box; }
+  .hint-actions { display: flex; gap: 4px; margin-top: 2px; }
 </style>
 </head>
 <body>
@@ -54,6 +66,8 @@
     <select id="game" aria-label="Game"></select>
     <label>Steps <input id="steps" type="number" min="256" max="5000000" value="200000"></label>
     <button id="start" type="button">Start</button>
+    <button id="pause" type="button" disabled>Pause</button>
+    <button id="resume" type="button" disabled>Resume</button>
     <button id="stop" type="button" disabled>Stop</button>
     <span id="budget-label" class="dim"></span>
     <span id="game-note" class="dim"></span>
@@ -69,6 +83,21 @@
     <h2>Stats</h2>
     <p id="round-note" class="dim"></p>
     <div id="stats"></div>
+    <h2>This generation</h2>
+    <div id="rank" class="dim">No generation yet.</div>
+    <h2>Networks</h2>
+    <div id="networks" class="dim"></div>
+    <h2>Hints</h2>
+    <p id="hint-note-copy" class="dim">A hint with buttons is played after the shared run, in that world and stage. Leave the buttons empty until the route is ready. The warp hint can wait.</p>
+    <div id="hint-list" class="dim">No hints yet.</div>
+    <form id="hint-form">
+      <input id="hint-title" type="text" placeholder="Title, such as World 1-2 warp" maxlength="80" required>
+      <label>World <input id="hint-world" type="number" min="1" max="8" value="1"></label>
+      <label>Stage <input id="hint-stage" type="number" min="1" max="4" value="2"></label>
+      <input id="hint-note" type="text" placeholder="What a person would notice" maxlength="500">
+      <input id="hint-actions" type="text" placeholder="Buttons later, such as RIGHT+B DOWN">
+      <button type="submit">Save hint</button>
+    </form>
     <h2>Hall of fame</h2>
     <div id="fame" class="dim">No finished round yet.</div>
   </aside>
@@ -79,6 +108,8 @@ const gameEl = document.querySelector("#game");
 const noteEl = document.querySelector("#game-note");
 const seatsEl = document.querySelector("#seats");
 const startEl = document.querySelector("#start");
+const pauseEl = document.querySelector("#pause");
+const resumeEl = document.querySelector("#resume");
 const stopEl = document.querySelector("#stop");
 const wallEl = document.querySelector("#wall");
 const statsEl = document.querySelector("#stats");
@@ -87,8 +118,40 @@ const budgetEl = document.querySelector("#budget-label");
 const roundNoteEl = document.querySelector("#round-note");
 let models = [];
 let seatMeta = [];
+let defaultModels = [];
 let games = [];
 let showing = false;
+
+const NETWORKS = {
+  ppo_cnn: {note: "Entropy 0.01. Same shape as Explore and Steady.", input: "4 grayscale frames, 84×84", parameters: 1690797, layers: [{label: "Conv 8×8, 32", params: 8224}, {label: "Conv 4×4, 64", params: 32832}, {label: "Conv 3×3, 64", params: 36928}, {label: "Dense 512", params: 1606144}, {label: "12 buttons", params: 6156}, {label: "Value", params: 513}]},
+  ppo_cnn_explore: {note: "Entropy 0.05. Same shape as the standard CNN, more willing to try a new button.", input: "4 grayscale frames, 84×84", parameters: 1690797, layers: [{label: "Conv 8×8, 32", params: 8224}, {label: "Conv 4×4, 64", params: 32832}, {label: "Conv 3×3, 64", params: 36928}, {label: "Dense 512", params: 1606144}, {label: "12 buttons", params: 6156}, {label: "Value", params: 513}]},
+  ppo_cnn_steady: {note: "Entropy 0.001. Same shape as the standard CNN, more willing to repeat a button.", input: "4 grayscale frames, 84×84", parameters: 1690797, layers: [{label: "Conv 8×8, 32", params: 8224}, {label: "Conv 4×4, 64", params: 32832}, {label: "Conv 3×3, 64", params: 36928}, {label: "Dense 512", params: 1606144}, {label: "12 buttons", params: 6156}, {label: "Value", params: 513}]},
+  ppo_lstm: {note: "The same picture front, then two memories of 128. The memory lasts one life.", input: "4 grayscale frames, 84×84", parameters: 2343213, layers: [{label: "Conv 8×8, 32", params: 8224}, {label: "Conv 4×4, 64", params: 32832}, {label: "Conv 3×3, 64", params: 36928}, {label: "Dense 512", params: 1606144}, {label: "LSTM 128, policy", params: 328704}, {label: "LSTM 128, value", params: 328704}, {label: "12 buttons", params: 1548}, {label: "Value", params: 129}]},
+  dqn_cnn: {note: "The same picture front. One head scores all 12 buttons.", input: "4 grayscale frames, 84×84", parameters: 1690284, layers: [{label: "Conv 8×8, 32", params: 8224}, {label: "Conv 4×4, 64", params: 32832}, {label: "Conv 3×3, 64", params: 36928}, {label: "Dense 512", params: 1606144}, {label: "12 button values", params: 6156}]},
+  ppo_ram: {note: "Nine numbers from the game, then two small layers. No picture.", input: "9 RAM numbers", parameters: 10445, layers: [{label: "Dense 64, policy", params: 640}, {label: "Dense 64, policy", params: 4160}, {label: "12 buttons", params: 780}, {label: "Dense 64, value", params: 640}, {label: "Dense 64, value", params: 4160}, {label: "Value", params: 65}]}
+};
+
+function seatRank(current, provided) {
+  if (Array.isArray(provided) && provided.length) return provided;
+  const seats = (current && current.seats) || [];
+  if (!seats.length) return [];
+  const parent = current && current.manifest ? current.manifest.parent_score : null;
+  const rows = seats.map((seat, index) => {
+    const score = Number(seat.score || 0);
+    return {
+      rank: 0,
+      seat: seat.seat != null ? Number(seat.seat) : index,
+      name: seat.name || "",
+      model: seat.model || "",
+      color: seat.color || "",
+      score: score,
+      delta: parent == null || seat.score == null ? null : score - Number(parent),
+    };
+  });
+  rows.sort((a, b) => b.score - a.score || a.seat - b.seat);
+  rows.forEach((row, index) => { row.rank = index + 1; });
+  return rows;
+}
 
 function showError(text) { errorEl.textContent = text || ""; }
 
@@ -116,7 +179,7 @@ function note() {
   const game = selectedGame();
   if (!game) { noteEl.textContent = ""; return; }
   noteEl.textContent = game.grade === "scored"
-    ? "Scored on distance to the right. Farther along the level wins."
+    ? "Scored on progress through the game. A later level beats the end of 1-1. The same ground pays more while the clock is high, and standing still costs a little. Six different models. They practice the best run once it reaches the score they started from. A faster pass of that ground replaces it. Every eighth life tries its own buttons."
     : game.grade === "bootable"
       ? "Bootable only. The score is steps survived, which is not beating the game."
       : game.reason;
@@ -125,9 +188,17 @@ function note() {
       const model = models.find((item) => item.id === option.value);
       const blocked = game.grade !== "scored" && model && model.needs_ram;
       option.disabled = blocked;
-      if (blocked && select.value === option.value) select.value = "ppo_cnn";
+      if (blocked && select.value === option.value) select.value = openModel(select);
     }
   }
+}
+
+function openModel(select) {
+  const used = new Set(
+    [...seatsEl.querySelectorAll("select")].filter((other) => other !== select).map((other) => other.value)
+  );
+  const candidate = models.find((model) => !model.needs_ram && !used.has(model.id));
+  return candidate ? candidate.id : "ppo_cnn";
 }
 
 function fillSeats() {
@@ -149,7 +220,8 @@ function fillSeats() {
       option.title = model.detail;
       select.appendChild(option);
     }
-    select.value = "ppo_cnn";
+    const preset = defaultModels[index];
+    select.value = preset && models.some((model) => model.id === preset.model) ? preset.model : "ppo_cnn";
     const seed = document.createElement("input");
     seed.type = "number";
     seed.value = String(index + 1);
@@ -189,6 +261,32 @@ async function startRound() {
   }
 }
 
+async function pauseRound() {
+  showError("");
+  pauseEl.disabled = true;
+  try {
+    const response = await fetch("/api/pause", {method: "POST"});
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.error || "could not pause");
+  } catch (exc) {
+    showError(String(exc.message || exc));
+    pauseEl.disabled = false;
+  }
+}
+
+async function resumeRound() {
+  showError("");
+  resumeEl.disabled = true;
+  try {
+    const response = await fetch("/api/resume", {method: "POST"});
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.error || "could not resume");
+  } catch (exc) {
+    showError(String(exc.message || exc));
+    resumeEl.disabled = false;
+  }
+}
+
 async function stopRound() {
   showError("");
   stopEl.disabled = true;
@@ -206,13 +304,14 @@ let wallKey = "";
 
 function viewMode(current) {
   if (!current || !current.state) return "idle";
+  if (current.phase === "paused" || (current.state && current.state.status === "paused")) return "paused";
   if (current.phase === "between") return "between";
   if (current.running || current.state.status === "recording") return "live";
   if (current.state.status === "done" || current.state.status === "failed") return "scores";
   return "idle";
 }
 
-function paintWindows(current, stopRequested, live) {
+function paintWindows(current, stopRequested, live, pauseRequested) {
   const seats = (current && current.seats && current.seats.length)
     ? current.seats
     : seatMeta.map((seat) => ({ name: seat.name, color: seat.color, model: "" }));
@@ -224,15 +323,31 @@ function paintWindows(current, stopRequested, live) {
     seats.forEach((seat, index) => {
       const card = document.createElement("article");
       card.className = "card";
+      card.dataset.seat = String(seat.seat != null ? seat.seat : index);
       card.style.borderColor = seat.color || "#333";
-      if (mode === "scores" || mode === "between") {
+      const runId = current && current.state && current.state.id;
+      if (runId) {
+        card.dataset.run = runId;
+        card.title = "Watch " + (seat.name || "this seat") + "'s best run";
+        card.addEventListener("click", () => {
+          const opened = window.open(
+            "/watch/" + runId + "/" + card.dataset.seat,
+            "lab-seat-" + card.dataset.seat,
+            "popup,width=720,height=820"
+          );
+          if (opened) opened.opener = null;
+        });
+      }
+      if (mode === "scores" || mode === "between" || mode === "paused") {
         const label = document.createElement("div");
         label.className = "empty";
         const name = document.createElement("span");
         name.textContent = seat.name || "";
+        const model = document.createElement("span");
+        model.textContent = modelLabel(seat.model);
         const score = document.createElement("b");
         score.textContent = seat.score == null ? "—" : String(seat.score);
-        label.append(name, score);
+        label.append(name, model, score);
         card.appendChild(label);
       } else {
         const img = document.createElement("img");
@@ -248,17 +363,21 @@ function paintWindows(current, stopRequested, live) {
   const generation = live && live.generation != null ? live.generation : (manifestNote && manifestNote.generation);
   const parent = live && live.parent_score != null ? live.parent_score : (manifestNote && manifestNote.parent_score);
   if (stopRequested && (mode === "live" || mode === "between")) {
-    roundNoteEl.textContent = "Stopping when this generation finishes. The windows stay on the live game.";
+    roundNoteEl.textContent = "Stopping. The seats that are still training save and the run ends.";
+  } else if (pauseRequested && (mode === "live" || mode === "between")) {
+    roundNoteEl.textContent = "Pausing. The seats save their checkpoints. Resume continues this generation.";
+  } else if (mode === "paused") {
+    roundNoteEl.textContent = "Paused. Resume continues this generation from the saved checkpoints. Click a seat to watch its best run.";
   } else if (mode === "between") {
     roundNoteEl.textContent = parent == null
       ? "Generation " + generation + " is starting from scratch. The windows switch to the live game when the seats are in the level."
       : "Generation " + generation + " is loading the best weights (x " + parent + "). The windows switch to the live game when the seats are in the level.";
   } else if (mode === "live") {
     roundNoteEl.textContent = parent == null
-      ? "Generation " + generation + " is training live."
-      : "Generation " + generation + " is training live, starting from x " + parent + ".";
+      ? "Generation " + generation + " is training live. The seats practice the best run once it reaches the score they started from. Click a seat to watch that run."
+      : "Generation " + generation + " is training live, starting from x " + parent + ". Click a seat to watch its best run.";
   } else if (mode === "scores") {
-    roundNoteEl.textContent = "Training is stopped. Start continues from the best weights, and these windows show the live game.";
+    roundNoteEl.textContent = "Training is stopped. Start begins the next generation from each model's own weights. Click a seat to watch its best run.";
   } else {
     roundNoteEl.textContent = "";
   }
@@ -286,18 +405,203 @@ function paintWindows(current, stopRequested, live) {
   }
 }
 
-function renderLive(current, stopRequested, live) {
+function modelLabel(id) {
+  const found = models.find((item) => item.id === id);
+  return found ? found.label : (id || "");
+}
+
+function paintRanks(ranking) {
+  const bySeat = {};
+  (ranking || []).forEach((row) => { bySeat[row.seat] = row; });
+  wallEl.querySelectorAll(".card").forEach((card) => {
+    const row = bySeat[Number(card.dataset.seat)];
+    let badge = card.querySelector(".rank");
+    if (!row) {
+      if (badge) badge.remove();
+      return;
+    }
+    if (!badge) {
+      badge = document.createElement("b");
+      badge.className = "rank";
+      card.appendChild(badge);
+    }
+    const text = "#" + row.rank;
+    if (badge.textContent !== text) badge.textContent = text;
+  });
+}
+
+let rankKey = "";
+
+function renderRank(ranking, practice, generation) {
+  const key = JSON.stringify({ranking: ranking, practice: practice, generation: generation});
+  if (key === rankKey) return;
+  rankKey = key;
+  const host = document.querySelector("#rank");
+  if (!ranking || !ranking.length) {
+    host.textContent = "No generation yet.";
+    host.className = "dim";
+    return;
+  }
+  host.className = "fame";
+  host.replaceChildren();
+  const line = document.createElement("p");
+  if (practice && practice.active) {
+    line.textContent = "Shared run: " + (practice.name || "the best") + ", score " + practice.score
+      + ", world " + practice.world + "-" + practice.stage + ", " + practice.presses
+      + " presses. Each new life practices it, then keeps playing. A higher score replaces it.";
+  } else if (practice) {
+    line.textContent = "Each seat is playing its own weights. The shared run is practiced once it reaches the score this generation started from.";
+  } else {
+    line.textContent = "Ranked by score. The change is against the score this generation started from.";
+  }
+  host.appendChild(line);
+  if (generation != null) {
+    const gen = document.createElement("p");
+    gen.textContent = "Generation " + generation + ", six models ranked by score.";
+    host.appendChild(gen);
+  }
+  const table = document.createElement("table");
+  const head = document.createElement("tr");
+  ["#", "Seat", "Model", "Score", "Change"].forEach((label, index) => {
+    const cell = document.createElement("th");
+    cell.textContent = label;
+    if (index >= 3) cell.className = "num";
+    head.appendChild(cell);
+  });
+  table.appendChild(head);
+  ranking.forEach((row) => {
+    const tr = document.createElement("tr");
+    const change = row.delta == null ? "—" : (row.delta > 0 ? "+" + row.delta : String(row.delta));
+    [String(row.rank), row.name || "—", modelLabel(row.model), String(row.score), change].forEach((value, index) => {
+      const cell = document.createElement("td");
+      cell.textContent = value;
+      if (index >= 3) cell.className = "num";
+      tr.appendChild(cell);
+    });
+    tr.style.borderLeft = "4px solid " + (row.color || "#333");
+    table.appendChild(tr);
+  });
+  host.appendChild(table);
+}
+
+let netKey = "";
+
+function renderNetworks(current) {
+  const specs = (current && current.seats && current.seats.length)
+    ? current.seats
+    : seatMeta.map((seat, index) => ({
+        name: seat.name,
+        color: seat.color,
+        model: (defaultModels[index] && defaultModels[index].model) || "",
+      }));
+  const key = specs.map((seat) => seat.model || "").join(",");
+  const host = document.querySelector("#networks");
+  if (key === netKey && host.children.length) return;
+  netKey = key;
+  host.className = "";
+  host.replaceChildren();
+  const drawn = specs.map((seat) => {
+    const model = models.find((item) => item.id === seat.model);
+    const network = (model && model.network) || NETWORKS[seat.model];
+    return {seat: seat, model: model, network: network};
+  });
+  const biggest = Math.max.apply(null, drawn.map((item) => (item.network && item.network.parameters) || 0).concat([1]));
+  drawn.forEach((item) => {
+    const block = document.createElement("div");
+    block.className = "net";
+    const params = (item.network && item.network.parameters) || 0;
+    const title = document.createElement("div");
+    title.textContent = (item.seat.name || "") + " · " + (item.model ? item.model.label : (item.seat.model || ""))
+      + " · " + params.toLocaleString();
+    const wide = document.createElement("div");
+    wide.className = "wide";
+    wide.title = "Parameter count beside the largest network";
+    const fill = document.createElement("b");
+    fill.style.width = Math.max(2, Math.round(100 * params / biggest)) + "%";
+    fill.style.background = item.seat.color || "#e6d3a3";
+    wide.appendChild(fill);
+    const bar = document.createElement("div");
+    bar.className = "layers";
+    const layers = (item.network && item.network.layers) || [];
+    const layerMax = Math.max.apply(null, layers.map((layer) => layer.params || 0).concat([1]));
+    layers.forEach((layer) => {
+      const piece = document.createElement("i");
+      piece.title = layer.label + " · " + Number(layer.params).toLocaleString();
+      piece.style.flex = String(Math.max(layer.params / layerMax, 0.08));
+      piece.style.background = item.seat.color || "#e6d3a3";
+      bar.appendChild(piece);
+    });
+    if (item.network) block.title = item.network.input + ". " + item.network.note;
+    block.append(title, wide, bar);
+    host.appendChild(block);
+  });
+}
+
+let hintKey = "";
+
+function renderHints(hints) {
+  const key = JSON.stringify(hints || []);
+  if (key === hintKey) return;
+  hintKey = key;
+  const host = document.querySelector("#hint-list");
+  if (!hints || !hints.length) {
+    host.textContent = "No hints yet. The warp route can be added here when you have it.";
+    host.className = "dim";
+    return;
+  }
+  host.className = "";
+  host.replaceChildren();
+  hints.forEach((hint) => {
+    const row = document.createElement("div");
+    row.className = "hint-row";
+    const presses = hint.actions && hint.actions.length ? hint.actions.length + " buttons" : "note only, no buttons yet";
+    const text = document.createElement("div");
+    text.textContent = hint.title + " · world " + hint.world + "-" + hint.stage + " · " + presses
+      + " · " + (hint.enabled ? "on" : "off");
+    if (hint.note) text.title = hint.note;
+    const controls = document.createElement("div");
+    controls.className = "hint-actions";
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.textContent = hint.enabled ? "Turn off" : "Turn on";
+    toggle.addEventListener("click", () => sendHint({id: hint.id, enabled: !hint.enabled}));
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.textContent = "Remove";
+    remove.addEventListener("click", () => sendHint({id: hint.id, remove: true}));
+    controls.append(toggle, remove);
+    row.append(text, controls);
+    host.appendChild(row);
+  });
+}
+
+async function sendHint(body) {
+  showError("");
+  const response = await fetch("/api/hints", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(body),
+  });
+  const payload = await response.json();
+  if (!response.ok) throw new Error(payload.error || "could not save the hint");
+  renderHints(payload.hints);
+  hintKey = JSON.stringify(payload.hints || []);
+}
+
+function renderLive(current, stopRequested, pauseRequested, paused, live) {
   const mode = viewMode(current);
   showing = mode === "live";
   const running = Boolean(current && current.running);
   startEl.disabled = running;
-  stopEl.disabled = !running;
+  pauseEl.disabled = !running || pauseRequested || stopRequested;
+  resumeEl.disabled = running || !paused;
+  stopEl.disabled = (!running && !paused) || (running && stopRequested);
   const manifest = current && current.manifest;
   const genBit = live && live.generation != null ? " · generation " + live.generation : "";
   budgetEl.textContent = manifest
     ? manifest.game + " · " + manifest.objective + genBit + " · " + manifest.steps + " steps"
     : "";
-  paintWindows(current, stopRequested, live);
+  paintWindows(current, stopRequested, live, pauseRequested);
 }
 
 function refreshPictures() {
@@ -375,7 +679,13 @@ async function poll() {
     const body = await response.json();
     showError("");
     const hall = body.hall || {};
-    renderLive(body.current, body.stop_requested, hall.live);
+    renderLive(body.current, body.stop_requested, body.pause_requested, body.paused, hall.live);
+    const ranking = seatRank(body.current, body.ranking);
+    paintRanks(ranking);
+    const generation = body.current && body.current.manifest && body.current.manifest.generation;
+    renderRank(ranking, body.practice, generation);
+    renderNetworks(body.current);
+    renderHints(body.hints);
     renderFame(hall);
   } catch (exc) {
     showError(String(exc.message || exc));
@@ -390,10 +700,30 @@ async function boot() {
   games = catalogBody.games;
   models = menuBody.models;
   seatMeta = menuBody.seats;
+  defaultModels = menuBody.defaults || [];
   fillSeats();
   fillGames();
   gameEl.addEventListener("change", note);
+  document.querySelector("#hint-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    try {
+      await sendHint({
+        title: document.querySelector("#hint-title").value,
+        world: Number(document.querySelector("#hint-world").value),
+        stage: Number(document.querySelector("#hint-stage").value),
+        note: document.querySelector("#hint-note").value,
+        actions: document.querySelector("#hint-actions").value,
+      });
+      document.querySelector("#hint-title").value = "";
+      document.querySelector("#hint-note").value = "";
+      document.querySelector("#hint-actions").value = "";
+    } catch (exc) {
+      showError(String(exc.message || exc));
+    }
+  });
   startEl.addEventListener("click", startRound);
+  pauseEl.addEventListener("click", pauseRound);
+  resumeEl.addEventListener("click", resumeRound);
   stopEl.addEventListener("click", stopRound);
   poll();
   setInterval(poll, 500);

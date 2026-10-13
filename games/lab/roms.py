@@ -111,8 +111,23 @@ def store_rom(remote_path: str, name: str, check) -> Path:
     return dest
 
 
+def pinned_smb() -> Path | None:
+    """The lab-home ROM when it is already the pinned World image."""
+    path = roms_dir() / "smb.nes"
+    if not path.is_file():
+        return None
+    try:
+        accept_smb(path.read_bytes())
+    except (OSError, RomRejected):
+        return None
+    return path
+
+
 def store_smb() -> Path:
     # A short local name. The cabinet path has spaces and parentheses, which some cores mishandle.
+    found = pinned_smb()
+    if found is not None:
+        return found
     return store_rom(SMB_REMOTE, "smb.nes", accept_smb)
 
 
