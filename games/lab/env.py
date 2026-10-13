@@ -73,44 +73,78 @@ class FrameEnv(gym.Env):
 
 
 class ScoredEnv(gym.Wrapper):
-    """Reward is how far right Mario moved. The life ends on death, or at the flag because the level stops."""
+    """Reward is further progress through the game. The flag starts the next level.
 
-    def __init__(self, env: FrameEnv, integration, step_limit: int = 10000):
+    Dying is a penalty on that step. A life also stops at the step limit so a
+    stuck Mario does not hold the seat forever.
+    """
+
+    def __init__(self, env: FrameEnv, integration, step_limit: int = 20000):
         super().__init__(env)
         self.integration = integration
         self.step_limit = step_limit
-        self._x = 0
+        self._progress = 0
         self._steps = 0
         self._seen_time = False
+        self._clear = {"cleared": False, "at": None}
+
+    def _measure(self, facts: dict) -> int:
+        measure = getattr(self.integration, "measure", None)
+        if measure is None:
+            return int(facts["x_pos"])
+        return int(measure(facts))
 
     def reset(self, *, seed=None, options=None):
         _obs, info = self.env.reset(seed=seed, options=options)
         facts = self.integration.describe(self.env.unwrapped.ram_bytes())
-        self._x = facts["x_pos"]
+        self._progress = self._measure(facts)
         self._steps = 0
         self._seen_time = facts["time"] > 0
+        self._clear = {"cleared": False, "at": None}
         info.update(facts)
-        info["score"] = facts["x_pos"]
+        info["score"] = self._progress
         info["objective"] = self.integration.objective
+        info["dead"] = False
         return self.env.unwrapped.runner.rgb.copy(), info
 
     def step(self, action):
-        _obs, _reward, terminated, truncated, info = self.env.step(action)
+        _obs, _reward, _terminated, _truncated, info = self.env.step(action)
         facts = self.integration.describe(self.env.unwrapped.ram_bytes())
-        reward = float(facts["x_pos"] - self._x)
-        self._x = facts["x_pos"]
         self._steps += 1
         if facts["time"] > 0:
             self._seen_time = True
-        dead = facts["dead"] or facts["dying"] or facts["game_over"] or (self._seen_time and facts["time"] == 0)
-        if facts["flag_get"] or dead or self._steps >= self.step_limit:
-            terminated = terminated or facts["flag_get"] or dead
-            truncated = truncated or self._steps >= self.step_limit
+        reward_of = getattr(self.integration, "step_reward", None)
+        note_clear = getattr(self.integration, "note_clear", None)
+        if note_clear is not None:
+            self._clear = note_clear(self._clear, facts)
+        if reward_of is None:
+            gained = max(0, self._measure(facts) - self._progress)
+            self._progress += gained
+            timed_out = self._seen_time and facts["time"] == 0 and not facts["flag_get"]
+            dead = bool(facts["dead"] or facts["dying"] or facts["game_over"] or timed_out)
+            reward = float(gained)
+        elif note_clear is not None:
+            place = self._clear.get("at") if self._clear.get("cleared") else None
+            reward, self._progress, dead = reward_of(
+                self._progress, facts, self._seen_time, bool(self._clear.get("cleared")), place
+            )
+        else:
+            reward, self._progress, dead = reward_of(self._progress, facts, self._seen_time)
+        # The flag is the way into the next level. It does not end the life.
+        if dead or self._steps >= self.step_limit:
+            terminated = dead
+            truncated = not dead
+        else:
+            terminated = False
+            truncated = False
         info.update(facts)
-        info["score"] = facts["x_pos"]
+        # The level number moves on during the castle walk. The score is still this stage.
+        if self._clear.get("cleared") and self._clear.get("at"):
+            info["world"], info["stage"] = self._clear["at"]
+        info["score"] = self._progress
         info["objective"] = self.integration.objective
         info["dead"] = dead
-        return self.env.unwrapped.runner.rgb.copy(), reward, bool(terminated), bool(truncated), info
+        return self.env.unwrapped.runner.rgb.copy(), reward, terminated, truncated, info
 
 
 class SurvivalEnv(gym.Wrapper):
@@ -154,6 +188,64 @@ def leave_nes_title(runner) -> None:
     runner.frame(set())
     for _ in range(480):
         runner.frame(set())
+
+
+class RouteEnv(gym.Wrapper):
+    """Play the shared best run, then a hint for this stage, then the policy.
+
+    Every life reloads the same savestate, so those buttons repeat the route.
+    After the run the policy is standing where that life left off, which is
+    World 1-2 once any seat has cleared 1-1. A higher score replaces the run,
+    and so does a faster pass of the same ground. Every eighth life skips the
+    run and plays its own buttons, so a shortcut can be found and then shared.
+    """
+
+    def __init__(self, env: gym.Env, tape_path, n_actions: int, objective: str | None,
+                 min_score: int = 0, hints_path=None):
+        super().__init__(env)
+        from games.lab.tape import Route
+        self.route = Route(tape_path, n_actions, objective, min_score, hints_path)
+        self._lives = 0
+
+    def reset(self, *, seed=None, options=None):
+        from games.lab.tape import search_life
+        obs, info = self.env.reset(seed=seed, options=options)
+        self._lives += 1
+        self.route.on_reset(search=search_life(self._lives))
+        info["forced"] = False
+        info["applied_action"] = None
+        return obs, info
+
+    def _place(self):
+        env = self.env
+        for _ in range(8):
+            if env is None:
+                return None, None
+            integration = getattr(env, "integration", None)
+            ram = getattr(getattr(env, "unwrapped", None), "ram_bytes", None)
+            describe = getattr(integration, "describe", None)
+            if callable(describe) and callable(ram):
+                try:
+                    facts = describe(ram())
+                except Exception:
+                    return None, None
+                if isinstance(facts, dict):
+                    return facts.get("world"), facts.get("stage")
+            env = getattr(env, "env", None)
+        return None, None
+
+    def step(self, action):
+        from games.lab.tape import as_int
+        world, stage = self._place()
+        applied, forced = self.route.on_step(action, world, stage)
+        obs, reward, terminated, truncated, info = self.env.step(applied)
+        info["applied_action"] = applied
+        info["forced"] = forced
+        try:
+            info["agent_action"] = as_int(action)
+        except (TypeError, ValueError, IndexError):
+            info["agent_action"] = None
+        return obs, reward, terminated, truncated, info
 
 
 def make_env(system: str, rom_path, integration=None, frame_skip: int = 4) -> gym.Env:

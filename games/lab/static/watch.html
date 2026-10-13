@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Best run</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; font: 14px/1.4 "Segoe UI", sans-serif; background: #12110f; color: #f3efe6; }
+  main { max-width: 760px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 20px; margin: 0 0 8px; }
+  video { width: 100%; background: #000; image-rendering: pixelated; }
+  button { background: #e6d3a3; color: #1a150e; border: 0; border-radius: 4px; padding: 4px 10px; font-weight: 600; cursor: pointer; }
+  .dim { color: #a89f90; }
+  .layers { display: flex; flex-direction: column; gap: 4px; margin-top: 12px; }
+  .layer { display: grid; grid-template-columns: 160px 1fr 80px; gap: 8px; align-items: center; }
+  .layer b { display: block; height: 18px; background: #e6d3a3; }
+  .error { color: #ffb4a8; }
+</style>
+</head>
+<body>
+<main>
+  <h1 id="title">Best run</h1>
+  <p id="status" class="dim">Opening the saved run.</p>
+  <video id="film" controls hidden></video>
+  <p id="error" class="error"></p>
+  <button id="retry" type="button" hidden>Try again</button>
+  <h2>Network</h2>
+  <p id="net-note" class="dim"></p>
+  <div id="layers" class="layers"></div>
+</main>
+<script>
+const parts = location.pathname.split("/").filter(Boolean);
+const runId = decodeURIComponent(parts[1] || "");
+const seat = parts[2] || "0";
+const titleEl = document.querySelector("#title");
+const statusEl = document.querySelector("#status");
+const filmEl = document.querySelector("#film");
+const errorEl = document.querySelector("#error");
+const retryEl = document.querySelector("#retry");
+const noteEl = document.querySelector("#net-note");
+const layersEl = document.querySelector("#layers");
+let drawn = false;
+let timer = 0;
+
+function drawNetwork(network, color) {
+  if (!network || drawn) return;
+  drawn = true;
+  noteEl.textContent = network.input + ". " + network.note + " " + Number(network.parameters).toLocaleString() + " parameters.";
+  const biggest = Math.max.apply(null, network.layers.map((layer) => layer.params || 0).concat([1]));
+  network.layers.forEach((layer) => {
+    const row = document.createElement("div");
+    row.className = "layer";
+    const name = document.createElement("span");
+    name.textContent = layer.label;
+    const track = document.createElement("div");
+    const bar = document.createElement("b");
+    bar.style.width = Math.max(4, Math.round(100 * layer.params / biggest)) + "%";
+    bar.style.background = color || "#e6d3a3";
+    track.appendChild(bar);
+    const count = document.createElement("span");
+    count.className = "dim";
+    count.textContent = Number(layer.params).toLocaleString();
+    row.append(name, track, count);
+    layersEl.appendChild(row);
+  });
+}
+
+async function poll(retry) {
+  const response = await fetch("/api/play/" + encodeURIComponent(runId) + "/" + seat + (retry ? "?retry=1" : ""));
+  const body = await response.json();
+  if (!response.ok) {
+    statusEl.textContent = body.error || "This run could not be opened.";
+    return;
+  }
+  const who = body.name || "This seat";
+  titleEl.textContent = who + "'s best run";
+  if (body.color) document.querySelector("h1").style.color = body.color;
+  drawNetwork(body.network, body.color);
+  retryEl.hidden = true;
+  if (body.state === "empty") {
+    statusEl.textContent = who + " has no saved run yet.";
+    clearInterval(timer);
+    timer = 0;
+    return;
+  }
+  if (body.state === "busy") {
+    statusEl.textContent = "Another best run is being prepared. This window waits, and training keeps going.";
+    return;
+  }
+  if (body.state === "error") {
+    statusEl.textContent = "The recording stopped.";
+    errorEl.textContent = body.error || "";
+    retryEl.hidden = false;
+    return;
+  }
+  if (body.state === "preparing") {
+    const frame = body.frame || 0;
+    const total = body.total || 0;
+    statusEl.textContent = total
+      ? "Preparing the full-speed recording, frame " + frame + " of " + total + ". Training keeps going."
+      : "Preparing the full-speed recording. Training keeps going.";
+    return;
+  }
+  if (body.state === "ready" && body.url) {
+    const where = (body.world && body.stage) ? " World " + body.world + "-" + body.stage + "." : "";
+    statusEl.textContent = "Full speed. Score " + body.score + ", " + body.presses + " presses." + where
+      + " This window plays the saved buttons in its own game.";
+    if (!filmEl.src) {
+      filmEl.hidden = false;
+      filmEl.src = body.url;
+      filmEl.play().catch(() => {});
+    }
+    clearInterval(timer);
+    timer = 0;
+  }
+}
+
+retryEl.addEventListener("click", () => {
+  errorEl.textContent = "";
+  filmEl.removeAttribute("src");
+  filmEl.hidden = true;
+  clearInterval(timer);
+  poll(true);
+  timer = setInterval(() => poll(false), 700);
+});
+poll(false);
+timer = setInterval(() => poll(false), 700);
+</script>
+</body>
+</html>

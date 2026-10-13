@@ -58,8 +58,13 @@ def collapsed_history(rounds: list[dict]) -> list[dict]:
     return rows
 
 
-def champion(root: Path, model: str) -> dict | None:
-    """The best.zip with the highest training score for this model. A tie keeps the lower seat."""
+def champion(root: Path, model: str, stamp: dict | None = None) -> dict | None:
+    """The best.zip with the highest training score for this model. A tie keeps the lower seat.
+
+    A stamp limits the search to weights that used the same buttons and score.
+    Older 1-1 weights then stay on disk and do not parent the next round.
+    """
+    from games.lab.stamp import matches
     best: dict | None = None
     if not root.is_dir():
         return None
@@ -78,7 +83,7 @@ def champion(root: Path, model: str) -> dict | None:
                 continue
             index = int(seat.get("seat") or 0)
             zip_path = path / "seats" / str(index) / "best.zip"
-            if not zip_path.is_file():
+            if not zip_path.is_file() or not matches(zip_path, stamp):
                 continue
             score = int(seat.get("score") or 0)
             if best is None or score > best["score"] or (score == best["score"] and index < best["seat"]):
