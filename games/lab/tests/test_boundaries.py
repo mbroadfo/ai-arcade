@@ -49,6 +49,18 @@ def test_generic_engine_modules_do_not_name_a_game():
     assert hits == []
 
 
+def test_the_training_path_does_not_assume_a_mario_life():
+    env_text = (ROOT / "env.py").read_text(encoding="utf-8")
+    for token in ("x_pos", "flag_get", "game_over"):
+        assert token not in env_text
+    assert 'info["world"]' not in env_text
+    worker_text = (ROOT / "worker.py").read_text(encoding="utf-8")
+    assert "peak_world = 1" not in worker_text
+    assert "peak_stage = 1" not in worker_text
+    assert 'info.get("world") or 1' not in worker_text
+    assert 'info.get("stage") or 1' not in worker_text
+
+
 def test_only_the_composition_root_imports_the_mario_adapter():
     root_text = (ROOT / "integrations" / "__init__.py").read_text(encoding="utf-8")
     assert "games.lab.integrations.smb_1_1" in root_text

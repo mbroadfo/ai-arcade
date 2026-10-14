@@ -32,31 +32,41 @@ def as_int(value) -> int:
 def make_tape(
     actions,
     score: int,
-    world: int,
-    stage: int,
-    seat: int,
-    name: str,
-    n_actions: int,
-    objective: str | None,
+    world: int | None = None,
+    stage: int | None = None,
+    seat: int = 0,
+    name: str = "",
+    n_actions: int = 0,
+    objective: str | None = None,
     scored_clear: bool = False,
     time: int | None = None,
     integration: str | None = None,
     sense: str | None = None,
+    context: dict | None = None,
 ) -> dict:
+    """Buttons and the metric they reached.
+
+    world and stage are recorded when the caller has them. A context is
+    recorded only when the caller supplies one.
+    """
     tape = {
         "actions": [int(action) for action in actions],
         "score": int(score),
-        "world": int(world),
-        "stage": int(stage),
         "seat": int(seat),
         "name": name,
         "n_actions": int(n_actions),
         "objective": objective,
     }
+    if world is not None:
+        tape["world"] = int(world)
+    if stage is not None:
+        tape["stage"] = int(stage)
     if integration:
         tape["integration"] = integration
     if sense:
         tape["sense"] = sense
+    if context is not None:
+        tape["context"] = dict(context)
     # scored_clear means the adapter already counted a finished stage.
     # Older files lack this mark. The adapter may correct those.
     if scored_clear:

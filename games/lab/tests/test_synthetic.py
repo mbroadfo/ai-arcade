@@ -7,6 +7,7 @@ loads the Mario adapter.
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -29,6 +30,7 @@ from games.lab.registry import get, isolated
 from games.lab.search import beam_search
 from games.lab.skill import new_skill, record_mastery, verify_demonstration
 from games.lab.worker import atomic_json
+from games.lab.worker import main as worker_main
 
 GOAL = 3
 ROM = "grid-runtime"
@@ -106,13 +108,17 @@ def _protocol(sense: str) -> dict:
 class GridEnv:
     """One cell at a time. Forward advances. Wait spends a step."""
 
-    def __init__(self):
+    def __init__(self, sense: str = "maximize"):
+        self.sense = sense if sense in ("maximize", "minimize") else "maximize"
         self.position = 0
         self.time = 0
+        self.episode = -1
+        self.seed = 0
 
     def reset(self, seed=0):
         self.position = 0
         self.time = 0
+        self.episode += 1
         self.seed = int(seed or 0)
         return {"position": 0}, self.facts()
 
@@ -121,11 +127,14 @@ class GridEnv:
         if int(action) == 1:
             self.position += 1
         done = self.position >= GOAL
-        return {"position": self.position}, float(self.position), done, False, self.facts()
+        info = self.facts()
+        info["applied_action"] = int(action)
+        return {"position": self.position}, float(self.position), done, False, info
 
     def facts(self) -> dict:
+        score = self.time if self.sense == "minimize" else self.position
         return {
-            "score": self.position,
+            "score": score,
             "time": self.time,
             "position": self.position,
             "dead": False,
@@ -133,6 +142,8 @@ class GridEnv:
             "forced": False,
             "assisted": False,
             "demonstration_steps": 0,
+            "episode": self.episode,
+            "context": {"cell": self.position},
         }
 
     def snapshot(self) -> bytes:
@@ -163,8 +174,6 @@ class GridProbe:
 class GridAdapter:
     id = "grid"
     system = "synthetic"
-    objective = "progress"
-    sense = "maximize"
     actions = [(), ("forward",)]
     capabilities = {
         "contract": 1,
@@ -175,11 +184,25 @@ class GridAdapter:
         "structured": True,
     }
 
-    def open_env(self):
-        return GridEnv()
+    def __init__(self, sense: str = "maximize"):
+        self.sense = sense if sense in ("maximize", "minimize") else "maximize"
+        self.objective = "time" if self.sense == "minimize" else "progress"
+
+    def open_env(self, rom=None):
+        return GridEnv(self.sense)
 
     def evaluation_protocol(self):
-        return _protocol("maximize")
+        return _protocol(self.sense)
+
+    def practice_policy(self, _observation, info):
+        try:
+            episode = int((info or {}).get("episode") or 0)
+            clock = int((info or {}).get("time") or 0)
+        except (TypeError, ValueError):
+            episode, clock = 0, 0
+        if self.sense == "minimize" and episode == 0 and clock == 0:
+            return 0
+        return 1
 
     def owns(self, record: dict) -> bool:
         return isinstance(record, dict) and record.get("integration") == self.id
@@ -213,6 +236,74 @@ def _measure(env: GridEnv, policy_for_attempt, protocol: dict, weights: Path) ->
     result = evaluate_attempts(run_one, protocol["attempts"], identity, protocol)
     write_eval(weights.with_suffix(".eval.json"), result)
     return result
+
+
+def _practice_argv(root: Path, objective: str, steps: int) -> list[str]:
+    seat = root / f"practice-{objective}" / "seats" / "0"
+    return [
+        "--system", "synthetic",
+        "--rom", ROM,
+        "--integration", "grid",
+        "--model", "stub",
+        "--seed", "0",
+        "--steps", str(steps),
+        "--seat-dir", str(seat),
+        "--seat", "0",
+        "--name", objective,
+        "--color", "#fff",
+        "--objective", objective,
+        "--practice",
+    ]
+
+
+def _read_practice(root: Path, objective: str) -> dict:
+    seat = root / f"practice-{objective}" / "seats" / "0"
+    status = json.loads((seat / "status.json").read_text(encoding="utf-8"))
+    tape = json.loads((seat / "best.tape.json").read_text(encoding="utf-8"))
+    return {"status": status, "tape": tape, "seat": seat}
+
+
+def _run_practice(root: Path, adapter: GridAdapter, objective: str, steps: int) -> dict:
+    previous = os.environ.get("LAB_RUNS")
+    os.environ["LAB_RUNS"] = str(root / "runs")
+    try:
+        with isolated(adapter):
+            assert worker_main(_practice_argv(root, objective, steps)) == 0
+    finally:
+        if previous is None:
+            os.environ.pop("LAB_RUNS", None)
+        else:
+            os.environ["LAB_RUNS"] = previous
+    return _read_practice(root, objective)
+
+
+def _minimize_floor(root: Path, adapter: GridAdapter) -> None:
+    from games.lab.worker import LifeTracker
+    allowed = root / "floor-pass"
+    blocked = root / "floor-block"
+    passing = {
+        "sense": "minimize",
+        "seat": 0,
+        "name": "fast",
+        "n_actions": 2,
+        "objective": "time",
+        "integration": "grid",
+        "floor": 10,
+        "tape": str(allowed / "best.tape.json"),
+    }
+    failing = {**passing, "floor": 3, "tape": str(blocked / "best.tape.json")}
+    with isolated(adapter):
+        life = LifeTracker(allowed / "seats" / "0", passing)
+        info = {"score": 4, "time": 4, "applied_action": 1, "context": {"cell": 1}}
+        life.record(info)
+        life.close(info, keep=lambda: False)
+        held = LifeTracker(blocked / "seats" / "0", failing)
+        held.record(info)
+        held.close(info, keep=lambda: False)
+    shared = json.loads((allowed / "best.tape.json").read_text(encoding="utf-8"))
+    assert shared["score"] == 4 and "world" not in shared and "stage" not in shared
+    assert not (blocked / "best.tape.json").is_file()
+    assert (blocked / "seats" / "0" / "best.tape.json").is_file()
 
 
 def exercise(root: Path) -> dict:
@@ -311,12 +402,31 @@ def exercise(root: Path) -> dict:
     assert fixed["agents"]["stub"] == "verified_fixed_state"
     assert fixed["standing"] == "verified_fixed_state"
     assert fixed["stage"] == "verified_demonstration"
-    varied = record_mastery(fixed, "stub", {
+    declared = record_mastery(fixed, "stub", {
         **progressed,
         "generalized": True,
         "starts": [{"position": 0}, {"position": 1}],
     })
+    assert declared["agents"]["stub"] == "verified_fixed_state"
+    assert declared["stage"] == "verified_demonstration"
+    blocked = record_mastery(fixed, "stub", {
+        **progressed,
+        "conditions": [
+            {"start": {"position": 0}, "attempts": 2, "successes": 2},
+            {"start": {"position": 1}, "attempts": 2, "successes": 0},
+        ],
+    })
+    assert blocked["agents"]["stub"] == "verified_fixed_state"
+    assert blocked["stage"] == "verified_demonstration"
+    varied = record_mastery(fixed, "stub", {
+        **progressed,
+        "conditions": [
+            {"start": {"position": 0}, "attempts": 2, "successes": 2},
+            {"start": {"position": 1}, "attempts": 2, "successes": 1},
+        ],
+    })
     assert varied["agents"]["stub"] == "generalized"
+    assert varied["stage"] == "generalized"
     atomic_json(folder / "skill.json", fixed)
     assert catalog(root)[0]["skill"]["standing"] == "verified_fixed_state"
 
@@ -367,6 +477,20 @@ def exercise(root: Path) -> dict:
         ],
         sense="minimize",
     )
+    progressed_run = _run_practice(root, adapter, "progress", 3)
+    timed_run = _run_practice(root, GridAdapter("minimize"), "time", 7)
+    _minimize_floor(root, GridAdapter("minimize"))
+    progress_tape = progressed_run["tape"]
+    time_tape = timed_run["tape"]
+    assert progress_tape["score"] == GOAL and progress_tape["actions"] == [1, 1, 1]
+    assert progress_tape["context"] == {"cell": GOAL}
+    assert "world" not in progress_tape and "stage" not in progress_tape
+    assert progressed_run["status"]["score"] == GOAL
+    assert time_tape["score"] == GOAL and time_tape["actions"] == [1, 1, 1]
+    assert timed_run["status"]["score"] == GOAL
+    assert "world" not in time_tape and "stage" not in time_tape
+    for report in (progressed_run, timed_run):
+        assert list(report["seat"].glob("*.zip")) == []
     return {
         "searched": True,
         "restored": True,
@@ -377,6 +501,8 @@ def exercise(root: Path) -> dict:
         "parent_seat": parent["seat"],
         "fixed": fixed["standing"],
         "general": varied["standing"],
+        "practiced_progress": progress_tape["score"],
+        "practiced_time": time_tape["score"],
     }
 
 
@@ -389,6 +515,8 @@ def test_grid_adapter_uses_the_generic_engine(tmp_path):
     assert report["parent_seat"] == 1
     assert report["fixed"] == "verified_fixed_state"
     assert report["general"] == "generalized"
+    assert report["practiced_progress"] == GOAL
+    assert report["practiced_time"] == GOAL
 
 
 def test_grid_adapter_does_not_import_mario():
@@ -415,6 +543,9 @@ if __name__ == "__main__":
         or name.startswith("games.lab.mario.")
         or name == "games.lab.integrations.smb_1_1"
         or name.endswith(".smb_1_1")
+        or name == "games.lab.env"
+        or name == "gymnasium"
+        or name.startswith("gymnasium.")
     ]
     if forbidden:
         raise SystemExit("game modules loaded: " + ", ".join(sorted(forbidden)))

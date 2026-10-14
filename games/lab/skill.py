@@ -94,19 +94,40 @@ def record_practice(skill: dict, agent: str) -> dict:
     return updated
 
 
-def _varied_starts(evaluation: dict) -> int:
-    rows = evaluation.get("starts")
-    if not isinstance(rows, list):
-        rows = evaluation.get("conditions")
-    if not isinstance(rows, list):
-        return 0
+def _condition_identity(start) -> str:
+    if isinstance(start, (dict, list)):
+        return json.dumps(start, sort_keys=True, default=str)
+    return str(start)
+
+
+def _proven_conditions(evaluation: dict) -> bool:
+    """True when every listed condition succeeded and two starts differ.
+
+    A condition with no successes, or a row that cannot be read, blocks the
+    claim. Declaring generalized, or listing starts, is not this evidence.
+    """
+    rows = evaluation.get("conditions")
+    if not isinstance(rows, list) or len(rows) < 2:
+        return False
     seen = set()
     for item in rows:
-        if isinstance(item, dict):
-            seen.add(json.dumps(item, sort_keys=True, default=str))
+        if not isinstance(item, dict):
+            return False
+        try:
+            attempts = int(item["attempts"])
+            successes = int(item["successes"])
+        except (KeyError, TypeError, ValueError):
+            return False
+        if attempts < 1 or successes < 1 or successes > attempts:
+            return False
+        if item.get("start") is not None:
+            start = item.get("start")
+        elif item.get("condition") is not None:
+            start = item.get("condition")
         else:
-            seen.add(str(item))
-    return len(seen)
+            return False
+        seen.add(_condition_identity(start))
+    return len(seen) >= 2
 
 
 def record_mastery(skill: dict, agent: str, evaluation: dict) -> dict:
@@ -114,7 +135,8 @@ def record_mastery(skill: dict, agent: str, evaluation: dict) -> dict:
 
     A failed evaluation, an assisted record, or a tape replay leaves the agent
     where it was. Success on one scenario is verified_fixed_state. generalized
-    requires the evaluation to name varied starting conditions.
+    requires a successful result on each of at least two distinct conditions.
+    The stage stays where it was until that evidence is present.
     """
     updated = {**skill, "agents": dict(skill.get("agents") or {})}
     expected = str(skill.get("benchmark") or "")
@@ -131,7 +153,7 @@ def record_mastery(skill: dict, agent: str, evaluation: dict) -> dict:
     )
     if not succeeded:
         return updated
-    if evaluation.get("generalized") and _varied_starts(evaluation) >= 2:
+    if _proven_conditions(evaluation):
         updated["agents"][agent] = "generalized"
         updated["standing"] = "generalized"
         updated["stage"] = "generalized"

@@ -1397,6 +1397,32 @@ def test_challenge_refuses_an_incompatible_state(tmp_path):
     assert listed[0]["records"]["assisted"] is None
 
 
+def test_a_tape_can_omit_world_and_stage():
+    from games.lab.integrations.smb_1_1 import INTEGRATION, clock_running, present
+    from games.lab.tape import make_tape
+    saved = make_tape(
+        [1, 1, 1],
+        3,
+        n_actions=2,
+        objective="progress",
+        sense="maximize",
+        integration="grid",
+        context={"cell": 3},
+    )
+    assert saved["score"] == 3
+    assert "world" not in saved and "stage" not in saved
+    assert saved["context"] == {"cell": 3}
+    mario = make_tape([1], 10, 1, 2, 0, "Red", 12, "progress")
+    assert mario["world"] == 1 and mario["stage"] == 2 and "context" not in mario
+    assert callable(INTEGRATION.open_env)
+    assert clock_running({"time": 400}) is True
+    assert clock_running({"time": 0}) is False
+    shown = present({"world": 2, "stage": 1, "x_pos": 10}, {"cleared": True, "at": (1, 1)})
+    assert shown["world"] == 1 and shown["stage"] == 1
+    plain = present({"world": 1, "stage": 1}, {"cleared": False, "at": None})
+    assert plain["world"] == 1 and plain["stage"] == 1
+
+
 def test_a_skill_does_not_spread_and_the_curriculum_is_not_running():
     from games.lab.skill import curriculum_plan, new_skill, record_mastery, record_practice, verify_demonstration
     skill = new_skill(
@@ -1427,7 +1453,7 @@ def test_a_skill_does_not_spread_and_the_curriculum_is_not_running():
     assert mastered["agents"]["Red"] == "verified_fixed_state"
     assert mastered["standing"] == "verified_fixed_state"
     assert mastered["stage"] == "practiced"
-    generalized = record_mastery(practiced, "Red", {
+    declared = record_mastery(practiced, "Red", {
         "assisted": False,
         "failed": False,
         "record": "independent",
@@ -1437,8 +1463,38 @@ def test_a_skill_does_not_spread_and_the_curriculum_is_not_running():
         "generalized": True,
         "starts": [{"x_pos": 0}, {"x_pos": 40}],
     })
+    assert declared["agents"]["Red"] == "verified_fixed_state"
+    assert declared["standing"] == "verified_fixed_state"
+    assert declared["stage"] == "practiced"
+    missed = record_mastery(practiced, "Red", {
+        "assisted": False,
+        "failed": False,
+        "record": "independent",
+        "benchmark": "opening-jump",
+        "successes": 5,
+        "success_rate": 1,
+        "conditions": [
+            {"start": {"x_pos": 0}, "attempts": 2, "successes": 2},
+            {"start": {"x_pos": 40}, "attempts": 2, "successes": 0},
+        ],
+    })
+    assert missed["agents"]["Red"] == "verified_fixed_state"
+    assert missed["stage"] == "practiced"
+    generalized = record_mastery(practiced, "Red", {
+        "assisted": False,
+        "failed": False,
+        "record": "independent",
+        "benchmark": "opening-jump",
+        "successes": 5,
+        "success_rate": 1,
+        "conditions": [
+            {"start": {"x_pos": 0}, "attempts": 2, "successes": 2},
+            {"condition": {"x_pos": 40}, "attempts": 2, "successes": 1},
+        ],
+    })
     assert generalized["agents"]["Red"] == "generalized"
     assert generalized["standing"] == "generalized"
+    assert generalized["stage"] == "generalized"
     flagpole = record_mastery(practiced, "Red", {
         "assisted": False,
         "failed": False,

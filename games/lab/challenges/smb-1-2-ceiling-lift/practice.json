@@ -11,6 +11,11 @@
     "standing": "verified_fixed_state",
     "note": "Five deterministic attempts from one saved state. That is verified from a fixed state. It is not generalization across varied starts. The zip stays beside this file and is not committed."
   },
+  "archive": {
+    "path": "C:\\Users\\Mike\\mario-runs\\artifacts\\smb-1-2-ceiling-lift\\practice-ppo-cnn.zip",
+    "sha256": "908c1e4b4e3037376b1a34ce36143ed2688110d7941dc1ccd2267fd6ec8e7691",
+    "note": "Backup of the gitignored checkout copy. The checkout file stays untracked. This copy is the retrievable artifact."
+  },
   "method": "supervised match of one frame-skip-4 action sequence",
   "frame_skip": 4,
   "search_jump_frames": 26,

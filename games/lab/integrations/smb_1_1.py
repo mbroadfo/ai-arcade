@@ -416,6 +416,23 @@ def note_frame(facts: dict, diag: dict, memory: dict | None) -> dict:
     return memory
 
 
+def clock_running(facts: dict) -> bool:
+    """True once this stage's timer has started."""
+    try:
+        return int((facts or {}).get("time") or 0) > 0
+    except (TypeError, ValueError):
+        return False
+
+
+def present(facts: dict, clear: dict | None = None) -> dict:
+    """Facts the seat should see. A latched clear keeps the finished stage."""
+    info = dict(facts or {})
+    latch = clear or {}
+    if latch.get("cleared") and latch.get("at"):
+        info["world"], info["stage"] = latch["at"]
+    return info
+
+
 def evaluation_protocol() -> dict:
     """What an independent Mario measurement is. Callers pass this to the engine."""
     return {
@@ -458,12 +475,25 @@ class _SMB:
     measure = staticmethod(progress)
     step_reward = staticmethod(step_reward)
     note_clear = staticmethod(note_clear)
+    clock_running = staticmethod(clock_running)
+    present = staticmethod(present)
     evaluation_protocol = staticmethod(evaluation_protocol)
     reached_warp = staticmethod(reached_warp)
     correct_progress = staticmethod(correct_progress)
     correct_floor = staticmethod(correct_floor)
     accept_hint_context = staticmethod(accept_hint_context)
     note_frame = staticmethod(note_frame)
+
+    def open_env(self, rom=None):
+        """The scored environment for this ROM. The engine asks every adapter for this."""
+        from pathlib import Path
+
+        from games.lab.env import make_env
+        if rom:
+            path = Path(rom)
+        else:
+            path = self.pinned_rom()
+        return make_env(self.system, path, self)
 
     def pinned_rom(self):
         from games.lab.mario.rom import pinned_smb

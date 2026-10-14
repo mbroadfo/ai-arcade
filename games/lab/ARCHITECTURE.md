@@ -86,9 +86,23 @@ The bytes stay outside git.
 ## Behavior that changed with the extraction
 
 - `record_mastery` writes `verified_fixed_state` for one independent scenario.
-  It writes `generalized` only when the evaluation says so and names at least
-  two distinct starts. Older files that say `independently_mastered` still
-  read as verified from a fixed state. Those files were not rewritten.
+  It writes `generalized` when the evaluation lists at least two conditions
+  and each condition recorded its own success on a distinct start. A declared
+  flag, or a list of starts, leaves the agent at verified_fixed_state. Older
+  files that say `independently_mastered` still read as verified from a fixed
+  state. Those files were not rewritten.
+- `make_tape` stores world and stage when the caller passes them, and stores
+  a context only when the caller supplies one. A tape with neither world nor
+  stage omits those keys. New Mario tapes still pass both.
+- Maximize training keeps the high-water mark and the buttons that reached it.
+  Minimize training records the finished episode and saves that episode's
+  buttons. A floor of 0 does not block the shared run. On a minimize metric,
+  a score above a nonzero floor stays on the seat tape.
+- `worker.main --practice` opens the adapter environment, steps a stub policy,
+  and writes a tape and status in the seat directory. It does not load a
+  training library or write a checkpoint. The supervisor does not pass that
+  flag. The real training path calls `open_env` when the adapter has one.
+  Mario's `open_env` builds the scored environment for the ROM it is given.
 - `python -m games.lab.eval` requires `--game`. The adapter id selects the
   protocol. There is no implicit game.
 - Mario smoke, capture, proof, and model smoke run as `python -m games.lab.mario.<tool>`.
@@ -115,9 +129,11 @@ The bytes stay outside git.
   state. It is not a promotion benchmark.
 - Five successes from one deterministic state are verified from that state.
   They are not a claim that the policy generalized.
-- The practiced PPO/CNN zip stays beside the ceiling challenge, gitignored,
-  with a relative path and sha256 in `practice.json`. The absolute path is
-  still recorded for this checkout.
+- The practiced PPO/CNN zip stays gitignored beside the ceiling challenge.
+  `practice.json` records the relative path, sha256
+  `908c1e4b4e3037376b1a34ce36143ed2688110d7941dc1ccd2267fd6ec8e7691`, and a
+  backup at `C:\Users\Mike\mario-runs\artifacts\smb-1-2-ceiling-lift\practice-ppo-cnn.zip`
+  with the same checksum.
 - Curriculum stages are described and not implemented. Unassisted play from
   the start of the game is still open.
 - The production registry installs one adapter. The grid adapter exists only
