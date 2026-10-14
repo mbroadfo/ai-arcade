@@ -9,8 +9,8 @@ import hashlib
 import json
 from pathlib import Path
 
-from games.lab.challenge import challenges_root, reached_warp, same_start, save_challenge
-from games.lab.integrations.smb_1_1 import CLEAR_X, SMB_ACTIONS, describe, diagnose
+from games.lab.challenge import challenges_root, same_start, save_challenge
+from games.lab.integrations.smb_1_1 import CLEAR_X, INTEGRATION, SMB_ACTIONS, describe, diagnose, reached_warp
 from games.lab.probe import EmulatorProbe
 from games.lab.search import beam_search
 
@@ -28,7 +28,7 @@ def _boot():
     from games.lab.cores import ensure_core
     from games.lab.integrations.smb_1_1 import skip_title
     from games.lab.libretro import LibretroRunner
-    from games.lab.roms import SMB_SHA1, pinned_smb
+    from games.lab.mario.rom import SMB_SHA1, pinned_smb
     rom = pinned_smb()
     if rom is None:
         raise SystemExit("pinned Super Mario Bros. ROM is missing")
@@ -85,7 +85,7 @@ def _restore_mode(runner) -> tuple[bytes, bool, dict]:
 
 def _opening(runner, rom_sha1: str, core_sha1: str) -> dict:
     state, empty_frame, restore_report = _restore_mode(runner)
-    probe = EmulatorProbe(runner, state, empty_frame=empty_frame)
+    probe = EmulatorProbe(runner, state, adapter=INTEGRATION, empty_frame=empty_frame)
     start = probe.restore()
     jump_rows = _sample(runner, {"A"}, 24)
     probe.restore()
@@ -297,7 +297,7 @@ def _warp(runner, rom_sha1: str, core_sha1: str, empty_frame: bool) -> dict:
         }
         return report
     state = runner.serialize()
-    probe = EmulatorProbe(runner, state, empty_frame=False)
+    probe = EmulatorProbe(runner, state, adapter=INTEGRATION, empty_frame=False)
     start = probe.restore()
     if not same_start(reached, start):
         # The serialize included the current frame. Keep the bytes that restore to `start`.
@@ -379,7 +379,7 @@ def refine() -> dict:
     from games.lab.actions import BUTTON_ID
     from games.lab.cores import ensure_core
     from games.lab.libretro import LibretroRunner
-    from games.lab.roms import SMB_SHA1, pinned_smb
+    from games.lab.mario.rom import SMB_SHA1, pinned_smb
     from games.lab.skill import curriculum_plan, new_skill, verify_demonstration
     from games.lab.worker import atomic_json
     rom = pinned_smb()
@@ -390,7 +390,7 @@ def refine() -> dict:
         from games.lab.challenge import load_challenge
         opening_dir = root / "smb-1-1-opening-jump"
         _document, opening_state = load_challenge(opening_dir, rom_sha1=SMB_SHA1, core_sha1=_sha1(core))
-        probe = EmulatorProbe(runner, opening_state, empty_frame=False)
+        probe = EmulatorProbe(runner, opening_state, adapter=INTEGRATION, empty_frame=False)
         start = probe.restore()
         goal = int(start["x_pos"]) + 8
 
@@ -478,7 +478,7 @@ def refine() -> dict:
             runner.frame(set())
         warp_report = {"settled": settled is not None, "trace_head": trace[:6], "trace_tail": trace[-3:]}
         if settled is not None:
-            probe = EmulatorProbe(runner, settled, empty_frame=False)
+            probe = EmulatorProbe(runner, settled, adapter=INTEGRATION, empty_frame=False)
             start = probe.restore()
             document = dict(warp_doc)
             document["start"] = {

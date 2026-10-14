@@ -4,8 +4,9 @@ from pathlib import Path
 
 import pytest
 
-from games.lab.challenge import challenges_root, load_challenge, reached_warp, same_start
-from games.lab.roms import SMB_SHA1, pinned_smb
+from games.lab.challenge import challenges_root, load_challenge, same_start
+from games.lab.integrations.smb_1_1 import INTEGRATION, reached_warp
+from games.lab.mario.rom import SMB_SHA1, pinned_smb
 
 
 def _ready():
@@ -37,7 +38,7 @@ def test_saved_states_restore_and_the_jump_repeats():
         load_challenge(warp_dir, rom_sha1=SMB_SHA1, core_sha1="0" * 40)
     runner = LibretroRunner(core, rom, BUTTON_ID)
     try:
-        probe = EmulatorProbe(runner, opening_state, empty_frame=False)
+        probe = EmulatorProbe(runner, opening_state, adapter=INTEGRATION, empty_frame=False)
         start = probe.restore()
         assert same_start(opening["start"], start)
         assert start["player_state"] == 8 and start["world"] == 1 and start["stage"] == 1
@@ -52,7 +53,7 @@ def test_saved_states_restore_and_the_jump_repeats():
             second,
         )
         assert first["x_pos"] == second["x_pos"] and first["saw_jump"] == second["saw_jump"]
-        warp_probe = EmulatorProbe(runner, warp_state, empty_frame=False)
+        warp_probe = EmulatorProbe(runner, warp_state, adapter=INTEGRATION, empty_frame=False)
         landed = warp_probe.restore()
         assert same_start(warp["start"], landed)
         assert landed["world"] == 1 and landed["stage"] == 2 and landed["player_state"] == 8

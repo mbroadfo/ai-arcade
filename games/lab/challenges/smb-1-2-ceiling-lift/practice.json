@@ -4,6 +4,13 @@
   "parent_sha256": "0d31d9fd5ae3cdab1531f72e33938a584e93f7549061e9de49ed26b2a18cf7ec",
   "practice_checkpoint": "C:\\Users\\Mike\\Documents\\Code\\ai-arcade-challenge\\games\\lab\\challenges\\smb-1-2-ceiling-lift\\practice-ppo-cnn.zip",
   "practice_sha256": "908c1e4b4e3037376b1a34ce36143ed2688110d7941dc1ccd2267fd6ec8e7691",
+  "artifact": {
+    "filename": "practice-ppo-cnn.zip",
+    "path": "games/lab/challenges/smb-1-2-ceiling-lift/practice-ppo-cnn.zip",
+    "sha256": "908c1e4b4e3037376b1a34ce36143ed2688110d7941dc1ccd2267fd6ec8e7691",
+    "standing": "verified_fixed_state",
+    "note": "Five deterministic attempts from one saved state. That is verified from a fixed state. It is not generalization across varied starts. The zip stays beside this file and is not committed."
+  },
   "method": "supervised match of one frame-skip-4 action sequence",
   "frame_skip": 4,
   "search_jump_frames": 26,

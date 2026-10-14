@@ -341,6 +341,81 @@ def episode_metrics(info: dict) -> dict:
     }
 
 
+def reached_warp(start: dict, now: dict) -> bool:
+    """World 1-2 became world 4 inside the emulator. A score is not this check."""
+    return (
+        start.get("world") == 1
+        and start.get("stage") == 2
+        and now.get("world") == 4
+        and now.get("stage") == 1
+        and not now.get("dead")
+        and not now.get("dying")
+    )
+
+
+def correct_progress(tape: dict, score: int) -> int:
+    """A castle walk once stored World 1-1's x as the start of World 1-2.
+
+    The buttons of that file stop on the 1-1 ending. A tape marked scored_clear
+    already measured the stage after the position reset.
+    """
+    if tape.get("scored_clear"):
+        return score
+    if tape.get("objective") not in (None, "progress"):
+        return score
+    try:
+        world = int(tape.get("world") or 1)
+        stage = int(tape.get("stage") or 1)
+    except (TypeError, ValueError):
+        return score
+    index = (world - 1) * 4 + (stage - 1)
+    if index > 0 and score == index * STAGE_SPAN + CLEAR_X:
+        return score - STAGE_SPAN
+    return score
+
+
+def correct_floor(floor: int):
+    """The historical parent 7362 is the 1-1 castle counted as 1-2."""
+    try:
+        floor = int(floor)
+    except (TypeError, ValueError):
+        return None
+    if floor == STAGE_SPAN + CLEAR_X:
+        return CLEAR_X
+    return None
+
+
+def accept_hint_context(context: dict) -> dict:
+    """A hint plays in one world and stage. Worlds are 1 to 8 and stages 1 to 4."""
+    try:
+        world = int(context.get("world"))
+        stage = int(context.get("stage"))
+    except (TypeError, ValueError):
+        raise ValueError("world and stage are numbers") from None
+    if not 1 <= world <= 8 or not 1 <= stage <= 4:
+        raise ValueError("world is 1 to 8 and stage is 1 to 4")
+    return {"world": world, "stage": stage}
+
+
+def note_frame(facts: dict, diag: dict, memory: dict | None) -> dict:
+    """Remember whether this life left the ground. Search uses that as a signal."""
+    memory = dict(memory or {})
+    if "start_y" not in memory:
+        memory["start_y"] = int(facts.get("y_pos") or 0)
+    saw = bool(memory.get("saw_jump"))
+    try:
+        speed = int((diag or {}).get("y_speed") or 0)
+        height = int(facts.get("y_pos") or 0)
+    except (TypeError, ValueError):
+        speed, height = 0, 0
+    if speed < 0 or height > int(memory["start_y"]) + 2:
+        saw = True
+    memory["saw_jump"] = saw
+    facts["saw_jump"] = saw
+    facts["diagnose"] = diag
+    return memory
+
+
 def evaluation_protocol() -> dict:
     """What an independent Mario measurement is. Callers pass this to the engine."""
     return {
@@ -354,6 +429,8 @@ def evaluation_protocol() -> dict:
         "clear_benchmark": "clear-1-1-flag",
         "game": "smb_1_1",
         "objective": "progress",
+        "sense": "maximize",
+        "metric": "score",
         "start": "game",
         "benchmarks": dict(BENCHMARKS),
         "observe": update_milestones,
@@ -366,21 +443,57 @@ class _SMB:
     id = "smb_1_1"
     system = "nes"
     objective = "progress"
+    sense = "maximize"
     actions = SMB_ACTIONS
     death_penalty = DEATH_PENALTY
+    capabilities = {
+        "contract": 1,
+        "pixels": True,
+        "ram": True,
+        "savestate": True,
+        "frame_accurate": True,
+        "structured": True,
+    }
     skip_title = staticmethod(skip_title)
     measure = staticmethod(progress)
     step_reward = staticmethod(step_reward)
     note_clear = staticmethod(note_clear)
     evaluation_protocol = staticmethod(evaluation_protocol)
+    reached_warp = staticmethod(reached_warp)
+    correct_progress = staticmethod(correct_progress)
+    correct_floor = staticmethod(correct_floor)
+    accept_hint_context = staticmethod(accept_hint_context)
+    note_frame = staticmethod(note_frame)
 
     def pinned_rom(self):
-        from games.lab.roms import pinned_smb
+        from games.lab.mario.rom import pinned_smb
         return pinned_smb()
 
     def rom_sha1(self) -> str:
-        from games.lab.roms import SMB_SHA1
+        from games.lab.mario.rom import SMB_SHA1
         return SMB_SHA1
+
+    def materialize(self, game=None):
+        from games.lab.mario.rom import store_smb
+        return store_smb()
+
+    def owns(self, record: dict) -> bool:
+        """Historical files often omit the adapter id. New files should set it."""
+        if not isinstance(record, dict):
+            return False
+        if record.get("integration") == self.id:
+            return True
+        if record.get("integration"):
+            return False
+        game = str(record.get("game") or "")
+        if game in {self.id, "Super Mario Bros."}:
+            return True
+        objective = record.get("objective")
+        if record.get("system") == "nes" and objective == "progress":
+            return True
+        if objective in (None, "progress", "x_pos") and ("world" in record or "stage" in record):
+            return True
+        return False
 
     def matches(self, system: str, stem: str) -> bool:
         return system == "nes" and stem.casefold() == "super mario bros. (japan, usa)"

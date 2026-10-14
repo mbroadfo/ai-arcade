@@ -40,6 +40,8 @@ def make_tape(
     objective: str | None,
     scored_clear: bool = False,
     time: int | None = None,
+    integration: str | None = None,
+    sense: str | None = None,
 ) -> dict:
     tape = {
         "actions": [int(action) for action in actions],
@@ -51,8 +53,12 @@ def make_tape(
         "n_actions": int(n_actions),
         "objective": objective,
     }
-    # The clear stays on the stage Mario finished. Older tapes lack this mark,
-    # and one of them counted the 1-1 castle as the start of 1-2.
+    if integration:
+        tape["integration"] = integration
+    if sense:
+        tape["sense"] = sense
+    # scored_clear means the adapter already counted a finished stage.
+    # Older files lack this mark. The adapter may correct those.
     if scored_clear:
         tape["scored_clear"] = True
     # Clock remaining at the first step that reached this score. Older files omit it.
@@ -104,12 +110,7 @@ def compatible(tape: dict | None, n_actions: int, objective: str | None = None) 
 
 
 def comparable(tape: dict | None) -> int:
-    """How far a saved run actually got.
-
-    A run saved before the clear stayed on the finished stage stored World 1-1's
-    castle position as World 1-2. That file's buttons stop on the 1-1 ending.
-    A run marked scored_clear measured the stage after the position had reset.
-    """
+    """How far a saved run got, after the owning adapter corrects legacy files."""
     if not isinstance(tape, dict):
         return -1
     try:
@@ -118,32 +119,37 @@ def comparable(tape: dict | None) -> int:
         return -1
     if tape.get("scored_clear"):
         return score
-    if tape.get("objective") not in (None, "progress"):
+    from games.lab.registry import owner_of
+    adapter = owner_of(tape)
+    hook = getattr(adapter, "correct_progress", None) if adapter else None
+    if not callable(hook):
         return score
     try:
-        world = int(tape.get("world") or 1)
-        stage = int(tape.get("stage") or 1)
+        return int(hook(tape, score))
     except (TypeError, ValueError):
         return score
-    from games.lab.integrations.smb_1_1 import CLEAR_X, STAGE_SPAN
-    index = (world - 1) * 4 + (stage - 1)
-    if index > 0 and score == index * STAGE_SPAN + CLEAR_X:
-        return score - STAGE_SPAN
-    return score
 
 
 def floor_value(floor: int) -> int:
     """The score a generation has to reach before its shared run is practiced.
 
-    The historical parent 7362 is the 1-1 castle counted as 1-2.
+    An adapter may correct a legacy floor. A number it does not recognize is unchanged.
     """
     try:
         floor = int(floor)
     except (TypeError, ValueError):
         return 0
-    from games.lab.integrations.smb_1_1 import CLEAR_X, STAGE_SPAN
-    if floor == STAGE_SPAN + CLEAR_X:
-        return floor - STAGE_SPAN
+    from games.lab.registry import registered
+    for adapter in registered():
+        hook = getattr(adapter, "correct_floor", None)
+        if not callable(hook):
+            continue
+        try:
+            corrected = hook(floor)
+        except (TypeError, ValueError):
+            continue
+        if corrected is not None:
+            return int(corrected)
     return max(floor, 0)
 
 
@@ -180,14 +186,17 @@ def further_or_faster(
     saved_score: int,
     saved_clock: int | None,
     saved_presses: int,
+    *,
+    sense: str = "maximize",
 ) -> bool:
-    """A life replaces the saved run when it went further, or as far and faster.
+    """A life replaces the saved run when it did better, or as well and faster.
 
-    Further always wins. At the same place, more time left wins when both runs
-    recorded a clock. Otherwise the run with fewer presses is the faster one.
+    sense comes from the adapter. At the same metric, more time left wins when
+    both runs recorded a clock. Otherwise fewer presses is the faster one.
     A missing clock does not lose to a timed run that took more presses.
     """
-    if score > saved_score:
+    from games.lab.contract import better
+    if better(sense, score, saved_score):
         return True
     if score != saved_score:
         return False
@@ -196,18 +205,32 @@ def further_or_faster(
     return presses < saved_presses
 
 
+def _tape_sense(tape: dict | None) -> str:
+    if isinstance(tape, dict) and tape.get("sense") in ("maximize", "minimize"):
+        return tape["sense"]
+    from games.lab.registry import owner_of
+    from games.lab.contract import sense_of
+    return sense_of(owner_of(tape)) or "maximize"
+
+
 def better(a: dict | None, b: dict | None) -> bool:
     """True when a should replace b."""
     if not isinstance(a, dict):
         return False
     clock = pace(a)
+    sense = _tape_sense(a)
+    if isinstance(b, dict):
+        saved_score = comparable(b)
+    else:
+        saved_score = 10**12 if sense == "minimize" else -1
     return further_or_faster(
         comparable(a),
         0 if clock is None else clock,
         _presses(a),
-        comparable(b) if isinstance(b, dict) else -1,
+        saved_score,
         pace(b) if isinstance(b, dict) else None,
         _presses(b) if isinstance(b, dict) else 10**9,
+        sense=sense,
     )
 
 
@@ -221,20 +244,20 @@ def search_life(life: int, every: int = SEARCH_EVERY) -> bool:
     return every > 0 and life > 0 and life % every == 0
 
 
-def peak_prefix(actions: list[int], scores: list[int]) -> list[int]:
-    """Buttons through the furthest world reached before the life died.
+def peak_prefix(actions: list[int], scores: list[int], *, sense: str = "maximize") -> list[int]:
+    """Buttons through the best metric this life reached.
 
-    Anything after that high-water step is the life falling apart. Replaying
-    it would repeat the failure. A clear into the next world raises the score,
-    so those presses stay.
+    Anything after that step is the life falling apart. Replaying it would
+    repeat the failure. sense is the adapter's comparison.
     """
+    from games.lab.contract import better
     if not actions or not scores:
         return []
     limit = min(len(actions), len(scores))
     best = scores[0]
     at = 0
     for index in range(limit):
-        if scores[index] > best:
+        if better(sense, scores[index], best):
             best = scores[index]
             at = index
     return [int(action) for action in actions[: at + 1]]

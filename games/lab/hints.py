@@ -1,7 +1,7 @@
-"""A human hint. The buttons play after the shared run, in one world and stage.
+"""A human hint. The buttons play after the shared run, in one game-defined context.
 
 A hint with no buttons is a note. It waits until the route is filled in.
-The warp route is one of those notes until its buttons are written down.
+The context is the adapter's: a world and stage, a room, or whatever that game uses.
 """
 from __future__ import annotations
 
@@ -43,41 +43,64 @@ def parse_actions(text: str, names: list[str]) -> list[int]:
     return out
 
 
-def _clean(item: dict, n_actions: int) -> dict | None:
+def _context_of(item: dict) -> dict | None:
+    context = item.get("context")
+    if isinstance(context, dict) and context:
+        return dict(context)
+    context = {}
+    for key in ("world", "stage"):
+        if item.get(key) is None:
+            continue
+        try:
+            context[key] = int(item.get(key))
+        except (TypeError, ValueError):
+            return None
+    return context or None
+
+
+def _clean(item: dict, n_actions: int | None, accept=None) -> dict | None:
     if not isinstance(item, dict):
         return None
-    try:
-        world = int(item.get("world"))
-        stage = int(item.get("stage"))
-    except (TypeError, ValueError):
+    context = _context_of(item)
+    if context is None:
         return None
-    if not 1 <= world <= 8 or not 1 <= stage <= 4:
-        return None
+    if accept is not None:
+        try:
+            context = accept(dict(context))
+        except (TypeError, ValueError):
+            return None
+        if not isinstance(context, dict) or not context:
+            return None
     actions = item.get("actions") or []
     if not isinstance(actions, list) or len(actions) > MAX_ACTIONS:
         return None
+    limit = MAX_ACTIONS if n_actions is None else int(n_actions)
     buttons = []
     for action in actions:
         if isinstance(action, bool) or not isinstance(action, int):
             return None
-        if action < 0 or action >= n_actions:
+        if action < 0 or action >= limit:
             return None
         buttons.append(int(action))
     title = str(item.get("title") or "").strip()[:MAX_TITLE]
     if not title:
         return None
-    return {
+    row = {
         "id": str(item.get("id") or "")[:40],
         "title": title,
-        "world": world,
-        "stage": stage,
+        "context": context,
         "enabled": bool(item.get("enabled", True)),
         "note": str(item.get("note") or "").strip()[:MAX_NOTE],
         "actions": buttons,
     }
+    if "world" in context:
+        row["world"] = context["world"]
+    if "stage" in context:
+        row["stage"] = context["stage"]
+    return row
 
 
-def read_hints(path: Path, n_actions: int = 12) -> list[dict]:
+def read_hints(path: Path, n_actions: int | None = None) -> list[dict]:
     file = Path(path)
     if not file.is_file():
         return []
@@ -107,35 +130,29 @@ def _hint_id() -> str:
     return f"hint-{time.time_ns()}-{_HINT_SEQ}"
 
 
-def add_hint(path: Path, spec: dict, n_actions: int = 12) -> dict:
+def add_hint(path: Path, spec: dict, n_actions: int | None = None, accept_context=None) -> dict:
     hints = read_hints(path, n_actions)
     if len(hints) >= MAX_HINTS:
         raise ValueError("too many hints")
     title = str(spec.get("title") or "").strip()
     if not title:
         raise ValueError("a hint needs a title")
-    try:
-        world = int(spec.get("world"))
-        stage = int(spec.get("stage"))
-    except (TypeError, ValueError):
-        raise ValueError("world and stage are numbers") from None
-    if not 1 <= world <= 8 or not 1 <= stage <= 4:
-        raise ValueError("world is 1 to 8 and stage is 1 to 4")
     actions = spec.get("actions") or []
     if isinstance(actions, str):
         raise ValueError("buttons should already be indexes")
-    hint = _clean(
-        {
-            "id": _hint_id(),
-            "title": title,
-            "world": world,
-            "stage": stage,
-            "enabled": True,
-            "note": spec.get("note") or "",
-            "actions": actions,
-        },
-        n_actions,
-    )
+    raw = {
+        "id": _hint_id(),
+        "title": title,
+        "enabled": True,
+        "note": spec.get("note") or "",
+        "actions": actions,
+    }
+    if isinstance(spec.get("context"), dict):
+        raw["context"] = spec["context"]
+    else:
+        raw["world"] = spec.get("world")
+        raw["stage"] = spec.get("stage")
+    hint = _clean(raw, n_actions, accept_context)
     if hint is None:
         raise ValueError("hint could not be saved")
     hints.append(hint)
@@ -143,8 +160,14 @@ def add_hint(path: Path, spec: dict, n_actions: int = 12) -> dict:
     return hint
 
 
-def change_hint(path: Path, hint_id: str, enabled: bool | None = None, remove: bool = False) -> list[dict]:
-    hints = read_hints(path)
+def change_hint(
+    path: Path,
+    hint_id: str,
+    enabled: bool | None = None,
+    remove: bool = False,
+    n_actions: int | None = None,
+) -> list[dict]:
+    hints = read_hints(path, n_actions)
     found = False
     kept = []
     for hint in hints:

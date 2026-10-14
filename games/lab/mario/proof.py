@@ -8,7 +8,7 @@ from pathlib import Path
 from games.lab.env import make_env
 from games.lab.integrations import get
 from games.lab.paths import runs_root
-from games.lab.roms import store_smb
+from games.lab.mario.rom import store_smb
 from games.lab.seats import SEATS
 from games.lab.worker import atomic_json, train
 

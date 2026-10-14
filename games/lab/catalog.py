@@ -10,7 +10,6 @@ import re
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
-from games.lab.integrations.smb_1_1 import INTEGRATION as SMB
 from games.lab.paths import REPO_ROOT
 
 # Lower is better. A loose zip loses to the raw image the core can open directly.
@@ -90,8 +89,10 @@ def _entries(document: dict):
 
 
 def _grade(system: str, stem: str) -> tuple[str, str, str | None, str | None]:
-    if SMB.matches(system, stem):
-        return "scored", "", SMB.id, _PLAYABLE["nes"]
+    from games.lab.registry import find_match
+    adapter = find_match(system, stem)
+    if adapter is not None:
+        return "scored", "", adapter.id, _PLAYABLE.get(getattr(adapter, "system", None)) or _PLAYABLE.get(system)
     core = _PLAYABLE.get(system)
     if core:
         return "bootable", "", None, core

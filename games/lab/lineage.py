@@ -37,11 +37,27 @@ def collapsed_history(rounds: list[dict]) -> list[dict]:
         winner_index = rnd.get("winner")
         seat = next((item for item in seats if item.get("seat") == winner_index), None)
         if seat is None:
-            seat = max(seats, key=lambda item: (int(item.get("score") or 0), -int(item.get("seat") or 0)))
+            from games.lab.contract import ordered
+            from games.lab.registry import owner_of
+            from games.lab.contract import sense_of
+            sense = rnd.get("sense") if rnd.get("sense") in ("maximize", "minimize") else sense_of(owner_of(rnd))
+            if sense is None:
+                seat = min(seats, key=lambda item: int(item.get("seat") or 0))
+            else:
+                seat = max(seats, key=lambda item: ordered(sense, int(item.get("score") or 0), int(item.get("seat") or 0)))
         score = int(seat.get("score") or 0)
         previous = rows[-1]["score"] if rows else None
         episodes = int(seat.get("episodes") or seat.get("deaths") or 0)
         steps = int(seat.get("steps") or 0)
+        from games.lab.contract import sense_of
+        from games.lab.registry import owner_of
+        sense = rnd.get("sense") if rnd.get("sense") in ("maximize", "minimize") else sense_of(owner_of(rnd))
+        if previous is None or sense is None:
+            delta = None
+        elif sense == "minimize":
+            delta = previous - score
+        else:
+            delta = score - previous
         rows.append({
             "generation": len(rows),
             "id": rnd.get("id"),
@@ -51,7 +67,8 @@ def collapsed_history(rounds: list[dict]) -> list[dict]:
             "score": score,
             "deaths": int(seat.get("deaths") or 0),
             "life": int(steps / episodes) if episodes else 0,
-            "delta": None if previous is None else score - previous,
+            "delta": delta,
+            "sense": sense,
             "game": rnd.get("game"),
             "objective": rnd.get("objective"),
             "record": "training",
@@ -59,12 +76,14 @@ def collapsed_history(rounds: list[dict]) -> list[dict]:
     return rows
 
 
-def champion(root: Path, model: str, stamp: dict | None = None) -> dict | None:
-    """The best.zip with the highest training score for this model. A tie keeps the lower seat.
+def champion(root: Path, model: str, stamp: dict | None = None, *, sense: str) -> dict | None:
+    """The best.zip this metric prefers. A tie keeps the lower seat.
 
-    A stamp limits the search to weights that used the same buttons and score.
-    A different stamp stays on disk and does not parent the next round.
+    sense comes from the adapter. A stamp limits the search to weights that used
+    the same buttons and score. A different stamp stays on disk and does not
+    parent the next round.
     """
+    from games.lab.contract import training_prefers
     from games.lab.stamp import matches
     best: dict | None = None
     if not root.is_dir():
@@ -87,7 +106,7 @@ def champion(root: Path, model: str, stamp: dict | None = None) -> dict | None:
             if not zip_path.is_file() or not matches(zip_path, stamp):
                 continue
             score = int(seat.get("score") or 0)
-            if best is None or score > best["score"] or (score == best["score"] and index < best["seat"]):
+            if training_prefers(sense, score, index, best):
                 best = {
                     "path": zip_path,
                     "score": score,
@@ -107,7 +126,7 @@ def promoted_parent(root: Path, model: str, stamp: dict | None = None, *, protoc
     evaluation, an assisted record, a different scenario or seed list, or a hash
     that does not match the zip leaves no parent. Two different ROM or core
     hashes are not ranked against each other. The higher success rate wins.
-    A tie breaks on the furthest recorded score, then the lower seat.
+    A tie breaks on the protocol metric, in the protocol's sense, then the lower seat.
     """
     from games.lab.eval import accept_eval, read_eval
     from games.lab.stamp import matches
@@ -135,13 +154,18 @@ def promoted_parent(root: Path, model: str, stamp: dict | None = None, *, protoc
             if not accept_eval(evaluation, zip_path, protocol=protocol, model=model):
                 continue
             furthest = evaluation.get("furthest") or {}
+            sense = protocol.get("sense")
+            metric = protocol.get("metric") or "score"
+            if sense not in ("maximize", "minimize"):
+                continue
             try:
-                score = int(furthest.get("score") or 0)
+                score = int(furthest.get(metric) or 0)
                 rate = float(evaluation.get("success_rate") or 0)
             except (TypeError, ValueError):
                 continue
+            ranked = score if sense == "maximize" else -score
             candidates.append({
-                "_rank": (rate, score, -index),
+                "_rank": (rate, ranked, -index),
                 "_env": (evaluation.get("rom_sha1"), evaluation.get("core_sha1")),
                 "path": zip_path,
                 "score": score,

@@ -7,7 +7,7 @@ from games.lab.env import make_env
 from games.lab.integrations import get
 from games.lab.models import registry
 from games.lab.paths import runs_root
-from games.lab.roms import store_smb
+from games.lab.mario.rom import store_smb
 from games.lab.worker import train
 import time
 

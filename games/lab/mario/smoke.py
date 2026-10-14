@@ -6,7 +6,8 @@ import json
 from games.lab.env import make_env
 from games.lab.integrations import get
 from games.lab.paths import assert_outside_repo
-from games.lab.roms import git_tracks_games, store_smb
+from games.lab.mario.rom import store_smb
+from games.lab.roms import git_tracks_games
 
 
 def main() -> int:

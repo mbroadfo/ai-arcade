@@ -124,6 +124,10 @@ def bind_scenario(protocol: dict, identity: dict | None = None) -> tuple[dict | 
             "core_sha1": identity.get("core_sha1"),
             "checkpoint_sha256": identity.get("checkpoint_sha256"),
         }
+        if protocol.get("sense") in ("maximize", "minimize"):
+            scenario["sense"] = protocol["sense"]
+        if protocol.get("metric"):
+            scenario["metric"] = str(protocol["metric"])
     except (KeyError, TypeError, ValueError) as exc:
         return None, f"protocol is incomplete: {exc}"
     for key in ("game", "objective", "frame_skip", "n_actions"):
@@ -178,11 +182,24 @@ def failed_evaluation(reason: str, scenario: dict | None = None) -> dict:
     return result
 
 
-def _furthest(episodes: list[dict]) -> dict | None:
+def _metric_value(episode: dict, metric: str) -> int:
+    raw = episode.get(metric)
+    if raw is None and metric != "score":
+        raw = episode.get("score")
+    try:
+        return int(raw or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def _furthest(episodes: list[dict], *, metric: str = "score", sense: str = "maximize") -> dict | None:
+    """The best finished attempt on the protocol metric."""
     good = [episode for episode in episodes if not episode.get("failed")]
     if not good:
         return None
-    return max(good, key=lambda episode: int(episode.get("score") or 0))
+    if sense == "minimize":
+        return min(good, key=lambda episode: _metric_value(episode, metric))
+    return max(good, key=lambda episode: _metric_value(episode, metric))
 
 
 def _counted_successes(episodes: list[dict], benchmark: str) -> int:
@@ -265,7 +282,9 @@ def evaluate_attempts(run_one, attempts: int, identity: dict, protocol: dict) ->
         result["seeds"] = seeds
         return result
     successes = _counted_successes(episodes, benchmark)
-    furthest = _furthest(episodes)
+    metric = str(protocol.get("metric") or "score")
+    sense = protocol.get("sense") if protocol.get("sense") in ("maximize", "minimize") else "maximize"
+    furthest = _furthest(episodes, metric=metric, sense=sense)
     decision_values = [int(episode.get("decisions") or 0) for episode in episodes if episode.get("success")]
     frame_values = [int(episode.get("frames") or 0) for episode in episodes if episode.get("success")]
     counts = {
@@ -345,8 +364,34 @@ def play_unassisted(env, choose, *, seed: int, protocol: dict, limit: int | None
     return _episode_from_trace(last, reached, decisions, decisions * skip, scenario["benchmark"], protocol)
 
 
+def _comparison_sense(before: dict, after: dict) -> str:
+    """The adapter's direction. A record that omits it keeps the historical maximize rule."""
+    left = before.get("sense")
+    right = after.get("sense")
+    known = ("maximize", "minimize")
+    if left in known and right in known and left != right:
+        raise ValueError("sense differs")
+    if left in known:
+        return left
+    if right in known:
+        return right
+    return "maximize"
+
+
+def _comparison_metric(before: dict, after: dict) -> str:
+    left = before.get("metric")
+    right = after.get("metric")
+    if left and right and left != right:
+        raise ValueError("metric differs")
+    return str(left or right or "score")
+
+
 def compare_independent(before: dict, after: dict) -> dict:
-    """Success rates from two finished evaluations of the same scenario and seeds."""
+    """Success rates from two finished evaluations of the same scenario and seeds.
+
+    The secondary metric follows the adapter. Higher is better only when the
+    sense is maximize. A record with no sense keeps that historical reading.
+    """
     for label, item in (("before", before), ("after", after)):
         if not isinstance(item, dict) or item.get("assisted") or item.get("failed"):
             raise ValueError(f"{label} is not a finished independent evaluation")
@@ -364,17 +409,22 @@ def compare_independent(before: dict, after: dict) -> dict:
     ):
         if before.get(key) != after.get(key):
             raise ValueError(f"{key} differs")
-    before_score = int((before.get("furthest") or {}).get("score") or 0)
-    after_score = int((after.get("furthest") or {}).get("score") or 0)
+    from games.lab.contract import better
+    metric = _comparison_metric(before, after)
+    sense = _comparison_sense(before, after)
+    before_score = int((before.get("furthest") or {}).get(metric) or 0)
+    after_score = int((after.get("furthest") or {}).get(metric) or 0)
     return {
         "before_success_rate": before["success_rate"],
         "after_success_rate": after["success_rate"],
         "before_furthest": before_score,
         "after_furthest": after_score,
+        "metric": metric,
+        "sense": sense,
         "attempts": [before["attempts"], after["attempts"]],
         "seeds": before.get("seeds"),
         "benchmark": before.get("benchmark"),
-        "improved": after["success_rate"] > before["success_rate"] or after_score > before_score,
+        "improved": after["success_rate"] > before["success_rate"] or better(sense, after_score, before_score),
         "record": "independent",
     }
 
@@ -578,7 +628,7 @@ def run_checkpoint(
         import hashlib
         from games.lab.cores import ensure_core
         from games.lab.env import make_env
-        from games.lab.integrations import get
+        from games.lab.registry import get
         from games.lab.models import registry
         integration = get(protocol["game"])
         rom = integration.pinned_rom()
@@ -621,14 +671,14 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Evaluate a checkpoint with no tape and no hints")
     parser.add_argument("--checkpoint", required=True)
     parser.add_argument("--model", required=True)
-    parser.add_argument("--game", default="smb_1_1", help="Adapter that supplies the protocol. Mario is the reference.")
+    parser.add_argument("--game", required=True, help="Adapter id. The adapter supplies the protocol.")
     parser.add_argument("--attempts", type=int, default=None)
     parser.add_argument("--seed", type=int, default=None)
     parser.add_argument("--limit", type=int, default=None)
     parser.add_argument("--benchmark", default=None)
     parser.add_argument("--out", default="")
     args = parser.parse_args(argv)
-    from games.lab.integrations import get
+    from games.lab.registry import get
     protocol = get(args.game).evaluation_protocol()
     attempts = protocol["attempts"] if args.attempts is None else args.attempts
     seed = protocol.get("seed") or 0 if args.seed is None else args.seed

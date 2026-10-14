@@ -75,8 +75,8 @@ class FrameEnv(gym.Env):
 class ScoredEnv(gym.Wrapper):
     """Reward is further progress through the game. The flag starts the next level.
 
-    Dying is a penalty on that step. A life also stops at the step limit so a
-    stuck Mario does not hold the seat forever.
+    Dying is a penalty on that step. A life also stops at the step limit so
+    a stuck episode does not hold the seat forever.
     """
 
     def __init__(self, env: FrameEnv, integration, step_limit: int = 20000):

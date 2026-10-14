@@ -209,7 +209,11 @@ class SeatCallback:
 
             def _prefix_len(self) -> int:
                 from games.lab.tape import peak_prefix
-                return len(peak_prefix(self.episode_actions, self.episode_scores))
+                return len(peak_prefix(
+                    self.episode_actions,
+                    self.episode_scores,
+                    sense=self.meta.get("sense") or "maximize",
+                ))
 
             def _saves_tape(self) -> bool:
                 from games.lab.tape import further_or_faster
@@ -223,6 +227,7 @@ class SeatCallback:
                     self.tape_score,
                     self.tape_time,
                     self.tape_presses,
+                    sense=self.meta.get("sense") or "maximize",
                 )
 
             def _save_run(self) -> bool:
@@ -237,7 +242,11 @@ class SeatCallback:
                     read_tape,
                     write_tape,
                 )
-                prefix = peak_prefix(self.episode_actions, self.episode_scores)
+                prefix = peak_prefix(
+                    self.episode_actions,
+                    self.episode_scores,
+                    sense=self.meta.get("sense") or "maximize",
+                )
                 n_actions = int(self.meta.get("n_actions") or 0)
                 if not prefix or n_actions <= 0:
                     return False
@@ -252,6 +261,8 @@ class SeatCallback:
                     self.meta.get("objective"),
                     scored_clear=True,
                     time=self.peak_time,
+                    integration=self.meta.get("integration") or None,
+                    sense=self.meta.get("sense"),
                 )
                 try:
                     write_tape(self.seat_dir / TAPE_NAME, tape)
@@ -376,9 +387,9 @@ def train(
     from games.lab.tape import TAPE_NAME, comparable, pace, read_tape
     existing = read_tape(seat_dir / TAPE_NAME)
     if existing is not None:
-        # The saved 7362 run stops on the 1-1 castle. A life that reaches 1-2
-        # goes further than that file and replaces it. The same place replaces
-        # it when the new life got there faster.
+        # comparable() asks the adapter to correct a legacy file. A life that
+        # does better replaces it. The same place replaces it when the new life
+        # got there faster.
         callback.tape_score = max(comparable(existing), 0)
         callback.tape_time = pace(existing)
         actions = existing.get("actions")
@@ -428,9 +439,10 @@ def main(argv: list[str] | None = None) -> int:
     if hold_requested():
         return 0
 
+    from games.lab.contract import SURVIVAL_SENSE, sense_of
     from games.lab.env import RouteEnv, make_env
-    from games.lab.integrations import get
     from games.lab.lineage import champion
+    from games.lab.registry import get
     from games.lab.paths import runs_root
     from games.lab.hints import HINTS_NAME
     from games.lab.tape import TAPE_NAME, parent_floor, seed_run
@@ -447,12 +459,14 @@ def main(argv: list[str] | None = None) -> int:
         "objective": args.objective,
         "n_actions": n_actions,
         "tape": str(seat_dir.parent.parent / TAPE_NAME),
+        "integration": integration.id if integration is not None else "",
+        "sense": sense_of(integration) if integration is not None else SURVIVAL_SENSE,
     }
     if integration is not None and hasattr(integration, "stamp"):
         meta["stamp"] = integration.stamp()
     floor = parent_floor(seat_dir.parent.parent)
     if floor == 0:
-        found = champion(runs_root(), args.model, meta.get("stamp"))
+        found = champion(runs_root(), args.model, meta.get("stamp"), sense=meta["sense"])
         floor = int(found["score"]) if found else 0
     meta["floor"] = floor
     # The supervisor process may have started before this rule existed. Copy here

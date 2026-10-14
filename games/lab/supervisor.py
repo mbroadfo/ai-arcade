@@ -1,4 +1,4 @@
-"""One round: six seats. Each seat keeps the life that went furthest right."""
+"""One round: six seats. Each seat keeps the life its adapter ranks first."""
 from __future__ import annotations
 
 import argparse
@@ -11,12 +11,12 @@ import time
 from pathlib import Path
 
 from games.lab.catalog import by_id, default_catalog_path, games_from, load_path
-from games.lab.integrations import get
 from games.lab.lineage import champion, collapsed_history, load_rows, promoted_parent, save_rows, seats_for_generation
-from games.lab.models import registry
+from games.lab.models import registry as models
 from games.lab.publish import finalize
 from games.lab.ranking import winner
-from games.lab.roms import ssh_command, store_game, store_smb
+from games.lab.registry import get
+from games.lab.roms import ssh_command, store_game
 from games.lab.paths import chain_followup, pause_requested, runs_root, stop_requested
 from games.lab.seats import SEATS
 from games.lab.worker import atomic_json
@@ -39,8 +39,10 @@ def load_catalog() -> list:
 
 
 def materialize(game) -> Path:
-    if game.integration == "smb_1_1":
-        return store_smb()
+    adapter = get(game.integration) if game.integration else None
+    hook = getattr(adapter, "materialize", None) if adapter else None
+    if callable(hook):
+        return hook(game)
     suffix = Path(game.path).suffix.lower() or ".rom"
     if suffix == ".zip":
         suffix = ".nes" if game.system == "nes" else ".a26"
@@ -187,14 +189,16 @@ def _game_stamp(game_id: str) -> dict | None:
     return stamp() if stamp else None
 
 
-def _seed_sources(seats: list[dict], stamp: dict | None = None) -> list[dict | None]:
+def _seed_sources(seats: list[dict], stamp: dict | None = None, sense: str | None = None) -> list[dict | None]:
     """Training-score zips. They set the practice floor. They do not parent weights."""
+    if sense not in ("maximize", "minimize"):
+        return [None for _seat in seats]
     cache: dict[str, dict | None] = {}
     sources = []
     for seat in seats:
         model = seat["model"]
         if model not in cache:
-            cache[model] = champion(runs_root(), model, stamp)
+            cache[model] = champion(runs_root(), model, stamp, sense=sense)
         sources.append(cache[model])
     return sources
 
@@ -254,8 +258,13 @@ def run_round(
     if len(seats) != 6:
         raise ValueError("a round has six seats")
     integration = get(game.integration)
+    from games.lab.contract import SURVIVAL_SENSE, sense_of
+    if integration is not None:
+        round_sense = sense_of(integration)
+    else:
+        round_sense = SURVIVAL_SENSE
     for seat in seats:
-        registry.check(seat["model"], integration)
+        models.check(seat["model"], integration)
 
     if not continuing:
         run_id = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
@@ -274,6 +283,8 @@ def run_round(
             "game": game.name,
             "system": game.system,
             "grade": game.grade,
+            "integration": game.integration,
+            "sense": round_sense,
             "objective": objective,
             "steps": steps,
             "rom": str(rom),
@@ -389,15 +400,17 @@ def run_round(
             status_path = run_dir / "seats" / str(index) / "status.json"
             status = json.loads(status_path.read_text(encoding="utf-8"))
             rows.append(status)
-        best = winner(rows)
-        # best.gif beside each seat is the life that set the distance record.
-        # Replaying checkpoint.zip is the final policy, which can walk left.
+        best = winner(rows, sense=round_sense)
+        # best.gif beside each seat is the life that set the training record.
+        # Replaying checkpoint.zip is the final policy, which can walk backward.
         finalize(run_dir)
         results = {
             "id": run_id,
             "game_id": game.id,
             "game": game.name,
+            "integration": game.integration,
             "objective": objective,
+            "sense": round_sense,
             "grade": game.grade,
             "winner": best["seat"],
             "seats": rows,
@@ -460,13 +473,20 @@ def run_chain(
         generation = start_generation
     stamp = _game_stamp(game_id)
     protocol = _game_protocol(game_id)
+    from games.lab.contract import SURVIVAL_SENSE, sense_of
+    sense = (protocol or {}).get("sense")
+    if sense not in ("maximize", "minimize"):
+        game = by_id(load_catalog())[game_id]
+        integration = get(game.integration)
+        sense = sense_of(integration) if integration is not None else SURVIVAL_SENSE
     pending_resume = resume_dir
     try:
         while True:
             weights = None if pending_resume is not None else _weight_sources(seats, stamp, protocol)
-            training = None if pending_resume is not None else _seed_sources(seats, stamp)
+            training = None if pending_resume is not None else _seed_sources(seats, stamp, sense)
             present = [source for source in (training or []) if source]
-            parent_score = max((source["score"] for source in present), default=None)
+            scores = [source["score"] for source in present]
+            parent_score = (min(scores) if sense == "minimize" else max(scores)) if scores else None
             weight_present = [source for source in (weights or []) if source]
             same_parent = len(weight_present) == 6 and len({str(source["path"]) for source in weight_present}) == 1
             parent_name = weight_present[0]["name"] if same_parent else None

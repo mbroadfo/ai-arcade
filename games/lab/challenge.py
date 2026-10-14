@@ -34,26 +34,32 @@ def check_id(challenge_id: str) -> str:
     return challenge_id
 
 
-def reached_warp(start: dict, now: dict) -> bool:
-    """World 1-2 became world 4 inside the emulator. A score is not this check."""
-    return (
-        start.get("world") == 1
-        and start.get("stage") == 2
-        and now.get("world") == 4
-        and now.get("stage") == 1
-        and not now.get("dead")
-        and not now.get("dying")
-    )
+def same_start(expected: dict, now: dict, keys=None) -> bool:
+    """The restored state matches the identity facts stored with the challenge.
 
-
-def same_start(expected: dict, now: dict) -> bool:
-    """The restored emulator matches the facts stored with the state."""
-    for key in ("world", "stage", "x_pos", "y_pos", "time", "player_state"):
-        try:
-            if int(expected.get(key)) != int(now.get(key)):
-                return False
-        except (TypeError, ValueError):
+    The keys are the ones the adapter wrote. A missing key is not a match.
+    """
+    if not isinstance(expected, dict) or not isinstance(now, dict):
+        return False
+    names = list(keys) if keys is not None else list(expected)
+    if not names:
+        return False
+    for key in names:
+        if key not in now:
             return False
+        left = expected.get(key)
+        right = now.get(key)
+        if isinstance(left, bool) or isinstance(right, bool):
+            if bool(left) is not bool(right):
+                return False
+            continue
+        try:
+            if int(left) == int(right):
+                continue
+            return False
+        except (TypeError, ValueError):
+            if left != right:
+                return False
     return True
 
 
@@ -86,14 +92,12 @@ def save_challenge(root: Path, document: dict, state: bytes) -> Path:
     if missing:
         raise ChallengeError("missing " + ", ".join(missing))
     start = document["start"]
-    if not isinstance(start, dict):
+    if not isinstance(start, dict) or not start:
         raise ChallengeError("start facts are missing")
-    for key in ("world", "stage", "x_pos", "y_pos", "time", "player_state"):
-        if start.get(key) is None:
-            raise ChallengeError(f"start is missing {key}")
     blob = bytes(state)
     document["version"] = 1
-    document["state_format"] = "libretro-serialize"
+    document["state_format"] = document.get("state_format") or "libretro-serialize"
+    document["identity_keys"] = list(document.get("identity_keys") or start.keys())
     document["state_sha256"] = hashlib.sha256(blob).hexdigest()
     document["state_bytes"] = len(blob)
     folder = Path(root) / document["id"]
@@ -116,7 +120,7 @@ def load_challenge(folder: Path, *, rom_sha1: str, core_sha1: str) -> tuple[dict
         raise ChallengeError("state could not be read") from exc
     if int(document.get("version") or 0) != 1:
         raise ChallengeError("unsupported challenge version")
-    if document.get("state_format") != "libretro-serialize":
+    if document.get("state_format") not in {"libretro-serialize", "snapshot"}:
         raise ChallengeError("unsupported state format")
     if document.get("rom_sha1") != rom_sha1:
         raise ChallengeError("ROM does not match this challenge")
@@ -129,6 +133,11 @@ def load_challenge(folder: Path, *, rom_sha1: str, core_sha1: str) -> tuple[dict
     if not isinstance(start, dict):
         raise ChallengeError("start facts are missing")
     return document, state
+
+
+def _standing(skill: dict) -> str | None:
+    from games.lab.skill import standing_of
+    return standing_of(skill)
 
 
 def catalog(root: Path | None = None) -> list[dict]:
@@ -174,6 +183,7 @@ def catalog(root: Path | None = None) -> list[dict]:
             },
             "skill": {
                 "stage": skill.get("stage"),
+                "standing": _standing(skill),
                 "agents": skill.get("agents") or {},
                 "provenance": skill.get("provenance"),
             },

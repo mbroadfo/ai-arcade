@@ -26,7 +26,8 @@ from games.lab.paths import REPO_ROOT, chain_followup, pause_requested, stop_req
 from games.lab.supervisor import _budget_met, resume_chain
 from games.lab.publish import finalize
 from games.lab.ranking import winner
-from games.lab.roms import SMB_SHA1, SMB_SHA256, RomRejected, accept_smb, pinned_smb
+from games.lab.mario.rom import SMB_SHA1, SMB_SHA256, accept_smb, pinned_smb
+from games.lab.roms import RomRejected
 from games.lab.worker import main as worker_main
 from games.lab.worker import train
 
@@ -212,8 +213,8 @@ def test_farther_right_wins_and_ties_prefer_the_lower_seat():
         {"seat": 1, "score": 100, "flag": True},
         {"seat": 2, "score": 100, "flag": True},
     ]
-    assert winner(rows)["seat"] == 0
-    assert winner([{"seat": 3, "score": 10, "flag": False}, {"seat": 1, "score": 10, "flag": False}])["seat"] == 1
+    assert winner(rows, sense="maximize")["seat"] == 0
+    assert winner([{"seat": 3, "score": 10, "flag": False}, {"seat": 1, "score": 10, "flag": False}], sense="maximize")["seat"] == 1
 
 
 def test_finalize_drops_thumbnails_and_keeps_the_video(tmp_path):
@@ -264,6 +265,8 @@ def test_default_lineup_is_six_different_models():
     from games.lab.seats import DEFAULT_MODELS, default_seat_specs
 
     class _Scored:
+        capabilities = {"ram": True}
+
         def ram_vector(self, _ram):
             return ()
 
@@ -363,14 +366,14 @@ def test_champion_is_the_highest_long_run_with_a_zip(tmp_path):
     write("short", 0, 9999, 256, b"nope")
     write("missing", 0, 3000, 200000, None)
     write("tie", 1, 1950, 200000, b"other")
-    found = champion(tmp_path, "ppo_cnn")
+    found = champion(tmp_path, "ppo_cnn", sense="maximize")
     assert found["score"] == 1950 and found["seat"] == 0
     assert found["path"].parent.name == "0"
     current = {"actions": [["RIGHT"]], "objective": "progress", "ram": 9}
-    assert champion(tmp_path, "ppo_cnn", current) is None
+    assert champion(tmp_path, "ppo_cnn", current, sense="maximize") is None
     kept = tmp_path / "tie" / "seats" / "1" / "best.zip"
     write_stamp(kept, current)
-    stamped = champion(tmp_path, "ppo_cnn", current)
+    stamped = champion(tmp_path, "ppo_cnn", current, sense="maximize")
     assert stamped["score"] == 1950 and stamped["path"] == kept
 
 
@@ -713,13 +716,13 @@ def test_generation_rank_orders_the_six_models_by_score():
         {"seat": 1, "name": "Green", "model": "ppo_lstm", "score": 7362, "color": "#3c9d5a"},
         {"seat": 3, "name": "Gold", "model": "ppo_ram", "score": 7362, "color": "#d4a017"},
     ]
-    ranked = generation_rank(seats, 3266)
+    ranked = generation_rank(seats, 3266, sense="maximize")
     assert [row["name"] for row in ranked] == ["Green", "Gold", "Red"]
     assert ranked[0]["rank"] == 1 and ranked[0]["delta"] == 7362 - 3266
     assert ranked[1]["delta"] == 7362 - 3266
     assert ranked[2]["delta"] == 1127 - 3266
     assert ranked[0]["record"] == "training"
-    assert generation_rank(seats, None)[0]["delta"] is None
+    assert generation_rank(seats, None, sense="maximize")[0]["delta"] is None
 
 
 def test_networks_show_the_shape_of_each_learner():
@@ -1112,10 +1115,10 @@ def test_promotion_uses_the_independent_eval_not_the_training_score(tmp_path, mo
         }
 
     write("trained", 0, 9999, b"trained-only", None)
-    assert champion(tmp_path, "ppo_cnn")["score"] == 9999
+    assert champion(tmp_path, "ppo_cnn", sense="maximize")["score"] == 9999
     assert promoted_parent(tmp_path, "ppo_cnn", protocol=protocol) is None
     seats = [{"model": "ppo_cnn"}, {"model": "ppo_cnn"}]
-    assert _seed_sources(seats)[0]["score"] == 9999
+    assert _seed_sources(seats, sense="maximize")[0]["score"] == 9999
     assert _weight_sources(seats) == [None, None]
     # A measured flagpole is a parent candidate. Its success rate on the requested benchmark is 0.
     write("trained", 0, 9999, b"trained-only", measurement(False, 3161))
@@ -1351,10 +1354,10 @@ def test_challenge_refuses_an_incompatible_state(tmp_path):
         ChallengeError,
         catalog,
         load_challenge,
-        reached_warp,
         same_start,
         save_challenge,
     )
+    from games.lab.integrations.smb_1_1 import reached_warp
     state = b"savestate-bytes"
     document = {
         "id": "smb-1-2-ceiling-warp",
@@ -1421,7 +1424,21 @@ def test_a_skill_does_not_spread_and_the_curriculum_is_not_running():
         "successes": 1,
         "success_rate": 1,
     })
-    assert mastered["agents"]["Red"] == "independently_mastered"
+    assert mastered["agents"]["Red"] == "verified_fixed_state"
+    assert mastered["standing"] == "verified_fixed_state"
+    assert mastered["stage"] == "practiced"
+    generalized = record_mastery(practiced, "Red", {
+        "assisted": False,
+        "failed": False,
+        "record": "independent",
+        "benchmark": "opening-jump",
+        "successes": 5,
+        "success_rate": 1,
+        "generalized": True,
+        "starts": [{"x_pos": 0}, {"x_pos": 40}],
+    })
+    assert generalized["agents"]["Red"] == "generalized"
+    assert generalized["standing"] == "generalized"
     flagpole = record_mastery(practiced, "Red", {
         "assisted": False,
         "failed": False,
