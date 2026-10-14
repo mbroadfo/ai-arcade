@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Challenges</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; font: 14px/1.4 "Segoe UI", sans-serif; background: #12110f; color: #f3efe6; }
+  header, main { padding: 12px 16px; max-width: 920px; }
+  a { color: #e6d3a3; }
+  h1 { font-size: 18px; margin: 0 0 8px; }
+  .card { border: 1px solid #3a352c; border-radius: 8px; padding: 10px 12px; margin: 0 0 12px; }
+  .dim { color: #a89f90; }
+  table { border-collapse: collapse; width: 100%; }
+  td, th { text-align: left; padding: 2px 8px 2px 0; vertical-align: top; }
+  .bar { height: 10px; background: #2c2822; border-radius: 3px; overflow: hidden; width: 160px; display: inline-block; vertical-align: middle; }
+  .bar b { display: block; height: 100%; background: #e6d3a3; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Challenges</h1>
+  <p class="dim"><a href="/">Training Lab</a>. A training score is a training record. An independent evaluation is a separate measurement.</p>
+</header>
+<main id="list">Loading.</main>
+<script>
+function rateBar(rate) {
+  const wrap = document.createElement("span");
+  wrap.className = "bar";
+  const fill = document.createElement("b");
+  const value = Math.max(0, Math.min(1, Number(rate) || 0));
+  fill.style.width = Math.round(value * 100) + "%";
+  wrap.appendChild(fill);
+  const label = document.createElement("span");
+  label.textContent = " " + Math.round(value * 100) + "%";
+  const host = document.createElement("span");
+  host.appendChild(wrap);
+  host.appendChild(label);
+  return host;
+}
+
+function row(name, value) {
+  const tr = document.createElement("tr");
+  const th = document.createElement("th");
+  th.textContent = name;
+  const td = document.createElement("td");
+  if (value instanceof Node) td.appendChild(value);
+  else td.textContent = value == null || value === "" ? "—" : String(value);
+  tr.appendChild(th);
+  tr.appendChild(td);
+  return tr;
+}
+
+function show(challenges) {
+  const host = document.getElementById("list");
+  host.replaceChildren();
+  if (!challenges.length) {
+    host.textContent = "No challenges saved.";
+    return;
+  }
+  challenges.forEach((item) => {
+    const card = document.createElement("article");
+    card.className = "card";
+    const title = document.createElement("h2");
+    title.textContent = item.id;
+    card.appendChild(title);
+    const objective = document.createElement("p");
+    objective.textContent = item.objective || "";
+    card.appendChild(objective);
+    const table = document.createElement("table");
+    const start = item.start || {};
+    table.appendChild(row("Game", item.game));
+    table.appendChild(row("Start", start.world + "-" + start.stage + " at x " + start.x_pos));
+    const searched = (item.records && item.records.searched) || {};
+    const attempts = searched.attempts == null ? "—" : searched.attempts;
+    const solved = searched.solved == null ? "—" : (searched.solved ? "yes" : "no");
+    table.appendChild(row("Searched", attempts + " attempts, solved " + solved));
+    table.appendChild(row("Assisted", "none"));
+    table.appendChild(row("Independent", "No independent evaluation yet."));
+    const search = item.search || {};
+    table.appendChild(row("Best trajectory", (search.presses || 0) + " presses, " + (search.trajectory_frames || 0) + " frames"));
+    const frameLabel = search.frame_accounting === "full-prefix" ? "Simulated frames" : "Reported frames";
+    table.appendChild(row(frameLabel, search.frames == null ? "—" : search.frames));
+    const subgoals = search.subgoals || [];
+    if (subgoals.length) {
+      table.appendChild(row("Subgoals", subgoals.map((item) => item.name + ": " + (item.reached ? "yes" : "no")).join(", ")));
+    }
+    const agents = Object.keys((item.skill && item.skill.agents) || {});
+    table.appendChild(row("Models", agents.length ? agents.join(", ") : "none execute it yet"));
+    table.appendChild(row("Skill", (item.skill && item.skill.stage) || "not discovered"));
+    if (item.watch) {
+      const link = document.createElement("a");
+      link.href = item.watch;
+      link.textContent = "Watch";
+      table.appendChild(row("Watch", link));
+    }
+    const comparisons = item.comparisons || [];
+    if (comparisons.length) {
+      comparisons.forEach((pair) => {
+        const before = rateBar(pair.before_success_rate);
+        const after = rateBar(pair.after_success_rate);
+        const cell = document.createElement("span");
+        cell.appendChild(document.createTextNode("before "));
+        cell.appendChild(before);
+        cell.appendChild(document.createTextNode(" after "));
+        cell.appendChild(after);
+        table.appendChild(row("success rate", cell));
+      });
+    }
+    card.appendChild(table);
+    host.appendChild(card);
+  });
+}
+
+fetch("/api/challenges").then((response) => response.json()).then((body) => {
+  show(body.challenges || []);
+}).catch(() => {
+  document.getElementById("list").textContent = "The challenge list did not load.";
+});
+</script>
+</body>
+</html>

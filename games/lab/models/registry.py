@@ -34,8 +34,10 @@ def get(model_id: str):
 
 def check(model_id: str, integration) -> None:
     module = get(model_id)
-    if module.NEEDS_RAM and (integration is None or not hasattr(integration, "ram_vector")):
-        raise ValueError(f"{module.LABEL} needs a scored game with a RAM vector")
+    from games.lab.contract import capabilities_of
+    has_ram = integration is not None and capabilities_of(integration).get("ram") and hasattr(integration, "ram_vector")
+    if module.NEEDS_RAM and not has_ram:
+        raise ValueError(f"{module.LABEL} needs an adapter with a RAM observation")
 
 
 def build(model_id: str, env, seed: int):

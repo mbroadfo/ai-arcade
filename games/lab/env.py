@@ -13,6 +13,7 @@ import numpy as np
 from gymnasium import spaces
 
 from games.lab.actions import BUTTON_ID, for_system
+from games.lab.contract import sense_of
 from games.lab.cores import ensure_core
 from games.lab.libretro import LibretroRunner
 
@@ -73,10 +74,11 @@ class FrameEnv(gym.Env):
 
 
 class ScoredEnv(gym.Wrapper):
-    """Reward is further progress through the game. The flag starts the next level.
+    """Reward and facts come from the adapter. A life ends when the adapter says so.
 
-    Dying is a penalty on that step. A life also stops at the step limit so a
-    stuck Mario does not hold the seat forever.
+    The step limit still ends a stuck episode. The adapter measures the
+    objective, says when its clock is running, and may present a cleared
+    stage in its own facts.
     """
 
     def __init__(self, env: FrameEnv, integration, step_limit: int = 20000):
@@ -88,20 +90,42 @@ class ScoredEnv(gym.Wrapper):
         self._seen_time = False
         self._clear = {"cleared": False, "at": None}
 
+    def _facts(self) -> dict:
+        describe = getattr(self.integration, "describe", None)
+        if not callable(describe):
+            return {}
+        facts = describe(self.env.unwrapped.ram_bytes())
+        return facts if isinstance(facts, dict) else {}
+
     def _measure(self, facts: dict) -> int:
         measure = getattr(self.integration, "measure", None)
-        if measure is None:
-            return int(facts["x_pos"])
+        if not callable(measure):
+            return 0
         return int(measure(facts))
+
+    def _running(self, facts: dict) -> bool:
+        clock = getattr(self.integration, "clock_running", None)
+        if not callable(clock):
+            return False
+        return bool(clock(facts))
+
+    def _show(self, info: dict, facts: dict) -> None:
+        present = getattr(self.integration, "present", None)
+        if callable(present):
+            shown = present(facts, self._clear)
+            if isinstance(shown, dict):
+                info.update(shown)
+                return
+        info.update(facts)
 
     def reset(self, *, seed=None, options=None):
         _obs, info = self.env.reset(seed=seed, options=options)
-        facts = self.integration.describe(self.env.unwrapped.ram_bytes())
+        facts = self._facts()
         self._progress = self._measure(facts)
         self._steps = 0
-        self._seen_time = facts["time"] > 0
+        self._seen_time = self._running(facts)
         self._clear = {"cleared": False, "at": None}
-        info.update(facts)
+        self._show(info, facts)
         info["score"] = self._progress
         info["objective"] = self.integration.objective
         info["dead"] = False
@@ -109,38 +133,38 @@ class ScoredEnv(gym.Wrapper):
 
     def step(self, action):
         _obs, _reward, _terminated, _truncated, info = self.env.step(action)
-        facts = self.integration.describe(self.env.unwrapped.ram_bytes())
+        facts = self._facts()
         self._steps += 1
-        if facts["time"] > 0:
+        if self._running(facts):
             self._seen_time = True
         reward_of = getattr(self.integration, "step_reward", None)
         note_clear = getattr(self.integration, "note_clear", None)
-        if note_clear is not None:
+        if callable(note_clear):
             self._clear = note_clear(self._clear, facts)
-        if reward_of is None:
-            gained = max(0, self._measure(facts) - self._progress)
-            self._progress += gained
-            timed_out = self._seen_time and facts["time"] == 0 and not facts["flag_get"]
-            dead = bool(facts["dead"] or facts["dying"] or facts["game_over"] or timed_out)
-            reward = float(gained)
-        elif note_clear is not None:
+        if not callable(reward_of):
+            measured = self._measure(facts)
+            dead = bool(facts.get("dead"))
+            if sense_of(self.integration) == "minimize":
+                self._progress = measured
+                reward = -float(measured)
+            else:
+                gained = max(0, measured - self._progress)
+                self._progress += gained
+                reward = float(gained)
+        elif callable(note_clear):
             place = self._clear.get("at") if self._clear.get("cleared") else None
             reward, self._progress, dead = reward_of(
                 self._progress, facts, self._seen_time, bool(self._clear.get("cleared")), place
             )
         else:
             reward, self._progress, dead = reward_of(self._progress, facts, self._seen_time)
-        # The flag is the way into the next level. It does not end the life.
         if dead or self._steps >= self.step_limit:
             terminated = dead
             truncated = not dead
         else:
             terminated = False
             truncated = False
-        info.update(facts)
-        # The level number moves on during the castle walk. The score is still this stage.
-        if self._clear.get("cleared") and self._clear.get("at"):
-            info["world"], info["stage"] = self._clear["at"]
+        self._show(info, facts)
         info["score"] = self._progress
         info["objective"] = self.integration.objective
         info["dead"] = dead
@@ -160,7 +184,6 @@ class SurvivalEnv(gym.Wrapper):
         obs, info = self.env.reset(seed=seed, options=options)
         self._steps = 0
         info["score"] = 0
-        info["flag_get"] = False
         info["objective"] = "steps"
         return obs, info
 
@@ -170,7 +193,6 @@ class SurvivalEnv(gym.Wrapper):
         if self._steps >= self.horizon:
             truncated = True
         info["score"] = self._steps
-        info["flag_get"] = False
         info["objective"] = "steps"
         return obs, 1.0, bool(terminated), bool(truncated), info
 
@@ -190,14 +212,37 @@ def leave_nes_title(runner) -> None:
         runner.frame(set())
 
 
-class RouteEnv(gym.Wrapper):
-    """Play the shared best run, then a hint for this stage, then the policy.
+def _demonstration_row(button: int, info: dict) -> dict:
+    """One practiced button. Missing place fields stay off the row."""
+    row = {"action": int(button)}
+    try:
+        row["score"] = int(info.get("score") or 0)
+    except (TypeError, ValueError):
+        row["score"] = 0
+    try:
+        row["time"] = max(int(info.get("time") or 0), 0)
+    except (TypeError, ValueError):
+        row["time"] = 0
+    for key in ("world", "stage"):
+        if not isinstance(info, dict) or key not in info or info.get(key) is None:
+            continue
+        try:
+            row[key] = int(info[key])
+        except (TypeError, ValueError):
+            continue
+    context = info.get("context") if isinstance(info, dict) else None
+    if isinstance(context, dict):
+        row["context"] = dict(context)
+    return row
 
-    Every life reloads the same savestate, so those buttons repeat the route.
-    After the run the policy is standing where that life left off, which is
-    World 1-2 once any seat has cleared 1-1. A higher score replaces the run,
-    and so does a faster pass of the same ground. Every eighth life skips the
-    run and plays its own buttons, so a shortcut can be found and then shared.
+
+class RouteEnv(gym.Wrapper):
+    """Practice the shared run, then let the policy play.
+
+    The run and a hint that applies after it are stepped inside reset. PPO and
+    DQN only call step for buttons the policy chose, so a demonstration never
+    enters either buffer. Every eighth life skips the run. A higher score
+    replaces it, and so does a faster pass of the same ground.
     """
 
     def __init__(self, env: gym.Env, tape_path, n_actions: int, objective: str | None,
@@ -206,14 +251,39 @@ class RouteEnv(gym.Wrapper):
         from games.lab.tape import Route
         self.route = Route(tape_path, n_actions, objective, min_score, hints_path)
         self._lives = 0
+        self.demonstration_log: list[dict] = []
 
     def reset(self, *, seed=None, options=None):
-        from games.lab.tape import search_life
+        from games.lab.tape import search_life, take_demonstration
         obs, info = self.env.reset(seed=seed, options=options)
         self._lives += 1
         self.route.on_reset(search=search_life(self._lives))
+        log: list[dict] = []
+        ended = False
+
+        def act(button: int) -> bool:
+            nonlocal obs, info, ended
+            obs, _reward, terminated, truncated, info = self.env.step(button)
+            log.append(_demonstration_row(int(button), info))
+            ended = bool(terminated or truncated)
+            return not ended
+
+        take_demonstration(self.route, self._place, act)
+        if ended:
+            # The demonstration itself ended the life. That death is not a policy
+            # transition, so this life starts over with no scripted buttons.
+            obs, info = self.env.reset(seed=seed, options=options)
+            self.route.on_reset(search=True)
+            log = []
+        self.demonstration_log = log
+        info = dict(info)
         info["forced"] = False
+        info["assisted"] = False
         info["applied_action"] = None
+        info["demonstration_steps"] = len(log)
+        info["demonstration_log"] = log
+        info["assisted_reset"] = bool(log)
+        info["learn"] = True
         return obs, info
 
     def _place(self):
@@ -236,15 +306,18 @@ class RouteEnv(gym.Wrapper):
 
     def step(self, action):
         from games.lab.tape import as_int
-        world, stage = self._place()
-        applied, forced = self.route.on_step(action, world, stage)
+        try:
+            applied = as_int(action)
+        except (TypeError, ValueError, IndexError):
+            applied = 0
         obs, reward, terminated, truncated, info = self.env.step(applied)
         info["applied_action"] = applied
-        info["forced"] = forced
-        try:
-            info["agent_action"] = as_int(action)
-        except (TypeError, ValueError, IndexError):
-            info["agent_action"] = None
+        info["forced"] = False
+        info["assisted"] = False
+        info["agent_action"] = applied
+        info["demonstration_steps"] = len(self.demonstration_log)
+        info["demonstration_log"] = self.demonstration_log
+        info["assisted_reset"] = bool(self.demonstration_log)
         return obs, reward, terminated, truncated, info
 
 

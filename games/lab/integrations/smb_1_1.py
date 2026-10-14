@@ -171,6 +171,51 @@ def step_reward(
     return reward, high, dead
 
 
+def _signed(value: int) -> int:
+    return value - 256 if value >= 128 else value
+
+
+# Player_State in smbdis. 0 is on the ground. The jump routine sets 1.
+# 2 is the usual falling value. 3 is climbing. This is not the policy observation.
+_PHYSICS = {0: "ground", 1: "jumping", 2: "falling", 3: "climbing"}
+
+
+def diagnose(ram: bytes) -> dict:
+    """Physics the solver can read. The policy vector does not include these.
+
+    Addresses are the doppelganger smbdis names. On this PC's FCEUmm, a jump set
+    Player_State $1D to 1 and Player_Y_Speed $9F to -4. Falling used state 2 and
+    a positive Y speed. The ground used state 0 and Y speed 0. Running made
+    Player_X_Speed $57 positive. A goomba showed up as enemy flag 1, id 6.
+    screen_x is the sprite's position on the screen, not a world x.
+    """
+    physics = _byte(ram, 0x001D)
+    enemies = []
+    for index in range(5):
+        flag = _byte(ram, 0x000F + index)
+        if flag == 0:
+            continue
+        enemies.append({
+            "slot": index,
+            "flag": flag,
+            "id": _byte(ram, 0x0016 + index),
+            "page": _byte(ram, 0x006E + index),
+            "screen_x": _byte(ram, 0x0087 + index),
+        })
+    return {
+        "physics": _PHYSICS.get(physics, "other"),
+        "physics_code": physics,
+        "x_speed": _signed(_byte(ram, 0x0057)),
+        "y_speed": _signed(_byte(ram, 0x009F)),
+        "x_fraction": _byte(ram, 0x0400),
+        "y_fraction": _byte(ram, 0x0433),
+        "x_move_force": _byte(ram, 0x0705),
+        "power": _byte(ram, 0x0756),
+        "area": _byte(ram, 0x0760),
+        "enemies": enemies,
+    }
+
+
 def ram_vector(ram: bytes) -> list[float]:
     facts = describe(ram)
     return [
@@ -219,15 +264,266 @@ def skip_title(runner, limit: int = 600) -> None:
     raise RuntimeError("Super Mario Bros. timer never started")
 
 
+# The unassisted experiment for this adapter. The lab engine does not define these.
+PROTOCOL_NAME = "smb-unassisted-v1"
+PROTOCOL_ATTEMPTS = 5
+PROTOCOL_LIMIT = 2000
+PROTOCOL_FRAME_SKIP = 4
+PROTOCOL_SEED = 0
+DEFAULT_BENCHMARK = "enter-world-4"
+
+# A later milestone is never implied by an earlier one.
+BENCHMARKS = {
+    "clear-1-1-flag": (
+        "Mario touches the World 1-1 flagpole while that stage is showing. "
+        "This does not mean he entered a later world."
+    ),
+    "reach-world-1-2": (
+        "The emulator is in World 1-2 or any later level, and Mario is alive. "
+        "The World 1-1 castle walk does not count."
+    ),
+    "enter-world-4": (
+        "The emulator shows World 4 and Mario is alive. "
+        "A flagpole does not count, including the World 1-1 flagpole."
+    ),
+}
+
+
+def update_milestones(reached: dict, info: dict) -> dict:
+    """Latch this adapter's milestones. The flagpole does not latch a later world."""
+    reached = {name: bool((reached or {}).get(name)) for name in BENCHMARKS}
+    try:
+        world = int(info.get("world") or 1)
+        stage = int(info.get("stage") or 1)
+    except (TypeError, ValueError):
+        return reached
+    alive = not info.get("dead") and not info.get("dying")
+    if info.get("flag_get") and world == 1 and stage == 1 and alive:
+        reached["clear-1-1-flag"] = True
+    if alive and (world > 1 or (world == 1 and stage >= 2)):
+        reached["reach-world-1-2"] = True
+    if alive and world >= 4:
+        reached["enter-world-4"] = True
+    return reached
+
+
+def position_supports(episode: dict, benchmark: str) -> bool:
+    """The recorded ending still agrees with a milestone the episode claims."""
+    try:
+        world = int(episode.get("world") or 0)
+        stage = int(episode.get("stage") or 0)
+    except (TypeError, ValueError):
+        return False
+    if benchmark == "enter-world-4":
+        return world > 4 or (world == 4 and stage >= 1)
+    if benchmark == "reach-world-1-2":
+        return world > 1 or (world == 1 and stage >= 2)
+    if benchmark == "clear-1-1-flag":
+        return True
+    return False
+
+
+def episode_metrics(info: dict) -> dict:
+    """Facts this adapter records for one life. The engine stores them as given."""
+    def num(key: str, default: int = 0) -> int:
+        try:
+            return int(info.get(key) if info.get(key) is not None else default)
+        except (TypeError, ValueError):
+            return default
+
+    return {
+        "score": num("score"),
+        "world": num("world", 1),
+        "stage": num("stage", 1),
+        "x_pos": num("x_pos"),
+        "time": num("time"),
+        "dead": bool(info.get("dead")),
+    }
+
+
+def reached_warp(start: dict, now: dict) -> bool:
+    """World 1-2 became world 4 inside the emulator. A score is not this check."""
+    return (
+        start.get("world") == 1
+        and start.get("stage") == 2
+        and now.get("world") == 4
+        and now.get("stage") == 1
+        and not now.get("dead")
+        and not now.get("dying")
+    )
+
+
+def correct_progress(tape: dict, score: int) -> int:
+    """A castle walk once stored World 1-1's x as the start of World 1-2.
+
+    The buttons of that file stop on the 1-1 ending. A tape marked scored_clear
+    already measured the stage after the position reset.
+    """
+    if tape.get("scored_clear"):
+        return score
+    if tape.get("objective") not in (None, "progress"):
+        return score
+    try:
+        world = int(tape.get("world") or 1)
+        stage = int(tape.get("stage") or 1)
+    except (TypeError, ValueError):
+        return score
+    index = (world - 1) * 4 + (stage - 1)
+    if index > 0 and score == index * STAGE_SPAN + CLEAR_X:
+        return score - STAGE_SPAN
+    return score
+
+
+def correct_floor(floor: int):
+    """The historical parent 7362 is the 1-1 castle counted as 1-2."""
+    try:
+        floor = int(floor)
+    except (TypeError, ValueError):
+        return None
+    if floor == STAGE_SPAN + CLEAR_X:
+        return CLEAR_X
+    return None
+
+
+def accept_hint_context(context: dict) -> dict:
+    """A hint plays in one world and stage. Worlds are 1 to 8 and stages 1 to 4."""
+    try:
+        world = int(context.get("world"))
+        stage = int(context.get("stage"))
+    except (TypeError, ValueError):
+        raise ValueError("world and stage are numbers") from None
+    if not 1 <= world <= 8 or not 1 <= stage <= 4:
+        raise ValueError("world is 1 to 8 and stage is 1 to 4")
+    return {"world": world, "stage": stage}
+
+
+def note_frame(facts: dict, diag: dict, memory: dict | None) -> dict:
+    """Remember whether this life left the ground. Search uses that as a signal."""
+    memory = dict(memory or {})
+    if "start_y" not in memory:
+        memory["start_y"] = int(facts.get("y_pos") or 0)
+    saw = bool(memory.get("saw_jump"))
+    try:
+        speed = int((diag or {}).get("y_speed") or 0)
+        height = int(facts.get("y_pos") or 0)
+    except (TypeError, ValueError):
+        speed, height = 0, 0
+    if speed < 0 or height > int(memory["start_y"]) + 2:
+        saw = True
+    memory["saw_jump"] = saw
+    facts["saw_jump"] = saw
+    facts["diagnose"] = diag
+    return memory
+
+
+def clock_running(facts: dict) -> bool:
+    """True once this stage's timer has started."""
+    try:
+        return int((facts or {}).get("time") or 0) > 0
+    except (TypeError, ValueError):
+        return False
+
+
+def present(facts: dict, clear: dict | None = None) -> dict:
+    """Facts the seat should see. A latched clear keeps the finished stage."""
+    info = dict(facts or {})
+    latch = clear or {}
+    if latch.get("cleared") and latch.get("at"):
+        info["world"], info["stage"] = latch["at"]
+    return info
+
+
+def evaluation_protocol() -> dict:
+    """What an independent Mario measurement is. Callers pass this to the engine."""
+    return {
+        "name": PROTOCOL_NAME,
+        "attempts": PROTOCOL_ATTEMPTS,
+        "limit": PROTOCOL_LIMIT,
+        "frame_skip": PROTOCOL_FRAME_SKIP,
+        "n_actions": len(SMB_ACTIONS),
+        "seed": PROTOCOL_SEED,
+        "default_benchmark": DEFAULT_BENCHMARK,
+        "clear_benchmark": "clear-1-1-flag",
+        "game": "smb_1_1",
+        "objective": "progress",
+        "sense": "maximize",
+        "metric": "score",
+        "start": "game",
+        "benchmarks": dict(BENCHMARKS),
+        "observe": update_milestones,
+        "supports": position_supports,
+        "metrics": episode_metrics,
+    }
+
+
 class _SMB:
     id = "smb_1_1"
+    system = "nes"
     objective = "progress"
+    sense = "maximize"
     actions = SMB_ACTIONS
     death_penalty = DEATH_PENALTY
+    capabilities = {
+        "contract": 1,
+        "pixels": True,
+        "ram": True,
+        "savestate": True,
+        "frame_accurate": True,
+        "structured": True,
+    }
     skip_title = staticmethod(skip_title)
     measure = staticmethod(progress)
     step_reward = staticmethod(step_reward)
     note_clear = staticmethod(note_clear)
+    clock_running = staticmethod(clock_running)
+    present = staticmethod(present)
+    evaluation_protocol = staticmethod(evaluation_protocol)
+    reached_warp = staticmethod(reached_warp)
+    correct_progress = staticmethod(correct_progress)
+    correct_floor = staticmethod(correct_floor)
+    accept_hint_context = staticmethod(accept_hint_context)
+    note_frame = staticmethod(note_frame)
+
+    def open_env(self, rom=None):
+        """The scored environment for this ROM. The engine asks every adapter for this."""
+        from pathlib import Path
+
+        from games.lab.env import make_env
+        if rom:
+            path = Path(rom)
+        else:
+            path = self.pinned_rom()
+        return make_env(self.system, path, self)
+
+    def pinned_rom(self):
+        from games.lab.mario.rom import pinned_smb
+        return pinned_smb()
+
+    def rom_sha1(self) -> str:
+        from games.lab.mario.rom import SMB_SHA1
+        return SMB_SHA1
+
+    def materialize(self, game=None):
+        from games.lab.mario.rom import store_smb
+        return store_smb()
+
+    def owns(self, record: dict) -> bool:
+        """Historical files often omit the adapter id. New files should set it."""
+        if not isinstance(record, dict):
+            return False
+        if record.get("integration") == self.id:
+            return True
+        if record.get("integration"):
+            return False
+        game = str(record.get("game") or "")
+        if game in {self.id, "Super Mario Bros."}:
+            return True
+        objective = record.get("objective")
+        if record.get("system") == "nes" and objective == "progress":
+            return True
+        if objective in (None, "progress", "x_pos") and ("world" in record or "stage" in record):
+            return True
+        return False
 
     def matches(self, system: str, stem: str) -> bool:
         return system == "nes" and stem.casefold() == "super mario bros. (japan, usa)"
@@ -237,6 +533,9 @@ class _SMB:
 
     def ram_vector(self, ram: bytes) -> list[float]:
         return ram_vector(ram)
+
+    def diagnose(self, ram: bytes) -> dict:
+        return diagnose(ram)
 
     def stamp(self) -> dict:
         return {

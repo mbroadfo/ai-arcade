@@ -1,8 +1,6 @@
-"""Copy a cabinet ROM into the lab home and accept it only when the bytes match.
+"""Copy a cabinet ROM into the lab home. A game adapter decides which bytes are legal.
 
-The pinned digest is the World ROM already on the cabinet
-(Super Mario Bros. (Japan, USA), 40,976 bytes). The bytes themselves are never
-written inside the repository. LEGAL.md allows a checksum; it does not allow the ROM.
+The bytes themselves are never written inside the repository.
 """
 from __future__ import annotations
 
@@ -15,12 +13,6 @@ from pathlib import Path
 
 from games.lab.paths import REPO_ROOT, assert_outside_repo, roms_dir
 
-# No-Intro / GoodTools "Super Mario Bros. (World)". Header 4E 45 53 1A 02 01 01 00.
-SMB_REMOTE = "/home/pi/RetroPie/roms/nes/Super Mario Bros. (Japan, USA).zip"
-SMB_SHA1 = "ea343f4e445a9050d4b4fbac2c77d0693b1d0922"
-SMB_SHA256 = "f61548fdf1670cffefcc4f0b7bdcdd9eaba0c226e3b74f8666071496988248de"
-SMB_SIZE = 40976
-SMB_HEADER = bytes.fromhex("4e45531a02010100")
 PI_HOST = os.environ.get("LAB_PI", "pi@192.168.10.122")
 
 
@@ -30,16 +22,6 @@ class RomRejected(Exception):
 
 def digest(data: bytes) -> tuple[str, str]:
     return hashlib.sha1(data).hexdigest(), hashlib.sha256(data).hexdigest()
-
-
-def accept_smb(data: bytes) -> None:
-    """Raise RomRejected unless data is the pinned World ROM."""
-    sha1, sha256 = digest(data)
-    if len(data) != SMB_SIZE or data[:8] != SMB_HEADER or sha1 != SMB_SHA1 or sha256 != SMB_SHA256:
-        raise RomRejected(
-            "not the cabinet Super Mario Bros. (Japan, USA) ROM "
-            f"(size {len(data)}, sha1 {sha1})"
-        )
 
 
 def accept_ines(data: bytes) -> None:
@@ -111,29 +93,10 @@ def store_rom(remote_path: str, name: str, check) -> Path:
     return dest
 
 
-def pinned_smb() -> Path | None:
-    """The lab-home ROM when it is already the pinned World image."""
-    path = roms_dir() / "smb.nes"
-    if not path.is_file():
-        return None
-    try:
-        accept_smb(path.read_bytes())
-    except (OSError, RomRejected):
-        return None
-    return path
-
-
-def store_smb() -> Path:
-    # A short local name. The cabinet path has spaces and parentheses, which some cores mishandle.
-    found = pinned_smb()
-    if found is not None:
-        return found
-    return store_rom(SMB_REMOTE, "smb.nes", accept_smb)
-
-
 def store_game(system: str, remote_path: str, name: str) -> Path:
+    """Fetch a bootable image. A scored game uses its adapter's materialize instead."""
     if system == "nes":
-        return store_rom(remote_path, name, accept_smb if name.startswith("Super Mario Bros. (Japan") else accept_ines)
+        return store_rom(remote_path, name, accept_ines)
     if system == "atari2600":
         return store_rom(remote_path, name, accept_a26)
     raise RomRejected(f"no ROM check for {system}")

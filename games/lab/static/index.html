@@ -12,6 +12,7 @@
   header { flex: 0 0 10%; height: 10%; box-sizing: border-box; display: flex; flex-direction: column; gap: 4px; padding: 4px 8px; overflow: hidden; }
   .bar { display: flex; align-items: center; gap: 8px; min-height: 0; }
   .bar h1 { font-size: 16px; font-weight: 600; margin: 0; white-space: nowrap; }
+  .bar a { color: #e6d3a3; white-space: nowrap; }
   .bar select { max-width: 280px; }
   .bar label { display: flex; align-items: center; gap: 4px; color: #a89f90; white-space: nowrap; }
   .bar input[type="number"] { width: 88px; }
@@ -63,6 +64,7 @@
 <header id="setup">
   <div class="bar">
     <h1>Training Lab</h1>
+    <a href="/challenge">Challenges</a>
     <select id="game" aria-label="Game"></select>
     <label>Steps <input id="steps" type="number" min="256" max="5000000" value="200000"></label>
     <button id="start" type="button">Start</button>
@@ -446,13 +448,13 @@ function renderRank(ranking, practice, generation) {
   host.replaceChildren();
   const line = document.createElement("p");
   if (practice && practice.active) {
-    line.textContent = "Shared run: " + (practice.name || "the best") + ", score " + practice.score
+    line.textContent = "Training record. Shared run: " + (practice.name || "the best") + ", score " + practice.score
       + ", world " + practice.world + "-" + practice.stage + ", " + practice.presses
       + " presses. Each new life practices it, then keeps playing. A higher score replaces it.";
   } else if (practice) {
-    line.textContent = "Each seat is playing its own weights. The shared run is practiced once it reaches the score this generation started from.";
+    line.textContent = "Training record. Each seat is playing its own weights. The shared run is practiced once it reaches the score this generation started from.";
   } else {
-    line.textContent = "Ranked by score. The change is against the score this generation started from.";
+    line.textContent = "Training record. Ranked by score. The change is against the score this generation started from.";
   }
   host.appendChild(line);
   if (generation != null) {

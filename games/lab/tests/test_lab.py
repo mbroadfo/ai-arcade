@@ -12,6 +12,7 @@ from games.lab.integrations.smb_1_1 import (
     STAGE_SPAN,
     STALL_PENALTY,
     describe,
+    diagnose,
     note_clear,
     progress,
     ram_vector,
@@ -25,7 +26,8 @@ from games.lab.paths import REPO_ROOT, chain_followup, pause_requested, stop_req
 from games.lab.supervisor import _budget_met, resume_chain
 from games.lab.publish import finalize
 from games.lab.ranking import winner
-from games.lab.roms import SMB_SHA1, SMB_SHA256, RomRejected, accept_smb, pinned_smb
+from games.lab.mario.rom import SMB_SHA1, SMB_SHA256, accept_smb, pinned_smb
+from games.lab.roms import RomRejected
 from games.lab.worker import main as worker_main
 from games.lab.worker import train
 
@@ -211,8 +213,8 @@ def test_farther_right_wins_and_ties_prefer_the_lower_seat():
         {"seat": 1, "score": 100, "flag": True},
         {"seat": 2, "score": 100, "flag": True},
     ]
-    assert winner(rows)["seat"] == 0
-    assert winner([{"seat": 3, "score": 10, "flag": False}, {"seat": 1, "score": 10, "flag": False}])["seat"] == 1
+    assert winner(rows, sense="maximize")["seat"] == 0
+    assert winner([{"seat": 3, "score": 10, "flag": False}, {"seat": 1, "score": 10, "flag": False}], sense="maximize")["seat"] == 1
 
 
 def test_finalize_drops_thumbnails_and_keeps_the_video(tmp_path):
@@ -263,6 +265,8 @@ def test_default_lineup_is_six_different_models():
     from games.lab.seats import DEFAULT_MODELS, default_seat_specs
 
     class _Scored:
+        capabilities = {"ram": True}
+
         def ram_vector(self, _ram):
             return ()
 
@@ -304,6 +308,9 @@ def test_page_mentions_six_seats():
     assert "repeat(3, minmax(0, 1fr))" in text
     assert "defaultModels" in text and "openModel" in text
     assert "practice the best run" in text
+    assert "Training record." in text and "Challenges" in text
+    challenge = (REPO_ROOT / "games" / "lab" / "static" / "challenge.html").read_text(encoding="utf-8")
+    assert "Independent" in challenge and "Searched" in challenge and "success rate" in challenge
     assert "This generation" in text and "Networks" in text and "Hints" in text
     assert "window.open" in text and "/watch/" in text
     watch = (REPO_ROOT / "games" / "lab" / "static" / "watch.html").read_text(encoding="utf-8")
@@ -334,6 +341,7 @@ def test_history_collapses_identical_rounds_and_skips_short_ones():
     rows = collapsed_history([better, again, short, full])
     assert [row["id"] for row in rows] == ["a", "d"]
     assert rows[0]["winner_name"] == "Red" and rows[0]["delta"] is None and rows[0]["generation"] == 0
+    assert rows[0]["record"] == "training"
     assert rows[1]["winner_name"] == "Gold" and rows[1]["score"] == 2100 and rows[1]["delta"] == 150
 
 
@@ -358,14 +366,14 @@ def test_champion_is_the_highest_long_run_with_a_zip(tmp_path):
     write("short", 0, 9999, 256, b"nope")
     write("missing", 0, 3000, 200000, None)
     write("tie", 1, 1950, 200000, b"other")
-    found = champion(tmp_path, "ppo_cnn")
+    found = champion(tmp_path, "ppo_cnn", sense="maximize")
     assert found["score"] == 1950 and found["seat"] == 0
     assert found["path"].parent.name == "0"
     current = {"actions": [["RIGHT"]], "objective": "progress", "ram": 9}
-    assert champion(tmp_path, "ppo_cnn", current) is None
+    assert champion(tmp_path, "ppo_cnn", current, sense="maximize") is None
     kept = tmp_path / "tie" / "seats" / "1" / "best.zip"
     write_stamp(kept, current)
-    stamped = champion(tmp_path, "ppo_cnn", current)
+    stamped = champion(tmp_path, "ppo_cnn", current, sense="maximize")
     assert stamped["score"] == 1950 and stamped["path"] == kept
 
 
@@ -708,12 +716,13 @@ def test_generation_rank_orders_the_six_models_by_score():
         {"seat": 1, "name": "Green", "model": "ppo_lstm", "score": 7362, "color": "#3c9d5a"},
         {"seat": 3, "name": "Gold", "model": "ppo_ram", "score": 7362, "color": "#d4a017"},
     ]
-    ranked = generation_rank(seats, 3266)
+    ranked = generation_rank(seats, 3266, sense="maximize")
     assert [row["name"] for row in ranked] == ["Green", "Gold", "Red"]
     assert ranked[0]["rank"] == 1 and ranked[0]["delta"] == 7362 - 3266
     assert ranked[1]["delta"] == 7362 - 3266
     assert ranked[2]["delta"] == 1127 - 3266
-    assert generation_rank(seats, None)[0]["delta"] is None
+    assert ranked[0]["record"] == "training"
+    assert generation_rank(seats, None, sense="maximize")[0]["delta"] is None
 
 
 def test_networks_show_the_shape_of_each_learner():
@@ -783,3 +792,727 @@ def test_playback_shows_every_frame_of_the_saved_buttons():
     assert film_matches({"score": 7362, "presses": 2, "n_actions": 12, "frames": 9}, tape) is True
     assert film_matches({"score": 3161, "presses": 2, "n_actions": 12, "frames": 9}, tape) is False
     assert film_matches(None, tape) is False
+
+
+def test_diagnostic_ram_stays_out_of_the_policy_vector():
+    ram = bytearray(2048)
+    ram[0x001D] = 1
+    ram[0x0057] = 0x18
+    ram[0x009F] = 0xFB
+    ram[0x000F] = 1
+    ram[0x0016] = 0x06
+    ram[0x006E] = 0
+    ram[0x0087] = 180
+    facts = diagnose(bytes(ram))
+    assert facts["physics"] == "jumping"
+    assert facts["x_speed"] == 0x18
+    assert facts["y_speed"] == -5
+    assert facts["enemies"][0]["screen_x"] == 180
+    assert facts["enemies"][0]["id"] == 0x06
+    assert len(ram_vector(bytes(ram))) == 9
+    assert "x_speed" not in describe(bytes(ram))
+    assert "enemies" not in describe(bytes(ram))
+
+
+def test_demonstration_stays_out_of_both_learners(tmp_path):
+    from games.lab.hints import add_hint
+    from games.lab.tape import Route, learnable_transition, make_tape, take_demonstration, write_tape
+    store = tmp_path / "hints.json"
+    add_hint(store, {"title": "Down the pipe", "world": 1, "stage": 2, "note": "", "actions": [10]})
+    tape = tmp_path / "best.tape.json"
+    write_tape(tape, make_tape([1, 2], 100, 1, 1, 0, "Red", 12, "progress"))
+    route = Route(tape, 12, "progress", hints_path=store)
+    route.on_reset()
+    where = {"stage": 1}
+
+    def place():
+        return 1, where["stage"]
+
+    def act(button):
+        if button == 2:
+            where["stage"] = 2
+        return True
+
+    assert take_demonstration(route, place, act) == [1, 2, 10]
+    assert route.peek_action(9, 1, 2) == (9, False)
+    searching = Route(tape, 12, "progress", hints_path=store)
+    searching.on_reset(search=True)
+    assert take_demonstration(searching, lambda: (1, 1)) == []
+    assert learnable_transition({"forced": True}, algorithm="ppo") is False
+    assert learnable_transition({"forced": True}, algorithm="dqn") is False
+    assert learnable_transition({"forced": False}, algorithm="ppo") is True
+    assert learnable_transition(None, algorithm="dqn") is True
+    with pytest.raises(ValueError):
+        learnable_transition({"forced": True}, algorithm="other")
+
+
+def test_independent_eval_rejects_assistance_and_a_mismatched_zip(tmp_path):
+    from games.lab.eval import (
+        accept_eval,
+        begin_life,
+        blank_milestones,
+        checkpoint_sha256,
+        compare_independent,
+        decide,
+        evaluate_attempts,
+        play_loaded,
+        write_eval,
+    )
+    from games.lab.integrations.smb_1_1 import BENCHMARKS, evaluation_protocol, update_milestones
+    protocol = evaluation_protocol()
+    identity = {
+        "rom_sha1": "abc",
+        "core_sha1": "def",
+        "checkpoint_sha256": "fff",
+        "model": "ppo_cnn",
+        "seed": 0,
+    }
+    assisted = evaluate_attempts(lambda seed: {"forced": True, "score": 99, "success": True}, 2, identity, protocol)
+    assert assisted["failed"] is True and assisted["assisted"] is False and assisted["successes"] == 0
+    missing = evaluate_attempts(lambda _seed: {}, 1, {"model": "ppo_cnn"}, protocol)
+    assert missing["failed"] is True and "rom_sha1" in missing["failure"]
+
+    flag = update_milestones(blank_milestones(protocol), {"world": 1, "stage": 1, "flag_get": True, "dead": False})
+    assert flag["clear-1-1-flag"] is True
+    assert flag["enter-world-4"] is False and flag["reach-world-1-2"] is False
+    warp = update_milestones(blank_milestones(protocol), {"world": 4, "stage": 1, "dead": False, "flag_get": False})
+    assert warp["enter-world-4"] is True and warp["reach-world-1-2"] is True
+    assert update_milestones(blank_milestones(protocol), {"world": 4, "stage": 1, "dead": True})["enter-world-4"] is False
+
+    def play(seed):
+        entered = seed == 1
+        return {
+            "score": 40 if entered else 10,
+            "world": 4 if entered else 1,
+            "stage": 1,
+            "x_pos": 40 if entered else 10,
+            "dead": False,
+            "time": 300,
+            "decisions": 2,
+            "frames": 8,
+            "forced": False,
+            "assisted": False,
+            "demonstration_steps": 0,
+            "milestones": {
+                "clear-1-1-flag": not entered,
+                "reach-world-1-2": entered,
+                "enter-world-4": entered,
+            },
+        }
+
+    before = evaluate_attempts(play, 2, identity, protocol)
+    assert before["failed"] is False and before["success_rate"] == 0.5 and before["record"] == "independent"
+    assert before["benchmark"] == "enter-world-4"
+    assert before["milestone_counts"]["clear-1-1-flag"] == 1
+    assert before["milestone_counts"]["enter-world-4"] == 1
+    assert before["protocol"] == "smb-unassisted-v1" and before["attempts"] == 2
+    assert before["seeds"] == [0, 1]
+    after = evaluate_attempts(lambda seed: {**play(1), "score": 80, "x_pos": 80}, 2, identity, protocol)
+    compared = compare_independent(before, after)
+    assert compared["improved"] is True and compared["benchmark"] == "enter-world-4"
+    with pytest.raises(ValueError):
+        compare_independent(assisted, before)
+    with pytest.raises(ValueError):
+        compare_independent(before, {**after, "benchmark": "clear-1-1-flag"})
+    with pytest.raises(ValueError):
+        compare_independent(before, {**after, "seeds": [5, 6]})
+    weights = tmp_path / "best.zip"
+    weights.write_bytes(b"weights-v1")
+    digest = checkpoint_sha256(weights)
+    # Two attempts describe a result. They are not the fixed five-life protocol.
+    short = {**before, "checkpoint_sha256": digest}
+    assert accept_eval(short, weights, protocol=protocol) is False
+
+    def five(entered):
+        body = evaluate_attempts(lambda _seed: play(1 if entered else 2), 5, identity, protocol)
+        return {**body, "checkpoint_sha256": digest}
+
+    entered = five(True)
+    assert entered["attempts"] == 5 and entered["success_rate"] == 1.0
+    assert accept_eval(entered, weights, protocol=protocol, model="ppo_cnn") is True
+    assert accept_eval(entered, weights, protocol=protocol, model="ppo_lstm") is False
+    assert accept_eval({**entered, "checkpoint_sha256": "nope"}, weights, protocol=protocol) is False
+    assert accept_eval({**entered, "assisted": True}, weights, protocol=protocol) is False
+    assert accept_eval({**entered, "failed": True}, weights, protocol=protocol) is False
+    assert accept_eval(entered, weights, protocol={**protocol, "name": "other-v1"}) is False
+    flagged = five(False)
+    assert flagged["success_rate"] == 0.0 and flagged["milestone_counts"]["clear-1-1-flag"] == 5
+    assert accept_eval(flagged, weights, protocol=protocol) is True
+    forged = {**flagged, "successes": 5, "success_rate": 1.0}
+    assert accept_eval(forged, weights, protocol=protocol) is False
+    lied_rows = [
+        {
+            **episode,
+            "success": True,
+            "milestones": {**episode["milestones"], "enter-world-4": True},
+        }
+        for episode in flagged["episodes"]
+    ]
+    lied = {**flagged, "episodes": lied_rows, "successes": 5, "success_rate": 1.0}
+    assert lied["episodes"][0]["world"] == 1
+    assert accept_eval(lied, weights, protocol=protocol) is False
+    other_seeds = {**entered, "seed": 3, "seeds": [3, 4, 5, 6, 7]}
+    other_seeds["episodes"] = [{**episode, "seed": 3 + index} for index, episode in enumerate(entered["episodes"])]
+    assert accept_eval(other_seeds, weights, protocol=protocol) is False
+    assert BENCHMARKS["enter-world-4"] != BENCHMARKS["clear-1-1-flag"]
+    write_eval(weights.with_suffix(".eval.json"), entered)
+
+    class Memory:
+        def __init__(self):
+            self.calls = []
+
+        def set_random_seed(self, seed):
+            self.seed = seed
+
+        def get_env(self):
+            return self.vec
+
+        def predict(self, observation, state=None, episode_start=None, deterministic=False):
+            self.calls.append((state, list(episode_start), deterministic))
+            return [0], (1 if state is None else state + 1)
+
+    class OneLife:
+        num_envs = 1
+
+        def __init__(self):
+            self.steps = 0
+            self.reset_infos = [{
+                "forced": False,
+                "assisted": False,
+                "demonstration_steps": 0,
+                "world": 1,
+                "stage": 1,
+                "score": 0,
+                "x_pos": 40,
+                "dead": False,
+                "dying": False,
+                "time": 400,
+                "flag_get": False,
+            }]
+
+        def reset(self):
+            self.steps = 0
+            return [0]
+
+        def step(self, _action):
+            self.steps += 1
+            done = self.steps >= 3
+            info = {
+                "forced": False,
+                "assisted": False,
+                "world": 1,
+                "stage": 1,
+                "score": 3161 if done else self.steps,
+                "x_pos": 3161 if done else 40,
+                "dead": False,
+                "dying": False,
+                "time": 300,
+                "flag_get": done,
+            }
+            return [0], [0], [done], [info]
+
+    memory = Memory()
+    memory.vec = OneLife()
+    life = begin_life(1)
+    _action, life = decide(memory, [0], life)
+    _action, life = decide(memory, [0], life)
+    again = begin_life(1)
+    decide(memory, [0], again)
+    assert memory.calls[0] == (None, [True], True)
+    assert memory.calls[1][0] == 1 and memory.calls[1][1] == [False]
+    assert memory.calls[2] == (None, [True], True)
+    played = play_loaded(memory, seed=7, protocol=protocol, limit=10)
+    starts = [call[1] for call in memory.calls[3:]]
+    states = [call[0] for call in memory.calls[3:]]
+    assert starts == [[True], [False], [False]]
+    assert states == [None, 1, 2]
+    assert all(call[2] for call in memory.calls)
+    assert played["milestones"]["clear-1-1-flag"] is True
+    assert played["milestones"]["enter-world-4"] is False
+    assert played["success"] is False
+    assert played["decisions"] == 3
+    assert played["frames"] == 3 * protocol["frame_skip"]
+
+
+def test_promotion_uses_the_independent_eval_not_the_training_score(tmp_path, monkeypatch):
+    from games.lab.eval import checkpoint_sha256, write_eval
+    from games.lab.lineage import champion, promoted_parent
+    from games.lab.supervisor import _seed_sources, _weight_sources
+    monkeypatch.setattr("games.lab.supervisor.runs_root", lambda: tmp_path)
+
+    def write(run, seat, score, payload, evaluation):
+        folder = tmp_path / run / "seats" / str(seat)
+        folder.mkdir(parents=True, exist_ok=True)
+        (folder / "best.zip").write_bytes(payload)
+        (tmp_path / run / "results.json").write_text(json.dumps({
+            "winner": seat,
+            "seats": [{
+                "seat": seat,
+                "name": "Red" if seat == 0 else "Green",
+                "model": "ppo_cnn",
+                "score": score,
+                "steps": 200000,
+                "deaths": 1,
+            }],
+        }), encoding="utf-8")
+        if evaluation is not None:
+            evaluation = {**evaluation, "checkpoint_sha256": checkpoint_sha256(folder / "best.zip")}
+            write_eval(folder / "best.eval.json", evaluation)
+
+    from games.lab.integrations.smb_1_1 import BENCHMARKS, evaluation_protocol
+    protocol = evaluation_protocol()
+
+    def measurement(success, score):
+        episodes = []
+        for seed in range(5):
+            episodes.append({
+                "seed": seed,
+                "failed": False,
+                "score": score,
+                "world": 4 if success else 1,
+                "stage": 1,
+                "x_pos": score,
+                "dead": False,
+                "time": 300,
+                "frames": 8,
+                "success": success,
+                "milestones": {
+                    "clear-1-1-flag": True,
+                    "reach-world-1-2": success,
+                    "enter-world-4": success,
+                },
+            })
+        return {
+            "assisted": False,
+            "failed": False,
+            "record": "independent",
+            "protocol": "smb-unassisted-v1",
+            "benchmark": "enter-world-4",
+            "benchmark_definition": BENCHMARKS["enter-world-4"],
+            "game": "smb_1_1",
+            "objective": "progress",
+            "frame_skip": 4,
+            "deterministic": True,
+            "limit": 2000,
+            "n_actions": 12,
+            "start": "game",
+            "model": "ppo_cnn",
+            "rom_sha1": "abc",
+            "core_sha1": "def",
+            "seed": 0,
+            "seeds": list(range(5)),
+            "attempts": 5,
+            "successes": 5 if success else 0,
+            "success_rate": 1.0 if success else 0.0,
+            "furthest": {
+                "score": score,
+                "world": 4 if success else 1,
+                "stage": 1,
+                "x_pos": score,
+                "time": 300,
+            },
+            "episodes": episodes,
+        }
+
+    write("trained", 0, 9999, b"trained-only", None)
+    assert champion(tmp_path, "ppo_cnn", sense="maximize")["score"] == 9999
+    assert promoted_parent(tmp_path, "ppo_cnn", protocol=protocol) is None
+    seats = [{"model": "ppo_cnn"}, {"model": "ppo_cnn"}]
+    assert _seed_sources(seats, sense="maximize")[0]["score"] == 9999
+    assert _weight_sources(seats) == [None, None]
+    # A measured flagpole is a parent candidate. Its success rate on the requested benchmark is 0.
+    write("trained", 0, 9999, b"trained-only", measurement(False, 3161))
+    flagged = promoted_parent(tmp_path, "ppo_cnn", protocol=protocol)
+    assert flagged["record"] == "independent" and flagged["success_rate"] == 0.0 and flagged["score"] == 3161
+    write("evaluated", 1, 10, b"evaluated", measurement(True, 20))
+    parent = promoted_parent(tmp_path, "ppo_cnn", protocol=protocol)
+    assert parent["record"] == "independent" and parent["score"] == 20 and parent["seat"] == 1
+    assert parent["success_rate"] == 1.0
+    assert _weight_sources(seats, protocol=protocol)[0]["path"] == parent["path"]
+    other = {**protocol, "name": "puzzle-v1", "game": "puzzle", "objective": "pieces", "default_benchmark": "solved"}
+    other["benchmarks"] = {"solved": "The puzzle is solved."}
+    assert promoted_parent(tmp_path, "ppo_cnn", protocol=other) is None
+    # A hash that does not match the zip is not a parent. The flagpole measurement remains.
+    stale = tmp_path / "evaluated" / "seats" / "1" / "best.eval.json"
+    body = json.loads(stale.read_text(encoding="utf-8"))
+    body["checkpoint_sha256"] = "0" * 64
+    stale.write_text(json.dumps(body), encoding="utf-8")
+    fallback = promoted_parent(tmp_path, "ppo_cnn", protocol=protocol)
+    assert fallback["seat"] == 0 and fallback["success_rate"] == 0.0
+    elsewhere = measurement(True, 999)
+    elsewhere["core_sha1"] = "not-the-same-core"
+    write("other-core", 0, 50, b"other-core", elsewhere)
+    assert promoted_parent(tmp_path, "ppo_cnn", protocol=protocol) is None
+
+
+def test_beam_search_clears_a_gap_and_keeps_the_frame_count():
+    from games.lab.search import beam_search, frames_of
+
+    class Gap:
+        def __init__(self):
+            self.simulated = 0
+
+        def replay(self, trajectory):
+            self.simulated += frames_of(trajectory)
+            x = 0
+            air = 0
+            dead = False
+            for step in trajectory:
+                buttons = step["buttons"]
+                for _ in range(int(step["frames"])):
+                    if dead:
+                        break
+                    if air == 0 and "A" in buttons:
+                        air = 3
+                    if "RIGHT" in buttons:
+                        x += 1
+                    if x == 3 and air == 0:
+                        dead = True
+                    elif air > 0:
+                        air -= 1
+            return {"x": x, "dead": dead, "dying": dead}
+
+    gap = Gap()
+
+    def success(facts):
+        return facts["x"] >= 4 and not facts["dead"]
+
+    def rank(facts):
+        return -100 if facts["dead"] else facts["x"]
+
+    actions = [(), ("RIGHT",), ("RIGHT", "A"), ("A",)]
+    found = beam_search(
+        gap, actions, success, rank, width=4, depth=6, hold=1, max_attempts=80, max_frames=400,
+        subgoals=[("across", success)],
+    )
+    assert found["solved"] is True
+    assert found["trajectory"]
+    assert all(step["frames"] == 1 for step in found["trajectory"])
+    assert frames_of(found["trajectory"]) == found["trajectory_frames"]
+    assert found["frame_accounting"] == "full-prefix"
+    assert found["frames"] == gap.simulated
+    assert found["decisions"] == len(found["trajectory"])
+    assert found["frames"] > found["trajectory_frames"]
+    assert found["subgoals"][0]["reached"] is True and found["subgoals"][0]["name"] == "across"
+    end = gap.replay(found["trajectory"])
+    again = gap.replay(found["trajectory"])
+    assert end == again and end["x"] >= 4 and end["dead"] is False
+    right_only = beam_search(gap, [("RIGHT",)], success, rank, width=2, depth=6, hold=1, max_attempts=20)
+    assert right_only["solved"] is False
+    stopped = beam_search(gap, actions, success, rank, depth=6, cancel=lambda: True)
+    assert stopped["cancelled"] is True and stopped["solved"] is False
+    partial = beam_search(gap, actions, success, rank, width=4, depth=1, hold=1, max_attempts=80)
+    assert partial["solved"] is False
+    resumed = beam_search(
+        gap, actions, success, rank, width=4, depth=6, hold=1, max_attempts=200, resume=partial["resume"]
+    )
+    assert resumed["solved"] is True and resumed["attempts"] > partial["attempts"]
+    limited = beam_search(gap, actions, success, rank, width=4, depth=6, hold=1, max_attempts=2)
+    assert limited["budget_exhausted"] is True
+
+
+def test_search_counts_every_replayed_prefix():
+    from games.lab.search import action_step, beam_search, frames_of
+    assert action_step({"buttons": ["RIGHT", "A"], "frames": 1}, 15) == {"buttons": ["RIGHT", "A"], "frames": 1}
+    assert action_step(("RIGHT",), 15)["frames"] == 15
+
+    class Log:
+        def __init__(self):
+            self.played = 0
+
+        def replay(self, trajectory):
+            cost = frames_of(trajectory)
+            self.played += cost
+            return {"x": cost, "dead": False, "dying": False}
+
+    log = Log()
+    actions = [{"buttons": ["RIGHT"], "frames": 15}, {"buttons": ["A"], "frames": 1}]
+    found = beam_search(
+        log,
+        actions,
+        lambda facts: facts["x"] >= 16,
+        lambda facts: facts["x"],
+        width=2,
+        depth=3,
+        hold=1,
+        max_attempts=20,
+        max_frames=5000,
+    )
+    assert found["solved"] is True
+    assert found["frames"] == log.played
+    assert found["trajectory_frames"] == frames_of(found["trajectory"])
+    assert found["frames"] > found["trajectory_frames"]
+    assert found["decisions"] == len(found["trajectory"])
+    assert found["frame_accounting"] == "full-prefix"
+
+
+def test_an_oversized_action_does_not_block_a_shorter_one():
+    from games.lab.search import beam_search, frames_of
+
+    class Log:
+        def replay(self, trajectory):
+            return {"x": frames_of(trajectory), "dead": False, "dying": False}
+
+    actions = [{"buttons": ["RIGHT"], "frames": 100}, {"buttons": ["A"], "frames": 1}]
+    found = beam_search(
+        Log(),
+        actions,
+        lambda facts: facts["x"] >= 1,
+        lambda facts: facts["x"],
+        width=2,
+        depth=2,
+        hold=1,
+        max_attempts=20,
+        max_frames=10,
+    )
+    assert found["solved"] is True
+    assert found["trajectory"] == [{"buttons": ["A"], "frames": 1}]
+    assert found["decisions"] == 1
+    assert found["trajectory_frames"] == 1
+    assert found["budget_exhausted"] is False
+    blocked = beam_search(
+        Log(),
+        [{"buttons": ["RIGHT"], "frames": 100}],
+        lambda facts: facts["x"] >= 1,
+        lambda facts: facts["x"],
+        width=2,
+        depth=2,
+        hold=1,
+        max_attempts=20,
+        max_frames=10,
+    )
+    assert blocked["solved"] is False and blocked["budget_exhausted"] is True
+
+
+def test_the_evaluator_follows_the_adapter_and_drops_an_incomplete_run(tmp_path):
+    from games.lab.eval import accept_eval, checkpoint_sha256, compare_independent, evaluate_attempts
+    protocol = {
+        "name": "puzzle-v1",
+        "attempts": 2,
+        "limit": 10,
+        "frame_skip": 2,
+        "n_actions": 3,
+        "seed": 0,
+        "default_benchmark": "solved",
+        "game": "puzzle",
+        "objective": "pieces",
+        "start": "game",
+        "benchmarks": {"solved": "The puzzle is solved."},
+        "supports": lambda episode, _benchmark: bool(episode.get("solved_position")),
+        "metrics": lambda info: {"score": int(info.get("score") or 0), "dead": bool(info.get("dead"))},
+    }
+    identity = {
+        "rom_sha1": "rom",
+        "core_sha1": "core",
+        "checkpoint_sha256": "hash",
+        "model": "ppo_cnn",
+        "seed": 0,
+    }
+
+    def play(_seed):
+        return {
+            "score": 3,
+            "dead": False,
+            "decisions": 4,
+            "frames": 8,
+            "forced": False,
+            "assisted": False,
+            "demonstration_steps": 0,
+            "solved_position": True,
+            "milestones": {"solved": True},
+        }
+
+    done = evaluate_attempts(play, 2, identity, protocol)
+    assert done["failed"] is False and done["benchmark"] == "solved" and done["game"] == "puzzle"
+    assert done["decisions"] == 4 and done["frames"] == 8 and done["seeds"] == [0, 1]
+    weights = tmp_path / "best.zip"
+    weights.write_bytes(b"puzzle")
+    digest = checkpoint_sha256(weights)
+    assert accept_eval({**done, "checkpoint_sha256": digest}, weights, protocol=protocol) is True
+    unsupported = {
+        **done["episodes"][0],
+        "solved_position": False,
+    }
+    forged = {**done, "checkpoint_sha256": digest, "episodes": [unsupported, done["episodes"][1]]}
+    assert accept_eval(forged, weights, protocol=protocol) is False
+
+    def boom(seed):
+        if seed == 1:
+            raise RuntimeError("dropped")
+        return play(seed)
+
+    partial = evaluate_attempts(boom, 2, identity, protocol)
+    assert partial["failed"] is True and partial["success_rate"] == 0.0
+    assert accept_eval({**partial, "checkpoint_sha256": digest}, weights, protocol=protocol) is False
+    shifted = evaluate_attempts(play, 2, {**identity, "seed": 4}, protocol)
+    with pytest.raises(ValueError):
+        compare_independent(done, shifted)
+
+
+def test_challenge_refuses_an_incompatible_state(tmp_path):
+    from games.lab.challenge import (
+        ChallengeError,
+        catalog,
+        load_challenge,
+        same_start,
+        save_challenge,
+    )
+    from games.lab.integrations.smb_1_1 import reached_warp
+    state = b"savestate-bytes"
+    document = {
+        "id": "smb-1-2-ceiling-warp",
+        "objective": "Reach world 4 from the ceiling route in 1-2",
+        "game": "Super Mario Bros.",
+        "rom_sha1": "rom",
+        "core_sha1": "core",
+        "core_name": "fceumm",
+        "success": "world-4-from-1-2",
+        "start": {"world": 1, "stage": 2, "x_pos": 10, "y_pos": 20, "time": 361, "player_state": 8},
+    }
+    folder = save_challenge(tmp_path, document, state)
+    loaded, blob = load_challenge(folder, rom_sha1="rom", core_sha1="core")
+    assert blob == state and loaded["state_sha256"]
+    assert same_start(loaded["start"], dict(loaded["start"]))
+    with pytest.raises(ChallengeError):
+        load_challenge(folder, rom_sha1="rom", core_sha1="other-core")
+    with pytest.raises(ChallengeError):
+        load_challenge(folder, rom_sha1="other-rom", core_sha1="core")
+    (folder / "state.bin").write_bytes(b"different")
+    with pytest.raises(ChallengeError):
+        load_challenge(folder, rom_sha1="rom", core_sha1="core")
+    (folder / "state.bin").write_bytes(state)
+    broken = json.loads((folder / "challenge.json").read_text(encoding="utf-8"))
+    broken["version"] = 2
+    (folder / "challenge.json").write_text(json.dumps(broken), encoding="utf-8")
+    with pytest.raises(ChallengeError):
+        load_challenge(folder, rom_sha1="rom", core_sha1="core")
+    with pytest.raises(ChallengeError):
+        save_challenge(tmp_path, {**document, "id": "../escape"}, state)
+    start = {"world": 1, "stage": 2}
+    assert reached_warp(start, {"world": 4, "stage": 1, "dead": False, "dying": False}) is True
+    assert reached_warp(start, {"world": 1, "stage": 2, "dead": False, "score": 99999}) is False
+    assert reached_warp(start, {"world": 4, "stage": 1, "dead": True}) is False
+    listed = catalog(tmp_path)
+    assert listed and listed[0]["id"] == "smb-1-2-ceiling-warp"
+    assert listed[0]["records"]["assisted"] is None
+
+
+def test_a_tape_can_omit_world_and_stage():
+    from games.lab.integrations.smb_1_1 import INTEGRATION, clock_running, present
+    from games.lab.tape import make_tape
+    saved = make_tape(
+        [1, 1, 1],
+        3,
+        n_actions=2,
+        objective="progress",
+        sense="maximize",
+        integration="grid",
+        context={"cell": 3},
+    )
+    assert saved["score"] == 3
+    assert "world" not in saved and "stage" not in saved
+    assert saved["context"] == {"cell": 3}
+    mario = make_tape([1], 10, 1, 2, 0, "Red", 12, "progress")
+    assert mario["world"] == 1 and mario["stage"] == 2 and "context" not in mario
+    assert callable(INTEGRATION.open_env)
+    assert clock_running({"time": 400}) is True
+    assert clock_running({"time": 0}) is False
+    shown = present({"world": 2, "stage": 1, "x_pos": 10}, {"cleared": True, "at": (1, 1)})
+    assert shown["world"] == 1 and shown["stage"] == 1
+    plain = present({"world": 1, "stage": 1}, {"cleared": False, "at": None})
+    assert plain["world"] == 1 and plain["stage"] == 1
+
+
+def test_a_skill_does_not_spread_and_the_curriculum_is_not_running():
+    from games.lab.skill import curriculum_plan, new_skill, record_mastery, record_practice, verify_demonstration
+    skill = new_skill(
+        "opening jump",
+        "jump the gap",
+        "gap",
+        [{"buttons": ["RIGHT", "A"], "frames": 1}],
+        world=1,
+        stage=1,
+        start={"x_pos": 0},
+        benchmark="opening-jump",
+    )
+    assert skill["stage"] == "discovered" and skill["agents"] == {}
+    verified = verify_demonstration(skill, [True, True])
+    assert verified["stage"] == "verified_demonstration"
+    rejected = verify_demonstration(skill, [True, False])
+    assert rejected["stage"] == "discovered"
+    practiced = record_practice(verified, "Red")
+    assert practiced["stage"] == "practiced" and practiced["agents"] == {"Red": "practiced"}
+    mastered = record_mastery(practiced, "Red", {
+        "assisted": False,
+        "failed": False,
+        "record": "independent",
+        "benchmark": "opening-jump",
+        "successes": 1,
+        "success_rate": 1,
+    })
+    assert mastered["agents"]["Red"] == "verified_fixed_state"
+    assert mastered["standing"] == "verified_fixed_state"
+    assert mastered["stage"] == "practiced"
+    declared = record_mastery(practiced, "Red", {
+        "assisted": False,
+        "failed": False,
+        "record": "independent",
+        "benchmark": "opening-jump",
+        "successes": 5,
+        "success_rate": 1,
+        "generalized": True,
+        "starts": [{"x_pos": 0}, {"x_pos": 40}],
+    })
+    assert declared["agents"]["Red"] == "verified_fixed_state"
+    assert declared["standing"] == "verified_fixed_state"
+    assert declared["stage"] == "practiced"
+    missed = record_mastery(practiced, "Red", {
+        "assisted": False,
+        "failed": False,
+        "record": "independent",
+        "benchmark": "opening-jump",
+        "successes": 5,
+        "success_rate": 1,
+        "conditions": [
+            {"start": {"x_pos": 0}, "attempts": 2, "successes": 2},
+            {"start": {"x_pos": 40}, "attempts": 2, "successes": 0},
+        ],
+    })
+    assert missed["agents"]["Red"] == "verified_fixed_state"
+    assert missed["stage"] == "practiced"
+    generalized = record_mastery(practiced, "Red", {
+        "assisted": False,
+        "failed": False,
+        "record": "independent",
+        "benchmark": "opening-jump",
+        "successes": 5,
+        "success_rate": 1,
+        "conditions": [
+            {"start": {"x_pos": 0}, "attempts": 2, "successes": 2},
+            {"condition": {"x_pos": 40}, "attempts": 2, "successes": 1},
+        ],
+    })
+    assert generalized["agents"]["Red"] == "generalized"
+    assert generalized["standing"] == "generalized"
+    assert generalized["stage"] == "generalized"
+    flagpole = record_mastery(practiced, "Red", {
+        "assisted": False,
+        "failed": False,
+        "record": "independent",
+        "benchmark": "clear-1-1-flag",
+        "successes": 1,
+        "success_rate": 1,
+    })
+    assert flagpole["agents"]["Red"] == "practiced"
+    left = record_mastery(practiced, "Green", {
+        "assisted": True,
+        "failed": False,
+        "record": "independent",
+        "successes": 1,
+        "success_rate": 1,
+    })
+    assert "Green" not in left["agents"]
+    plan = curriculum_plan("smb-1-2-ceiling-warp")
+    assert [item["stage"] for item in plan] == ["at_obstacle", "farther_back", "level_start", "game_start"]
+    assert [item["implemented"] for item in plan] == [False, False, False, False]
+    assert all(item["assisted"] is False for item in plan)

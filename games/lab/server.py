@@ -17,7 +17,6 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 from games.lab.hints import HINTS_NAME, add_hint, change_hint, labels, parse_actions, read_hints
-from games.lab.integrations.smb_1_1 import SMB_ACTIONS
 from games.lab.lineage import collapsed_history, load_rows
 from games.lab.models import registry
 from games.lab.models.networks import network_for
@@ -30,9 +29,42 @@ from games.lab.tape import TAPE_NAME, comparable, compatible, floor_value, read_
 
 PAGE = Path(__file__).with_name("static") / "index.html"
 WATCH = Path(__file__).with_name("static") / "watch.html"
+CHALLENGE_PAGE = Path(__file__).with_name("static") / "challenge.html"
 PORT = int(os.environ.get("LAB_PORT", "8790"))
-BUTTONS = labels(SMB_ACTIONS)
 _play_lock = threading.Lock()
+
+
+def _page_adapter():
+    """The adapter for the live round, or the only installed adapter."""
+    from games.lab.registry import get, registered
+    manifest = (_current() or {}).get("manifest") or {}
+    integration_id = manifest.get("integration")
+    if integration_id:
+        try:
+            return get(integration_id)
+        except KeyError:
+            return None
+    adapters = registered()
+    if len(adapters) == 1:
+        return adapters[0]
+    return None
+
+
+def _buttons() -> list[str]:
+    adapter = _page_adapter()
+    actions = getattr(adapter, "actions", None) if adapter is not None else None
+    if not actions:
+        return []
+    return labels(list(actions))
+
+
+def _rank_sense(current: dict | None) -> str:
+    from games.lab.contract import SURVIVAL_SENSE, sense_of
+    manifest = (current or {}).get("manifest") or {}
+    if manifest.get("sense") in ("maximize", "minimize"):
+        return manifest["sense"]
+    sensed = sense_of(_page_adapter())
+    return sensed or SURVIVAL_SENSE
 
 
 def _rounds() -> list[dict]:
@@ -366,6 +398,13 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/":
             self._send(200, PAGE.read_bytes(), "text/html; charset=utf-8")
             return
+        if path == "/challenge":
+            self._send(200, CHALLENGE_PAGE.read_bytes(), "text/html; charset=utf-8")
+            return
+        if path == "/api/challenges":
+            from games.lab.challenge import catalog
+            self._json(200, {"challenges": catalog()})
+            return
         if path == "/api/catalog":
             try:
                 games = [game.to_json() for game in load_catalog()]
@@ -386,10 +425,14 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200, {
                 "current": current,
                 "hall": _hall(current),
-                "ranking": generation_rank((current or {}).get("seats") or [], _parent_score(current)),
+                "ranking": generation_rank(
+                    (current or {}).get("seats") or [],
+                    _parent_score(current),
+                    sense=_rank_sense(current),
+                ),
                 "practice": _practice(current),
-                "hints": read_hints(runs_root() / HINTS_NAME),
-                "buttons": BUTTONS,
+                "hints": read_hints(runs_root() / HINTS_NAME, len(_buttons()) or None),
+                "buttons": _buttons(),
                 "stop_requested": stop_requested() and bool(current and current.get("running")),
                 "pause_requested": pause_requested() and bool(current and current.get("running")),
                 "paused": (not (round_running() or chain_running())) and read_pause() is not None,
@@ -520,23 +563,32 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 body = json.loads(self.rfile.read(length).decode())
                 store = runs_root() / HINTS_NAME
+                adapter = _page_adapter()
+                names = _buttons()
+                n_actions = len(names) or None
+                accept = getattr(adapter, "accept_hint_context", None) if adapter is not None else None
                 if body.get("id"):
                     hints = change_hint(
                         store,
                         str(body["id"]),
                         enabled=None if "enabled" not in body else bool(body.get("enabled")),
                         remove=bool(body.get("remove")),
+                        n_actions=n_actions,
                     )
                 else:
-                    actions = parse_actions(str(body.get("actions") or ""), BUTTONS)
-                    add_hint(store, {
+                    actions = parse_actions(str(body.get("actions") or ""), names)
+                    spec = {
                         "title": body.get("title"),
-                        "world": body.get("world"),
-                        "stage": body.get("stage"),
                         "note": body.get("note") or "",
                         "actions": actions,
-                    })
-                    hints = read_hints(store)
+                    }
+                    if isinstance(body.get("context"), dict):
+                        spec["context"] = body["context"]
+                    else:
+                        spec["world"] = body.get("world")
+                        spec["stage"] = body.get("stage")
+                    add_hint(store, spec, n_actions, accept)
+                    hints = read_hints(store, n_actions)
             except (ValueError, TypeError, json.JSONDecodeError, OSError) as exc:
                 self._json(400, {"error": str(exc)})
                 return
@@ -562,7 +614,7 @@ class Handler(BaseHTTPRequestHandler):
                 raise ValueError("training is already running")
             # Validate before detaching so the page gets the reason.
             from games.lab.catalog import by_id
-            from games.lab.integrations import get
+            from games.lab.registry import get
             games = by_id(load_catalog())
             game = games[game_id]
             if not game.selectable:

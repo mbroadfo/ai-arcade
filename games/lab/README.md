@@ -24,7 +24,7 @@ uv pip install --python C:\Users\Mike\mario-lab\venv\Scripts\python.exe --reinst
 The CUDA reinstall is last on purpose. Installing the requirements afterward pulls
 the CPU wheel of torch from PyPI and `torch.cuda.is_available()` comes back false.
 
-`C:\Users\Mike\mario-lab\venv\Scripts\python.exe -m games.lab.smoke` boots Super Mario Bros.
+`C:\Users\Mike\mario-lab\venv\Scripts\python.exe -m games.lab.mario.smoke` boots Super Mario Bros.
 for 1,000 steps. The same interpreter with `-m games.lab.server` serves the page.
 
 Each seat writes a GIF of the life that went furthest (`best.gif`) and the weights
@@ -46,6 +46,52 @@ can replace the slower run. Clicking a seat
 opens that seat's own best run in a separate window, at full game speed, in
 its own game. The page also draws each network and can store a hint for a
 later route, such as a warp. A hint with no buttons is only a note.
+The hall and the generation table are a training record. They rank the score from
+assisted practice. A checkpoint parents the next generation's weights only after
+an independent evaluation of that exact file: no shared run, no hints, and no
+forced button. The engine takes the protocol, the metric, and whether a higher
+or lower number wins from the game adapter. It does not assume a game. Mario's
+adapter names the protocol `smb-unassisted-v1`: five deterministic lives, a
+2000-step cap, frame skip 4, and the twelve-button set, from the normal start
+of the game, seeds 0 through 4, maximizing score. The success it ranks is entering World 4 alive.
+Touching the 1-1 flagpole is recorded separately and is not that success. An
+attempt that fails leaves the evaluation incomplete, so it does not compete.
+A result records policy decisions separately from emulator frames. A recurrent
+policy keeps its hidden state across the decisions of one life. Run it with the
+lab venv, and leave `--out` unset to print the result instead of writing next to
+a live run. `--game` is the adapter id:
+
+```powershell
+C:\Users\Mike\mario-lab\venv\Scripts\python.exe -m games.lab.eval --checkpoint C:\path\to\best.zip --model ppo_cnn --game smb_1_1
+```
+
+The boundaries between the arcade, the lab engine, the adapters, and the skill
+libraries are in [ARCHITECTURE.md](ARCHITECTURE.md).
+
+Challenges live under `games/lab/challenges`. Each one is a description plus a
+libretro savestate for one core and one ROM. A different core is refused.
+The page lists them at `/challenge`. Search restores the saved state for every
+candidate and counts every emulator frame in those replays. The reported frame
+count is that simulated work. `decisions` is the number of actions in the
+sequence, and the trajectory length is the emulator frames in that sequence.
+An action that is longer than the remaining budget is skipped, and a shorter
+action is still tried. The World 1-2 ceiling route is the proving ground. The opening jump only checks
+that a saved state can be restored. The exit-pipe corner is past the one-way
+scroll, so the search starts on the rising platform instead. That search found
+a verified way onto the brick ceiling: wait for the platform, jump right, and
+release. It has been replayed twice. A PPO step holds for 4 frames, and the
+26-frame search jump is not a multiple of 4. The practiced hold is 28 frames,
+which also lands. From that saved state, with no tape and no hint, PPO/CNN
+stood on the ceiling in 0 of 5 attempts. It held right-jump-run the whole time
+and finished on the lower path. After a short supervised practice on the
+28-frame sequence, the same five attempts stood on the ceiling in 5 of 5.
+That check starts from the saved platform. It does not start from the
+beginning of the game, and it does not enter World 4. Capture on a machine that has the ROM with:
+
+```powershell
+C:\Users\Mike\mario-lab\venv\Scripts\python.exe -m games.lab.mario.capture
+```
+
 Bootable games (anything NES or Atari 2600 without a scored integration) rank by steps
 survived. That is not the same as beating the game. Arcade, 32X, ports, TRS-80, and Zork
 are listed and cannot be started.

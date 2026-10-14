@@ -1,0 +1,1296 @@
+{
+  "agent": "ppo_cnn",
+  "parent_checkpoint": "C:\\Users\\Mike\\mario-runs\\20261012T011344Z\\seats\\0\\best.zip",
+  "parent_sha256": "0d31d9fd5ae3cdab1531f72e33938a584e93f7549061e9de49ed26b2a18cf7ec",
+  "practice_checkpoint": "C:\\Users\\Mike\\Documents\\Code\\ai-arcade-challenge\\games\\lab\\challenges\\smb-1-2-ceiling-lift\\practice-ppo-cnn.zip",
+  "practice_sha256": "908c1e4b4e3037376b1a34ce36143ed2688110d7941dc1ccd2267fd6ec8e7691",
+  "artifact": {
+    "filename": "practice-ppo-cnn.zip",
+    "path": "games/lab/challenges/smb-1-2-ceiling-lift/practice-ppo-cnn.zip",
+    "sha256": "908c1e4b4e3037376b1a34ce36143ed2688110d7941dc1ccd2267fd6ec8e7691",
+    "standing": "verified_fixed_state",
+    "note": "Five deterministic attempts from one saved state. That is verified from a fixed state. It is not generalization across varied starts. The zip stays beside this file and is not committed."
+  },
+  "archive": {
+    "path": "C:\\Users\\Mike\\mario-runs\\artifacts\\smb-1-2-ceiling-lift\\practice-ppo-cnn.zip",
+    "sha256": "908c1e4b4e3037376b1a34ce36143ed2688110d7941dc1ccd2267fd6ec8e7691",
+    "note": "Backup of the gitignored checkout copy. The checkout file stays untracked. This copy is the retrievable artifact."
+  },
+  "method": "supervised match of one frame-skip-4 action sequence",
+  "frame_skip": 4,
+  "search_jump_frames": 26,
+  "practiced_jump_frames": 28,
+  "demonstration_actions": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    4,
+    4,
+    4,
+    4,
+    4,
+    4,
+    4,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "demonstration_landed_at": 43,
+  "demonstration_path": [
+    {
+      "step": 1,
+      "action": 0,
+      "x": 2520,
+      "y": 107,
+      "physics": "ground",
+      "world": 1,
+      "stage": 2,
+      "dead": false
+    },
+    {
+      "step": 32,
+      "action": 0,
+      "x": 2520,
+      "y": 223,
+      "physics": "ground",
+      "world": 1,
+      "stage": 2,
+      "dead": false
+    },
+    {
+      "step": 39,
+      "action": 4,
+      "x": 2549,
+      "y": 287,
+      "physics": "jumping",
+      "world": 1,
+      "stage": 2,
+      "dead": false
+    },
+    {
+      "step": 43,
+      "action": 0,
+      "x": 2573,
+      "y": 255,
+      "physics": "ground",
+      "world": 1,
+      "stage": 2,
+      "dead": false
+    },
+    {
+      "step": 45,
+      "action": 0,
+      "x": 2581,
+      "y": 255,
+      "physics": "ground",
+      "world": 1,
+      "stage": 2,
+      "dead": false
+    }
+  ],
+  "practice": {
+    "epochs_ran": 58,
+    "matched_at": 53,
+    "class_counts": {
+      "0": 38,
+      "4": 7
+    },
+    "final": {
+      "epoch": 58,
+      "loss": 0.0268942192196846,
+      "matched": 45,
+      "count": 45
+    },
+    "passes": [
+      {
+        "epochs_ran": 58,
+        "matched_at": 53,
+        "final": {
+          "epoch": 58,
+          "loss": 0.0268942192196846,
+          "matched": 45,
+          "count": 45
+        }
+      }
+    ]
+  },
+  "before": {
+    "attempts": 5,
+    "ceilings": 0,
+    "success_rate": 0.0,
+    "episodes": [
+      {
+        "seed": 0,
+        "steps": 100,
+        "ceiling": false,
+        "end": {
+          "x": 2930,
+          "y": 127,
+          "physics": "ground",
+          "world": 1,
+          "stage": 2,
+          "dead": false
+        },
+        "viewport_spike": {
+          "step": 33,
+          "x": 0,
+          "y": 510
+        },
+        "trace": [
+          {
+            "step": 1,
+            "action": 4,
+            "x": 2520,
+            "y": 119,
+            "physics": "jumping",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 10,
+            "action": 4,
+            "x": 2566,
+            "y": 157,
+            "physics": "jumping",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 20,
+            "action": 4,
+            "x": 2645,
+            "y": 127,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 30,
+            "action": 4,
+            "x": 2656,
+            "y": 127,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 40,
+            "action": 4,
+            "x": 2872,
+            "y": 20,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 50,
+            "action": 4,
+            "x": 2872,
+            "y": 60,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 60,
+            "action": 4,
+            "x": 2872,
+            "y": 100,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 70,
+            "action": 4,
+            "x": 2888,
+            "y": 177,
+            "physics": "jumping",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 80,
+            "action": 4,
+            "x": 2930,
+            "y": 127,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 90,
+            "action": 4,
+            "x": 2930,
+            "y": 127,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 100,
+            "action": 4,
+            "x": 2930,
+            "y": 127,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          }
+        ],
+        "action_runs": [
+          {
+            "action": 4,
+            "steps": 100
+          }
+        ]
+      },
+      {
+        "seed": 1,
+        "steps": 100,
+        "ceiling": false,
+        "end": {
+          "x": 2930,
+          "y": 127,
+          "physics": "ground",
+          "world": 1,
+          "stage": 2,
+          "dead": false
+        },
+        "viewport_spike": {
+          "step": 33,
+          "x": 0,
+          "y": 510
+        },
+        "trace": [
+          {
+            "step": 1,
+            "action": 4,
+            "x": 2520,
+            "y": 119,
+            "physics": "jumping",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 10,
+            "action": 4,
+            "x": 2566,
+            "y": 157,
+            "physics": "jumping",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 20,
+            "action": 4,
+            "x": 2645,
+            "y": 127,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 30,
+            "action": 4,
+            "x": 2656,
+            "y": 127,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 40,
+            "action": 4,
+            "x": 2872,
+            "y": 20,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 50,
+            "action": 4,
+            "x": 2872,
+            "y": 60,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 60,
+            "action": 4,
+            "x": 2872,
+            "y": 100,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 70,
+            "action": 4,
+            "x": 2888,
+            "y": 177,
+            "physics": "jumping",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 80,
+            "action": 4,
+            "x": 2930,
+            "y": 127,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 90,
+            "action": 4,
+            "x": 2930,
+            "y": 127,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 100,
+            "action": 4,
+            "x": 2930,
+            "y": 127,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          }
+        ],
+        "action_runs": [
+          {
+            "action": 4,
+            "steps": 100
+          }
+        ]
+      },
+      {
+        "seed": 2,
+        "steps": 100,
+        "ceiling": false,
+        "end": {
+          "x": 2930,
+          "y": 127,
+          "physics": "ground",
+          "world": 1,
+          "stage": 2,
+          "dead": false
+        },
+        "viewport_spike": {
+          "step": 33,
+          "x": 0,
+          "y": 510
+        },
+        "trace": [
+          {
+            "step": 1,
+            "action": 4,
+            "x": 2520,
+            "y": 119,
+            "physics": "jumping",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 10,
+            "action": 4,
+            "x": 2566,
+            "y": 157,
+            "physics": "jumping",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 20,
+            "action": 4,
+            "x": 2645,
+            "y": 127,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 30,
+            "action": 4,
+            "x": 2656,
+            "y": 127,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 40,
+            "action": 4,
+            "x": 2872,
+            "y": 20,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 50,
+            "action": 4,
+            "x": 2872,
+            "y": 60,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 60,
+            "action": 4,
+            "x": 2872,
+            "y": 100,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 70,
+            "action": 4,
+            "x": 2888,
+            "y": 177,
+            "physics": "jumping",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 80,
+            "action": 4,
+            "x": 2930,
+            "y": 127,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 90,
+            "action": 4,
+            "x": 2930,
+            "y": 127,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 100,
+            "action": 4,
+            "x": 2930,
+            "y": 127,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          }
+        ],
+        "action_runs": [
+          {
+            "action": 4,
+            "steps": 100
+          }
+        ]
+      },
+      {
+        "seed": 3,
+        "steps": 100,
+        "ceiling": false,
+        "end": {
+          "x": 2930,
+          "y": 127,
+          "physics": "ground",
+          "world": 1,
+          "stage": 2,
+          "dead": false
+        },
+        "viewport_spike": {
+          "step": 33,
+          "x": 0,
+          "y": 510
+        },
+        "trace": [
+          {
+            "step": 1,
+            "action": 4,
+            "x": 2520,
+            "y": 119,
+            "physics": "jumping",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 10,
+            "action": 4,
+            "x": 2566,
+            "y": 157,
+            "physics": "jumping",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 20,
+            "action": 4,
+            "x": 2645,
+            "y": 127,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 30,
+            "action": 4,
+            "x": 2656,
+            "y": 127,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 40,
+            "action": 4,
+            "x": 2872,
+            "y": 20,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 50,
+            "action": 4,
+            "x": 2872,
+            "y": 60,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 60,
+            "action": 4,
+            "x": 2872,
+            "y": 100,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 70,
+            "action": 4,
+            "x": 2888,
+            "y": 177,
+            "physics": "jumping",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 80,
+            "action": 4,
+            "x": 2930,
+            "y": 127,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 90,
+            "action": 4,
+            "x": 2930,
+            "y": 127,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 100,
+            "action": 4,
+            "x": 2930,
+            "y": 127,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          }
+        ],
+        "action_runs": [
+          {
+            "action": 4,
+            "steps": 100
+          }
+        ]
+      },
+      {
+        "seed": 4,
+        "steps": 100,
+        "ceiling": false,
+        "end": {
+          "x": 2930,
+          "y": 127,
+          "physics": "ground",
+          "world": 1,
+          "stage": 2,
+          "dead": false
+        },
+        "viewport_spike": {
+          "step": 33,
+          "x": 0,
+          "y": 510
+        },
+        "trace": [
+          {
+            "step": 1,
+            "action": 4,
+            "x": 2520,
+            "y": 119,
+            "physics": "jumping",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 10,
+            "action": 4,
+            "x": 2566,
+            "y": 157,
+            "physics": "jumping",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 20,
+            "action": 4,
+            "x": 2645,
+            "y": 127,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 30,
+            "action": 4,
+            "x": 2656,
+            "y": 127,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 40,
+            "action": 4,
+            "x": 2872,
+            "y": 20,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 50,
+            "action": 4,
+            "x": 2872,
+            "y": 60,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 60,
+            "action": 4,
+            "x": 2872,
+            "y": 100,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 70,
+            "action": 4,
+            "x": 2888,
+            "y": 177,
+            "physics": "jumping",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 80,
+            "action": 4,
+            "x": 2930,
+            "y": 127,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 90,
+            "action": 4,
+            "x": 2930,
+            "y": 127,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 100,
+            "action": 4,
+            "x": 2930,
+            "y": 127,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          }
+        ],
+        "action_runs": [
+          {
+            "action": 4,
+            "steps": 100
+          }
+        ]
+      }
+    ]
+  },
+  "after": {
+    "attempts": 5,
+    "ceilings": 5,
+    "success_rate": 1.0,
+    "record": "independent",
+    "assisted": false,
+    "benchmark": "on-upper-path",
+    "episodes": [
+      {
+        "seed": 0,
+        "steps": 43,
+        "ceiling": true,
+        "end": {
+          "x": 2573,
+          "y": 255,
+          "physics": "ground",
+          "world": 1,
+          "stage": 2,
+          "dead": false
+        },
+        "viewport_spike": null,
+        "trace": [
+          {
+            "step": 1,
+            "action": 0,
+            "x": 2520,
+            "y": 107,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 10,
+            "action": 0,
+            "x": 2520,
+            "y": 141,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 20,
+            "action": 0,
+            "x": 2520,
+            "y": 178,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 30,
+            "action": 0,
+            "x": 2520,
+            "y": 216,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 40,
+            "action": 0,
+            "x": 2555,
+            "y": 287,
+            "physics": "jumping",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 43,
+            "action": 0,
+            "x": 2573,
+            "y": 255,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          }
+        ],
+        "action_runs": [
+          {
+            "action": 0,
+            "steps": 32
+          },
+          {
+            "action": 4,
+            "steps": 7
+          },
+          {
+            "action": 0,
+            "steps": 4
+          }
+        ]
+      },
+      {
+        "seed": 1,
+        "steps": 43,
+        "ceiling": true,
+        "end": {
+          "x": 2573,
+          "y": 255,
+          "physics": "ground",
+          "world": 1,
+          "stage": 2,
+          "dead": false
+        },
+        "viewport_spike": null,
+        "trace": [
+          {
+            "step": 1,
+            "action": 0,
+            "x": 2520,
+            "y": 107,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 10,
+            "action": 0,
+            "x": 2520,
+            "y": 141,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 20,
+            "action": 0,
+            "x": 2520,
+            "y": 178,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 30,
+            "action": 0,
+            "x": 2520,
+            "y": 216,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 40,
+            "action": 0,
+            "x": 2555,
+            "y": 287,
+            "physics": "jumping",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 43,
+            "action": 0,
+            "x": 2573,
+            "y": 255,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          }
+        ],
+        "action_runs": [
+          {
+            "action": 0,
+            "steps": 32
+          },
+          {
+            "action": 4,
+            "steps": 7
+          },
+          {
+            "action": 0,
+            "steps": 4
+          }
+        ]
+      },
+      {
+        "seed": 2,
+        "steps": 43,
+        "ceiling": true,
+        "end": {
+          "x": 2573,
+          "y": 255,
+          "physics": "ground",
+          "world": 1,
+          "stage": 2,
+          "dead": false
+        },
+        "viewport_spike": null,
+        "trace": [
+          {
+            "step": 1,
+            "action": 0,
+            "x": 2520,
+            "y": 107,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 10,
+            "action": 0,
+            "x": 2520,
+            "y": 141,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 20,
+            "action": 0,
+            "x": 2520,
+            "y": 178,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 30,
+            "action": 0,
+            "x": 2520,
+            "y": 216,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 40,
+            "action": 0,
+            "x": 2555,
+            "y": 287,
+            "physics": "jumping",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 43,
+            "action": 0,
+            "x": 2573,
+            "y": 255,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          }
+        ],
+        "action_runs": [
+          {
+            "action": 0,
+            "steps": 32
+          },
+          {
+            "action": 4,
+            "steps": 7
+          },
+          {
+            "action": 0,
+            "steps": 4
+          }
+        ]
+      },
+      {
+        "seed": 3,
+        "steps": 43,
+        "ceiling": true,
+        "end": {
+          "x": 2573,
+          "y": 255,
+          "physics": "ground",
+          "world": 1,
+          "stage": 2,
+          "dead": false
+        },
+        "viewport_spike": null,
+        "trace": [
+          {
+            "step": 1,
+            "action": 0,
+            "x": 2520,
+            "y": 107,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 10,
+            "action": 0,
+            "x": 2520,
+            "y": 141,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 20,
+            "action": 0,
+            "x": 2520,
+            "y": 178,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 30,
+            "action": 0,
+            "x": 2520,
+            "y": 216,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 40,
+            "action": 0,
+            "x": 2555,
+            "y": 287,
+            "physics": "jumping",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 43,
+            "action": 0,
+            "x": 2573,
+            "y": 255,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          }
+        ],
+        "action_runs": [
+          {
+            "action": 0,
+            "steps": 32
+          },
+          {
+            "action": 4,
+            "steps": 7
+          },
+          {
+            "action": 0,
+            "steps": 4
+          }
+        ]
+      },
+      {
+        "seed": 4,
+        "steps": 43,
+        "ceiling": true,
+        "end": {
+          "x": 2573,
+          "y": 255,
+          "physics": "ground",
+          "world": 1,
+          "stage": 2,
+          "dead": false
+        },
+        "viewport_spike": null,
+        "trace": [
+          {
+            "step": 1,
+            "action": 0,
+            "x": 2520,
+            "y": 107,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 10,
+            "action": 0,
+            "x": 2520,
+            "y": 141,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 20,
+            "action": 0,
+            "x": 2520,
+            "y": 178,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 30,
+            "action": 0,
+            "x": 2520,
+            "y": 216,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 40,
+            "action": 0,
+            "x": 2555,
+            "y": 287,
+            "physics": "jumping",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          },
+          {
+            "step": 43,
+            "action": 0,
+            "x": 2573,
+            "y": 255,
+            "physics": "ground",
+            "world": 1,
+            "stage": 2,
+            "dead": false
+          }
+        ],
+        "action_runs": [
+          {
+            "action": 0,
+            "steps": 32
+          },
+          {
+            "action": 4,
+            "steps": 7
+          },
+          {
+            "action": 0,
+            "steps": 4
+          }
+        ]
+      }
+    ]
+  }
+}

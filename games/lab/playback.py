@@ -103,8 +103,22 @@ def play_tape(run_dir: Path, seat: int) -> int:
     }
     _status(status, base)
     integration_id = manifest.get("integration")
-    if not integration_id and manifest.get("system") == "nes" and manifest.get("objective") == "progress":
-        integration_id = "smb_1_1"
+    if not integration_id:
+        from games.lab.registry import owner_of
+        record = {
+            "system": manifest.get("system"),
+            "objective": manifest.get("objective"),
+            "game": manifest.get("game"),
+        }
+        if isinstance(tape, dict):
+            for key in ("world", "stage", "integration"):
+                if tape.get(key) is not None:
+                    record[key] = tape.get(key)
+        owner = owner_of(record)
+        integration_id = getattr(owner, "id", None) if owner is not None else None
+    if not integration_id:
+        _status(status, {"state": "empty", "seat": seat})
+        return 2
     film = seat_dir / FILM_NAME
     # ffmpeg picks the format from the extension. ".mp4.part" is not mp4.
     partial = seat_dir / "best.part.mp4"
@@ -113,7 +127,7 @@ def play_tape(run_dir: Path, seat: int) -> int:
     frames = 0
     try:
         from games.lab.env import make_env
-        from games.lab.integrations import get
+        from games.lab.registry import get
         env = make_env(manifest["system"], Path(manifest["rom"]), get(integration_id), frame_skip=FRAME_SKIP)
         obs, _info = env.reset()
         runner = env.unwrapped.runner

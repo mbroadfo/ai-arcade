@@ -1,20 +1,24 @@
-"""Who won the round. The higher score wins. For Mario that score is distance to the right."""
+"""Who won the round. The adapter says whether a higher or lower metric wins."""
 from __future__ import annotations
 
+from games.lab.contract import ordered, require_sense
 
-def winner(rows: list[dict]) -> dict:
+
+def winner(rows: list[dict], *, sense: str) -> dict:
     """rows need seat (int) and score (number). Ties go to the lower seat."""
     if not rows:
         raise ValueError("a round with no seats has no winner")
+    require_sense(sense)
 
     def key(row: dict) -> tuple:
-        return (row.get("score") or 0, -int(row["seat"]))
+        return ordered(sense, row.get("score") or 0, int(row["seat"]))
 
     return max(rows, key=key)
 
 
-def generation_rank(seats: list[dict], parent_score) -> list[dict]:
-    """Highest score first. The change is against the score the generation started from."""
+def generation_rank(seats: list[dict], parent_score, *, sense: str) -> list[dict]:
+    """Best outcome first. The change is in the direction the adapter calls better."""
+    require_sense(sense)
     try:
         parent = None if parent_score is None else int(parent_score)
     except (TypeError, ValueError):
@@ -31,6 +35,12 @@ def generation_rank(seats: list[dict], parent_score) -> list[dict]:
             seat_index = int(seat["seat"]) if seat.get("seat") is not None else index
         except (TypeError, ValueError):
             seat_index = index
+        if parent is None:
+            delta = None
+        elif sense == "minimize":
+            delta = parent - score
+        else:
+            delta = score - parent
         rows.append({
             "rank": 0,
             "seat": seat_index,
@@ -38,9 +48,11 @@ def generation_rank(seats: list[dict], parent_score) -> list[dict]:
             "model": seat.get("model") or "",
             "color": seat.get("color") or "",
             "score": score,
-            "delta": None if parent is None else score - parent,
+            "delta": delta,
+            "sense": sense,
+            "record": "training",
         })
-    rows.sort(key=lambda row: (-row["score"], row["seat"]))
+    rows.sort(key=lambda row: ordered(sense, row["score"], row["seat"]), reverse=True)
     for place, row in enumerate(rows, start=1):
         row["rank"] = place
     return rows
