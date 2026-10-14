@@ -22,14 +22,21 @@ def new_skill(
     world: int,
     stage: int,
     start: dict,
+    benchmark: str = "",
 ) -> dict:
-    """A search result. It is a demonstration candidate, not a mastered skill."""
+    """A search result. It is a demonstration candidate, not a mastered skill.
+
+    benchmark is the milestone an independent evaluation must name before this
+    skill can be called mastered. A flagpole measurement does not match a
+    different benchmark.
+    """
     return {
         "version": 1,
         "name": name,
         "objective": objective,
         "challenge": challenge_id,
         "stage": "discovered",
+        "benchmark": benchmark,
         "world": int(world),
         "stage_number": int(stage),
         "start": dict(start),
@@ -64,11 +71,15 @@ def record_mastery(skill: dict, agent: str, evaluation: dict) -> dict:
     where it was.
     """
     updated = {**skill, "agents": dict(skill.get("agents") or {})}
+    expected = str(skill.get("benchmark") or "")
+    observed = str((evaluation or {}).get("benchmark") or "")
     if (
-        isinstance(evaluation, dict)
+        expected
+        and observed == expected
+        and isinstance(evaluation, dict)
         and not evaluation.get("assisted")
         and not evaluation.get("failed")
-        and evaluation.get("record") in (None, "independent")
+        and evaluation.get("record") == "independent"
         and int(evaluation.get("successes") or 0) >= 1
         and float(evaluation.get("success_rate") or 0) > 0
     ):

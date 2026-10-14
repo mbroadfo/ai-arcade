@@ -80,6 +80,12 @@ function show(challenges) {
     table.appendChild(row("Independent", "No independent evaluation yet."));
     const search = item.search || {};
     table.appendChild(row("Best trajectory", (search.presses || 0) + " presses, " + (search.trajectory_frames || 0) + " frames"));
+    const frameLabel = search.frame_accounting === "full-prefix" ? "Simulated frames" : "Reported frames";
+    table.appendChild(row(frameLabel, search.frames == null ? "—" : search.frames));
+    const subgoals = search.subgoals || [];
+    if (subgoals.length) {
+      table.appendChild(row("Subgoals", subgoals.map((item) => item.name + ": " + (item.reached ? "yes" : "no")).join(", ")));
+    }
     const agents = Object.keys((item.skill && item.skill.agents) || {});
     table.appendChild(row("Models", agents.length ? agents.join(", ") : "none execute it yet"));
     table.appendChild(row("Skill", (item.skill && item.skill.stage) || "not discovered"));

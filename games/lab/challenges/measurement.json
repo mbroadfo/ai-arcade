@@ -21,9 +21,43 @@
     "source_tape": "20261012T203659Z",
     "solved": false,
     "attempts": 30,
-    "start": {"world": 1, "stage": 2, "x_pos": 40, "y_pos": 79, "time": 399, "player_state": 8},
+    "start": {
+      "world": 1,
+      "stage": 2,
+      "x_pos": 40,
+      "y_pos": 79,
+      "time": 399,
+      "player_state": 8
+    },
     "physics": "ground",
     "best_world": 1,
     "best_x": 40
+  },
+  "ceiling_entry": {
+    "id": "smb-1-2-ceiling-entry",
+    "solved": false,
+    "note": "The exit-pipe corner is past the one-way scroll. A search from there did not reach the ceiling."
+  },
+  "ceiling_lift": {
+    "id": "smb-1-2-ceiling-lift",
+    "solved": true,
+    "attempts": 121,
+    "frames": 10038,
+    "trajectory_frames": 186,
+    "frame_accounting": "full-prefix",
+    "verified_repeats": 2,
+    "skill_stage": "practiced",
+    "landing": {
+      "world": 1,
+      "stage": 2,
+      "x_pos": 2579,
+      "y_pos": 255,
+      "physics": "ground"
+    },
+    "enter_world_4": false,
+    "ppo_cnn": "independently_mastered",
+    "baseline_ceilings": "0/5",
+    "practiced_ceilings": "5/5",
+    "practice_jump_frames": 28
   }
 }

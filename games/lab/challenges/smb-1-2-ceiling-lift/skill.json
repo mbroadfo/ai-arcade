@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "name": "ceiling jump",
+  "objective": "From this rising platform in World 1-2, get onto the brick ceiling. The platform is still low. Waiting raises it. A jump to the right, taken while the platform is high, is the way onto the ceiling. Entering World 4 is the ultimate success and is recorded separately.",
+  "challenge": "smb-1-2-ceiling-lift",
+  "stage": "practiced",
+  "benchmark": "on-upper-path",
+  "world": 1,
+  "stage_number": 2,
+  "start": {
+    "world": 1,
+    "stage": 2,
+    "x_pos": 2520,
+    "y_pos": 102,
+    "time": 349,
+    "player_state": 8
+  },
+  "trajectory": [
+    {
+      "buttons": [],
+      "frames": 32
+    },
+    {
+      "buttons": [],
+      "frames": 32
+    },
+    {
+      "buttons": [],
+      "frames": 32
+    },
+    {
+      "buttons": [],
+      "frames": 32
+    },
+    {
+      "buttons": [
+        "RIGHT",
+        "A",
+        "B"
+      ],
+      "frames": 26
+    },
+    {
+      "buttons": [],
+      "frames": 32
+    }
+  ],
+  "provenance": "search",
+  "agents": {
+    "ppo_cnn": "independently_mastered"
+  },
+  "repeats": [
+    true,
+    true
+  ]
+}

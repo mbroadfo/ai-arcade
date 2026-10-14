@@ -169,6 +169,8 @@ def catalog(root: Path | None = None) -> list[dict]:
                 "trajectory": trajectory[:80],
                 "presses": len(trajectory),
                 "best_facts": search.get("best_facts"),
+                "frame_accounting": search.get("frame_accounting"),
+                "subgoals": search.get("subgoals") or [],
             },
             "skill": {
                 "stage": skill.get("stage"),

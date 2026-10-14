@@ -103,12 +103,14 @@ def promoted_parent(root: Path, model: str, stamp: dict | None = None) -> dict |
     """A zip whose independent evaluation matches these exact weights.
 
     A training score does not promote. A missing file, a failed evaluation, an
-    assisted record, or a hash that does not match the zip leaves no parent.
+    assisted record, a short protocol, or a hash that does not match the zip
+    leaves no parent. Success is the World 4 benchmark, not a flagpole.
+    Two different ROM or core hashes are not ranked against each other.
     The higher success rate wins. A tie breaks on furthest score, then the lower seat.
     """
     from games.lab.eval import accept_eval, read_eval
     from games.lab.stamp import matches
-    best: dict | None = None
+    candidates: list[dict] = []
     if not root.is_dir():
         return None
     for path in root.iterdir():
@@ -127,7 +129,7 @@ def promoted_parent(root: Path, model: str, stamp: dict | None = None) -> dict |
             if not zip_path.is_file() or not matches(zip_path, stamp):
                 continue
             evaluation = read_eval(zip_path.with_suffix(".eval.json"))
-            if not accept_eval(evaluation, zip_path):
+            if not accept_eval(evaluation, zip_path, model=model):
                 continue
             furthest = evaluation.get("furthest") or {}
             try:
@@ -135,21 +137,24 @@ def promoted_parent(root: Path, model: str, stamp: dict | None = None) -> dict |
                 rate = float(evaluation.get("success_rate") or 0)
             except (TypeError, ValueError):
                 continue
-            rank = (rate, score, -index)
-            if best is None or rank > best["_rank"]:
-                best = {
-                    "_rank": rank,
-                    "path": zip_path,
-                    "score": score,
-                    "success_rate": rate,
-                    "name": seat.get("name"),
-                    "seat": index,
-                    "run_id": path.name,
-                    "model": model,
-                    "record": "independent",
-                }
-    if best is not None:
-        best.pop("_rank", None)
+            candidates.append({
+                "_rank": (rate, score, -index),
+                "_env": (evaluation.get("rom_sha1"), evaluation.get("core_sha1")),
+                "path": zip_path,
+                "score": score,
+                "success_rate": rate,
+                "name": seat.get("name"),
+                "seat": index,
+                "run_id": path.name,
+                "model": model,
+                "record": "independent",
+            })
+    environments = {item["_env"] for item in candidates}
+    if len(environments) != 1:
+        return None
+    best = max(candidates, key=lambda item: item["_rank"])
+    best.pop("_rank", None)
+    best.pop("_env", None)
     return best
 
 
