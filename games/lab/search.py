@@ -5,8 +5,10 @@ not write their weights. Every candidate is judged by running it.
 
 `frames` is the number of emulator frames actually played. Each candidate is
 restored and the whole sequence is run again, so this counts every prefix, not
-only the button just appended. `trajectory_frames` is the length of the
-returned sequence.
+only the button just appended. `decisions` is how many actions are in the
+returned sequence. `trajectory_frames` is the emulator frames in that sequence.
+An action that does not fit the remaining frame budget is skipped. A shorter
+action later in the alphabet is still tried.
 """
 from __future__ import annotations
 
@@ -119,15 +121,21 @@ def beam_search(
             cancelled = True
             break
         pool = []
+        progressed = False
+        skipped_for_budget = False
         for trajectory in beam:
             for action in alphabet:
                 step = action_step(action, hold)
                 candidate = list(trajectory) + [step]
                 replayed = frames_of(candidate)
-                if attempts >= max_attempts or used + replayed > max_frames:
+                if attempts >= max_attempts:
                     exhausted = True
                     break
+                if used + replayed > max_frames:
+                    skipped_for_budget = True
+                    continue
                 facts = probe.replay(candidate)
+                progressed = True
                 attempts += 1
                 used += replayed
                 _note_subgoals(subgoals, facts, attempts, used, found_subgoals)
@@ -149,6 +157,10 @@ def beam_search(
                 break
         if solved or exhausted or cancelled:
             break
+        if not progressed:
+            if skipped_for_budget:
+                exhausted = True
+            break
         pool.sort(key=lambda item: item[0], reverse=True)
         beam = [candidate for _value, candidate in pool[: int(width)]]
         if not beam:
@@ -166,6 +178,7 @@ def _result(solved, trajectory, attempts, used, facts, best_rank, cancelled, exh
         "trajectory": trajectory,
         "attempts": int(attempts),
         "frames": int(used),
+        "decisions": len(trajectory),
         "trajectory_frames": frames_of(trajectory),
         "frame_accounting": "full-prefix",
         "best_facts": facts,

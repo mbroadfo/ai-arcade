@@ -199,14 +199,25 @@ def _seed_sources(seats: list[dict], stamp: dict | None = None) -> list[dict | N
     return sources
 
 
-def _weight_sources(seats: list[dict], stamp: dict | None = None) -> list[dict | None]:
-    """Independent evaluations. A training score alone does not seed the next generation."""
+def _game_protocol(game_id: str) -> dict | None:
+    """The adapter's evaluation experiment, when it has one."""
+    game = by_id(load_catalog())[game_id]
+    integration = get(game.integration)
+    protocol_of = getattr(integration, "evaluation_protocol", None)
+    if protocol_of is None:
+        return None
+    protocol = protocol_of()
+    return protocol if isinstance(protocol, dict) else None
+
+
+def _weight_sources(seats: list[dict], stamp: dict | None = None, protocol: dict | None = None) -> list[dict | None]:
+    """Independent evaluations for this protocol. A training score does not seed weights."""
     cache: dict[str, dict | None] = {}
     sources = []
     for seat in seats:
         model = seat["model"]
         if model not in cache:
-            cache[model] = promoted_parent(runs_root(), model, stamp)
+            cache[model] = promoted_parent(runs_root(), model, stamp, protocol=protocol)
         sources.append(cache[model])
     return sources
 
@@ -448,10 +459,11 @@ def run_chain(
     if start_generation is not None:
         generation = start_generation
     stamp = _game_stamp(game_id)
+    protocol = _game_protocol(game_id)
     pending_resume = resume_dir
     try:
         while True:
-            weights = None if pending_resume is not None else _weight_sources(seats, stamp)
+            weights = None if pending_resume is not None else _weight_sources(seats, stamp, protocol)
             training = None if pending_resume is not None else _seed_sources(seats, stamp)
             present = [source for source in (training or []) if source]
             parent_score = max((source["score"] for source in present), default=None)

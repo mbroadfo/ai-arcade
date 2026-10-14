@@ -63,7 +63,7 @@ def champion(root: Path, model: str, stamp: dict | None = None) -> dict | None:
     """The best.zip with the highest training score for this model. A tie keeps the lower seat.
 
     A stamp limits the search to weights that used the same buttons and score.
-    Older 1-1 weights then stay on disk and do not parent the next round.
+    A different stamp stays on disk and does not parent the next round.
     """
     from games.lab.stamp import matches
     best: dict | None = None
@@ -99,17 +99,20 @@ def champion(root: Path, model: str, stamp: dict | None = None) -> dict | None:
     return best
 
 
-def promoted_parent(root: Path, model: str, stamp: dict | None = None) -> dict | None:
-    """A zip whose independent evaluation matches these exact weights.
+def promoted_parent(root: Path, model: str, stamp: dict | None = None, *, protocol: dict | None = None) -> dict | None:
+    """A zip whose independent evaluation matches these exact weights and this experiment.
 
-    A training score does not promote. A missing file, a failed evaluation, an
-    assisted record, a short protocol, or a hash that does not match the zip
-    leaves no parent. Success is the World 4 benchmark, not a flagpole.
-    Two different ROM or core hashes are not ranked against each other.
-    The higher success rate wins. A tie breaks on furthest score, then the lower seat.
+    A training score does not promote. Without a protocol there is no experiment
+    to match, so there is no parent. A missing file, a failed or incomplete
+    evaluation, an assisted record, a different scenario or seed list, or a hash
+    that does not match the zip leaves no parent. Two different ROM or core
+    hashes are not ranked against each other. The higher success rate wins.
+    A tie breaks on the furthest recorded score, then the lower seat.
     """
     from games.lab.eval import accept_eval, read_eval
     from games.lab.stamp import matches
+    if not isinstance(protocol, dict) or not protocol.get("name"):
+        return None
     candidates: list[dict] = []
     if not root.is_dir():
         return None
@@ -129,7 +132,7 @@ def promoted_parent(root: Path, model: str, stamp: dict | None = None) -> dict |
             if not zip_path.is_file() or not matches(zip_path, stamp):
                 continue
             evaluation = read_eval(zip_path.with_suffix(".eval.json"))
-            if not accept_eval(evaluation, zip_path, model=model):
+            if not accept_eval(evaluation, zip_path, protocol=protocol, model=model):
                 continue
             furthest = evaluation.get("furthest") or {}
             try:

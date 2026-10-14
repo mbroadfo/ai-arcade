@@ -264,8 +264,107 @@ def skip_title(runner, limit: int = 600) -> None:
     raise RuntimeError("Super Mario Bros. timer never started")
 
 
+# The unassisted experiment for this adapter. The lab engine does not define these.
+PROTOCOL_NAME = "smb-unassisted-v1"
+PROTOCOL_ATTEMPTS = 5
+PROTOCOL_LIMIT = 2000
+PROTOCOL_FRAME_SKIP = 4
+PROTOCOL_SEED = 0
+DEFAULT_BENCHMARK = "enter-world-4"
+
+# A later milestone is never implied by an earlier one.
+BENCHMARKS = {
+    "clear-1-1-flag": (
+        "Mario touches the World 1-1 flagpole while that stage is showing. "
+        "This does not mean he entered a later world."
+    ),
+    "reach-world-1-2": (
+        "The emulator is in World 1-2 or any later level, and Mario is alive. "
+        "The World 1-1 castle walk does not count."
+    ),
+    "enter-world-4": (
+        "The emulator shows World 4 and Mario is alive. "
+        "A flagpole does not count, including the World 1-1 flagpole."
+    ),
+}
+
+
+def update_milestones(reached: dict, info: dict) -> dict:
+    """Latch this adapter's milestones. The flagpole does not latch a later world."""
+    reached = {name: bool((reached or {}).get(name)) for name in BENCHMARKS}
+    try:
+        world = int(info.get("world") or 1)
+        stage = int(info.get("stage") or 1)
+    except (TypeError, ValueError):
+        return reached
+    alive = not info.get("dead") and not info.get("dying")
+    if info.get("flag_get") and world == 1 and stage == 1 and alive:
+        reached["clear-1-1-flag"] = True
+    if alive and (world > 1 or (world == 1 and stage >= 2)):
+        reached["reach-world-1-2"] = True
+    if alive and world >= 4:
+        reached["enter-world-4"] = True
+    return reached
+
+
+def position_supports(episode: dict, benchmark: str) -> bool:
+    """The recorded ending still agrees with a milestone the episode claims."""
+    try:
+        world = int(episode.get("world") or 0)
+        stage = int(episode.get("stage") or 0)
+    except (TypeError, ValueError):
+        return False
+    if benchmark == "enter-world-4":
+        return world > 4 or (world == 4 and stage >= 1)
+    if benchmark == "reach-world-1-2":
+        return world > 1 or (world == 1 and stage >= 2)
+    if benchmark == "clear-1-1-flag":
+        return True
+    return False
+
+
+def episode_metrics(info: dict) -> dict:
+    """Facts this adapter records for one life. The engine stores them as given."""
+    def num(key: str, default: int = 0) -> int:
+        try:
+            return int(info.get(key) if info.get(key) is not None else default)
+        except (TypeError, ValueError):
+            return default
+
+    return {
+        "score": num("score"),
+        "world": num("world", 1),
+        "stage": num("stage", 1),
+        "x_pos": num("x_pos"),
+        "time": num("time"),
+        "dead": bool(info.get("dead")),
+    }
+
+
+def evaluation_protocol() -> dict:
+    """What an independent Mario measurement is. Callers pass this to the engine."""
+    return {
+        "name": PROTOCOL_NAME,
+        "attempts": PROTOCOL_ATTEMPTS,
+        "limit": PROTOCOL_LIMIT,
+        "frame_skip": PROTOCOL_FRAME_SKIP,
+        "n_actions": len(SMB_ACTIONS),
+        "seed": PROTOCOL_SEED,
+        "default_benchmark": DEFAULT_BENCHMARK,
+        "clear_benchmark": "clear-1-1-flag",
+        "game": "smb_1_1",
+        "objective": "progress",
+        "start": "game",
+        "benchmarks": dict(BENCHMARKS),
+        "observe": update_milestones,
+        "supports": position_supports,
+        "metrics": episode_metrics,
+    }
+
+
 class _SMB:
     id = "smb_1_1"
+    system = "nes"
     objective = "progress"
     actions = SMB_ACTIONS
     death_penalty = DEATH_PENALTY
@@ -273,6 +372,15 @@ class _SMB:
     measure = staticmethod(progress)
     step_reward = staticmethod(step_reward)
     note_clear = staticmethod(note_clear)
+    evaluation_protocol = staticmethod(evaluation_protocol)
+
+    def pinned_rom(self):
+        from games.lab.roms import pinned_smb
+        return pinned_smb()
+
+    def rom_sha1(self) -> str:
+        from games.lab.roms import SMB_SHA1
+        return SMB_SHA1
 
     def matches(self, system: str, stem: str) -> bool:
         return system == "nes" and stem.casefold() == "super mario bros. (japan, usa)"

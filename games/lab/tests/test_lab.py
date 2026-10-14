@@ -845,7 +845,6 @@ def test_demonstration_stays_out_of_both_learners(tmp_path):
 
 def test_independent_eval_rejects_assistance_and_a_mismatched_zip(tmp_path):
     from games.lab.eval import (
-        BENCHMARKS,
         accept_eval,
         begin_life,
         blank_milestones,
@@ -854,27 +853,28 @@ def test_independent_eval_rejects_assistance_and_a_mismatched_zip(tmp_path):
         decide,
         evaluate_attempts,
         play_loaded,
-        update_milestones,
         write_eval,
     )
+    from games.lab.integrations.smb_1_1 import BENCHMARKS, evaluation_protocol, update_milestones
+    protocol = evaluation_protocol()
     identity = {
         "rom_sha1": "abc",
         "core_sha1": "def",
         "checkpoint_sha256": "fff",
         "model": "ppo_cnn",
-        "seed": 1,
+        "seed": 0,
     }
-    assisted = evaluate_attempts(lambda seed: {"forced": True, "score": 99, "success": True}, 2, identity)
+    assisted = evaluate_attempts(lambda seed: {"forced": True, "score": 99, "success": True}, 2, identity, protocol)
     assert assisted["failed"] is True and assisted["assisted"] is False and assisted["successes"] == 0
-    missing = evaluate_attempts(lambda _seed: {}, 1, {"model": "ppo_cnn"})
+    missing = evaluate_attempts(lambda _seed: {}, 1, {"model": "ppo_cnn"}, protocol)
     assert missing["failed"] is True and "rom_sha1" in missing["failure"]
 
-    flag = update_milestones(blank_milestones(), {"world": 1, "stage": 1, "flag_get": True, "dead": False})
+    flag = update_milestones(blank_milestones(protocol), {"world": 1, "stage": 1, "flag_get": True, "dead": False})
     assert flag["clear-1-1-flag"] is True
     assert flag["enter-world-4"] is False and flag["reach-world-1-2"] is False
-    warp = update_milestones(blank_milestones(), {"world": 4, "stage": 1, "dead": False, "flag_get": False})
+    warp = update_milestones(blank_milestones(protocol), {"world": 4, "stage": 1, "dead": False, "flag_get": False})
     assert warp["enter-world-4"] is True and warp["reach-world-1-2"] is True
-    assert update_milestones(blank_milestones(), {"world": 4, "stage": 1, "dead": True})["enter-world-4"] is False
+    assert update_milestones(blank_milestones(protocol), {"world": 4, "stage": 1, "dead": True})["enter-world-4"] is False
 
     def play(seed):
         entered = seed == 1
@@ -885,6 +885,7 @@ def test_independent_eval_rejects_assistance_and_a_mismatched_zip(tmp_path):
             "x_pos": 40 if entered else 10,
             "dead": False,
             "time": 300,
+            "decisions": 2,
             "frames": 8,
             "forced": False,
             "assisted": False,
@@ -896,50 +897,60 @@ def test_independent_eval_rejects_assistance_and_a_mismatched_zip(tmp_path):
             },
         }
 
-    before = evaluate_attempts(play, 2, identity)
+    before = evaluate_attempts(play, 2, identity, protocol)
     assert before["failed"] is False and before["success_rate"] == 0.5 and before["record"] == "independent"
     assert before["benchmark"] == "enter-world-4"
     assert before["milestone_counts"]["clear-1-1-flag"] == 1
     assert before["milestone_counts"]["enter-world-4"] == 1
     assert before["protocol"] == "smb-unassisted-v1" and before["attempts"] == 2
-    after = evaluate_attempts(lambda seed: {**play(1), "score": 80, "x_pos": 80}, 2, identity)
+    assert before["seeds"] == [0, 1]
+    after = evaluate_attempts(lambda seed: {**play(1), "score": 80, "x_pos": 80}, 2, identity, protocol)
     compared = compare_independent(before, after)
     assert compared["improved"] is True and compared["benchmark"] == "enter-world-4"
     with pytest.raises(ValueError):
         compare_independent(assisted, before)
     with pytest.raises(ValueError):
         compare_independent(before, {**after, "benchmark": "clear-1-1-flag"})
+    with pytest.raises(ValueError):
+        compare_independent(before, {**after, "seeds": [5, 6]})
     weights = tmp_path / "best.zip"
     weights.write_bytes(b"weights-v1")
     digest = checkpoint_sha256(weights)
     # Two attempts describe a result. They are not the fixed five-life protocol.
     short = {**before, "checkpoint_sha256": digest}
-    assert accept_eval(short, weights) is False
+    assert accept_eval(short, weights, protocol=protocol) is False
 
     def five(entered):
-        body = evaluate_attempts(lambda _seed: play(1 if entered else 2), 5, identity)
+        body = evaluate_attempts(lambda _seed: play(1 if entered else 2), 5, identity, protocol)
         return {**body, "checkpoint_sha256": digest}
 
     entered = five(True)
     assert entered["attempts"] == 5 and entered["success_rate"] == 1.0
-    assert accept_eval(entered, weights, model="ppo_cnn") is True
-    assert accept_eval(entered, weights, model="ppo_lstm") is False
-    assert accept_eval({**entered, "checkpoint_sha256": "nope"}, weights) is False
-    assert accept_eval({**entered, "assisted": True}, weights) is False
-    assert accept_eval({**entered, "failed": True}, weights) is False
+    assert accept_eval(entered, weights, protocol=protocol, model="ppo_cnn") is True
+    assert accept_eval(entered, weights, protocol=protocol, model="ppo_lstm") is False
+    assert accept_eval({**entered, "checkpoint_sha256": "nope"}, weights, protocol=protocol) is False
+    assert accept_eval({**entered, "assisted": True}, weights, protocol=protocol) is False
+    assert accept_eval({**entered, "failed": True}, weights, protocol=protocol) is False
+    assert accept_eval(entered, weights, protocol={**protocol, "name": "other-v1"}) is False
     flagged = five(False)
     assert flagged["success_rate"] == 0.0 and flagged["milestone_counts"]["clear-1-1-flag"] == 5
-    assert accept_eval(flagged, weights) is True
+    assert accept_eval(flagged, weights, protocol=protocol) is True
     forged = {**flagged, "successes": 5, "success_rate": 1.0}
-    assert accept_eval(forged, weights) is False
-    lied_row = {
-        **flagged["episodes"][0],
-        "success": True,
-        "milestones": {**flagged["episodes"][0]["milestones"], "enter-world-4": True},
-    }
-    lied = {**flagged, "episodes": [lied_row] * 5, "successes": 5, "success_rate": 1.0}
+    assert accept_eval(forged, weights, protocol=protocol) is False
+    lied_rows = [
+        {
+            **episode,
+            "success": True,
+            "milestones": {**episode["milestones"], "enter-world-4": True},
+        }
+        for episode in flagged["episodes"]
+    ]
+    lied = {**flagged, "episodes": lied_rows, "successes": 5, "success_rate": 1.0}
     assert lied["episodes"][0]["world"] == 1
-    assert accept_eval(lied, weights) is False
+    assert accept_eval(lied, weights, protocol=protocol) is False
+    other_seeds = {**entered, "seed": 3, "seeds": [3, 4, 5, 6, 7]}
+    other_seeds["episodes"] = [{**episode, "seed": 3 + index} for index, episode in enumerate(entered["episodes"])]
+    assert accept_eval(other_seeds, weights, protocol=protocol) is False
     assert BENCHMARKS["enter-world-4"] != BENCHMARKS["clear-1-1-flag"]
     write_eval(weights.with_suffix(".eval.json"), entered)
 
@@ -1007,7 +1018,7 @@ def test_independent_eval_rejects_assistance_and_a_mismatched_zip(tmp_path):
     assert memory.calls[0] == (None, [True], True)
     assert memory.calls[1][0] == 1 and memory.calls[1][1] == [False]
     assert memory.calls[2] == (None, [True], True)
-    played = play_loaded(memory, seed=7, limit=10)
+    played = play_loaded(memory, seed=7, protocol=protocol, limit=10)
     starts = [call[1] for call in memory.calls[3:]]
     states = [call[0] for call in memory.calls[3:]]
     assert starts == [[True], [False], [False]]
@@ -1016,6 +1027,8 @@ def test_independent_eval_rejects_assistance_and_a_mismatched_zip(tmp_path):
     assert played["milestones"]["clear-1-1-flag"] is True
     assert played["milestones"]["enter-world-4"] is False
     assert played["success"] is False
+    assert played["decisions"] == 3
+    assert played["frames"] == 3 * protocol["frame_skip"]
 
 
 def test_promotion_uses_the_independent_eval_not_the_training_score(tmp_path, monkeypatch):
@@ -1043,7 +1056,8 @@ def test_promotion_uses_the_independent_eval_not_the_training_score(tmp_path, mo
             evaluation = {**evaluation, "checkpoint_sha256": checkpoint_sha256(folder / "best.zip")}
             write_eval(folder / "best.eval.json", evaluation)
 
-    from games.lab.eval import BENCHMARKS
+    from games.lab.integrations.smb_1_1 import BENCHMARKS, evaluation_protocol
+    protocol = evaluation_protocol()
 
     def measurement(success, score):
         episodes = []
@@ -1082,6 +1096,8 @@ def test_promotion_uses_the_independent_eval_not_the_training_score(tmp_path, mo
             "model": "ppo_cnn",
             "rom_sha1": "abc",
             "core_sha1": "def",
+            "seed": 0,
+            "seeds": list(range(5)),
             "attempts": 5,
             "successes": 5 if success else 0,
             "success_rate": 1.0 if success else 0.0,
@@ -1097,30 +1113,33 @@ def test_promotion_uses_the_independent_eval_not_the_training_score(tmp_path, mo
 
     write("trained", 0, 9999, b"trained-only", None)
     assert champion(tmp_path, "ppo_cnn")["score"] == 9999
-    assert promoted_parent(tmp_path, "ppo_cnn") is None
+    assert promoted_parent(tmp_path, "ppo_cnn", protocol=protocol) is None
     seats = [{"model": "ppo_cnn"}, {"model": "ppo_cnn"}]
     assert _seed_sources(seats)[0]["score"] == 9999
     assert _weight_sources(seats) == [None, None]
-    # A measured flagpole is a parent candidate with World 4 success rate 0.
+    # A measured flagpole is a parent candidate. Its success rate on the requested benchmark is 0.
     write("trained", 0, 9999, b"trained-only", measurement(False, 3161))
-    flagged = promoted_parent(tmp_path, "ppo_cnn")
+    flagged = promoted_parent(tmp_path, "ppo_cnn", protocol=protocol)
     assert flagged["record"] == "independent" and flagged["success_rate"] == 0.0 and flagged["score"] == 3161
     write("evaluated", 1, 10, b"evaluated", measurement(True, 20))
-    parent = promoted_parent(tmp_path, "ppo_cnn")
+    parent = promoted_parent(tmp_path, "ppo_cnn", protocol=protocol)
     assert parent["record"] == "independent" and parent["score"] == 20 and parent["seat"] == 1
     assert parent["success_rate"] == 1.0
-    assert _weight_sources(seats)[0]["path"] == parent["path"]
+    assert _weight_sources(seats, protocol=protocol)[0]["path"] == parent["path"]
+    other = {**protocol, "name": "puzzle-v1", "game": "puzzle", "objective": "pieces", "default_benchmark": "solved"}
+    other["benchmarks"] = {"solved": "The puzzle is solved."}
+    assert promoted_parent(tmp_path, "ppo_cnn", protocol=other) is None
     # A hash that does not match the zip is not a parent. The flagpole measurement remains.
     stale = tmp_path / "evaluated" / "seats" / "1" / "best.eval.json"
     body = json.loads(stale.read_text(encoding="utf-8"))
     body["checkpoint_sha256"] = "0" * 64
     stale.write_text(json.dumps(body), encoding="utf-8")
-    fallback = promoted_parent(tmp_path, "ppo_cnn")
+    fallback = promoted_parent(tmp_path, "ppo_cnn", protocol=protocol)
     assert fallback["seat"] == 0 and fallback["success_rate"] == 0.0
-    other = measurement(True, 999)
-    other["core_sha1"] = "not-the-same-core"
-    write("other-core", 0, 50, b"other-core", other)
-    assert promoted_parent(tmp_path, "ppo_cnn") is None
+    elsewhere = measurement(True, 999)
+    elsewhere["core_sha1"] = "not-the-same-core"
+    write("other-core", 0, 50, b"other-core", elsewhere)
+    assert promoted_parent(tmp_path, "ppo_cnn", protocol=protocol) is None
 
 
 def test_beam_search_clears_a_gap_and_keeps_the_frame_count():
@@ -1169,6 +1188,7 @@ def test_beam_search_clears_a_gap_and_keeps_the_frame_count():
     assert frames_of(found["trajectory"]) == found["trajectory_frames"]
     assert found["frame_accounting"] == "full-prefix"
     assert found["frames"] == gap.simulated
+    assert found["decisions"] == len(found["trajectory"])
     assert found["frames"] > found["trajectory_frames"]
     assert found["subgoals"][0]["reached"] is True and found["subgoals"][0]["name"] == "across"
     end = gap.replay(found["trajectory"])
@@ -1219,7 +1239,111 @@ def test_search_counts_every_replayed_prefix():
     assert found["frames"] == log.played
     assert found["trajectory_frames"] == frames_of(found["trajectory"])
     assert found["frames"] > found["trajectory_frames"]
+    assert found["decisions"] == len(found["trajectory"])
     assert found["frame_accounting"] == "full-prefix"
+
+
+def test_an_oversized_action_does_not_block_a_shorter_one():
+    from games.lab.search import beam_search, frames_of
+
+    class Log:
+        def replay(self, trajectory):
+            return {"x": frames_of(trajectory), "dead": False, "dying": False}
+
+    actions = [{"buttons": ["RIGHT"], "frames": 100}, {"buttons": ["A"], "frames": 1}]
+    found = beam_search(
+        Log(),
+        actions,
+        lambda facts: facts["x"] >= 1,
+        lambda facts: facts["x"],
+        width=2,
+        depth=2,
+        hold=1,
+        max_attempts=20,
+        max_frames=10,
+    )
+    assert found["solved"] is True
+    assert found["trajectory"] == [{"buttons": ["A"], "frames": 1}]
+    assert found["decisions"] == 1
+    assert found["trajectory_frames"] == 1
+    assert found["budget_exhausted"] is False
+    blocked = beam_search(
+        Log(),
+        [{"buttons": ["RIGHT"], "frames": 100}],
+        lambda facts: facts["x"] >= 1,
+        lambda facts: facts["x"],
+        width=2,
+        depth=2,
+        hold=1,
+        max_attempts=20,
+        max_frames=10,
+    )
+    assert blocked["solved"] is False and blocked["budget_exhausted"] is True
+
+
+def test_the_evaluator_follows_the_adapter_and_drops_an_incomplete_run(tmp_path):
+    from games.lab.eval import accept_eval, checkpoint_sha256, compare_independent, evaluate_attempts
+    protocol = {
+        "name": "puzzle-v1",
+        "attempts": 2,
+        "limit": 10,
+        "frame_skip": 2,
+        "n_actions": 3,
+        "seed": 0,
+        "default_benchmark": "solved",
+        "game": "puzzle",
+        "objective": "pieces",
+        "start": "game",
+        "benchmarks": {"solved": "The puzzle is solved."},
+        "supports": lambda episode, _benchmark: bool(episode.get("solved_position")),
+        "metrics": lambda info: {"score": int(info.get("score") or 0), "dead": bool(info.get("dead"))},
+    }
+    identity = {
+        "rom_sha1": "rom",
+        "core_sha1": "core",
+        "checkpoint_sha256": "hash",
+        "model": "ppo_cnn",
+        "seed": 0,
+    }
+
+    def play(_seed):
+        return {
+            "score": 3,
+            "dead": False,
+            "decisions": 4,
+            "frames": 8,
+            "forced": False,
+            "assisted": False,
+            "demonstration_steps": 0,
+            "solved_position": True,
+            "milestones": {"solved": True},
+        }
+
+    done = evaluate_attempts(play, 2, identity, protocol)
+    assert done["failed"] is False and done["benchmark"] == "solved" and done["game"] == "puzzle"
+    assert done["decisions"] == 4 and done["frames"] == 8 and done["seeds"] == [0, 1]
+    weights = tmp_path / "best.zip"
+    weights.write_bytes(b"puzzle")
+    digest = checkpoint_sha256(weights)
+    assert accept_eval({**done, "checkpoint_sha256": digest}, weights, protocol=protocol) is True
+    unsupported = {
+        **done["episodes"][0],
+        "solved_position": False,
+    }
+    forged = {**done, "checkpoint_sha256": digest, "episodes": [unsupported, done["episodes"][1]]}
+    assert accept_eval(forged, weights, protocol=protocol) is False
+
+    def boom(seed):
+        if seed == 1:
+            raise RuntimeError("dropped")
+        return play(seed)
+
+    partial = evaluate_attempts(boom, 2, identity, protocol)
+    assert partial["failed"] is True and partial["success_rate"] == 0.0
+    assert accept_eval({**partial, "checkpoint_sha256": digest}, weights, protocol=protocol) is False
+    shifted = evaluate_attempts(play, 2, {**identity, "seed": 4}, protocol)
+    with pytest.raises(ValueError):
+        compare_independent(done, shifted)
 
 
 def test_challenge_refuses_an_incompatible_state(tmp_path):

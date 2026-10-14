@@ -49,13 +49,16 @@ later route, such as a warp. A hint with no buttons is only a note.
 The hall and the generation table are a training record. They rank the score from
 assisted practice. A checkpoint parents the next generation's weights only after
 an independent evaluation of that exact file: no shared run, no hints, and no
-forced button. The comparable protocol is `smb-unassisted-v1`: five deterministic
-lives, a 2000-step cap, frame skip 4, and the twelve-button set, from the normal
-start of the game. The success it ranks is entering World 4 alive. Touching the
-1-1 flagpole is recorded separately and is not that success. A recurrent policy
-keeps its hidden state across the decisions of one life. Run it with the lab
-venv, and leave `--out` unset to print the result instead of writing next to a
-live run:
+forced button. The engine takes the protocol from the game adapter. Mario's
+adapter names that protocol `smb-unassisted-v1`: five deterministic lives, a
+2000-step cap, frame skip 4, and the twelve-button set, from the normal start
+of the game, seeds 0 through 4. The success it ranks is entering World 4 alive.
+Touching the 1-1 flagpole is recorded separately and is not that success. An
+attempt that fails leaves the evaluation incomplete, so it does not compete.
+A result records policy decisions separately from emulator frames. A recurrent
+policy keeps its hidden state across the decisions of one life. Run it with the
+lab venv, and leave `--out` unset to print the result instead of writing next to
+a live run:
 
 ```powershell
 C:\Users\Mike\mario-lab\venv\Scripts\python.exe -m games.lab.eval --checkpoint C:\path\to\best.zip --model ppo_cnn
@@ -65,7 +68,10 @@ Challenges live under `games/lab/challenges`. Each one is a description plus a
 libretro savestate for one core and one ROM. A different core is refused.
 The page lists them at `/challenge`. Search restores the saved state for every
 candidate and counts every emulator frame in those replays. The reported frame
-count is that simulated work. The trajectory length is separate. The World 1-2 ceiling route is the proving ground. The opening jump only checks
+count is that simulated work. `decisions` is the number of actions in the
+sequence, and the trajectory length is the emulator frames in that sequence.
+An action that is longer than the remaining budget is skipped, and a shorter
+action is still tried. The World 1-2 ceiling route is the proving ground. The opening jump only checks
 that a saved state can be restored. The exit-pipe corner is past the one-way
 scroll, so the search starts on the rising platform instead. That search found
 a verified way onto the brick ceiling: wait for the platform, jump right, and
