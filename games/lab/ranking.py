@@ -39,6 +39,7 @@ def generation_rank(seats: list[dict], parent_score) -> list[dict]:
             "color": seat.get("color") or "",
             "score": score,
             "delta": None if parent is None else score - parent,
+            "record": "training",
         })
     rows.sort(key=lambda row: (-row["score"], row["seat"]))
     for place, row in enumerate(rows, start=1):

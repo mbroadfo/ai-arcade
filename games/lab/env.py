@@ -191,13 +191,12 @@ def leave_nes_title(runner) -> None:
 
 
 class RouteEnv(gym.Wrapper):
-    """Play the shared best run, then a hint for this stage, then the policy.
+    """Practice the shared run, then let the policy play.
 
-    Every life reloads the same savestate, so those buttons repeat the route.
-    After the run the policy is standing where that life left off, which is
-    World 1-2 once any seat has cleared 1-1. A higher score replaces the run,
-    and so does a faster pass of the same ground. Every eighth life skips the
-    run and plays its own buttons, so a shortcut can be found and then shared.
+    The run and a hint that applies after it are stepped inside reset. PPO and
+    DQN only call step for buttons the policy chose, so a demonstration never
+    enters either buffer. Every eighth life skips the run. A higher score
+    replaces it, and so does a faster pass of the same ground.
     """
 
     def __init__(self, env: gym.Env, tape_path, n_actions: int, objective: str | None,
@@ -206,14 +205,52 @@ class RouteEnv(gym.Wrapper):
         from games.lab.tape import Route
         self.route = Route(tape_path, n_actions, objective, min_score, hints_path)
         self._lives = 0
+        self.demonstration_log: list[dict] = []
 
     def reset(self, *, seed=None, options=None):
-        from games.lab.tape import search_life
+        from games.lab.tape import search_life, take_demonstration
         obs, info = self.env.reset(seed=seed, options=options)
         self._lives += 1
         self.route.on_reset(search=search_life(self._lives))
+        log: list[dict] = []
+        ended = False
+
+        def act(button: int) -> bool:
+            nonlocal obs, info, ended
+            obs, _reward, terminated, truncated, info = self.env.step(button)
+            try:
+                score = int(info.get("score") or 0)
+                world = int(info.get("world") or 1)
+                stage = int(info.get("stage") or 1)
+                clock = int(info.get("time") or 0)
+            except (TypeError, ValueError):
+                score, world, stage, clock = 0, 1, 1, 0
+            log.append({
+                "action": int(button),
+                "score": score,
+                "world": world,
+                "stage": stage,
+                "time": clock,
+            })
+            ended = bool(terminated or truncated)
+            return not ended
+
+        take_demonstration(self.route, self._place, act)
+        if ended:
+            # The demonstration itself ended the life. That death is not a policy
+            # transition, so this life starts over with no scripted buttons.
+            obs, info = self.env.reset(seed=seed, options=options)
+            self.route.on_reset(search=True)
+            log = []
+        self.demonstration_log = log
+        info = dict(info)
         info["forced"] = False
+        info["assisted"] = False
         info["applied_action"] = None
+        info["demonstration_steps"] = len(log)
+        info["demonstration_log"] = log
+        info["assisted_reset"] = bool(log)
+        info["learn"] = True
         return obs, info
 
     def _place(self):
@@ -236,15 +273,18 @@ class RouteEnv(gym.Wrapper):
 
     def step(self, action):
         from games.lab.tape import as_int
-        world, stage = self._place()
-        applied, forced = self.route.on_step(action, world, stage)
+        try:
+            applied = as_int(action)
+        except (TypeError, ValueError, IndexError):
+            applied = 0
         obs, reward, terminated, truncated, info = self.env.step(applied)
         info["applied_action"] = applied
-        info["forced"] = forced
-        try:
-            info["agent_action"] = as_int(action)
-        except (TypeError, ValueError, IndexError):
-            info["agent_action"] = None
+        info["forced"] = False
+        info["assisted"] = False
+        info["agent_action"] = applied
+        info["demonstration_steps"] = len(self.demonstration_log)
+        info["demonstration_log"] = self.demonstration_log
+        info["assisted_reset"] = bool(self.demonstration_log)
         return obs, reward, terminated, truncated, info
 
 

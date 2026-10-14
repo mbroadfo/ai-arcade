@@ -272,6 +272,20 @@ def shield_reward(rewards, actions, info: dict | None, on_policy: bool) -> None:
         rewards[0] = 0.0
 
 
+def learnable_transition(info: dict | None, *, algorithm: str) -> bool:
+    """False when a tape or a hint played this step.
+
+    PPO and DQN both skip that step. Zeroing the reward is not enough: the next
+    state still came from the external button, so the transition does not belong
+    in either buffer. The shared run is played before the policy steps.
+    """
+    if algorithm not in {"ppo", "dqn"}:
+        raise ValueError(algorithm)
+    if not info:
+        return True
+    return not bool(info.get("forced"))
+
+
 class Route:
     """Which button is played. RouteEnv is the gym wrapper around this.
 
@@ -351,6 +365,54 @@ class Route:
                 applied, forced = button, True
                 self._hint_i += 1
         return applied, forced
+
+    def peek_action(self, agent_action, world=None, stage=None) -> tuple[int, bool]:
+        """The button on_step would play. The run index and the hint index stay put."""
+        from games.lab.hints import hint_button
+        if self._search:
+            return as_int(agent_action), False
+        applied, forced = applied_action(
+            self._tape, self._index, agent_action, self.n_actions, self.objective
+        )
+        if forced:
+            return applied, True
+        where = _stage(world, stage)
+        if self._hints and where is not None:
+            hint_i = 0 if where != self._hint_where else self._hint_i
+            button = hint_button(self._hints, where[0], where[1], hint_i, self.n_actions)
+            if button is not None:
+                return button, True
+        return applied, False
+
+
+def take_demonstration(route: Route, place, act=None) -> list[int]:
+    """Buttons of the shared run, then a hint for the stage those buttons reach.
+
+    place() returns the world and stage now. act(button) plays that button and
+    returns False when the life ended. The policy button is not included.
+    A search life returns an empty list. The cap stops a hint that never ends.
+    """
+    if getattr(route, "_search", False):
+        return []
+    played: list[int] = []
+    for _ in range(100_000):
+        if route._index == 0 and not route._search:
+            route._reload()
+            route._load_hints()
+        try:
+            world, stage = place()
+        except Exception:
+            world, stage = None, None
+        _button, forced = route.peek_action(0, world, stage)
+        if not forced:
+            break
+        applied, forced = route.on_step(0, world, stage)
+        if not forced:
+            break
+        played.append(int(applied))
+        if act is not None and act(int(applied)) is False:
+            break
+    return played
 
 
 def _stage(world, stage):

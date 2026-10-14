@@ -54,6 +54,7 @@ def collapsed_history(rounds: list[dict]) -> list[dict]:
             "delta": None if previous is None else score - previous,
             "game": rnd.get("game"),
             "objective": rnd.get("objective"),
+            "record": "training",
         })
     return rows
 
@@ -95,6 +96,60 @@ def champion(root: Path, model: str, stamp: dict | None = None) -> dict | None:
                     "run_id": path.name,
                     "model": model,
                 }
+    return best
+
+
+def promoted_parent(root: Path, model: str, stamp: dict | None = None) -> dict | None:
+    """A zip whose independent evaluation matches these exact weights.
+
+    A training score does not promote. A missing file, a failed evaluation, an
+    assisted record, or a hash that does not match the zip leaves no parent.
+    The higher success rate wins. A tie breaks on furthest score, then the lower seat.
+    """
+    from games.lab.eval import accept_eval, read_eval
+    from games.lab.stamp import matches
+    best: dict | None = None
+    if not root.is_dir():
+        return None
+    for path in root.iterdir():
+        results_path = path / "results.json"
+        if not path.is_dir() or not results_path.is_file():
+            continue
+        try:
+            data = json.loads(results_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        for seat in data.get("seats") or []:
+            if seat.get("model") != model:
+                continue
+            index = int(seat.get("seat") or 0)
+            zip_path = path / "seats" / str(index) / "best.zip"
+            if not zip_path.is_file() or not matches(zip_path, stamp):
+                continue
+            evaluation = read_eval(zip_path.with_suffix(".eval.json"))
+            if not accept_eval(evaluation, zip_path):
+                continue
+            furthest = evaluation.get("furthest") or {}
+            try:
+                score = int(furthest.get("score") or 0)
+                rate = float(evaluation.get("success_rate") or 0)
+            except (TypeError, ValueError):
+                continue
+            rank = (rate, score, -index)
+            if best is None or rank > best["_rank"]:
+                best = {
+                    "_rank": rank,
+                    "path": zip_path,
+                    "score": score,
+                    "success_rate": rate,
+                    "name": seat.get("name"),
+                    "seat": index,
+                    "run_id": path.name,
+                    "model": model,
+                    "record": "independent",
+                }
+    if best is not None:
+        best.pop("_rank", None)
     return best
 
 

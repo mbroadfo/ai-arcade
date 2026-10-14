@@ -12,6 +12,7 @@ from games.lab.integrations.smb_1_1 import (
     STAGE_SPAN,
     STALL_PENALTY,
     describe,
+    diagnose,
     note_clear,
     progress,
     ram_vector,
@@ -304,6 +305,9 @@ def test_page_mentions_six_seats():
     assert "repeat(3, minmax(0, 1fr))" in text
     assert "defaultModels" in text and "openModel" in text
     assert "practice the best run" in text
+    assert "Training record." in text and "Challenges" in text
+    challenge = (REPO_ROOT / "games" / "lab" / "static" / "challenge.html").read_text(encoding="utf-8")
+    assert "Independent" in challenge and "Searched" in challenge and "success rate" in challenge
     assert "This generation" in text and "Networks" in text and "Hints" in text
     assert "window.open" in text and "/watch/" in text
     watch = (REPO_ROOT / "games" / "lab" / "static" / "watch.html").read_text(encoding="utf-8")
@@ -334,6 +338,7 @@ def test_history_collapses_identical_rounds_and_skips_short_ones():
     rows = collapsed_history([better, again, short, full])
     assert [row["id"] for row in rows] == ["a", "d"]
     assert rows[0]["winner_name"] == "Red" and rows[0]["delta"] is None and rows[0]["generation"] == 0
+    assert rows[0]["record"] == "training"
     assert rows[1]["winner_name"] == "Gold" and rows[1]["score"] == 2100 and rows[1]["delta"] == 150
 
 
@@ -713,6 +718,7 @@ def test_generation_rank_orders_the_six_models_by_score():
     assert ranked[0]["rank"] == 1 and ranked[0]["delta"] == 7362 - 3266
     assert ranked[1]["delta"] == 7362 - 3266
     assert ranked[2]["delta"] == 1127 - 3266
+    assert ranked[0]["record"] == "training"
     assert generation_rank(seats, None)[0]["delta"] is None
 
 
@@ -783,3 +789,297 @@ def test_playback_shows_every_frame_of_the_saved_buttons():
     assert film_matches({"score": 7362, "presses": 2, "n_actions": 12, "frames": 9}, tape) is True
     assert film_matches({"score": 3161, "presses": 2, "n_actions": 12, "frames": 9}, tape) is False
     assert film_matches(None, tape) is False
+
+
+def test_diagnostic_ram_stays_out_of_the_policy_vector():
+    ram = bytearray(2048)
+    ram[0x001D] = 1
+    ram[0x0057] = 0x18
+    ram[0x009F] = 0xFB
+    ram[0x000F] = 1
+    ram[0x0016] = 0x06
+    ram[0x006E] = 0
+    ram[0x0087] = 180
+    facts = diagnose(bytes(ram))
+    assert facts["physics"] == "jumping"
+    assert facts["x_speed"] == 0x18
+    assert facts["y_speed"] == -5
+    assert facts["enemies"][0]["screen_x"] == 180
+    assert facts["enemies"][0]["id"] == 0x06
+    assert len(ram_vector(bytes(ram))) == 9
+    assert "x_speed" not in describe(bytes(ram))
+    assert "enemies" not in describe(bytes(ram))
+
+
+def test_demonstration_stays_out_of_both_learners(tmp_path):
+    from games.lab.hints import add_hint
+    from games.lab.tape import Route, learnable_transition, make_tape, take_demonstration, write_tape
+    store = tmp_path / "hints.json"
+    add_hint(store, {"title": "Down the pipe", "world": 1, "stage": 2, "note": "", "actions": [10]})
+    tape = tmp_path / "best.tape.json"
+    write_tape(tape, make_tape([1, 2], 100, 1, 1, 0, "Red", 12, "progress"))
+    route = Route(tape, 12, "progress", hints_path=store)
+    route.on_reset()
+    where = {"stage": 1}
+
+    def place():
+        return 1, where["stage"]
+
+    def act(button):
+        if button == 2:
+            where["stage"] = 2
+        return True
+
+    assert take_demonstration(route, place, act) == [1, 2, 10]
+    assert route.peek_action(9, 1, 2) == (9, False)
+    searching = Route(tape, 12, "progress", hints_path=store)
+    searching.on_reset(search=True)
+    assert take_demonstration(searching, lambda: (1, 1)) == []
+    assert learnable_transition({"forced": True}, algorithm="ppo") is False
+    assert learnable_transition({"forced": True}, algorithm="dqn") is False
+    assert learnable_transition({"forced": False}, algorithm="ppo") is True
+    assert learnable_transition(None, algorithm="dqn") is True
+    with pytest.raises(ValueError):
+        learnable_transition({"forced": True}, algorithm="other")
+
+
+def test_independent_eval_rejects_assistance_and_a_mismatched_zip(tmp_path):
+    from games.lab.eval import accept_eval, compare_independent, evaluate_attempts, write_eval
+    identity = {
+        "rom_sha1": "abc",
+        "core_sha1": "def",
+        "checkpoint_sha256": "fff",
+        "model": "ppo_cnn",
+        "seed": 1,
+    }
+    assisted = evaluate_attempts(lambda seed: {"forced": True, "score": 99, "success": True}, 2, identity)
+    assert assisted["failed"] is True and assisted["assisted"] is False and assisted["successes"] == 0
+    missing = evaluate_attempts(lambda _seed: {}, 1, {"model": "ppo_cnn"})
+    assert missing["failed"] is True and "rom_sha1" in missing["failure"]
+
+    def play(seed):
+        return {
+            "score": 40 if seed == 1 else 10,
+            "world": 1,
+            "stage": 1,
+            "x_pos": 40 if seed == 1 else 10,
+            "dead": seed != 1,
+            "time": 300,
+            "cleared": False,
+            "success": seed == 1,
+            "frames": 8,
+            "forced": False,
+            "assisted": False,
+            "demonstration_steps": 0,
+        }
+
+    before = evaluate_attempts(play, 2, identity)
+    assert before["failed"] is False and before["success_rate"] == 0.5 and before["record"] == "independent"
+    after = evaluate_attempts(lambda seed: {**play(1), "score": 80, "x_pos": 80}, 2, identity)
+    compared = compare_independent(before, after)
+    assert compared["improved"] is True and compared["record"] == "independent"
+    with pytest.raises(ValueError):
+        compare_independent(assisted, before)
+    weights = tmp_path / "best.zip"
+    weights.write_bytes(b"weights-v1")
+    from games.lab.eval import checkpoint_sha256
+    written = {**before, "checkpoint_sha256": checkpoint_sha256(weights), "failed": False, "assisted": False}
+    write_eval(weights.with_suffix(".eval.json"), written)
+    assert accept_eval(written, weights) is True
+    assert accept_eval({**written, "checkpoint_sha256": "nope"}, weights) is False
+    assert accept_eval({**written, "assisted": True}, weights) is False
+    assert accept_eval({**written, "failed": True}, weights) is False
+
+
+def test_promotion_uses_the_independent_eval_not_the_training_score(tmp_path, monkeypatch):
+    from games.lab.eval import checkpoint_sha256, write_eval
+    from games.lab.lineage import champion, promoted_parent
+    from games.lab.supervisor import _seed_sources, _weight_sources
+    monkeypatch.setattr("games.lab.supervisor.runs_root", lambda: tmp_path)
+
+    def write(run, seat, score, payload, evaluation):
+        folder = tmp_path / run / "seats" / str(seat)
+        folder.mkdir(parents=True)
+        (folder / "best.zip").write_bytes(payload)
+        (tmp_path / run / "results.json").write_text(json.dumps({
+            "winner": seat,
+            "seats": [{
+                "seat": seat,
+                "name": "Red" if seat == 0 else "Green",
+                "model": "ppo_cnn",
+                "score": score,
+                "steps": 200000,
+                "deaths": 1,
+            }],
+        }), encoding="utf-8")
+        if evaluation is not None:
+            evaluation = {**evaluation, "checkpoint_sha256": checkpoint_sha256(folder / "best.zip")}
+            write_eval(folder / "best.eval.json", evaluation)
+
+    finished = {
+        "assisted": False,
+        "failed": False,
+        "record": "independent",
+        "attempts": 2,
+        "successes": 2,
+        "success_rate": 1.0,
+        "furthest": {"score": 20, "world": 1, "stage": 1, "x_pos": 20, "time": 300},
+    }
+    write("trained", 0, 9999, b"trained-only", None)
+    assert champion(tmp_path, "ppo_cnn")["score"] == 9999
+    assert promoted_parent(tmp_path, "ppo_cnn") is None
+    seats = [{"model": "ppo_cnn"}, {"model": "ppo_cnn"}]
+    assert _seed_sources(seats)[0]["score"] == 9999
+    assert _weight_sources(seats) == [None, None]
+    write("evaluated", 1, 10, b"evaluated", finished)
+    parent = promoted_parent(tmp_path, "ppo_cnn")
+    assert parent["record"] == "independent" and parent["score"] == 20 and parent["seat"] == 1
+    assert _weight_sources(seats)[0]["path"] == parent["path"]
+    # A hash that does not match the zip is not a parent.
+    stale = tmp_path / "evaluated" / "seats" / "1" / "best.eval.json"
+    body = json.loads(stale.read_text(encoding="utf-8"))
+    body["checkpoint_sha256"] = "0" * 64
+    stale.write_text(json.dumps(body), encoding="utf-8")
+    assert promoted_parent(tmp_path, "ppo_cnn") is None
+
+
+def test_beam_search_clears_a_gap_and_keeps_the_frame_count():
+    from games.lab.search import beam_search, frames_of
+
+    class Gap:
+        def replay(self, trajectory):
+            x = 0
+            air = 0
+            dead = False
+            for step in trajectory:
+                buttons = step["buttons"]
+                for _ in range(int(step["frames"])):
+                    if dead:
+                        break
+                    if air == 0 and "A" in buttons:
+                        air = 3
+                    if "RIGHT" in buttons:
+                        x += 1
+                    if x == 3 and air == 0:
+                        dead = True
+                    elif air > 0:
+                        air -= 1
+            return {"x": x, "dead": dead, "dying": dead}
+
+    gap = Gap()
+
+    def success(facts):
+        return facts["x"] >= 4 and not facts["dead"]
+
+    def rank(facts):
+        return -100 if facts["dead"] else facts["x"]
+
+    actions = [(), ("RIGHT",), ("RIGHT", "A"), ("A",)]
+    found = beam_search(gap, actions, success, rank, width=4, depth=6, hold=1, max_attempts=80, max_frames=400)
+    assert found["solved"] is True
+    assert found["trajectory"]
+    assert all(step["frames"] == 1 for step in found["trajectory"])
+    assert frames_of(found["trajectory"]) == found["trajectory_frames"]
+    end = gap.replay(found["trajectory"])
+    again = gap.replay(found["trajectory"])
+    assert end == again and end["x"] >= 4 and end["dead"] is False
+    right_only = beam_search(gap, [("RIGHT",)], success, rank, width=2, depth=6, hold=1, max_attempts=20)
+    assert right_only["solved"] is False
+    stopped = beam_search(gap, actions, success, rank, depth=6, cancel=lambda: True)
+    assert stopped["cancelled"] is True and stopped["solved"] is False
+    partial = beam_search(gap, actions, success, rank, width=4, depth=1, hold=1, max_attempts=80)
+    assert partial["solved"] is False
+    resumed = beam_search(
+        gap, actions, success, rank, width=4, depth=6, hold=1, max_attempts=200, resume=partial["resume"]
+    )
+    assert resumed["solved"] is True and resumed["attempts"] > partial["attempts"]
+    limited = beam_search(gap, actions, success, rank, width=4, depth=6, hold=1, max_attempts=2)
+    assert limited["budget_exhausted"] is True
+
+
+def test_challenge_refuses_an_incompatible_state(tmp_path):
+    from games.lab.challenge import (
+        ChallengeError,
+        catalog,
+        load_challenge,
+        reached_warp,
+        same_start,
+        save_challenge,
+    )
+    state = b"savestate-bytes"
+    document = {
+        "id": "smb-1-2-ceiling-warp",
+        "objective": "Reach world 4 from the ceiling route in 1-2",
+        "game": "Super Mario Bros.",
+        "rom_sha1": "rom",
+        "core_sha1": "core",
+        "core_name": "fceumm",
+        "success": "world-4-from-1-2",
+        "start": {"world": 1, "stage": 2, "x_pos": 10, "y_pos": 20, "time": 361, "player_state": 8},
+    }
+    folder = save_challenge(tmp_path, document, state)
+    loaded, blob = load_challenge(folder, rom_sha1="rom", core_sha1="core")
+    assert blob == state and loaded["state_sha256"]
+    assert same_start(loaded["start"], dict(loaded["start"]))
+    with pytest.raises(ChallengeError):
+        load_challenge(folder, rom_sha1="rom", core_sha1="other-core")
+    with pytest.raises(ChallengeError):
+        load_challenge(folder, rom_sha1="other-rom", core_sha1="core")
+    (folder / "state.bin").write_bytes(b"different")
+    with pytest.raises(ChallengeError):
+        load_challenge(folder, rom_sha1="rom", core_sha1="core")
+    (folder / "state.bin").write_bytes(state)
+    broken = json.loads((folder / "challenge.json").read_text(encoding="utf-8"))
+    broken["version"] = 2
+    (folder / "challenge.json").write_text(json.dumps(broken), encoding="utf-8")
+    with pytest.raises(ChallengeError):
+        load_challenge(folder, rom_sha1="rom", core_sha1="core")
+    with pytest.raises(ChallengeError):
+        save_challenge(tmp_path, {**document, "id": "../escape"}, state)
+    start = {"world": 1, "stage": 2}
+    assert reached_warp(start, {"world": 4, "stage": 1, "dead": False, "dying": False}) is True
+    assert reached_warp(start, {"world": 1, "stage": 2, "dead": False, "score": 99999}) is False
+    assert reached_warp(start, {"world": 4, "stage": 1, "dead": True}) is False
+    listed = catalog(tmp_path)
+    assert listed and listed[0]["id"] == "smb-1-2-ceiling-warp"
+    assert listed[0]["records"]["assisted"] is None
+
+
+def test_a_skill_does_not_spread_and_the_curriculum_is_not_running():
+    from games.lab.skill import curriculum_plan, new_skill, record_mastery, record_practice, verify_demonstration
+    skill = new_skill(
+        "opening jump",
+        "jump the gap",
+        "gap",
+        [{"buttons": ["RIGHT", "A"], "frames": 1}],
+        world=1,
+        stage=1,
+        start={"x_pos": 0},
+    )
+    assert skill["stage"] == "discovered" and skill["agents"] == {}
+    verified = verify_demonstration(skill, [True, True])
+    assert verified["stage"] == "verified_demonstration"
+    rejected = verify_demonstration(skill, [True, False])
+    assert rejected["stage"] == "discovered"
+    practiced = record_practice(verified, "Red")
+    assert practiced["stage"] == "practiced" and practiced["agents"] == {"Red": "practiced"}
+    mastered = record_mastery(practiced, "Red", {
+        "assisted": False,
+        "failed": False,
+        "record": "independent",
+        "successes": 1,
+        "success_rate": 1,
+    })
+    assert mastered["agents"]["Red"] == "independently_mastered"
+    left = record_mastery(practiced, "Green", {
+        "assisted": True,
+        "failed": False,
+        "record": "independent",
+        "successes": 1,
+        "success_rate": 1,
+    })
+    assert "Green" not in left["agents"]
+    plan = curriculum_plan("smb-1-2-ceiling-warp")
+    assert [item["stage"] for item in plan] == ["at_obstacle", "farther_back", "level_start", "game_start"]
+    assert [item["implemented"] for item in plan] == [False, False, False, False]
+    assert all(item["assisted"] is False for item in plan)

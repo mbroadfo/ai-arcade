@@ -1,0 +1,29 @@
+{
+  "rom_sha1": "ea343f4e445a9050d4b4fbac2c77d0693b1d0922",
+  "core_sha1": "e3d3a8436a3a0f3cc2c9164945dc4f87e616f243",
+  "core_name": "fceumm",
+  "platform": "windows-dll",
+  "opening": {
+    "id": "smb-1-1-opening-jump",
+    "solved": true,
+    "attempts": 116,
+    "frames": 115,
+    "trajectory_frames": 21,
+    "goal_x": 48,
+    "start_x": 40,
+    "saw_jump": true,
+    "skill_stage": "verified_demonstration",
+    "y_speed_on_jump": -4,
+    "physics_on_jump": "jumping"
+  },
+  "warp": {
+    "id": "smb-1-2-ceiling-warp",
+    "source_tape": "20261012T203659Z",
+    "solved": false,
+    "attempts": 30,
+    "start": {"world": 1, "stage": 2, "x_pos": 40, "y_pos": 79, "time": 399, "player_state": 8},
+    "physics": "ground",
+    "best_world": 1,
+    "best_x": 40
+  }
+}

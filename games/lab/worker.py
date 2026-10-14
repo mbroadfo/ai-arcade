@@ -88,6 +88,8 @@ class SeatCallback:
                 infos = self.locals.get("infos") or [{}]
                 info = infos[0]
                 dones = self.locals.get("dones") or [False]
+                if not self.episode_actions:
+                    self._prepend_demonstration(info)
                 try:
                     score = int(info.get("score") or 0)
                 except (TypeError, ValueError):
@@ -165,8 +167,33 @@ class SeatCallback:
                     self.episode_frames = self.episode_frames[::2]
                     self._stride *= 2
 
+            def _prepend_demonstration(self, info: dict) -> None:
+                # These buttons were played inside reset. They belong on the saved
+                # run. They are not transitions in the PPO rollout or the DQN replay.
+                for item in info.get("demonstration_log") or []:
+                    try:
+                        action = int(item["action"])
+                        score = int(item["score"])
+                    except (KeyError, TypeError, ValueError):
+                        continue
+                    self.episode_actions.append(action)
+                    self.episode_scores.append(score)
+                    if score > self.episode_peak:
+                        self.episode_peak = score
+                        try:
+                            self.peak_time = max(int(item.get("time") or 0), 0)
+                            self.peak_world = int(item.get("world") or 1)
+                            self.peak_stage = int(item.get("stage") or 1)
+                        except (TypeError, ValueError):
+                            pass
+
             def _shield(self, info: dict) -> None:
-                from games.lab.tape import shield_reward
+                # shield_reward is a backstop for a forced step that still reached
+                # learn(). RouteEnv plays the shared run inside reset, so this step
+                # is the policy's own button. Zeroing the reward does not remove a
+                # transition. learnable_transition is false for both PPO and DQN
+                # when a step was forced, and that step stays out of step().
+                from games.lab.tape import learnable_transition, shield_reward
                 on_policy = getattr(self.model, "rollout_buffer", None) is not None
                 shield_reward(
                     self.locals.get("rewards"),
@@ -174,6 +201,11 @@ class SeatCallback:
                     info,
                     on_policy,
                 )
+                algorithm = "ppo" if on_policy else "dqn"
+                if not learnable_transition(info, algorithm=algorithm):
+                    rewards = self.locals.get("rewards")
+                    if rewards is not None:
+                        rewards[0] = 0.0
 
             def _prefix_len(self) -> int:
                 from games.lab.tape import peak_prefix

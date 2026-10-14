@@ -171,6 +171,51 @@ def step_reward(
     return reward, high, dead
 
 
+def _signed(value: int) -> int:
+    return value - 256 if value >= 128 else value
+
+
+# Player_State in smbdis. 0 is on the ground. The jump routine sets 1.
+# 2 is the usual falling value. 3 is climbing. This is not the policy observation.
+_PHYSICS = {0: "ground", 1: "jumping", 2: "falling", 3: "climbing"}
+
+
+def diagnose(ram: bytes) -> dict:
+    """Physics the solver can read. The policy vector does not include these.
+
+    Addresses are the doppelganger smbdis names. On this PC's FCEUmm, a jump set
+    Player_State $1D to 1 and Player_Y_Speed $9F to -4. Falling used state 2 and
+    a positive Y speed. The ground used state 0 and Y speed 0. Running made
+    Player_X_Speed $57 positive. A goomba showed up as enemy flag 1, id 6.
+    screen_x is the sprite's position on the screen, not a world x.
+    """
+    physics = _byte(ram, 0x001D)
+    enemies = []
+    for index in range(5):
+        flag = _byte(ram, 0x000F + index)
+        if flag == 0:
+            continue
+        enemies.append({
+            "slot": index,
+            "flag": flag,
+            "id": _byte(ram, 0x0016 + index),
+            "page": _byte(ram, 0x006E + index),
+            "screen_x": _byte(ram, 0x0087 + index),
+        })
+    return {
+        "physics": _PHYSICS.get(physics, "other"),
+        "physics_code": physics,
+        "x_speed": _signed(_byte(ram, 0x0057)),
+        "y_speed": _signed(_byte(ram, 0x009F)),
+        "x_fraction": _byte(ram, 0x0400),
+        "y_fraction": _byte(ram, 0x0433),
+        "x_move_force": _byte(ram, 0x0705),
+        "power": _byte(ram, 0x0756),
+        "area": _byte(ram, 0x0760),
+        "enemies": enemies,
+    }
+
+
 def ram_vector(ram: bytes) -> list[float]:
     facts = describe(ram)
     return [
@@ -237,6 +282,9 @@ class _SMB:
 
     def ram_vector(self, ram: bytes) -> list[float]:
         return ram_vector(ram)
+
+    def diagnose(self, ram: bytes) -> dict:
+        return diagnose(ram)
 
     def stamp(self) -> dict:
         return {

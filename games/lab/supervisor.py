@@ -12,7 +12,7 @@ from pathlib import Path
 
 from games.lab.catalog import by_id, default_catalog_path, games_from, load_path
 from games.lab.integrations import get
-from games.lab.lineage import champion, collapsed_history, load_rows, save_rows, seats_for_generation
+from games.lab.lineage import champion, collapsed_history, load_rows, promoted_parent, save_rows, seats_for_generation
 from games.lab.models import registry
 from games.lab.publish import finalize
 from games.lab.ranking import winner
@@ -188,13 +188,25 @@ def _game_stamp(game_id: str) -> dict | None:
 
 
 def _seed_sources(seats: list[dict], stamp: dict | None = None) -> list[dict | None]:
-    """One champion per seat. The same model shares the best record-life zip."""
+    """Training-score zips. They set the practice floor. They do not parent weights."""
     cache: dict[str, dict | None] = {}
     sources = []
     for seat in seats:
         model = seat["model"]
         if model not in cache:
             cache[model] = champion(runs_root(), model, stamp)
+        sources.append(cache[model])
+    return sources
+
+
+def _weight_sources(seats: list[dict], stamp: dict | None = None) -> list[dict | None]:
+    """Independent evaluations. A training score alone does not seed the next generation."""
+    cache: dict[str, dict | None] = {}
+    sources = []
+    for seat in seats:
+        model = seat["model"]
+        if model not in cache:
+            cache[model] = promoted_parent(runs_root(), model, stamp)
         sources.append(cache[model])
     return sources
 
@@ -410,6 +422,7 @@ def _remember(run_dir: Path, generation: int) -> dict:
         "life": int(int(seat.get("steps") or 0) / int(seat.get("episodes") or seat.get("deaths") or 1)),
         "game": results.get("game"),
         "objective": results.get("objective"),
+        "record": "training",
     }
 
 
@@ -421,7 +434,7 @@ def run_chain(
     start_generation: int | None = None,
     resume_dir: Path | None = None,
 ) -> None:
-    """Keep training. Each generation starts from the best record-life weights and new seeds."""
+    """Keep training. The practice floor is the training score. Weights need an independent eval."""
     if resume_dir is None:
         for name in ("stop.request", "pause.request"):
             path = runs_root() / name
@@ -438,11 +451,13 @@ def run_chain(
     pending_resume = resume_dir
     try:
         while True:
-            sources = None if pending_resume is not None else _seed_sources(seats, stamp)
-            present = [source for source in (sources or []) if source]
+            weights = None if pending_resume is not None else _weight_sources(seats, stamp)
+            training = None if pending_resume is not None else _seed_sources(seats, stamp)
+            present = [source for source in (training or []) if source]
             parent_score = max((source["score"] for source in present), default=None)
-            same_parent = len(present) == 6 and len({str(source["path"]) for source in present}) == 1
-            parent_name = present[0]["name"] if same_parent else None
+            weight_present = [source for source in (weights or []) if source]
+            same_parent = len(weight_present) == 6 and len({str(source["path"]) for source in weight_present}) == 1
+            parent_name = weight_present[0]["name"] if same_parent else None
             if pending_resume is None and pause_requested():
                 _write_pause(game_id, seats, steps, generation, None, "between", parent_score, parent_name)
                 _set_chain("paused", "paused", generation, parent_score, parent_name)
@@ -454,7 +469,7 @@ def run_chain(
                     seats_for_generation(seats, generation),
                     steps,
                     generation=generation,
-                    seed_sources=sources,
+                    seed_sources=weights,
                     parent_score=parent_score,
                     parent_name=parent_name,
                     chained=True,

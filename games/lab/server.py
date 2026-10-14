@@ -30,6 +30,7 @@ from games.lab.tape import TAPE_NAME, comparable, compatible, floor_value, read_
 
 PAGE = Path(__file__).with_name("static") / "index.html"
 WATCH = Path(__file__).with_name("static") / "watch.html"
+CHALLENGE_PAGE = Path(__file__).with_name("static") / "challenge.html"
 PORT = int(os.environ.get("LAB_PORT", "8790"))
 BUTTONS = labels(SMB_ACTIONS)
 _play_lock = threading.Lock()
@@ -365,6 +366,13 @@ class Handler(BaseHTTPRequestHandler):
         path = urlparse(self.path).path
         if path == "/":
             self._send(200, PAGE.read_bytes(), "text/html; charset=utf-8")
+            return
+        if path == "/challenge":
+            self._send(200, CHALLENGE_PAGE.read_bytes(), "text/html; charset=utf-8")
+            return
+        if path == "/api/challenges":
+            from games.lab.challenge import catalog
+            self._json(200, {"challenges": catalog()})
             return
         if path == "/api/catalog":
             try:

@@ -46,6 +46,27 @@ can replace the slower run. Clicking a seat
 opens that seat's own best run in a separate window, at full game speed, in
 its own game. The page also draws each network and can store a hint for a
 later route, such as a warp. A hint with no buttons is only a note.
+The hall and the generation table are a training record. They rank the score from
+assisted practice. A checkpoint parents the next generation's weights only after
+an independent evaluation of that exact file: no shared run, no hints, and no
+forced button. Run it with the lab venv, and leave `--out` unset to print the
+result instead of writing next to a live run:
+
+```powershell
+C:\Users\Mike\mario-lab\venv\Scripts\python.exe -m games.lab.eval --checkpoint C:\path\to\best.zip --model ppo_cnn --attempts 3
+```
+
+Challenges live under `games/lab/challenges`. Each one is a description plus a
+libretro savestate for one core and one ROM. A different core is refused.
+The page lists them at `/challenge`. Search a saved state with a one-frame hold
+by restoring it and running `games.lab.search`. The World 1-2 ceiling warp to
+World 4 is the proving ground. Reaching it from the normal start of the game,
+with no script, is not done. Capture on a machine that has the ROM with:
+
+```powershell
+C:\Users\Mike\mario-lab\venv\Scripts\python.exe -m games.lab.capture
+```
+
 Bootable games (anything NES or Atari 2600 without a scored integration) rank by steps
 survived. That is not the same as beating the game. Arcade, 32X, ports, TRS-80, and Zork
 are listed and cannot be started.
