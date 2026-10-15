@@ -1,0 +1,86 @@
+{
+  "objective": "smb-1-1-speed",
+  "version": 1,
+  "frame_skip": 4,
+  "formula": {
+    "progress": "min(1, (pixels_gained / 256) * (1 + time_left / 400))",
+    "completion": 5.0,
+    "death": 1.0,
+    "stall": 0.05,
+    "time_per_emulator_frame": 0.001,
+    "time_per_decision": 0.004,
+    "stall_limit_decisions": 24,
+    "ceiling_stall_limit_decisions": 64,
+    "step_cap": 1.0
+  },
+  "notes": {
+    "goomba_death": "Gate A title trace. x after each of 37 decisions, reset x 40, death at x 313. Timer is 399 minus decision//6, which matches the trace.",
+    "pipe_stall": "Same trace through x 308, then the traced 10-pixel running pace until x 434, then 24 zero-gain decisions. No death. The opening traced decision also gains 0, so the stall component is 25 decisions.",
+    "past_pipe": "The pipe episode through x 434, then 30 decisions at 10 pixels (x 734). Modeled pace. x 458 is on the pipe, not past it. A scripted emulator trace is recorded separately.",
+    "brisk_clear": "Constructed. No saved policy has finished World 1-1 unassisted. Traced pace through x 308, then 10 pixels per decision until the World 1-1 flag at x 3161. Completion is paid once.",
+    "slow_clear": "The brisk gains split across two decisions, so the same distance takes about twice as many frames.",
+    "near_flag_death": "Brisk pace to x 3158, then a death with no flag. This is the episode a fast failure must not outrank."
+  },
+  "episodes": {
+    "goomba_death": {
+      "progress": 2.1211328125,
+      "completion": 0.0,
+      "stall": 0.05,
+      "death": 1.0,
+      "time": 0.148,
+      "total": 0.9231328125,
+      "high": 313,
+      "reason": "death"
+    },
+    "pipe_stall": {
+      "progress": 3.057275390625,
+      "completion": 0.0,
+      "stall": 1.25,
+      "death": 0.0,
+      "time": 0.292,
+      "total": 1.515275390625,
+      "high": 434,
+      "reason": "alive"
+    },
+    "past_pipe": {
+      "progress": 5.367822265625,
+      "completion": 0.0,
+      "stall": 0.05,
+      "death": 0.0,
+      "time": 0.316,
+      "total": 5.001822265625,
+      "high": 734,
+      "reason": "open"
+    },
+    "brisk_clear": {
+      "progress": 23.523310546875,
+      "completion": 5.0,
+      "stall": 0.05,
+      "death": 0.0,
+      "time": 1.288,
+      "total": 27.185310546875,
+      "high": 3161,
+      "reason": "complete"
+    },
+    "slow_clear": {
+      "progress": 22.699404296875,
+      "completion": 5.0,
+      "stall": 0.05,
+      "death": 0.0,
+      "time": 2.564,
+      "total": 25.085404296875,
+      "high": 3161,
+      "reason": "complete"
+    },
+    "near_flag_death": {
+      "progress": 23.501455078125,
+      "completion": 0.0,
+      "stall": 0.05,
+      "death": 1.0,
+      "time": 1.288,
+      "total": 21.163455078125,
+      "high": 3158,
+      "reason": "death"
+    }
+  }
+}

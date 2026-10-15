@@ -7,6 +7,9 @@ integration only has to get past the title. The life keeps going into later leve
 """
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 # Down enters a pipe. Up climbs a vine. Left chords set up a jump.
 # The older seven-button list could not do either, and its weights do not load.
 SMB_ACTIONS: list[tuple[str, ...]] = [
@@ -169,6 +172,191 @@ def step_reward(
     if dead:
         reward -= DEATH_PENALTY
     return reward, high, dead
+
+
+def progress_components(
+    previous: int,
+    facts: dict,
+    seen_time: bool,
+    cleared: bool = False,
+    place=None,
+) -> dict:
+    """The progress objective, split into parts. The total is step_reward."""
+    reward, high, dead = step_reward(previous, facts, seen_time, cleared, place)
+    gained = high - int(previous)
+    try:
+        time_left = max(int(facts.get("time") or 0), 0)
+    except (TypeError, ValueError):
+        time_left = 0
+    progress_reward = float(gained) * (1.0 + time_left / float(FULL_CLOCK))
+    stall = 0.0
+    if gained == 0 and not dead and not cleared and not facts.get("flag_get"):
+        stall = float(STALL_PENALTY)
+    death = float(DEATH_PENALTY) if dead else 0.0
+    return {
+        "total": float(reward),
+        "high": high,
+        "dead": dead,
+        "gained": gained,
+        "stop": False,
+        "paid": False,
+        "progress": progress_reward,
+        "completion": 0.0,
+        "stall": stall,
+        "death": death,
+        "time": 0.0,
+    }
+
+
+# World 1-1 speed. These magnitudes are the calibrated profile, not the progress
+# objective. One decision's distance term is capped. Completion is paid once.
+SPEED_ID = "smb-1-1-speed"
+SPEED_PIXEL_UNIT = 256.0
+SPEED_STEP_CAP = 1.0
+SPEED_COMPLETION = 5.0
+SPEED_DEATH = 1.0
+SPEED_STALL = 0.05
+SPEED_TIME_PER_FRAME = 0.001
+SPEED_STALL_LIMIT = 24
+_ACCEPTED_OBJECTIVES = ("progress", SPEED_ID)
+
+
+def _stage_pair(place):
+    if isinstance(place, (tuple, list)) and len(place) == 2:
+        try:
+            return int(place[0]), int(place[1])
+        except (TypeError, ValueError):
+            return None
+    return None
+
+
+def speed_components(
+    previous: int,
+    facts: dict,
+    seen_time: bool,
+    cleared: bool = False,
+    place=None,
+    frame_skip: int = 4,
+    paid: bool = False,
+) -> dict:
+    """Bounded return for finishing World 1-1 quickly.
+
+    Distance is pixels over one screen, and one decision cannot pay more than
+    the step cap. A per-frame time cost prefers a faster clear. Standing still
+    pays its own demerit. Dying pays one screen's worth, not the progress
+    objective's death number. The completion bonus is paid once, on the World
+    1-1 flag, and that step ends the episode.
+    """
+    dead = is_dead(facts, seen_time, cleared)
+    if cleared and place is not None:
+        here = progress(facts, place)
+    else:
+        here = progress(facts)
+    high = max(int(previous), here)
+    gained = high - int(previous)
+    try:
+        time_left = max(int(facts.get("time") or 0), 0)
+    except (TypeError, ValueError):
+        time_left = 0
+    clock = 1.0 + time_left / float(FULL_CLOCK)
+    progress_reward = min(SPEED_STEP_CAP, (gained / SPEED_PIXEL_UNIT) * clock)
+    completed_now = (not paid) and bool(cleared) and _stage_pair(place) == (1, 1) and not dead
+    stall = SPEED_STALL if gained == 0 and not dead and not completed_now else 0.0
+    death = SPEED_DEATH if dead else 0.0
+    bonus = SPEED_COMPLETION if completed_now else 0.0
+    try:
+        skip = max(int(frame_skip), 0)
+    except (TypeError, ValueError):
+        skip = 0
+    time_cost = skip * SPEED_TIME_PER_FRAME
+    return {
+        "total": progress_reward + bonus - stall - death - time_cost,
+        "high": high,
+        "dead": dead,
+        "gained": gained,
+        "stop": completed_now,
+        "paid": bool(paid or completed_now),
+        "progress": progress_reward,
+        "completion": bonus,
+        "stall": stall,
+        "death": death,
+        "time": time_cost,
+    }
+
+
+def reward_bundle(
+    objective,
+    previous: int,
+    facts: dict,
+    seen_time: bool,
+    cleared: bool = False,
+    place=None,
+    frame_skip: int = 4,
+    paid: bool = False,
+    scenario=None,
+) -> dict | None:
+    """Parts for the selected objective. An unknown name leaves the caller on its own."""
+    del scenario
+    name = objective or "progress"
+    if name in ("progress", "x_pos"):
+        return progress_components(previous, facts, seen_time, cleared, place)
+    if name == SPEED_ID:
+        return speed_components(
+            previous, facts, seen_time, cleared, place, frame_skip=frame_skip, paid=paid
+        )
+    return None
+
+
+def scenario_stall_limit(objective, scenario=None):
+    """Decisions without a new maximum before the episode stops.
+
+    The progress objective has no cutoff. The speed objective stops after 24
+    decisions. A scenario file can name its own cutoff. The World 1-2 rising
+    platform waits on purpose, so its file carries a longer cutoff.
+    """
+    if objective != SPEED_ID:
+        return None
+    if scenario:
+        path = Path(__file__).resolve().parents[1] / "challenges" / str(scenario) / "challenge.json"
+        if path.is_file():
+            try:
+                data = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                data = None
+            if isinstance(data, dict) and data.get("stall_limit") is not None:
+                return int(data["stall_limit"])
+    return SPEED_STALL_LIMIT
+
+
+def objective_profile(name: str | None = None) -> dict:
+    """Declared objective. Names other than progress and the speed run are not implemented."""
+    if name in (None, "progress"):
+        return {
+            "id": "progress",
+            "version": 1,
+            "implemented": True,
+            "training_sense": "maximize",
+            "stall_limit": None,
+        }
+    if name == SPEED_ID:
+        return {
+            "id": SPEED_ID,
+            "version": 1,
+            "implemented": True,
+            "training_sense": "maximize",
+            "eval_sense": "minimize",
+            "eval_metric": "frames",
+            "require_success": True,
+            "stall_limit": SPEED_STALL_LIMIT,
+            "pixel_unit": SPEED_PIXEL_UNIT,
+            "step_cap": SPEED_STEP_CAP,
+            "completion": SPEED_COMPLETION,
+            "death": SPEED_DEATH,
+            "stall": SPEED_STALL,
+            "time_per_frame": SPEED_TIME_PER_FRAME,
+            "frame_skip": PROTOCOL_FRAME_SKIP,
+        }
+    raise ValueError(f"unknown objective {name}")
 
 
 def _signed(value: int) -> int:
@@ -456,6 +644,35 @@ def evaluation_protocol() -> dict:
     }
 
 
+def speed_protocol() -> dict:
+    """Independent ranking for the speed objective.
+
+    Sense is minimize and the metric is emulator frames. require_success means
+    a failure is not a champion, even when it used very few frames. Training
+    still maximizes position. This protocol does not replace evaluation_protocol.
+    """
+    return {
+        "name": "smb-1-1-speed-v1",
+        "attempts": PROTOCOL_ATTEMPTS,
+        "limit": PROTOCOL_LIMIT,
+        "frame_skip": PROTOCOL_FRAME_SKIP,
+        "n_actions": len(SMB_ACTIONS),
+        "seed": PROTOCOL_SEED,
+        "default_benchmark": "clear-1-1-flag",
+        "clear_benchmark": "clear-1-1-flag",
+        "game": "smb_1_1",
+        "objective": SPEED_ID,
+        "sense": "minimize",
+        "metric": "frames",
+        "require_success": True,
+        "start": "game",
+        "benchmarks": dict(BENCHMARKS),
+        "observe": update_milestones,
+        "supports": position_supports,
+        "metrics": episode_metrics,
+    }
+
+
 class _SMB:
     id = "smb_1_1"
     system = "nes"
@@ -478,22 +695,30 @@ class _SMB:
     clock_running = staticmethod(clock_running)
     present = staticmethod(present)
     evaluation_protocol = staticmethod(evaluation_protocol)
+    speed_protocol = staticmethod(speed_protocol)
+    objective_profile = staticmethod(objective_profile)
+    reward_bundle = staticmethod(reward_bundle)
     reached_warp = staticmethod(reached_warp)
     correct_progress = staticmethod(correct_progress)
     correct_floor = staticmethod(correct_floor)
     accept_hint_context = staticmethod(accept_hint_context)
     note_frame = staticmethod(note_frame)
 
-    def open_env(self, rom=None):
-        """The scored environment for this ROM. The engine asks every adapter for this."""
-        from pathlib import Path
+    def open_env(self, rom=None, objective=None, scenario=None):
+        """The scored environment for this ROM. The engine asks every adapter for this.
 
+        objective selects the reward. The default stays the progress objective.
+        """
         from games.lab.env import make_env
         if rom:
             path = Path(rom)
         else:
             path = self.pinned_rom()
-        return make_env(self.system, path, self)
+        return make_env(self.system, path, self, objective=objective, scenario=scenario)
+
+    def stall_limit(self, objective=None, scenario=None):
+        name = self.objective if objective is None else objective
+        return scenario_stall_limit(name, scenario)
 
     def pinned_rom(self):
         from games.lab.mario.rom import pinned_smb
@@ -537,10 +762,13 @@ class _SMB:
     def diagnose(self, ram: bytes) -> dict:
         return diagnose(ram)
 
-    def stamp(self) -> dict:
+    def stamp(self, objective=None) -> dict:
+        name = self.objective if objective is None else str(objective)
+        if name not in _ACCEPTED_OBJECTIVES:
+            raise ValueError(f"unknown objective {name}")
         return {
             "actions": [list(chord) for chord in self.actions],
-            "objective": self.objective,
+            "objective": name,
             "ram": len(self.ram_vector(bytes(2048))),
         }
 

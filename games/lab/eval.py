@@ -192,11 +192,25 @@ def _metric_value(episode: dict, metric: str) -> int:
         return 0
 
 
-def _furthest(episodes: list[dict], *, metric: str = "score", sense: str = "maximize") -> dict | None:
-    """The best finished attempt on the protocol metric."""
+def _furthest(
+    episodes: list[dict],
+    *,
+    metric: str = "score",
+    sense: str = "maximize",
+    require_success: bool = False,
+) -> dict | None:
+    """The best finished attempt on the protocol metric.
+
+    require_success ranks a completed episode ahead of every failure, then
+    fewer frames among successes and greater progress among failures. Without
+    that flag, the protocol metric is used on every finished attempt.
+    """
     good = [episode for episode in episodes if not episode.get("failed")]
     if not good:
         return None
+    if require_success:
+        from games.lab.objective import rank_completion
+        return rank_completion(good)
     if sense == "minimize":
         return min(good, key=lambda episode: _metric_value(episode, metric))
     return max(good, key=lambda episode: _metric_value(episode, metric))
@@ -215,7 +229,13 @@ def _counted_successes(episodes: list[dict], benchmark: str) -> int:
 
 def _record_furthest(episode: dict, protocol: dict) -> dict:
     sample = protocol["metrics"]({})
-    return {key: episode.get(key, sample[key]) for key in sample}
+    recorded = {key: episode.get(key, sample[key]) for key in sample}
+    if "frames" not in recorded:
+        try:
+            recorded["frames"] = int(episode.get("frames") or 0)
+        except (TypeError, ValueError):
+            recorded["frames"] = 0
+    return recorded
 
 
 def evaluate_attempts(run_one, attempts: int, identity: dict, protocol: dict) -> dict:
@@ -284,7 +304,12 @@ def evaluate_attempts(run_one, attempts: int, identity: dict, protocol: dict) ->
     successes = _counted_successes(episodes, benchmark)
     metric = str(protocol.get("metric") or "score")
     sense = protocol.get("sense") if protocol.get("sense") in ("maximize", "minimize") else "maximize"
-    furthest = _furthest(episodes, metric=metric, sense=sense)
+    furthest = _furthest(
+        episodes,
+        metric=metric,
+        sense=sense,
+        require_success=bool(protocol.get("require_success")),
+    )
     decision_values = [int(episode.get("decisions") or 0) for episode in episodes if episode.get("success")]
     frame_values = [int(episode.get("frames") or 0) for episode in episodes if episode.get("success")]
     counts = {
