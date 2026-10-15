@@ -1,0 +1,5208 @@
+{
+  "config": {
+    "steps": 16384,
+    "seed": 0,
+    "model": "ppo_cnn",
+    "frame_skip": 4,
+    "eval_limit_decisions": 800,
+    "init_sha256": "0d31d9fd5ae3cdab1531f72e33938a584e93f7549061e9de49ed26b2a18cf7ec",
+    "init_role": "initialization",
+    "init_objective": "progress",
+    "rom": "C:\\Users\\Mike\\mario-lab\\roms\\smb.nes",
+    "pipe_state_sha256": "72c3ea8bd337c489e2a0c1adb3253de22457c8617c8162816dfbd25ae014a97e",
+    "held_out": [
+      {
+        "path": "held-out-past-pipe.bin",
+        "sha256": "4aead3929fddf62ea5f8eefb3b83868f8849719baf0b9ef756a21e976dd42141",
+        "bytes": 13758,
+        "role": "held-out",
+        "x": 505,
+        "y": 79,
+        "decision_after_release": 19
+      },
+      {
+        "path": "held-out-later.bin",
+        "sha256": "cfce5b42f75e25299dae999900eeed5505f5a97b13f70d6531a97ef79d719172",
+        "bytes": 13758,
+        "role": "held-out",
+        "x": 594,
+        "y": 79,
+        "decision_after_release": 34
+      }
+    ],
+    "on_pipe_x": 472,
+    "device": "cpu",
+    "cuda_visible_devices": "-1",
+    "bare": true,
+    "tapes": false,
+    "hints": false
+  },
+  "runs": {
+    "progress": {
+      "objective": "progress",
+      "exit_code": 0,
+      "wall_seconds": 110.214,
+      "status": {
+        "seat": 0,
+        "name": "Red",
+        "color": "red",
+        "model": "ppo_cnn",
+        "seed": 0,
+        "objective": "progress",
+        "n_actions": 12,
+        "tape": "C:\\Users\\Mike\\AppData\\Local\\Temp\\lab-speed-ab\\progress\\best.tape.json",
+        "integration": "smb_1_1",
+        "sense": "maximize",
+        "floor": 0,
+        "bare": true,
+        "stamp": {
+          "actions": [
+            [],
+            [
+              "RIGHT"
+            ],
+            [
+              "RIGHT",
+              "A"
+            ],
+            [
+              "RIGHT",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "A"
+            ],
+            [
+              "LEFT"
+            ],
+            [
+              "LEFT",
+              "A"
+            ],
+            [
+              "LEFT",
+              "B"
+            ],
+            [
+              "LEFT",
+              "A",
+              "B"
+            ],
+            [
+              "DOWN"
+            ],
+            [
+              "UP"
+            ]
+          ],
+          "objective": "progress",
+          "ram": 9
+        },
+        "initialized_from": {
+          "path": "C:\\Users\\Mike\\mario-runs\\20261012T011344Z\\seats\\0\\best.zip",
+          "sha256": "0d31d9fd5ae3cdab1531f72e33938a584e93f7549061e9de49ed26b2a18cf7ec",
+          "objective": "progress",
+          "role": "initialization"
+        },
+        "steps": 16384,
+        "episodes": 34,
+        "deaths": 34,
+        "score": 899,
+        "replay_score": 899,
+        "flag": false,
+        "finished": true,
+        "termination": "death",
+        "frames": 9576,
+        "components": {
+          "progress": 0.0,
+          "completion": 0.0,
+          "stall": 2393.0,
+          "death": 256.0,
+          "time": 0.0,
+          "total": -2649.0
+        }
+      },
+      "emulator_frames": 65536
+    },
+    "smb-1-1-speed": {
+      "objective": "smb-1-1-speed",
+      "exit_code": 0,
+      "wall_seconds": 110.242,
+      "status": {
+        "seat": 0,
+        "name": "Red",
+        "color": "red",
+        "model": "ppo_cnn",
+        "seed": 0,
+        "objective": "smb-1-1-speed",
+        "n_actions": 12,
+        "tape": "C:\\Users\\Mike\\AppData\\Local\\Temp\\lab-speed-ab\\speed\\best.tape.json",
+        "integration": "smb_1_1",
+        "sense": "maximize",
+        "floor": 0,
+        "bare": true,
+        "stamp": {
+          "actions": [
+            [],
+            [
+              "RIGHT"
+            ],
+            [
+              "RIGHT",
+              "A"
+            ],
+            [
+              "RIGHT",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "A"
+            ],
+            [
+              "LEFT"
+            ],
+            [
+              "LEFT",
+              "A"
+            ],
+            [
+              "LEFT",
+              "B"
+            ],
+            [
+              "LEFT",
+              "A",
+              "B"
+            ],
+            [
+              "DOWN"
+            ],
+            [
+              "UP"
+            ]
+          ],
+          "objective": "smb-1-1-speed",
+          "ram": 9
+        },
+        "initialized_from": {
+          "path": "C:\\Users\\Mike\\mario-runs\\20261012T011344Z\\seats\\0\\best.zip",
+          "sha256": "0d31d9fd5ae3cdab1531f72e33938a584e93f7549061e9de49ed26b2a18cf7ec",
+          "objective": "progress",
+          "role": "initialization"
+        },
+        "steps": 16384,
+        "episodes": 160,
+        "deaths": 90,
+        "score": 1673,
+        "replay_score": 1673,
+        "flag": false,
+        "finished": true,
+        "termination": "death",
+        "frames": 212,
+        "components": {
+          "progress": 1.8795996093750005,
+          "completion": 0.0,
+          "stall": 0.49999999999999994,
+          "death": 1.0,
+          "time": 0.21200000000000016,
+          "total": 0.16759960937499985
+        }
+      },
+      "emulator_frames": 65536
+    }
+  },
+  "evaluations": {
+    "initialization": {
+      "zip": "C:\\Users\\Mike\\mario-runs\\20261012T011344Z\\seats\\0\\best.zip",
+      "sha256": "0d31d9fd5ae3cdab1531f72e33938a584e93f7549061e9de49ed26b2a18cf7ec",
+      "episodes": [
+        {
+          "objective_env": "progress",
+          "decisions": 37,
+          "frames": 148,
+          "start_x": 40,
+          "max_x": 313,
+          "gained": 273,
+          "final_x": 313,
+          "final_y": 79,
+          "world": 1,
+          "stage": 1,
+          "dead": true,
+          "termination": "death",
+          "components": {
+            "progress": 543.0100000000002,
+            "completion": 0.0,
+            "stall": 1.0,
+            "death": 256.0,
+            "time": 0.0,
+            "total": 286.0100000000002
+          },
+          "flag": false,
+          "released_a": false,
+          "repressed_a": false,
+          "edges": {
+            "opening_a": true,
+            "releases": 0,
+            "represses_after_release": 0,
+            "unique": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ]
+          },
+          "actions_head": [
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ]
+          ],
+          "actions_tail": [
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ]
+          ],
+          "start": "title",
+          "start_role": "training-reset",
+          "reached_pipe": false,
+          "on_or_over_pipe": false,
+          "past_pipe": false,
+          "further": false
+        },
+        {
+          "objective_env": "smb-1-1-speed",
+          "decisions": 37,
+          "frames": 148,
+          "start_x": 40,
+          "max_x": 313,
+          "gained": 273,
+          "final_x": 313,
+          "final_y": 79,
+          "world": 1,
+          "stage": 1,
+          "dead": true,
+          "termination": "death",
+          "components": {
+            "progress": 2.121132812500001,
+            "completion": 0.0,
+            "stall": 0.05,
+            "death": 1.0,
+            "time": 0.1480000000000001,
+            "total": 0.9231328125000006
+          },
+          "flag": false,
+          "released_a": false,
+          "repressed_a": false,
+          "edges": {
+            "opening_a": true,
+            "releases": 0,
+            "represses_after_release": 0,
+            "unique": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ]
+          },
+          "actions_head": [
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ]
+          ],
+          "actions_tail": [
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ]
+          ],
+          "start": "title",
+          "start_role": "training-reset",
+          "reached_pipe": false,
+          "on_or_over_pipe": false,
+          "past_pipe": false,
+          "further": false
+        },
+        {
+          "objective_env": "progress",
+          "decisions": 800,
+          "frames": 3200,
+          "start_x": 197,
+          "max_x": 434,
+          "gained": 237,
+          "final_x": 434,
+          "final_y": 79,
+          "world": 1,
+          "stage": 1,
+          "dead": false,
+          "termination": "limit",
+          "components": {
+            "progress": 470.04249999999996,
+            "completion": 0.0,
+            "stall": 771.0,
+            "death": 0.0,
+            "time": 0.0,
+            "total": -300.95750000000004
+          },
+          "flag": false,
+          "released_a": false,
+          "repressed_a": false,
+          "edges": {
+            "opening_a": true,
+            "releases": 0,
+            "represses_after_release": 0,
+            "unique": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ]
+          },
+          "actions_head": [
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ]
+          ],
+          "actions_tail": [
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ]
+          ],
+          "start": "pipe-approach",
+          "start_role": "evaluation",
+          "reached_pipe": true,
+          "on_or_over_pipe": false,
+          "past_pipe": false,
+          "further": false
+        },
+        {
+          "objective_env": "smb-1-1-speed",
+          "decisions": 54,
+          "frames": 216,
+          "start_x": 197,
+          "max_x": 434,
+          "gained": 237,
+          "final_x": 434,
+          "final_y": 79,
+          "world": 1,
+          "stage": 1,
+          "dead": false,
+          "termination": "stall",
+          "components": {
+            "progress": 1.8361035156249998,
+            "completion": 0.0,
+            "stall": 1.2500000000000004,
+            "death": 0.0,
+            "time": 0.21600000000000016,
+            "total": 0.3701035156249987
+          },
+          "flag": false,
+          "released_a": false,
+          "repressed_a": false,
+          "edges": {
+            "opening_a": true,
+            "releases": 0,
+            "represses_after_release": 0,
+            "unique": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ]
+          },
+          "actions_head": [
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ]
+          ],
+          "actions_tail": [
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ]
+          ],
+          "start": "pipe-approach",
+          "start_role": "evaluation",
+          "reached_pipe": true,
+          "on_or_over_pipe": false,
+          "past_pipe": false,
+          "further": false
+        },
+        {
+          "objective_env": "progress",
+          "decisions": 18,
+          "frames": 72,
+          "start_x": 508,
+          "max_x": 680,
+          "gained": 172,
+          "final_x": 680,
+          "final_y": 79,
+          "world": 1,
+          "stage": 1,
+          "dead": true,
+          "termination": "death",
+          "components": {
+            "progress": 337.79500000000013,
+            "completion": 0.0,
+            "stall": 0.0,
+            "death": 256.0,
+            "time": 0.0,
+            "total": 81.7950000000001
+          },
+          "flag": false,
+          "released_a": false,
+          "repressed_a": false,
+          "edges": {
+            "opening_a": true,
+            "releases": 0,
+            "represses_after_release": 0,
+            "unique": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ]
+          },
+          "actions_head": [
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ]
+          ],
+          "actions_tail": [
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ]
+          ],
+          "start": "held-out-past-pipe.bin",
+          "start_role": "held-out",
+          "reached_pipe": false,
+          "on_or_over_pipe": false,
+          "past_pipe": false,
+          "further": true
+        },
+        {
+          "objective_env": "smb-1-1-speed",
+          "decisions": 18,
+          "frames": 72,
+          "start_x": 508,
+          "max_x": 680,
+          "gained": 172,
+          "final_x": 680,
+          "final_y": 79,
+          "world": 1,
+          "stage": 1,
+          "dead": true,
+          "termination": "death",
+          "components": {
+            "progress": 1.3195117187500005,
+            "completion": 0.0,
+            "stall": 0.0,
+            "death": 1.0,
+            "time": 0.07200000000000004,
+            "total": 0.24751171875000033
+          },
+          "flag": false,
+          "released_a": false,
+          "repressed_a": false,
+          "edges": {
+            "opening_a": true,
+            "releases": 0,
+            "represses_after_release": 0,
+            "unique": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ]
+          },
+          "actions_head": [
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ]
+          ],
+          "actions_tail": [
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ]
+          ],
+          "start": "held-out-past-pipe.bin",
+          "start_role": "held-out",
+          "reached_pipe": false,
+          "on_or_over_pipe": false,
+          "past_pipe": false,
+          "further": true
+        },
+        {
+          "objective_env": "progress",
+          "decisions": 21,
+          "frames": 84,
+          "start_x": 594,
+          "max_x": 705,
+          "gained": 111,
+          "final_x": 705,
+          "final_y": 79,
+          "world": 1,
+          "stage": 1,
+          "dead": true,
+          "termination": "death",
+          "components": {
+            "progress": 217.02000000000004,
+            "completion": 0.0,
+            "stall": 3.0,
+            "death": 256.0,
+            "time": 0.0,
+            "total": -41.97999999999996
+          },
+          "flag": false,
+          "released_a": false,
+          "repressed_a": false,
+          "edges": {
+            "opening_a": true,
+            "releases": 0,
+            "represses_after_release": 0,
+            "unique": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ]
+          },
+          "actions_head": [
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ]
+          ],
+          "actions_tail": [
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ]
+          ],
+          "start": "held-out-later.bin",
+          "start_role": "held-out",
+          "reached_pipe": false,
+          "on_or_over_pipe": false,
+          "past_pipe": false,
+          "further": true
+        },
+        {
+          "objective_env": "smb-1-1-speed",
+          "decisions": 21,
+          "frames": 84,
+          "start_x": 594,
+          "max_x": 705,
+          "gained": 111,
+          "final_x": 705,
+          "final_y": 79,
+          "world": 1,
+          "stage": 1,
+          "dead": true,
+          "termination": "death",
+          "components": {
+            "progress": 0.8477343750000002,
+            "completion": 0.0,
+            "stall": 0.15000000000000002,
+            "death": 1.0,
+            "time": 0.08400000000000005,
+            "total": -0.38626562500000006
+          },
+          "flag": false,
+          "released_a": false,
+          "repressed_a": false,
+          "edges": {
+            "opening_a": true,
+            "releases": 0,
+            "represses_after_release": 0,
+            "unique": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ]
+          },
+          "actions_head": [
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ]
+          ],
+          "actions_tail": [
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ],
+            [
+              "RIGHT",
+              "A",
+              "B"
+            ]
+          ],
+          "start": "held-out-later.bin",
+          "start_role": "held-out",
+          "reached_pipe": false,
+          "on_or_over_pipe": false,
+          "past_pipe": false,
+          "further": true
+        }
+      ]
+    },
+    "progress": {
+      "final": {
+        "zip": "C:\\Users\\Mike\\AppData\\Local\\Temp\\lab-speed-ab\\progress\\seats\\0\\checkpoint.zip",
+        "sha256": "855dbe4688bd93bb909571bf0867df99d5c86cef1c9cd819499a4cfafe1bddee",
+        "episodes": [
+          {
+            "objective_env": "progress",
+            "decisions": 800,
+            "frames": 3200,
+            "start_x": 40,
+            "max_x": 40,
+            "gained": 0,
+            "final_x": 0,
+            "final_y": 79,
+            "world": 1,
+            "stage": 1,
+            "dead": false,
+            "termination": "limit",
+            "components": {
+              "progress": 0.0,
+              "completion": 0.0,
+              "stall": 800.0,
+              "death": 0.0,
+              "time": 0.0,
+              "total": -800.0
+            },
+            "flag": false,
+            "released_a": false,
+            "repressed_a": false,
+            "edges": {
+              "opening_a": false,
+              "releases": 0,
+              "represses_after_release": 0,
+              "unique": [
+                [
+                  "LEFT",
+                  "B"
+                ]
+              ]
+            },
+            "actions_head": [
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ]
+            ],
+            "actions_tail": [
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ]
+            ],
+            "start": "title",
+            "start_role": "training-reset",
+            "reached_pipe": false,
+            "on_or_over_pipe": false,
+            "past_pipe": false,
+            "further": false
+          },
+          {
+            "objective_env": "smb-1-1-speed",
+            "decisions": 24,
+            "frames": 96,
+            "start_x": 40,
+            "max_x": 40,
+            "gained": 0,
+            "final_x": 0,
+            "final_y": 79,
+            "world": 1,
+            "stage": 1,
+            "dead": false,
+            "termination": "stall",
+            "components": {
+              "progress": 0.0,
+              "completion": 0.0,
+              "stall": 1.2000000000000004,
+              "death": 0.0,
+              "time": 0.09600000000000006,
+              "total": -1.2960000000000007
+            },
+            "flag": false,
+            "released_a": false,
+            "repressed_a": false,
+            "edges": {
+              "opening_a": false,
+              "releases": 0,
+              "represses_after_release": 0,
+              "unique": [
+                [
+                  "LEFT",
+                  "B"
+                ]
+              ]
+            },
+            "actions_head": [
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ]
+            ],
+            "actions_tail": [
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ]
+            ],
+            "start": "title",
+            "start_role": "training-reset",
+            "reached_pipe": false,
+            "on_or_over_pipe": false,
+            "past_pipe": false,
+            "further": false
+          },
+          {
+            "objective_env": "progress",
+            "decisions": 112,
+            "frames": 448,
+            "start_x": 197,
+            "max_x": 223,
+            "gained": 26,
+            "final_x": 112,
+            "final_y": 79,
+            "world": 1,
+            "stage": 1,
+            "dead": true,
+            "termination": "death",
+            "components": {
+              "progress": 51.715,
+              "completion": 0.0,
+              "stall": 106.0,
+              "death": 256.0,
+              "time": 0.0,
+              "total": -310.28499999999997
+            },
+            "flag": false,
+            "released_a": false,
+            "repressed_a": false,
+            "edges": {
+              "opening_a": false,
+              "releases": 0,
+              "represses_after_release": 0,
+              "unique": [
+                [
+                  "LEFT",
+                  "B"
+                ]
+              ]
+            },
+            "actions_head": [
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ]
+            ],
+            "actions_tail": [
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ]
+            ],
+            "start": "pipe-approach",
+            "start_role": "evaluation",
+            "reached_pipe": false,
+            "on_or_over_pipe": false,
+            "past_pipe": false,
+            "further": false
+          },
+          {
+            "objective_env": "smb-1-1-speed",
+            "decisions": 29,
+            "frames": 116,
+            "start_x": 197,
+            "max_x": 223,
+            "gained": 26,
+            "final_x": 112,
+            "final_y": 79,
+            "world": 1,
+            "stage": 1,
+            "dead": false,
+            "termination": "stall",
+            "components": {
+              "progress": 0.20201171875,
+              "completion": 0.0,
+              "stall": 1.2000000000000004,
+              "death": 0.0,
+              "time": 0.11600000000000008,
+              "total": -1.1139882812500004
+            },
+            "flag": false,
+            "released_a": false,
+            "repressed_a": false,
+            "edges": {
+              "opening_a": false,
+              "releases": 0,
+              "represses_after_release": 0,
+              "unique": [
+                [
+                  "LEFT",
+                  "B"
+                ]
+              ]
+            },
+            "actions_head": [
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ]
+            ],
+            "actions_tail": [
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ]
+            ],
+            "start": "pipe-approach",
+            "start_role": "evaluation",
+            "reached_pipe": false,
+            "on_or_over_pipe": false,
+            "past_pipe": false,
+            "further": false
+          },
+          {
+            "objective_env": "progress",
+            "decisions": 800,
+            "frames": 3200,
+            "start_x": 508,
+            "max_x": 536,
+            "gained": 28,
+            "final_x": 478,
+            "final_y": 79,
+            "world": 1,
+            "stage": 1,
+            "dead": false,
+            "termination": "limit",
+            "components": {
+              "progress": 55.074999999999996,
+              "completion": 0.0,
+              "stall": 795.0,
+              "death": 0.0,
+              "time": 0.0,
+              "total": -739.925
+            },
+            "flag": false,
+            "released_a": false,
+            "repressed_a": false,
+            "edges": {
+              "opening_a": false,
+              "releases": 0,
+              "represses_after_release": 0,
+              "unique": [
+                [
+                  "LEFT",
+                  "B"
+                ]
+              ]
+            },
+            "actions_head": [
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ]
+            ],
+            "actions_tail": [
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ]
+            ],
+            "start": "held-out-past-pipe.bin",
+            "start_role": "held-out",
+            "reached_pipe": false,
+            "on_or_over_pipe": false,
+            "past_pipe": false,
+            "further": false
+          },
+          {
+            "objective_env": "smb-1-1-speed",
+            "decisions": 29,
+            "frames": 116,
+            "start_x": 508,
+            "max_x": 536,
+            "gained": 28,
+            "final_x": 478,
+            "final_y": 79,
+            "world": 1,
+            "stage": 1,
+            "dead": false,
+            "termination": "stall",
+            "components": {
+              "progress": 0.21513671874999998,
+              "completion": 0.0,
+              "stall": 1.2000000000000004,
+              "death": 0.0,
+              "time": 0.11600000000000008,
+              "total": -1.1008632812500005
+            },
+            "flag": false,
+            "released_a": false,
+            "repressed_a": false,
+            "edges": {
+              "opening_a": false,
+              "releases": 0,
+              "represses_after_release": 0,
+              "unique": [
+                [
+                  "LEFT",
+                  "B"
+                ]
+              ]
+            },
+            "actions_head": [
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ]
+            ],
+            "actions_tail": [
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ]
+            ],
+            "start": "held-out-past-pipe.bin",
+            "start_role": "held-out",
+            "reached_pipe": false,
+            "on_or_over_pipe": false,
+            "past_pipe": false,
+            "further": false
+          },
+          {
+            "objective_env": "progress",
+            "decisions": 800,
+            "frames": 3200,
+            "start_x": 594,
+            "max_x": 594,
+            "gained": 0,
+            "final_x": 478,
+            "final_y": 79,
+            "world": 1,
+            "stage": 1,
+            "dead": false,
+            "termination": "limit",
+            "components": {
+              "progress": 0.0,
+              "completion": 0.0,
+              "stall": 800.0,
+              "death": 0.0,
+              "time": 0.0,
+              "total": -800.0
+            },
+            "flag": false,
+            "released_a": false,
+            "repressed_a": false,
+            "edges": {
+              "opening_a": false,
+              "releases": 0,
+              "represses_after_release": 0,
+              "unique": [
+                [
+                  "LEFT",
+                  "B"
+                ]
+              ]
+            },
+            "actions_head": [
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ]
+            ],
+            "actions_tail": [
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ]
+            ],
+            "start": "held-out-later.bin",
+            "start_role": "held-out",
+            "reached_pipe": false,
+            "on_or_over_pipe": false,
+            "past_pipe": false,
+            "further": false
+          },
+          {
+            "objective_env": "smb-1-1-speed",
+            "decisions": 24,
+            "frames": 96,
+            "start_x": 594,
+            "max_x": 594,
+            "gained": 0,
+            "final_x": 478,
+            "final_y": 79,
+            "world": 1,
+            "stage": 1,
+            "dead": false,
+            "termination": "stall",
+            "components": {
+              "progress": 0.0,
+              "completion": 0.0,
+              "stall": 1.2000000000000004,
+              "death": 0.0,
+              "time": 0.09600000000000006,
+              "total": -1.2960000000000007
+            },
+            "flag": false,
+            "released_a": false,
+            "repressed_a": false,
+            "edges": {
+              "opening_a": false,
+              "releases": 0,
+              "represses_after_release": 0,
+              "unique": [
+                [
+                  "LEFT",
+                  "B"
+                ]
+              ]
+            },
+            "actions_head": [
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ]
+            ],
+            "actions_tail": [
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ],
+              [
+                "LEFT",
+                "B"
+              ]
+            ],
+            "start": "held-out-later.bin",
+            "start_role": "held-out",
+            "reached_pipe": false,
+            "on_or_over_pipe": false,
+            "past_pipe": false,
+            "further": false
+          }
+        ]
+      },
+      "artifact": "C:\\Users\\Mike\\mario-runs\\artifacts\\smb-1-1-speed-ab\\progress-final.zip",
+      "best_x": {
+        "zip": "C:\\Users\\Mike\\AppData\\Local\\Temp\\lab-speed-ab\\progress\\seats\\0\\best.zip",
+        "sha256": "046ffd5b98a9dc2d1b27ee1b1739bcfbd230640f85a30fab832a43014317a185",
+        "episodes": [
+          {
+            "objective_env": "progress",
+            "decisions": 37,
+            "frames": 148,
+            "start_x": 40,
+            "max_x": 313,
+            "gained": 273,
+            "final_x": 313,
+            "final_y": 79,
+            "world": 1,
+            "stage": 1,
+            "dead": true,
+            "termination": "death",
+            "components": {
+              "progress": 543.0100000000002,
+              "completion": 0.0,
+              "stall": 1.0,
+              "death": 256.0,
+              "time": 0.0,
+              "total": 286.0100000000002
+            },
+            "flag": false,
+            "released_a": false,
+            "repressed_a": false,
+            "edges": {
+              "opening_a": true,
+              "releases": 0,
+              "represses_after_release": 0,
+              "unique": [
+                [
+                  "RIGHT",
+                  "A",
+                  "B"
+                ]
+              ]
+            },
+            "actions_head": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "actions_tail": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "start": "title",
+            "start_role": "training-reset",
+            "reached_pipe": false,
+            "on_or_over_pipe": false,
+            "past_pipe": false,
+            "further": false
+          },
+          {
+            "objective_env": "smb-1-1-speed",
+            "decisions": 37,
+            "frames": 148,
+            "start_x": 40,
+            "max_x": 313,
+            "gained": 273,
+            "final_x": 313,
+            "final_y": 79,
+            "world": 1,
+            "stage": 1,
+            "dead": true,
+            "termination": "death",
+            "components": {
+              "progress": 2.121132812500001,
+              "completion": 0.0,
+              "stall": 0.05,
+              "death": 1.0,
+              "time": 0.1480000000000001,
+              "total": 0.9231328125000006
+            },
+            "flag": false,
+            "released_a": false,
+            "repressed_a": false,
+            "edges": {
+              "opening_a": true,
+              "releases": 0,
+              "represses_after_release": 0,
+              "unique": [
+                [
+                  "RIGHT",
+                  "A",
+                  "B"
+                ]
+              ]
+            },
+            "actions_head": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "actions_tail": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "start": "title",
+            "start_role": "training-reset",
+            "reached_pipe": false,
+            "on_or_over_pipe": false,
+            "past_pipe": false,
+            "further": false
+          },
+          {
+            "objective_env": "progress",
+            "decisions": 800,
+            "frames": 3200,
+            "start_x": 197,
+            "max_x": 434,
+            "gained": 237,
+            "final_x": 434,
+            "final_y": 79,
+            "world": 1,
+            "stage": 1,
+            "dead": false,
+            "termination": "limit",
+            "components": {
+              "progress": 470.04249999999996,
+              "completion": 0.0,
+              "stall": 771.0,
+              "death": 0.0,
+              "time": 0.0,
+              "total": -300.95750000000004
+            },
+            "flag": false,
+            "released_a": false,
+            "repressed_a": false,
+            "edges": {
+              "opening_a": true,
+              "releases": 0,
+              "represses_after_release": 0,
+              "unique": [
+                [
+                  "RIGHT",
+                  "A",
+                  "B"
+                ]
+              ]
+            },
+            "actions_head": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "actions_tail": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "start": "pipe-approach",
+            "start_role": "evaluation",
+            "reached_pipe": true,
+            "on_or_over_pipe": false,
+            "past_pipe": false,
+            "further": false
+          },
+          {
+            "objective_env": "smb-1-1-speed",
+            "decisions": 54,
+            "frames": 216,
+            "start_x": 197,
+            "max_x": 434,
+            "gained": 237,
+            "final_x": 434,
+            "final_y": 79,
+            "world": 1,
+            "stage": 1,
+            "dead": false,
+            "termination": "stall",
+            "components": {
+              "progress": 1.8361035156249998,
+              "completion": 0.0,
+              "stall": 1.2500000000000004,
+              "death": 0.0,
+              "time": 0.21600000000000016,
+              "total": 0.3701035156249987
+            },
+            "flag": false,
+            "released_a": false,
+            "repressed_a": false,
+            "edges": {
+              "opening_a": true,
+              "releases": 0,
+              "represses_after_release": 0,
+              "unique": [
+                [
+                  "RIGHT",
+                  "A",
+                  "B"
+                ]
+              ]
+            },
+            "actions_head": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "actions_tail": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "start": "pipe-approach",
+            "start_role": "evaluation",
+            "reached_pipe": true,
+            "on_or_over_pipe": false,
+            "past_pipe": false,
+            "further": false
+          },
+          {
+            "objective_env": "progress",
+            "decisions": 18,
+            "frames": 72,
+            "start_x": 508,
+            "max_x": 680,
+            "gained": 172,
+            "final_x": 680,
+            "final_y": 79,
+            "world": 1,
+            "stage": 1,
+            "dead": true,
+            "termination": "death",
+            "components": {
+              "progress": 337.79500000000013,
+              "completion": 0.0,
+              "stall": 0.0,
+              "death": 256.0,
+              "time": 0.0,
+              "total": 81.7950000000001
+            },
+            "flag": false,
+            "released_a": false,
+            "repressed_a": false,
+            "edges": {
+              "opening_a": true,
+              "releases": 0,
+              "represses_after_release": 0,
+              "unique": [
+                [
+                  "RIGHT",
+                  "A",
+                  "B"
+                ]
+              ]
+            },
+            "actions_head": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "actions_tail": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "start": "held-out-past-pipe.bin",
+            "start_role": "held-out",
+            "reached_pipe": false,
+            "on_or_over_pipe": false,
+            "past_pipe": false,
+            "further": true
+          },
+          {
+            "objective_env": "smb-1-1-speed",
+            "decisions": 18,
+            "frames": 72,
+            "start_x": 508,
+            "max_x": 680,
+            "gained": 172,
+            "final_x": 680,
+            "final_y": 79,
+            "world": 1,
+            "stage": 1,
+            "dead": true,
+            "termination": "death",
+            "components": {
+              "progress": 1.3195117187500005,
+              "completion": 0.0,
+              "stall": 0.0,
+              "death": 1.0,
+              "time": 0.07200000000000004,
+              "total": 0.24751171875000033
+            },
+            "flag": false,
+            "released_a": false,
+            "repressed_a": false,
+            "edges": {
+              "opening_a": true,
+              "releases": 0,
+              "represses_after_release": 0,
+              "unique": [
+                [
+                  "RIGHT",
+                  "A",
+                  "B"
+                ]
+              ]
+            },
+            "actions_head": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "actions_tail": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "start": "held-out-past-pipe.bin",
+            "start_role": "held-out",
+            "reached_pipe": false,
+            "on_or_over_pipe": false,
+            "past_pipe": false,
+            "further": true
+          },
+          {
+            "objective_env": "progress",
+            "decisions": 21,
+            "frames": 84,
+            "start_x": 594,
+            "max_x": 705,
+            "gained": 111,
+            "final_x": 705,
+            "final_y": 79,
+            "world": 1,
+            "stage": 1,
+            "dead": true,
+            "termination": "death",
+            "components": {
+              "progress": 217.02000000000004,
+              "completion": 0.0,
+              "stall": 3.0,
+              "death": 256.0,
+              "time": 0.0,
+              "total": -41.97999999999996
+            },
+            "flag": false,
+            "released_a": false,
+            "repressed_a": false,
+            "edges": {
+              "opening_a": true,
+              "releases": 0,
+              "represses_after_release": 0,
+              "unique": [
+                [
+                  "RIGHT",
+                  "A",
+                  "B"
+                ]
+              ]
+            },
+            "actions_head": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "actions_tail": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "start": "held-out-later.bin",
+            "start_role": "held-out",
+            "reached_pipe": false,
+            "on_or_over_pipe": false,
+            "past_pipe": false,
+            "further": true
+          },
+          {
+            "objective_env": "smb-1-1-speed",
+            "decisions": 21,
+            "frames": 84,
+            "start_x": 594,
+            "max_x": 705,
+            "gained": 111,
+            "final_x": 705,
+            "final_y": 79,
+            "world": 1,
+            "stage": 1,
+            "dead": true,
+            "termination": "death",
+            "components": {
+              "progress": 0.8477343750000002,
+              "completion": 0.0,
+              "stall": 0.15000000000000002,
+              "death": 1.0,
+              "time": 0.08400000000000005,
+              "total": -0.38626562500000006
+            },
+            "flag": false,
+            "released_a": false,
+            "repressed_a": false,
+            "edges": {
+              "opening_a": true,
+              "releases": 0,
+              "represses_after_release": 0,
+              "unique": [
+                [
+                  "RIGHT",
+                  "A",
+                  "B"
+                ]
+              ]
+            },
+            "actions_head": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "actions_tail": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "start": "held-out-later.bin",
+            "start_role": "held-out",
+            "reached_pipe": false,
+            "on_or_over_pipe": false,
+            "past_pipe": false,
+            "further": true
+          }
+        ]
+      },
+      "best_artifact": "C:\\Users\\Mike\\mario-runs\\artifacts\\smb-1-1-speed-ab\\progress-best.zip"
+    },
+    "smb-1-1-speed": {
+      "final": {
+        "zip": "C:\\Users\\Mike\\AppData\\Local\\Temp\\lab-speed-ab\\speed\\seats\\0\\checkpoint.zip",
+        "sha256": "26c565c4959d727a13a6bf3794c0b3ad528f5faab8abd75f1ec5a2c5d20a4b6a",
+        "episodes": [
+          {
+            "objective_env": "progress",
+            "decisions": 37,
+            "frames": 148,
+            "start_x": 40,
+            "max_x": 313,
+            "gained": 273,
+            "final_x": 313,
+            "final_y": 79,
+            "world": 1,
+            "stage": 1,
+            "dead": true,
+            "termination": "death",
+            "components": {
+              "progress": 543.0100000000002,
+              "completion": 0.0,
+              "stall": 1.0,
+              "death": 256.0,
+              "time": 0.0,
+              "total": 286.0100000000002
+            },
+            "flag": false,
+            "released_a": false,
+            "repressed_a": false,
+            "edges": {
+              "opening_a": true,
+              "releases": 0,
+              "represses_after_release": 0,
+              "unique": [
+                [
+                  "RIGHT",
+                  "A",
+                  "B"
+                ]
+              ]
+            },
+            "actions_head": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "actions_tail": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "start": "title",
+            "start_role": "training-reset",
+            "reached_pipe": false,
+            "on_or_over_pipe": false,
+            "past_pipe": false,
+            "further": false
+          },
+          {
+            "objective_env": "smb-1-1-speed",
+            "decisions": 37,
+            "frames": 148,
+            "start_x": 40,
+            "max_x": 313,
+            "gained": 273,
+            "final_x": 313,
+            "final_y": 79,
+            "world": 1,
+            "stage": 1,
+            "dead": true,
+            "termination": "death",
+            "components": {
+              "progress": 2.121132812500001,
+              "completion": 0.0,
+              "stall": 0.05,
+              "death": 1.0,
+              "time": 0.1480000000000001,
+              "total": 0.9231328125000006
+            },
+            "flag": false,
+            "released_a": false,
+            "repressed_a": false,
+            "edges": {
+              "opening_a": true,
+              "releases": 0,
+              "represses_after_release": 0,
+              "unique": [
+                [
+                  "RIGHT",
+                  "A",
+                  "B"
+                ]
+              ]
+            },
+            "actions_head": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "actions_tail": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "start": "title",
+            "start_role": "training-reset",
+            "reached_pipe": false,
+            "on_or_over_pipe": false,
+            "past_pipe": false,
+            "further": false
+          },
+          {
+            "objective_env": "progress",
+            "decisions": 800,
+            "frames": 3200,
+            "start_x": 197,
+            "max_x": 434,
+            "gained": 237,
+            "final_x": 434,
+            "final_y": 79,
+            "world": 1,
+            "stage": 1,
+            "dead": false,
+            "termination": "limit",
+            "components": {
+              "progress": 470.04249999999996,
+              "completion": 0.0,
+              "stall": 771.0,
+              "death": 0.0,
+              "time": 0.0,
+              "total": -300.95750000000004
+            },
+            "flag": false,
+            "released_a": false,
+            "repressed_a": false,
+            "edges": {
+              "opening_a": true,
+              "releases": 0,
+              "represses_after_release": 0,
+              "unique": [
+                [
+                  "RIGHT",
+                  "A",
+                  "B"
+                ]
+              ]
+            },
+            "actions_head": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "actions_tail": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "start": "pipe-approach",
+            "start_role": "evaluation",
+            "reached_pipe": true,
+            "on_or_over_pipe": false,
+            "past_pipe": false,
+            "further": false
+          },
+          {
+            "objective_env": "smb-1-1-speed",
+            "decisions": 54,
+            "frames": 216,
+            "start_x": 197,
+            "max_x": 434,
+            "gained": 237,
+            "final_x": 434,
+            "final_y": 79,
+            "world": 1,
+            "stage": 1,
+            "dead": false,
+            "termination": "stall",
+            "components": {
+              "progress": 1.8361035156249998,
+              "completion": 0.0,
+              "stall": 1.2500000000000004,
+              "death": 0.0,
+              "time": 0.21600000000000016,
+              "total": 0.3701035156249987
+            },
+            "flag": false,
+            "released_a": false,
+            "repressed_a": false,
+            "edges": {
+              "opening_a": true,
+              "releases": 0,
+              "represses_after_release": 0,
+              "unique": [
+                [
+                  "RIGHT",
+                  "A",
+                  "B"
+                ]
+              ]
+            },
+            "actions_head": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "actions_tail": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "start": "pipe-approach",
+            "start_role": "evaluation",
+            "reached_pipe": true,
+            "on_or_over_pipe": false,
+            "past_pipe": false,
+            "further": false
+          },
+          {
+            "objective_env": "progress",
+            "decisions": 18,
+            "frames": 72,
+            "start_x": 508,
+            "max_x": 680,
+            "gained": 172,
+            "final_x": 680,
+            "final_y": 79,
+            "world": 1,
+            "stage": 1,
+            "dead": true,
+            "termination": "death",
+            "components": {
+              "progress": 337.79500000000013,
+              "completion": 0.0,
+              "stall": 0.0,
+              "death": 256.0,
+              "time": 0.0,
+              "total": 81.7950000000001
+            },
+            "flag": false,
+            "released_a": false,
+            "repressed_a": false,
+            "edges": {
+              "opening_a": true,
+              "releases": 0,
+              "represses_after_release": 0,
+              "unique": [
+                [
+                  "RIGHT",
+                  "A",
+                  "B"
+                ]
+              ]
+            },
+            "actions_head": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "actions_tail": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "start": "held-out-past-pipe.bin",
+            "start_role": "held-out",
+            "reached_pipe": false,
+            "on_or_over_pipe": false,
+            "past_pipe": false,
+            "further": true
+          },
+          {
+            "objective_env": "smb-1-1-speed",
+            "decisions": 18,
+            "frames": 72,
+            "start_x": 508,
+            "max_x": 680,
+            "gained": 172,
+            "final_x": 680,
+            "final_y": 79,
+            "world": 1,
+            "stage": 1,
+            "dead": true,
+            "termination": "death",
+            "components": {
+              "progress": 1.3195117187500005,
+              "completion": 0.0,
+              "stall": 0.0,
+              "death": 1.0,
+              "time": 0.07200000000000004,
+              "total": 0.24751171875000033
+            },
+            "flag": false,
+            "released_a": false,
+            "repressed_a": false,
+            "edges": {
+              "opening_a": true,
+              "releases": 0,
+              "represses_after_release": 0,
+              "unique": [
+                [
+                  "RIGHT",
+                  "A",
+                  "B"
+                ]
+              ]
+            },
+            "actions_head": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "actions_tail": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "start": "held-out-past-pipe.bin",
+            "start_role": "held-out",
+            "reached_pipe": false,
+            "on_or_over_pipe": false,
+            "past_pipe": false,
+            "further": true
+          },
+          {
+            "objective_env": "progress",
+            "decisions": 21,
+            "frames": 84,
+            "start_x": 594,
+            "max_x": 705,
+            "gained": 111,
+            "final_x": 705,
+            "final_y": 79,
+            "world": 1,
+            "stage": 1,
+            "dead": true,
+            "termination": "death",
+            "components": {
+              "progress": 217.02000000000004,
+              "completion": 0.0,
+              "stall": 3.0,
+              "death": 256.0,
+              "time": 0.0,
+              "total": -41.97999999999996
+            },
+            "flag": false,
+            "released_a": false,
+            "repressed_a": false,
+            "edges": {
+              "opening_a": true,
+              "releases": 0,
+              "represses_after_release": 0,
+              "unique": [
+                [
+                  "RIGHT",
+                  "A",
+                  "B"
+                ]
+              ]
+            },
+            "actions_head": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "actions_tail": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "start": "held-out-later.bin",
+            "start_role": "held-out",
+            "reached_pipe": false,
+            "on_or_over_pipe": false,
+            "past_pipe": false,
+            "further": true
+          },
+          {
+            "objective_env": "smb-1-1-speed",
+            "decisions": 21,
+            "frames": 84,
+            "start_x": 594,
+            "max_x": 705,
+            "gained": 111,
+            "final_x": 705,
+            "final_y": 79,
+            "world": 1,
+            "stage": 1,
+            "dead": true,
+            "termination": "death",
+            "components": {
+              "progress": 0.8477343750000002,
+              "completion": 0.0,
+              "stall": 0.15000000000000002,
+              "death": 1.0,
+              "time": 0.08400000000000005,
+              "total": -0.38626562500000006
+            },
+            "flag": false,
+            "released_a": false,
+            "repressed_a": false,
+            "edges": {
+              "opening_a": true,
+              "releases": 0,
+              "represses_after_release": 0,
+              "unique": [
+                [
+                  "RIGHT",
+                  "A",
+                  "B"
+                ]
+              ]
+            },
+            "actions_head": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "actions_tail": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "start": "held-out-later.bin",
+            "start_role": "held-out",
+            "reached_pipe": false,
+            "on_or_over_pipe": false,
+            "past_pipe": false,
+            "further": true
+          }
+        ]
+      },
+      "artifact": "C:\\Users\\Mike\\mario-runs\\artifacts\\smb-1-1-speed-ab\\speed-final.zip",
+      "best_x": {
+        "zip": "C:\\Users\\Mike\\AppData\\Local\\Temp\\lab-speed-ab\\speed\\seats\\0\\best.zip",
+        "sha256": "6b790b5935f53f50b72c6999e96bcabe7a6c07c6f0545ddc21dd6ae5cd1a2155",
+        "episodes": [
+          {
+            "objective_env": "progress",
+            "decisions": 37,
+            "frames": 148,
+            "start_x": 40,
+            "max_x": 313,
+            "gained": 273,
+            "final_x": 313,
+            "final_y": 79,
+            "world": 1,
+            "stage": 1,
+            "dead": true,
+            "termination": "death",
+            "components": {
+              "progress": 543.0100000000002,
+              "completion": 0.0,
+              "stall": 1.0,
+              "death": 256.0,
+              "time": 0.0,
+              "total": 286.0100000000002
+            },
+            "flag": false,
+            "released_a": false,
+            "repressed_a": false,
+            "edges": {
+              "opening_a": true,
+              "releases": 0,
+              "represses_after_release": 0,
+              "unique": [
+                [
+                  "RIGHT",
+                  "A",
+                  "B"
+                ]
+              ]
+            },
+            "actions_head": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "actions_tail": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "start": "title",
+            "start_role": "training-reset",
+            "reached_pipe": false,
+            "on_or_over_pipe": false,
+            "past_pipe": false,
+            "further": false
+          },
+          {
+            "objective_env": "smb-1-1-speed",
+            "decisions": 37,
+            "frames": 148,
+            "start_x": 40,
+            "max_x": 313,
+            "gained": 273,
+            "final_x": 313,
+            "final_y": 79,
+            "world": 1,
+            "stage": 1,
+            "dead": true,
+            "termination": "death",
+            "components": {
+              "progress": 2.121132812500001,
+              "completion": 0.0,
+              "stall": 0.05,
+              "death": 1.0,
+              "time": 0.1480000000000001,
+              "total": 0.9231328125000006
+            },
+            "flag": false,
+            "released_a": false,
+            "repressed_a": false,
+            "edges": {
+              "opening_a": true,
+              "releases": 0,
+              "represses_after_release": 0,
+              "unique": [
+                [
+                  "RIGHT",
+                  "A",
+                  "B"
+                ]
+              ]
+            },
+            "actions_head": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "actions_tail": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "start": "title",
+            "start_role": "training-reset",
+            "reached_pipe": false,
+            "on_or_over_pipe": false,
+            "past_pipe": false,
+            "further": false
+          },
+          {
+            "objective_env": "progress",
+            "decisions": 800,
+            "frames": 3200,
+            "start_x": 197,
+            "max_x": 434,
+            "gained": 237,
+            "final_x": 434,
+            "final_y": 79,
+            "world": 1,
+            "stage": 1,
+            "dead": false,
+            "termination": "limit",
+            "components": {
+              "progress": 470.04249999999996,
+              "completion": 0.0,
+              "stall": 771.0,
+              "death": 0.0,
+              "time": 0.0,
+              "total": -300.95750000000004
+            },
+            "flag": false,
+            "released_a": false,
+            "repressed_a": false,
+            "edges": {
+              "opening_a": true,
+              "releases": 0,
+              "represses_after_release": 0,
+              "unique": [
+                [
+                  "RIGHT",
+                  "A",
+                  "B"
+                ]
+              ]
+            },
+            "actions_head": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "actions_tail": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "start": "pipe-approach",
+            "start_role": "evaluation",
+            "reached_pipe": true,
+            "on_or_over_pipe": false,
+            "past_pipe": false,
+            "further": false
+          },
+          {
+            "objective_env": "smb-1-1-speed",
+            "decisions": 54,
+            "frames": 216,
+            "start_x": 197,
+            "max_x": 434,
+            "gained": 237,
+            "final_x": 434,
+            "final_y": 79,
+            "world": 1,
+            "stage": 1,
+            "dead": false,
+            "termination": "stall",
+            "components": {
+              "progress": 1.8361035156249998,
+              "completion": 0.0,
+              "stall": 1.2500000000000004,
+              "death": 0.0,
+              "time": 0.21600000000000016,
+              "total": 0.3701035156249987
+            },
+            "flag": false,
+            "released_a": false,
+            "repressed_a": false,
+            "edges": {
+              "opening_a": true,
+              "releases": 0,
+              "represses_after_release": 0,
+              "unique": [
+                [
+                  "RIGHT",
+                  "A",
+                  "B"
+                ]
+              ]
+            },
+            "actions_head": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "actions_tail": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "start": "pipe-approach",
+            "start_role": "evaluation",
+            "reached_pipe": true,
+            "on_or_over_pipe": false,
+            "past_pipe": false,
+            "further": false
+          },
+          {
+            "objective_env": "progress",
+            "decisions": 18,
+            "frames": 72,
+            "start_x": 508,
+            "max_x": 680,
+            "gained": 172,
+            "final_x": 680,
+            "final_y": 79,
+            "world": 1,
+            "stage": 1,
+            "dead": true,
+            "termination": "death",
+            "components": {
+              "progress": 337.79500000000013,
+              "completion": 0.0,
+              "stall": 0.0,
+              "death": 256.0,
+              "time": 0.0,
+              "total": 81.7950000000001
+            },
+            "flag": false,
+            "released_a": false,
+            "repressed_a": false,
+            "edges": {
+              "opening_a": true,
+              "releases": 0,
+              "represses_after_release": 0,
+              "unique": [
+                [
+                  "RIGHT",
+                  "A",
+                  "B"
+                ]
+              ]
+            },
+            "actions_head": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "actions_tail": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "start": "held-out-past-pipe.bin",
+            "start_role": "held-out",
+            "reached_pipe": false,
+            "on_or_over_pipe": false,
+            "past_pipe": false,
+            "further": true
+          },
+          {
+            "objective_env": "smb-1-1-speed",
+            "decisions": 18,
+            "frames": 72,
+            "start_x": 508,
+            "max_x": 680,
+            "gained": 172,
+            "final_x": 680,
+            "final_y": 79,
+            "world": 1,
+            "stage": 1,
+            "dead": true,
+            "termination": "death",
+            "components": {
+              "progress": 1.3195117187500005,
+              "completion": 0.0,
+              "stall": 0.0,
+              "death": 1.0,
+              "time": 0.07200000000000004,
+              "total": 0.24751171875000033
+            },
+            "flag": false,
+            "released_a": false,
+            "repressed_a": false,
+            "edges": {
+              "opening_a": true,
+              "releases": 0,
+              "represses_after_release": 0,
+              "unique": [
+                [
+                  "RIGHT",
+                  "A",
+                  "B"
+                ]
+              ]
+            },
+            "actions_head": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "actions_tail": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "start": "held-out-past-pipe.bin",
+            "start_role": "held-out",
+            "reached_pipe": false,
+            "on_or_over_pipe": false,
+            "past_pipe": false,
+            "further": true
+          },
+          {
+            "objective_env": "progress",
+            "decisions": 21,
+            "frames": 84,
+            "start_x": 594,
+            "max_x": 705,
+            "gained": 111,
+            "final_x": 705,
+            "final_y": 79,
+            "world": 1,
+            "stage": 1,
+            "dead": true,
+            "termination": "death",
+            "components": {
+              "progress": 217.02000000000004,
+              "completion": 0.0,
+              "stall": 3.0,
+              "death": 256.0,
+              "time": 0.0,
+              "total": -41.97999999999996
+            },
+            "flag": false,
+            "released_a": false,
+            "repressed_a": false,
+            "edges": {
+              "opening_a": true,
+              "releases": 0,
+              "represses_after_release": 0,
+              "unique": [
+                [
+                  "RIGHT",
+                  "A",
+                  "B"
+                ]
+              ]
+            },
+            "actions_head": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "actions_tail": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "start": "held-out-later.bin",
+            "start_role": "held-out",
+            "reached_pipe": false,
+            "on_or_over_pipe": false,
+            "past_pipe": false,
+            "further": true
+          },
+          {
+            "objective_env": "smb-1-1-speed",
+            "decisions": 21,
+            "frames": 84,
+            "start_x": 594,
+            "max_x": 705,
+            "gained": 111,
+            "final_x": 705,
+            "final_y": 79,
+            "world": 1,
+            "stage": 1,
+            "dead": true,
+            "termination": "death",
+            "components": {
+              "progress": 0.8477343750000002,
+              "completion": 0.0,
+              "stall": 0.15000000000000002,
+              "death": 1.0,
+              "time": 0.08400000000000005,
+              "total": -0.38626562500000006
+            },
+            "flag": false,
+            "released_a": false,
+            "repressed_a": false,
+            "edges": {
+              "opening_a": true,
+              "releases": 0,
+              "represses_after_release": 0,
+              "unique": [
+                [
+                  "RIGHT",
+                  "A",
+                  "B"
+                ]
+              ]
+            },
+            "actions_head": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "actions_tail": [
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ],
+              [
+                "RIGHT",
+                "A",
+                "B"
+              ]
+            ],
+            "start": "held-out-later.bin",
+            "start_role": "held-out",
+            "reached_pipe": false,
+            "on_or_over_pipe": false,
+            "past_pipe": false,
+            "further": true
+          }
+        ]
+      },
+      "best_artifact": "C:\\Users\\Mike\\mario-runs\\artifacts\\smb-1-1-speed-ab\\speed-best.zip"
+    }
+  }
+}
