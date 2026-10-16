@@ -1,0 +1,4913 @@
+{
+ "generated": "2026-10-15",
+ "source": "mame 0.251 -listxml on the Pi; emulators.cfg",
+ "games": [
+  {
+   "zip": "amidar",
+   "mame_name": "amidar1",
+   "emulator": "mame-0.251",
+   "title": "Amidar (older)",
+   "year": "1981",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "4"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "anteater",
+   "mame_name": "anteater",
+   "emulator": "mame-0.251",
+   "title": "Anteater",
+   "year": "1982",
+   "players": 1,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "buttons": "1",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "arkanoid",
+   "mame_name": "arkanoid",
+   "emulator": "advmame",
+   "title": "Arkanoid (World, older)",
+   "year": "1986",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "dial",
+     "player": "1",
+     "buttons": "1"
+    },
+    {
+     "type": "dial",
+     "player": "2",
+     "buttons": "1"
+    }
+   ]
+  },
+  {
+   "zip": "armora",
+   "mame_name": "armora",
+   "emulator": "lr-mame2003",
+   "title": "Armor Attack",
+   "year": "1980",
+   "players": 2,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "2"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "armorcar",
+   "mame_name": "armorcar",
+   "emulator": "mame-0.251",
+   "title": "Armored Car (set 1)",
+   "year": "1981",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "4"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "astdelux",
+   "mame_name": "astdelux",
+   "emulator": "lr-mame2003",
+   "title": "Asteroids Deluxe (rev 3)",
+   "year": "1980",
+   "players": 1,
+   "coins": 3,
+   "controls": [
+    {
+     "type": "only_buttons",
+     "buttons": "5"
+    }
+   ]
+  },
+  {
+   "zip": "asteroid",
+   "mame_name": "asteroid",
+   "emulator": "lr-mame2003",
+   "title": "Asteroids (rev 4)",
+   "year": "1979",
+   "players": 1,
+   "coins": 3,
+   "controls": [
+    {
+     "type": "only_buttons",
+     "buttons": "5"
+    }
+   ]
+  },
+  {
+   "zip": "astinvad",
+   "mame_name": "astinvad",
+   "emulator": "mame-0.251",
+   "title": "Astro Invader",
+   "year": "1980",
+   "players": 2,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "2"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "astrob",
+   "mame_name": "astrob",
+   "emulator": "lr-mame2000",
+   "title": "Astro Blaster (version 3)",
+   "year": "1981",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "2"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "astrof",
+   "mame_name": "astrof",
+   "emulator": "mame-0.251",
+   "title": "Astro Fighter (set 1)",
+   "year": "1979",
+   "players": 2,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "2"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "atlantis",
+   "mame_name": "atlantis",
+   "emulator": "mame-0.251",
+   "title": "Battle of Atlantis (set 1)",
+   "year": "1981",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "aztarac",
+   "mame_name": "aztarac",
+   "emulator": "lr-mame2003",
+   "title": "Aztarac",
+   "year": "1983",
+   "players": 1,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "stick",
+     "buttons": "2"
+    },
+    {
+     "type": "dial"
+    }
+   ]
+  },
+  {
+   "zip": "bagman",
+   "mame_name": "bagman",
+   "emulator": "mame-0.251",
+   "title": "Bagman",
+   "year": "1982",
+   "players": 2,
+   "coins": 4,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "4"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "barrier",
+   "mame_name": "barrier",
+   "emulator": "lr-mame2003",
+   "title": "Barrier",
+   "year": "1979",
+   "players": 2,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "ways": "4"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "battles",
+   "mame_name": "battles",
+   "emulator": "advmame",
+   "title": "Battles (set 1)",
+   "year": "1982",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "berzerk",
+   "mame_name": "berzerk",
+   "emulator": "lr-mame2000",
+   "title": "Berzerk (revision RC31A)",
+   "year": "1980",
+   "players": 2,
+   "coins": 3,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "bking",
+   "mame_name": "bking",
+   "emulator": "mame-0.251",
+   "title": "Birdie King",
+   "year": "1982",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "trackball",
+     "player": "1"
+    },
+    {
+     "type": "trackball",
+     "player": "2"
+    }
+   ]
+  },
+  {
+   "zip": "blkhole",
+   "mame_name": "blkhole",
+   "emulator": "lr-mame2000",
+   "title": "Black Hole",
+   "year": "1981",
+   "players": 2,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "2"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "blockade",
+   "mame_name": "blockade",
+   "emulator": "mame-0.251",
+   "title": "Blockade",
+   "year": "1976",
+   "players": 2,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "ways": "4"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "blstroid",
+   "mame_name": "blstroid",
+   "emulator": "mame-0.251",
+   "title": "Blasteroids (rev 4)",
+   "year": "1987",
+   "players": 2,
+   "coins": 3,
+   "controls": [
+    {
+     "type": "dial",
+     "player": "1",
+     "buttons": "4"
+    },
+    {
+     "type": "dial",
+     "player": "2",
+     "buttons": "4"
+    }
+   ]
+  },
+  {
+   "zip": "blueprnt",
+   "mame_name": "blueprnt",
+   "emulator": "mame-0.251",
+   "title": "Blue Print (Midway)",
+   "year": "1982",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "bnj",
+   "mame_name": "bnjm",
+   "emulator": "mame-0.251",
+   "title": "Bump 'n' Jump (Midway)",
+   "year": "1982",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "bombjack",
+   "mame_name": "bombjack",
+   "emulator": "mame-0.251",
+   "title": "Bomb Jack (set 1)",
+   "year": "1984",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "boothill",
+   "mame_name": "boothill",
+   "emulator": "mame-0.251",
+   "title": "Boot Hill",
+   "year": "1977",
+   "players": 2,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "ways": "8"
+    },
+    {
+     "type": "positional",
+     "player": "1",
+     "buttons": "1"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "ways": "8"
+    },
+    {
+     "type": "positional",
+     "player": "2",
+     "buttons": "1"
+    }
+   ]
+  },
+  {
+   "zip": "bosco",
+   "mame_name": "bosco",
+   "emulator": "lr-mame2000",
+   "title": "Bosconian - Star Destroyer (version 5)",
+   "year": "1981",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "boxingb",
+   "mame_name": "boxingb",
+   "emulator": "lr-mame2003",
+   "title": "Boxing Bugs",
+   "year": "1981",
+   "players": 2,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "dial",
+     "player": "1",
+     "buttons": "3"
+    },
+    {
+     "type": "only_buttons",
+     "player": "2",
+     "buttons": "3"
+    }
+   ]
+  },
+  {
+   "zip": "bradley",
+   "mame_name": "bradley",
+   "emulator": "advmame",
+   "title": "Bradley Trainer",
+   "year": "1980",
+   "players": 1,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "stick",
+     "buttons": "10"
+    }
+   ]
+  },
+  {
+   "zip": "brubber",
+   "mame_name": "brubber",
+   "emulator": "mame-0.251",
+   "title": "Burnin' Rubber",
+   "year": "1982",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "btime",
+   "mame_name": "btime",
+   "emulator": "mame-0.251",
+   "title": "Burger Time (Data East set 1)",
+   "year": "1982",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "4"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "bubbles",
+   "mame_name": "bubbles",
+   "emulator": "lr-mame2000",
+   "title": "Bubbles",
+   "year": "1982",
+   "players": 1,
+   "coins": 3,
+   "controls": [
+    {
+     "type": "joy",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "bublbobl",
+   "mame_name": "bublbobl",
+   "emulator": "lr-mame2000",
+   "title": "Bubble Bobble (Japan, Ver 0.1)",
+   "year": "1986",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "2"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "buckrog",
+   "mame_name": "buckrog",
+   "emulator": "advmame",
+   "title": "Buck Rogers: Planet of Zoom",
+   "year": "1982",
+   "players": 1,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "buttons": "3",
+     "ways": "8"
+    },
+    {
+     "type": "pedal"
+    }
+   ]
+  },
+  {
+   "zip": "bwidow",
+   "mame_name": "bwidow",
+   "emulator": "lr-mame2003",
+   "title": "Black Widow",
+   "year": "1982",
+   "players": 1,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "doublejoy",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "bzone",
+   "mame_name": "bzone",
+   "emulator": "advmame",
+   "title": "Battle Zone (rev 2)",
+   "year": "1980",
+   "players": 1,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "doublejoy",
+     "buttons": "1",
+     "ways": "vertical2"
+    }
+   ]
+  },
+  {
+   "zip": "canyon",
+   "mame_name": "canyon",
+   "emulator": "mame-0.251",
+   "title": "Canyon Bomber",
+   "year": "1977",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "only_buttons",
+     "player": "1",
+     "buttons": "2"
+    },
+    {
+     "type": "only_buttons",
+     "player": "2",
+     "buttons": "1"
+    }
+   ]
+  },
+  {
+   "zip": "carnival",
+   "mame_name": "carnival",
+   "emulator": "mame-0.251",
+   "title": "Carnival (upright, AY8912 music)",
+   "year": "1980",
+   "players": 1,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "buttons": "1",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "cavenger",
+   "mame_name": "cavenger",
+   "emulator": "mame-0.251",
+   "title": "Cosmic Avenger",
+   "year": "1981",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "ccastles",
+   "mame_name": "ccastles",
+   "emulator": "lr-mame2003",
+   "title": "Crystal Castles (version 4)",
+   "year": "1983",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "trackball",
+     "player": "1",
+     "buttons": "3"
+    },
+    {
+     "type": "trackball",
+     "player": "2",
+     "buttons": "1"
+    }
+   ]
+  },
+  {
+   "zip": "cchasm",
+   "mame_name": "cchasm",
+   "emulator": "advmame",
+   "title": "Cosmic Chasm (set 1)",
+   "year": "1983",
+   "players": 1,
+   "coins": 3,
+   "controls": [
+    {
+     "type": "dial",
+     "buttons": "3"
+    }
+   ]
+  },
+  {
+   "zip": "cclimber",
+   "mame_name": "cclimber",
+   "emulator": "mame-0.251",
+   "title": "Crazy Climber (US set 1)",
+   "year": "1980",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "doublejoy",
+     "player": "1",
+     "ways": "8"
+    },
+    {
+     "type": "doublejoy",
+     "player": "2",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "centiped",
+   "mame_name": "centiped",
+   "emulator": "lr-mame2003",
+   "title": "Centipede (revision 4)",
+   "year": "1980",
+   "players": 1,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "buttons": "1",
+     "ways": "8"
+    },
+    {
+     "type": "trackball"
+    }
+   ]
+  },
+  {
+   "zip": "circus",
+   "mame_name": "circus",
+   "emulator": "lr-mame2000",
+   "title": "Circus / Acrobat TV",
+   "year": "1977",
+   "players": 1,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "paddle"
+    }
+   ]
+  },
+  {
+   "zip": "congo",
+   "mame_name": "congo",
+   "emulator": "mame-0.251",
+   "title": "Congo Bongo (Rev C, 2 board stack)",
+   "year": "1983",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "cosmicg",
+   "mame_name": "cosmicg",
+   "emulator": "mame-0.251",
+   "title": "Cosmic Guerilla",
+   "year": "1979",
+   "players": 2,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "2"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "cracksht",
+   "mame_name": "cracksht",
+   "emulator": "lr-mame2000",
+   "title": "Crackshot (version 2.0)",
+   "year": "1985",
+   "players": 1,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "lightgun",
+     "buttons": "1"
+    }
+   ]
+  },
+  {
+   "zip": "crossbow",
+   "mame_name": "crossbow",
+   "emulator": "lr-mame2000",
+   "title": "Crossbow (version 2.0)",
+   "year": "1983",
+   "players": 1,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "lightgun",
+     "buttons": "1"
+    }
+   ]
+  },
+  {
+   "zip": "crush",
+   "mame_name": "crush",
+   "emulator": "mame-0.251",
+   "title": "Crush Roller (set 1)",
+   "year": "1981",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "ways": "4"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "defender",
+   "mame_name": "defender",
+   "emulator": "lr-mame2003",
+   "title": "Defender (Red label)",
+   "year": "1980",
+   "players": 1,
+   "coins": 3,
+   "controls": [
+    {
+     "type": "joy",
+     "buttons": "5",
+     "ways": "vertical2"
+    }
+   ]
+  },
+  {
+   "zip": "demoderb",
+   "mame_name": "demoderb",
+   "emulator": "lr-mame2003",
+   "title": "Demolition Derby",
+   "year": "1984",
+   "players": 4,
+   "coins": 4,
+   "controls": [
+    {
+     "type": "dial",
+     "player": "1",
+     "buttons": "2"
+    },
+    {
+     "type": "dial",
+     "player": "2",
+     "buttons": "2"
+    },
+    {
+     "type": "dial",
+     "player": "3",
+     "buttons": "2"
+    },
+    {
+     "type": "dial",
+     "player": "4",
+     "buttons": "2"
+    }
+   ]
+  },
+  {
+   "zip": "demon",
+   "mame_name": "demon",
+   "emulator": "lr-mame2003",
+   "title": "Demon",
+   "year": "1982",
+   "players": 2,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "3",
+     "ways": "2"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "3",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "depthch",
+   "mame_name": "depthch",
+   "emulator": "mame-0.251",
+   "title": "Depthcharge",
+   "year": "1977",
+   "players": 1,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "buttons": "2",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "digdug2",
+   "mame_name": "digdug2",
+   "emulator": "mame-0.251",
+   "title": "Dig Dug II (New Ver.)",
+   "year": "1985",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "4"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "digdug",
+   "mame_name": "digdug",
+   "emulator": "lr-mame2000",
+   "title": "Dig Dug (rev 2)",
+   "year": "1982",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "4"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "digger",
+   "mame_name": "digger",
+   "emulator": "mame-0.251",
+   "title": "Digger",
+   "year": "1980",
+   "players": 1,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "buttons": "2",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "dkong3",
+   "mame_name": "dkong3",
+   "emulator": "lr-mame2000",
+   "title": "Donkey Kong 3 (US)",
+   "year": "1983",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "4"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "dkongjr",
+   "mame_name": "dkongjr",
+   "emulator": "lr-mame2000",
+   "title": "Donkey Kong Junior (US set F-2)",
+   "year": "1982",
+   "players": 2,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "4"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "dkong",
+   "mame_name": "dkong",
+   "emulator": "advmame",
+   "title": "Donkey Kong (US set 1)",
+   "year": "1981",
+   "players": 2,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "4"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "docastle",
+   "mame_name": "docastle",
+   "emulator": "mame-0.251",
+   "title": "Mr. Do's Castle (set 1)",
+   "year": "1983",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "4"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "dodgem",
+   "mame_name": "dodgem",
+   "emulator": "mame-0.251",
+   "title": "Dodgem",
+   "year": "1979",
+   "players": 1,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "buttons": "1",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "dorunrun",
+   "mame_name": "dorunrun",
+   "emulator": "mame-0.251",
+   "title": "Do! Run Run (set 1)",
+   "year": "1984",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "4"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "dotron",
+   "mame_name": "dotrona",
+   "emulator": "mame-0.251",
+   "title": "Discs of Tron (Upright, 9/22/83)",
+   "year": "1983",
+   "players": 1,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "buttons": "4",
+     "ways": "8"
+    },
+    {
+     "type": "dial"
+    },
+    {
+     "type": "trackball"
+    }
+   ]
+  },
+  {
+   "zip": "dowild",
+   "mame_name": "dowild",
+   "emulator": "mame-0.251",
+   "title": "Mr. Do's Wild Ride",
+   "year": "1984",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "4"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "elevator",
+   "mame_name": "elevator",
+   "emulator": "lr-mame2000",
+   "title": "Elevator Action (BA3, 4 PCB version, 1.1)",
+   "year": "1983",
+   "players": 2,
+   "coins": 3,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "elim2",
+   "mame_name": "elim2",
+   "emulator": "lr-mame2003",
+   "title": "Eliminator (2 Players, set 1)",
+   "year": "1981",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "2"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "esb",
+   "mame_name": "esb",
+   "emulator": "lr-mame2003",
+   "title": "The Empire Strikes Back",
+   "year": "1985",
+   "players": 1,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "stick",
+     "buttons": "4"
+    }
+   ]
+  },
+  {
+   "zip": "exterm",
+   "mame_name": "exterm",
+   "emulator": "mame-0.251",
+   "title": "Exterminator",
+   "year": "1989",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "8"
+    },
+    {
+     "type": "dial",
+     "player": "1"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "8"
+    },
+    {
+     "type": "dial",
+     "player": "2"
+    }
+   ]
+  },
+  {
+   "zip": "fireone",
+   "mame_name": "fireone",
+   "emulator": "lr-mame2000",
+   "title": "Fire One",
+   "year": "1979",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "paddle",
+     "player": "1",
+     "buttons": "2"
+    },
+    {
+     "type": "paddle",
+     "player": "2",
+     "buttons": "2"
+    }
+   ]
+  },
+  {
+   "zip": "fnkyfish",
+   "mame_name": "fnkyfish",
+   "emulator": "mame-0.251",
+   "title": "Funky Fish",
+   "year": "1981",
+   "players": 2,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "foodf",
+   "mame_name": "foodf",
+   "emulator": "lr-mame2000",
+   "title": "Food Fight (rev 3)",
+   "year": "1982",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "stick",
+     "player": "1",
+     "buttons": "1"
+    },
+    {
+     "type": "stick",
+     "player": "2",
+     "buttons": "1"
+    }
+   ]
+  },
+  {
+   "zip": "frogger",
+   "mame_name": "frogger",
+   "emulator": "mame-0.251",
+   "title": "Frogger",
+   "year": "1981",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "ways": "4"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "frontlin",
+   "mame_name": "frontlin",
+   "emulator": "lr-mame2000",
+   "title": "Front Line (AA1, 4 PCB version)",
+   "year": "1982",
+   "players": 2,
+   "coins": 3,
+   "controls": [
+    {
+     "type": "doublejoy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "8"
+    },
+    {
+     "type": "doublejoy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "galaga3",
+   "mame_name": "galaga3",
+   "emulator": "advmame",
+   "title": "Galaga 3 (GP3 rev. D)",
+   "year": "1984",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "galaga88",
+   "mame_name": "galaga88",
+   "emulator": "lr-mame2000",
+   "title": "Galaga '88",
+   "year": "1987",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "3",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "3",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "galaga",
+   "mame_name": "galaga",
+   "emulator": "lr-mame2000",
+   "title": "Galaga (Namco rev. B)",
+   "year": "1981",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "2"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "galaxian",
+   "mame_name": "galaxian",
+   "emulator": "lr-mame2000",
+   "title": "Galaxian (Namco set 1)",
+   "year": "1979",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "2"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "galxwars",
+   "mame_name": "galxwars",
+   "emulator": "lr-mame2003",
+   "title": "Galaxy Wars (Universal set 1)",
+   "year": "1979",
+   "players": 2,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "2"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "gaplus",
+   "mame_name": "gaplus",
+   "emulator": "lr-mame2003",
+   "title": "Gaplus (GP2 rev. B)",
+   "year": "1984",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "gaunt2",
+   "mame_name": "gaunt2",
+   "emulator": "advmame",
+   "title": "Gauntlet II",
+   "year": "1986",
+   "players": 4,
+   "coins": 4,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "3",
+     "buttons": "2",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "4",
+     "buttons": "2",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "gauntlet",
+   "mame_name": "gauntlet",
+   "emulator": "advmame",
+   "title": "Gauntlet (rev 14)",
+   "year": "1985",
+   "players": 4,
+   "coins": 4,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "3",
+     "buttons": "2",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "4",
+     "buttons": "2",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "gorf",
+   "mame_name": "gorf",
+   "emulator": "advmame",
+   "title": "Gorf",
+   "year": "1981",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "gravitar",
+   "mame_name": "gravitar",
+   "emulator": "lr-mame2003",
+   "title": "Gravitar (version 3)",
+   "year": "1982",
+   "players": 1,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "buttons": "3",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "gridlee",
+   "mame_name": "gridlee",
+   "emulator": "mame-0.251",
+   "title": "Gridlee",
+   "year": "1983",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "trackball",
+     "player": "1",
+     "buttons": "1"
+    },
+    {
+     "type": "trackball",
+     "player": "2",
+     "buttons": "1"
+    }
+   ]
+  },
+  {
+   "zip": "gunfight",
+   "mame_name": "gunfight",
+   "emulator": "mame-0.251",
+   "title": "Gun Fight (set 1)",
+   "year": "1975",
+   "players": 2,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "ways": "8"
+    },
+    {
+     "type": "positional",
+     "player": "1",
+     "buttons": "1"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "ways": "8"
+    },
+    {
+     "type": "positional",
+     "player": "2",
+     "buttons": "1"
+    }
+   ]
+  },
+  {
+   "zip": "gyruss",
+   "mame_name": "gyruss",
+   "emulator": "mame-0.251",
+   "title": "Gyruss",
+   "year": "1983",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "2"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "headon",
+   "mame_name": "headon",
+   "emulator": "mame-0.251",
+   "title": "Head On (2 players)",
+   "year": "1979",
+   "players": 1,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "buttons": "1",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "hustler",
+   "mame_name": "hustler",
+   "emulator": "mame-0.251",
+   "title": "Video Hustler",
+   "year": "1981",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "insector",
+   "mame_name": "insector",
+   "emulator": "mame-0.251",
+   "title": "Insector (prototype)",
+   "year": "1982",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "invad2ct",
+   "mame_name": "invad2ct",
+   "emulator": "mame-0.251",
+   "title": "Space Invaders II (Midway, cocktail)",
+   "year": "1980",
+   "players": 2,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "2"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "invaders",
+   "mame_name": "invaders",
+   "emulator": "mame-0.251",
+   "title": "Space Invaders / Space Invaders M",
+   "year": "1978",
+   "players": 2,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "2"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "invadpt2",
+   "mame_name": "invadpt2",
+   "emulator": "mame-0.251",
+   "title": "Space Invaders Part II (Taito, bigger ROMs)",
+   "year": "1979",
+   "players": 2,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "2"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "invinco",
+   "mame_name": "invinco",
+   "emulator": "mame-0.251",
+   "title": "Invinco",
+   "year": "1979",
+   "players": 1,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "buttons": "1",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "irobot",
+   "mame_name": "irobot",
+   "emulator": "mame-0.251",
+   "title": "I, Robot",
+   "year": "1983",
+   "players": 1,
+   "coins": 3,
+   "controls": [
+    {
+     "type": "stick",
+     "buttons": "2"
+    }
+   ]
+  },
+  {
+   "zip": "jack",
+   "mame_name": "jack",
+   "emulator": "mame-0.251",
+   "title": "Jack the Giantkiller (set 1)",
+   "year": "1982",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "jedi",
+   "mame_name": "jedi",
+   "emulator": "mame-0.251",
+   "title": "Return of the Jedi",
+   "year": "1984",
+   "players": 1,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "stick",
+     "buttons": "3"
+    }
+   ]
+  },
+  {
+   "zip": "journey",
+   "mame_name": "journey",
+   "emulator": "mame-0.251",
+   "title": "Journey",
+   "year": "1983",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "4"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "joust2",
+   "mame_name": "joust2",
+   "emulator": "lr-mame2000",
+   "title": "Joust 2 - Survival of the Fittest (revision 2)",
+   "year": "1986",
+   "players": 2,
+   "coins": 3,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "2"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "joust",
+   "mame_name": "joust",
+   "emulator": "advmame",
+   "title": "Joust (Green label)",
+   "year": "1982",
+   "players": 2,
+   "coins": 3,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "2"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "jrpacman",
+   "mame_name": "jrpacman",
+   "emulator": "mame-0.251",
+   "title": "Jr. Pac-Man (11/9/83)",
+   "year": "1983",
+   "players": 2,
+   "coins": 3,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "ways": "4"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "jumpbug",
+   "mame_name": "jumpbug",
+   "emulator": "mame-0.251",
+   "title": "Jump Bug",
+   "year": "1981",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "jumpcoas",
+   "mame_name": "jumpcoasa",
+   "emulator": "mame-0.251",
+   "title": "Jump Coaster",
+   "year": "1983",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "junglek",
+   "mame_name": "junglek",
+   "emulator": "mame-0.251",
+   "title": "Jungle King (Japan)",
+   "year": "1982",
+   "players": 2,
+   "coins": 3,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "jungler",
+   "mame_name": "jungler",
+   "emulator": "mame-0.251",
+   "title": "Jungler",
+   "year": "1981",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "4"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "kangaroo",
+   "mame_name": "kangaroo",
+   "emulator": "mame-0.251",
+   "title": "Kangaroo",
+   "year": "1982",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "ladybug",
+   "mame_name": "ladybug",
+   "emulator": "mame-0.251",
+   "title": "Lady Bug",
+   "year": "1981",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "ways": "4"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "lazercmd",
+   "mame_name": "lazercmd",
+   "emulator": "mame-0.251",
+   "title": "Lazer Command",
+   "year": "1976",
+   "players": 2,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "llander",
+   "mame_name": "llander",
+   "emulator": "lr-mame2003",
+   "title": "Lunar Lander (rev 2)",
+   "year": "1979",
+   "players": 1,
+   "coins": 3,
+   "controls": [
+    {
+     "type": "pedal",
+     "buttons": "3"
+    }
+   ]
+  },
+  {
+   "zip": "lnc",
+   "mame_name": "lnc",
+   "emulator": "mame-0.251",
+   "title": "Lock'n'Chase",
+   "year": "1981",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "4"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "lrescue",
+   "mame_name": "lrescue",
+   "emulator": "mame-0.251",
+   "title": "Lunar Rescue",
+   "year": "1979",
+   "players": 2,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "2"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "mappy",
+   "mame_name": "mappy",
+   "emulator": "mame-0.251",
+   "title": "Mappy (US)",
+   "year": "1983",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "2"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "marble",
+   "mame_name": "marble",
+   "emulator": "advmame",
+   "title": "Marble Madness (set 1)",
+   "year": "1984",
+   "players": 2,
+   "coins": 3,
+   "controls": [
+    {
+     "type": "trackball",
+     "player": "1"
+    },
+    {
+     "type": "trackball",
+     "player": "2"
+    }
+   ]
+  },
+  {
+   "zip": "mario",
+   "mame_name": "mario",
+   "emulator": "lr-mame2000",
+   "title": "Mario Bros. (US, Revision G)",
+   "year": "1983",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "2"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "mhavoc",
+   "mame_name": "mhavoc",
+   "emulator": "lr-mame2003",
+   "title": "Major Havoc (rev 3)",
+   "year": "1983",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "dial",
+     "player": "1",
+     "buttons": "2"
+    },
+    {
+     "type": "only_buttons",
+     "player": "2",
+     "buttons": "2"
+    }
+   ]
+  },
+  {
+   "zip": "milliped",
+   "mame_name": "milliped",
+   "emulator": "advmame",
+   "title": "Millipede",
+   "year": "1982",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "8"
+    },
+    {
+     "type": "trackball",
+     "player": "1"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "8"
+    },
+    {
+     "type": "trackball",
+     "player": "2"
+    }
+   ]
+  },
+  {
+   "zip": "minefld",
+   "mame_name": "minefld",
+   "emulator": "mame-0.251",
+   "title": "Minefield",
+   "year": "1983",
+   "players": 1,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "doublejoy",
+     "buttons": "1",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "mineswpr",
+   "mame_name": "mineswpr",
+   "emulator": "mame-0.251",
+   "title": "Minesweeper",
+   "year": "1977",
+   "players": 2,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "ways": "4"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "missile",
+   "mame_name": "missile",
+   "emulator": "lr-mame2003",
+   "title": "Missile Command (rev 3)",
+   "year": "1980",
+   "players": 2,
+   "coins": 3,
+   "controls": [
+    {
+     "type": "trackball",
+     "player": "1",
+     "buttons": "3"
+    },
+    {
+     "type": "trackball",
+     "player": "2",
+     "buttons": "3"
+    }
+   ]
+  },
+  {
+   "zip": "monsterb",
+   "mame_name": "monsterb",
+   "emulator": "mame-0.251",
+   "title": "Monster Bash",
+   "year": "1982",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "4"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "moonal2",
+   "mame_name": "moonal2",
+   "emulator": "lr-mame2000",
+   "title": "Moon Alien Part 2",
+   "year": "1980",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "2"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "mooncrst",
+   "mame_name": "mooncrst",
+   "emulator": "lr-mame2000",
+   "title": "Moon Cresta (Nichibutsu)",
+   "year": "1980",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "2"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "moonwar",
+   "mame_name": "moonwar",
+   "emulator": "mame-0.251",
+   "title": "Moonwar",
+   "year": "1981",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "dial",
+     "player": "1",
+     "buttons": "4"
+    },
+    {
+     "type": "dial",
+     "player": "2",
+     "buttons": "3"
+    }
+   ]
+  },
+  {
+   "zip": "mpatrol",
+   "mame_name": "mpatrol",
+   "emulator": "lr-mame2000",
+   "title": "Moon Patrol",
+   "year": "1982",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "2"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "mplanets",
+   "mame_name": "mplanets",
+   "emulator": "mame-0.251",
+   "title": "Mad Planets",
+   "year": "1983",
+   "players": 1,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "buttons": "2",
+     "ways": "8"
+    },
+    {
+     "type": "dial"
+    }
+   ]
+  },
+  {
+   "zip": "mrdo",
+   "mame_name": "mrdo",
+   "emulator": "lr-mame2000",
+   "title": "Mr. Do!",
+   "year": "1982",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "4"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "mshuttle",
+   "mame_name": "mshuttle",
+   "emulator": "mame-0.251",
+   "title": "Moon Shuttle (US? set 1)",
+   "year": "1981",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "5 (half8)"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "5 (half8)"
+    }
+   ]
+  },
+  {
+   "zip": "mspacman",
+   "mame_name": "mspacman",
+   "emulator": "mame-0.251",
+   "title": "Ms. Pac-Man",
+   "year": "1981",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "ways": "4"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "mtrap",
+   "mame_name": "mtrap",
+   "emulator": "lr-mame2000",
+   "title": "Mouse Trap (version 5)",
+   "year": "1981",
+   "players": 1,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "buttons": "4",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "natodef",
+   "mame_name": "natodef",
+   "emulator": "mame-0.251",
+   "title": "NATO Defense",
+   "year": "1982",
+   "players": 2,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "4"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "nitedrvr",
+   "mame_name": "nitedrvr",
+   "emulator": "mame-0.251",
+   "title": "Night Driver",
+   "year": "1976",
+   "players": 1,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "dial",
+     "buttons": "8"
+    }
+   ]
+  },
+  {
+   "zip": "nyny",
+   "mame_name": "nyny",
+   "emulator": "mame-0.251",
+   "title": "New York! New York!",
+   "year": "1980",
+   "players": 2,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "2"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "omegrace",
+   "mame_name": "omegrace",
+   "emulator": "advmame",
+   "title": "Omega Race (set 1)",
+   "year": "1981",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "dial",
+     "player": "1",
+     "buttons": "2"
+    },
+    {
+     "type": "dial",
+     "player": "2",
+     "buttons": "2"
+    }
+   ]
+  },
+  {
+   "zip": "orbitron",
+   "mame_name": "orbitron",
+   "emulator": "lr-mame2000",
+   "title": "Orbitron",
+   "year": "1982",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "pacland",
+   "mame_name": "pacland",
+   "emulator": "lr-mame2000",
+   "title": "Pac-Land (World)",
+   "year": "1984",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "only_buttons",
+     "player": "1",
+     "buttons": "3"
+    },
+    {
+     "type": "only_buttons",
+     "player": "2",
+     "buttons": "3"
+    }
+   ]
+  },
+  {
+   "zip": "pacman",
+   "mame_name": "pacman",
+   "emulator": "mame-0.251",
+   "title": "Pac-Man (Midway)",
+   "year": "1980",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "ways": "4"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "pacplus",
+   "mame_name": "pacplus",
+   "emulator": "mame-0.251",
+   "title": "Pac-Man Plus",
+   "year": "1982",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "ways": "4"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "panic",
+   "mame_name": "panic",
+   "emulator": "mame-0.251",
+   "title": "Space Panic (version E)",
+   "year": "1980",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "4"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "paperboy",
+   "mame_name": "paperboy",
+   "emulator": "advmame",
+   "title": "Paperboy (rev 3)",
+   "year": "1984",
+   "players": 1,
+   "coins": 3,
+   "controls": [
+    {
+     "type": "stick",
+     "buttons": "2"
+    }
+   ]
+  },
+  {
+   "zip": "pengo",
+   "mame_name": "pengo",
+   "emulator": "mame-0.251",
+   "title": "Pengo (set 1 rev C, encrypted)",
+   "year": "1982",
+   "players": 2,
+   "coins": 3,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "4"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "pepper2",
+   "mame_name": "pepper2",
+   "emulator": "lr-mame2000",
+   "title": "Pepper II (version 8)",
+   "year": "1982",
+   "players": 1,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "buttons": "1",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "phoenix",
+   "mame_name": "phoenix",
+   "emulator": "mame-0.251",
+   "title": "Phoenix (Amstar, set 1)",
+   "year": "1980",
+   "players": 2,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "2"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "pisces",
+   "mame_name": "pisces",
+   "emulator": "advmame",
+   "title": "Pisces",
+   "year": "19??",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "2"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "pitfall2",
+   "mame_name": "pitfall2",
+   "emulator": "mame-0.251",
+   "title": "Pitfall II (315-5093)",
+   "year": "1985",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "pleiads",
+   "mame_name": "pleiads",
+   "emulator": "mame-0.251",
+   "title": "Pleiads (Tehkan)",
+   "year": "1981",
+   "players": 2,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "2"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "polaris",
+   "mame_name": "polarisb",
+   "emulator": "mame-0.251",
+   "title": "Polaris (first revision)",
+   "year": "1980",
+   "players": 2,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "polepos2",
+   "mame_name": "polepos2",
+   "emulator": "advmame",
+   "title": "Pole Position II (Japan)",
+   "year": "1983",
+   "players": 1,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "dial",
+     "buttons": "1"
+    },
+    {
+     "type": "pedal"
+    }
+   ]
+  },
+  {
+   "zip": "polepos",
+   "mame_name": "polepos",
+   "emulator": "lr-mame2003",
+   "title": "Pole Position (World)",
+   "year": "1982",
+   "players": 1,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "dial",
+     "buttons": "1"
+    },
+    {
+     "type": "pedal"
+    }
+   ]
+  },
+  {
+   "zip": "pooyan",
+   "mame_name": "pooyan",
+   "emulator": "mame-0.251",
+   "title": "Pooyan",
+   "year": "1982",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "vertical2"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "vertical2"
+    }
+   ]
+  },
+  {
+   "zip": "popeye",
+   "mame_name": "popeye",
+   "emulator": "mame-0.251",
+   "title": "Popeye (revision D)",
+   "year": "1982",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "4"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "puckman",
+   "mame_name": "puckmanb",
+   "emulator": "mame-0.251",
+   "title": "Puck Man (bootleg set 1)",
+   "year": "1980",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "ways": "4"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "pulsar",
+   "mame_name": "pulsar",
+   "emulator": "mame-0.251",
+   "title": "Pulsar",
+   "year": "1981",
+   "players": 1,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "buttons": "1",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "punchout",
+   "mame_name": "punchout",
+   "emulator": "lr-mame2000",
+   "title": "Punch-Out!! (Rev B)",
+   "year": "1984",
+   "players": 1,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "buttons": "3",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "qbertqub",
+   "mame_name": "qbertqub",
+   "emulator": "lr-mame2000",
+   "title": "Q*bert's Qubes",
+   "year": "1983",
+   "players": 1,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "qbert",
+   "mame_name": "qbert",
+   "emulator": "lr-mame2000",
+   "title": "Q*bert (US set 1)",
+   "year": "1982",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "qix",
+   "mame_name": "qix",
+   "emulator": "mame-0.251",
+   "title": "Qix (Rev 2)",
+   "year": "1981",
+   "players": 2,
+   "coins": 3,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "4"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "quantum",
+   "mame_name": "quantum",
+   "emulator": "advmame",
+   "title": "Quantum (rev 2)",
+   "year": "1982",
+   "players": 1,
+   "coins": 3,
+   "controls": [
+    {
+     "type": "trackball"
+    }
+   ]
+  },
+  {
+   "zip": "r2dtank",
+   "mame_name": "r2dtank",
+   "emulator": "mame-0.251",
+   "title": "R2D Tank",
+   "year": "1980",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "radarscp",
+   "mame_name": "radarscpc",
+   "emulator": "mame-0.251",
+   "title": "Radar Scope (TRS02?, rev. C)",
+   "year": "1980",
+   "players": 2,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "2"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "rallyx",
+   "mame_name": "rallyx",
+   "emulator": "lr-mame2000",
+   "title": "Rally X (32k Ver.?)",
+   "year": "1980",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "4"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "reactor",
+   "mame_name": "reactor",
+   "emulator": "lr-mame2000",
+   "title": "Reactor",
+   "year": "1982",
+   "players": 1,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "trackball",
+     "buttons": "2"
+    }
+   ]
+  },
+  {
+   "zip": "redalert",
+   "mame_name": "redalert",
+   "emulator": "mame-0.251",
+   "title": "Red Alert",
+   "year": "1981",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "2"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "redbaron",
+   "mame_name": "redbaron",
+   "emulator": "lr-mame2003",
+   "title": "Red Baron (Revised Hardware)",
+   "year": "1980",
+   "players": 1,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "buttons": "1",
+     "ways": "4"
+    },
+    {
+     "type": "stick"
+    }
+   ]
+  },
+  {
+   "zip": "ripoff",
+   "mame_name": "ripoff",
+   "emulator": "lr-mame2003",
+   "title": "Rip Off",
+   "year": "1980",
+   "players": 2,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "2"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "robotron",
+   "mame_name": "robotron",
+   "emulator": "lr-mame2000",
+   "title": "Robotron: 2084 (Solid Blue label)",
+   "year": "1982",
+   "players": 1,
+   "coins": 3,
+   "controls": [
+    {
+     "type": "doublejoy",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "satansat",
+   "mame_name": "satansat",
+   "emulator": "lr-mame2000",
+   "title": "Satan of Saturn (set 1)",
+   "year": "1981",
+   "players": 2,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "2"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "sbagman",
+   "mame_name": "sbagman2",
+   "emulator": "lr-mame2000",
+   "title": "Super Bagman (version 3?)",
+   "year": "1984",
+   "players": 2,
+   "coins": 4,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "4"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "sbrkout",
+   "mame_name": "sbrkout",
+   "emulator": "mame-0.251",
+   "title": "Super Breakout (rev 04)",
+   "year": "1978",
+   "players": 1,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "paddle",
+     "buttons": "1"
+    }
+   ]
+  },
+  {
+   "zip": "scobra",
+   "mame_name": "scobra",
+   "emulator": "mame-0.251",
+   "title": "Super Cobra",
+   "year": "1981",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "scramble",
+   "mame_name": "scramble",
+   "emulator": "mame-0.251",
+   "title": "Scramble",
+   "year": "1981",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "sdungeon",
+   "mame_name": "sdungeon",
+   "emulator": "lr-mame2000",
+   "title": "Space Dungeon",
+   "year": "1981",
+   "players": 2,
+   "coins": 3,
+   "controls": [
+    {
+     "type": "doublejoy",
+     "player": "1",
+     "ways": "8"
+    },
+    {
+     "type": "doublejoy",
+     "player": "2",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "seawolf2",
+   "mame_name": "seawolf2",
+   "emulator": "mame-0.251",
+   "title": "Sea Wolf II",
+   "year": "1978",
+   "players": 2,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "positional",
+     "player": "1",
+     "buttons": "1"
+    },
+    {
+     "type": "positional",
+     "player": "2",
+     "buttons": "1"
+    }
+   ]
+  },
+  {
+   "zip": "seawolf",
+   "mame_name": "seawolf",
+   "emulator": "mame-0.251",
+   "title": "Sea Wolf (set 1)",
+   "year": "1976",
+   "players": 1,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "positional",
+     "buttons": "1"
+    }
+   ]
+  },
+  {
+   "zip": "sharkatt",
+   "mame_name": "sharkatt",
+   "emulator": "mame-0.251",
+   "title": "Shark Attack",
+   "year": "1980",
+   "players": 2,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "shollow",
+   "mame_name": "shollow",
+   "emulator": "mame-0.251",
+   "title": "Satan's Hollow (set 1)",
+   "year": "1981",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "2"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "sinistar",
+   "mame_name": "sinistar",
+   "emulator": "lr-mame2000",
+   "title": "Sinistar (revision 3)",
+   "year": "1982",
+   "players": 1,
+   "coins": 3,
+   "controls": [
+    {
+     "type": "stick",
+     "buttons": "2"
+    }
+   ]
+  },
+  {
+   "zip": "skydiver",
+   "mame_name": "skydiver",
+   "emulator": "lr-mame2000",
+   "title": "Sky Diver",
+   "year": "1978",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "6",
+     "ways": "2"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "skyraid",
+   "mame_name": "skyraid",
+   "emulator": "mame-0.251",
+   "title": "Sky Raider",
+   "year": "1978",
+   "players": 1,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "stick",
+     "buttons": "7"
+    }
+   ]
+  },
+  {
+   "zip": "snapjack",
+   "mame_name": "snapjack",
+   "emulator": "mame-0.251",
+   "title": "Snap Jack",
+   "year": "1981",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "solarfox",
+   "mame_name": "solarfox",
+   "emulator": "mame-0.251",
+   "title": "Solar Fox (upright)",
+   "year": "1981",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "4"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "solarq",
+   "mame_name": "solarq",
+   "emulator": "lr-mame2003",
+   "title": "Solar Quest (rev 10 8 81)",
+   "year": "1981",
+   "players": 1,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "buttons": "4",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "spacduel",
+   "mame_name": "spacduel",
+   "emulator": "lr-mame2003",
+   "title": "Space Duel (version 2)",
+   "year": "1980",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "3",
+     "ways": "2"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "3",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "spacecr",
+   "mame_name": "spacecr",
+   "emulator": "mame-0.251",
+   "title": "Space Cruiser",
+   "year": "1981",
+   "players": 2,
+   "coins": 3,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "2"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "spacefb",
+   "mame_name": "spacefbe2",
+   "emulator": "mame-0.251",
+   "title": "Space Firebird (rev. 03-e set 2)",
+   "year": "1980",
+   "players": 2,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "2"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "spaceod",
+   "mame_name": "spaceod2",
+   "emulator": "lr-mame2000",
+   "title": "Space Odyssey (version 1)",
+   "year": "1981",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "spacewar",
+   "mame_name": "spacewar",
+   "emulator": "lr-mame2003",
+   "title": "Space Wars",
+   "year": "1977",
+   "players": 2,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "3",
+     "ways": "2"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "3",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "spacfury",
+   "mame_name": "spacfury",
+   "emulator": "lr-mame2003",
+   "title": "Space Fury (revision C)",
+   "year": "1981",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "2"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "spectar",
+   "mame_name": "spectar",
+   "emulator": "lr-mame2000",
+   "title": "Spectar (revision 3)",
+   "year": "1980",
+   "players": 1,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "buttons": "1",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "speedfrk",
+   "mame_name": "speedfrk",
+   "emulator": "lr-mame2003",
+   "title": "Speed Freak",
+   "year": "1979",
+   "players": 2,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "dial",
+     "player": "1",
+     "buttons": "1"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "spiders",
+   "mame_name": "spiders",
+   "emulator": "lr-mame2000",
+   "title": "Spiders (set 1)",
+   "year": "1981",
+   "players": 2,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "2"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "spnchout",
+   "mame_name": "spnchout",
+   "emulator": "lr-mame2000",
+   "title": "Super Punch-Out!! (Rev B)",
+   "year": "1984",
+   "players": 1,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "buttons": "4",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "spyhunt",
+   "mame_name": "spyhunt",
+   "emulator": "advmame",
+   "title": "Spy Hunter",
+   "year": "1983",
+   "players": 1,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "paddle",
+     "buttons": "5"
+    },
+    {
+     "type": "pedal"
+    }
+   ]
+  },
+  {
+   "zip": "ssi",
+   "mame_name": "ssi",
+   "emulator": "lr-mame2000",
+   "title": "Super Space Invaders '91 (World, revised code, Rev 1)",
+   "year": "1990",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "starcas",
+   "mame_name": "starcas",
+   "emulator": "lr-mame2003",
+   "title": "Star Castle (version 3)",
+   "year": "1980",
+   "players": 1,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "buttons": "2",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "starcrus",
+   "mame_name": "starcrus",
+   "emulator": "lr-mame2000",
+   "title": "Star Cruiser",
+   "year": "1977",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "3",
+     "ways": "2"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "3",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "starfire",
+   "mame_name": "starfire",
+   "emulator": "lr-mame2000",
+   "title": "Star Fire (set 1)",
+   "year": "1979",
+   "players": 1,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "stick",
+     "buttons": "1"
+    }
+   ]
+  },
+  {
+   "zip": "starforc",
+   "mame_name": "starforc",
+   "emulator": "mame-0.251",
+   "title": "Star Force",
+   "year": "1984",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "stargate",
+   "mame_name": "stargate",
+   "emulator": "lr-mame2000",
+   "title": "Stargate",
+   "year": "1981",
+   "players": 1,
+   "coins": 3,
+   "controls": [
+    {
+     "type": "joy",
+     "buttons": "6",
+     "ways": "vertical2"
+    }
+   ]
+  },
+  {
+   "zip": "starhawk",
+   "mame_name": "starhawk",
+   "emulator": "lr-mame2003",
+   "title": "Starhawk",
+   "year": "1979",
+   "players": 2,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "4",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "4",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "starjack",
+   "mame_name": "starjack",
+   "emulator": "mame-0.251",
+   "title": "Star Jacker (Sega)",
+   "year": "1983",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "starshp1",
+   "mame_name": "starshp1",
+   "emulator": "mame-0.251",
+   "title": "Starship 1",
+   "year": "1977",
+   "players": 1,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "stick",
+     "buttons": "3"
+    }
+   ]
+  },
+  {
+   "zip": "startrek",
+   "mame_name": "startrek",
+   "emulator": "lr-mame2003",
+   "title": "Star Trek",
+   "year": "1982",
+   "players": 1,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "dial",
+     "buttons": "4"
+    }
+   ]
+  },
+  {
+   "zip": "starwars",
+   "mame_name": "starwars",
+   "emulator": "lr-mame2003",
+   "title": "Star Wars (set 1)",
+   "year": "1983",
+   "players": 1,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "stick",
+     "buttons": "4"
+    }
+   ]
+  },
+  {
+   "zip": "streakng",
+   "mame_name": "streakng",
+   "emulator": "lr-mame2000",
+   "title": "Streaking (set 1)",
+   "year": "1980",
+   "players": 2,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "ways": "4"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "subroc3d",
+   "mame_name": "subroc3d",
+   "emulator": "mame-0.251",
+   "title": "Subroc-3D",
+   "year": "1982",
+   "players": 1,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "buttons": "1",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "subs",
+   "mame_name": "subs",
+   "emulator": "mame-0.251",
+   "title": "Subs",
+   "year": "1977",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "dial",
+     "player": "1",
+     "buttons": "1"
+    },
+    {
+     "type": "dial",
+     "player": "2",
+     "buttons": "1"
+    }
+   ]
+  },
+  {
+   "zip": "sundance",
+   "mame_name": "sundance",
+   "emulator": "lr-mame2003",
+   "title": "Sundance",
+   "year": "1979",
+   "players": 2,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "only_buttons",
+     "player": "1",
+     "buttons": "1"
+    },
+    {
+     "type": "only_buttons",
+     "player": "2",
+     "buttons": "1"
+    }
+   ]
+  },
+  {
+   "zip": "superbug",
+   "mame_name": "superbug",
+   "emulator": "mame-0.251",
+   "title": "Super Bug",
+   "year": "1977",
+   "players": 1,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "dial",
+     "buttons": "6"
+    }
+   ]
+  },
+  {
+   "zip": "superpac",
+   "mame_name": "superpac",
+   "emulator": "mame-0.251",
+   "title": "Super Pac-Man",
+   "year": "1982",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "4"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "swimmer",
+   "mame_name": "swimmer",
+   "emulator": "mame-0.251",
+   "title": "Swimmer (set 1)",
+   "year": "1982",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "szaxxon",
+   "mame_name": "szaxxon",
+   "emulator": "mame-0.251",
+   "title": "Super Zaxxon (315-5013)",
+   "year": "1982",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "tacscan",
+   "mame_name": "tacscan",
+   "emulator": "lr-mame2003",
+   "title": "Tac/Scan",
+   "year": "1982",
+   "players": 1,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "dial",
+     "buttons": "2"
+    }
+   ]
+  },
+  {
+   "zip": "tailg",
+   "mame_name": "tailg",
+   "emulator": "lr-mame2003",
+   "title": "Tailgunner",
+   "year": "1979",
+   "players": 1,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "stick",
+     "buttons": "2"
+    }
+   ]
+  },
+  {
+   "zip": "tankbatt",
+   "mame_name": "tankbatt",
+   "emulator": "lr-mame2000",
+   "title": "Tank Battalion",
+   "year": "1980",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "4"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "tankfrce",
+   "mame_name": "tankfrce",
+   "emulator": "mame-0.251",
+   "title": "Tank Force (US, 2 Players)",
+   "year": "1991",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "3",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "3",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "tapper",
+   "mame_name": "tapperb",
+   "emulator": "mame-0.251",
+   "title": "Tapper (Budweiser, 1/12/84)",
+   "year": "1983",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "4"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "targ",
+   "mame_name": "targ",
+   "emulator": "lr-mame2000",
+   "title": "Targ",
+   "year": "1980",
+   "players": 1,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "buttons": "1",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "tempest",
+   "mame_name": "tempest",
+   "emulator": "advmame",
+   "title": "Tempest (rev 3, Revised Hardware)",
+   "year": "1980",
+   "players": 2,
+   "coins": 3,
+   "controls": [
+    {
+     "type": "dial",
+     "player": "1",
+     "buttons": "2"
+    },
+    {
+     "type": "dial",
+     "player": "2",
+     "buttons": "2"
+    }
+   ]
+  },
+  {
+   "zip": "thehand",
+   "mame_name": "thehand",
+   "emulator": "mame-0.251",
+   "title": "The Hand",
+   "year": "1981",
+   "players": 2,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "3",
+     "ways": "4"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "3",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "thief",
+   "mame_name": "thief",
+   "emulator": "mame-0.251",
+   "title": "Thief",
+   "year": "1981",
+   "players": 2,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "ways": "4"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "ways": "4"
+    }
+   ]
+  },
+  {
+   "zip": "timeplt",
+   "mame_name": "timeplt",
+   "emulator": "mame-0.251",
+   "title": "Time Pilot",
+   "year": "1982",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "tron",
+   "mame_name": "tron2",
+   "emulator": "mame-0.251",
+   "title": "Tron (6/25)",
+   "year": "1982",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "8"
+    },
+    {
+     "type": "dial",
+     "player": "1"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "8"
+    },
+    {
+     "type": "dial",
+     "player": "2"
+    }
+   ]
+  },
+  {
+   "zip": "turbo",
+   "mame_name": "turbo",
+   "emulator": "advmame",
+   "title": "Turbo (program 1513-1515)",
+   "year": "1981",
+   "players": 1,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "dial",
+     "buttons": "1"
+    },
+    {
+     "type": "pedal"
+    }
+   ]
+  },
+  {
+   "zip": "tutankhm",
+   "mame_name": "tutankhm",
+   "emulator": "mame-0.251",
+   "title": "Tutankham",
+   "year": "1982",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "doublejoy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "2"
+    },
+    {
+     "type": "doublejoy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "ultratnk",
+   "mame_name": "ultratnk",
+   "emulator": "advmame",
+   "title": "Ultra Tank",
+   "year": "1978",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "doublejoy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "vertical2"
+    },
+    {
+     "type": "doublejoy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "vertical2"
+    }
+   ]
+  },
+  {
+   "zip": "vanguard",
+   "mame_name": "vanguard",
+   "emulator": "mame-0.251",
+   "title": "Vanguard (SNK)",
+   "year": "1981",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "4",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "4",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "venture",
+   "mame_name": "venture",
+   "emulator": "lr-mame2000",
+   "title": "Venture (version 5 set 1)",
+   "year": "1981",
+   "players": 1,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "buttons": "1",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "wacko",
+   "mame_name": "wacko",
+   "emulator": "mame-0.251",
+   "title": "Wacko",
+   "year": "1982",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "ways": "4"
+    },
+    {
+     "type": "trackball",
+     "player": "1"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "ways": "4"
+    },
+    {
+     "type": "trackball",
+     "player": "2"
+    }
+   ]
+  },
+  {
+   "zip": "warlords",
+   "mame_name": "warlords",
+   "emulator": "advmame",
+   "title": "Warlords",
+   "year": "1980",
+   "players": 4,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "paddle",
+     "player": "1",
+     "buttons": "1"
+    },
+    {
+     "type": "paddle",
+     "player": "2",
+     "buttons": "1"
+    },
+    {
+     "type": "paddle",
+     "player": "3",
+     "buttons": "1"
+    },
+    {
+     "type": "paddle",
+     "player": "4",
+     "buttons": "1"
+    }
+   ]
+  },
+  {
+   "zip": "warofbug",
+   "mame_name": "warofbug",
+   "emulator": "lr-mame2000",
+   "title": "War of the Bugs or Monsterous Manouvers in a Mushroom Maze",
+   "year": "1981",
+   "players": 2,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "warrior",
+   "mame_name": "warrior",
+   "emulator": "lr-mame2003",
+   "title": "Warrior",
+   "year": "1979",
+   "players": 2,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "wotw",
+   "mame_name": "wotw",
+   "emulator": "lr-mame2003",
+   "title": "War of the Worlds",
+   "year": "1981",
+   "players": 1,
+   "coins": 1,
+   "controls": [
+    {
+     "type": "joy",
+     "buttons": "2",
+     "ways": "2"
+    }
+   ]
+  },
+  {
+   "zip": "wow",
+   "mame_name": "wow",
+   "emulator": "lr-mame2000",
+   "title": "Wizard of Wor",
+   "year": "1980",
+   "players": 2,
+   "coins": 3,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "xevious",
+   "mame_name": "xevious",
+   "emulator": "lr-mame2000",
+   "title": "Xevious (Namco)",
+   "year": "1982",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "2",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "2",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "zaxxon",
+   "mame_name": "zaxxon",
+   "emulator": "mame-0.251",
+   "title": "Zaxxon (set 1, rev D)",
+   "year": "1982",
+   "players": 2,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "joy",
+     "player": "1",
+     "buttons": "1",
+     "ways": "8"
+    },
+    {
+     "type": "joy",
+     "player": "2",
+     "buttons": "1",
+     "ways": "8"
+    }
+   ]
+  },
+  {
+   "zip": "zektor",
+   "mame_name": "zektor",
+   "emulator": "lr-mame2003",
+   "title": "Zektor (revision B)",
+   "year": "1982",
+   "players": 1,
+   "coins": 2,
+   "controls": [
+    {
+     "type": "dial",
+     "buttons": "2"
+    }
+   ]
+  }
+ ]
+}
