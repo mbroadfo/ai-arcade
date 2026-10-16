@@ -375,12 +375,19 @@ def run_attempt(spec_id: str, decoder: dict, reason: str, blobs: dict) -> dict:
                 break
 
         contact_row = next((row for row in approach_rows if row["decision"] > 0 and row["x"] >= 434 and not row["dead"]), None)
-        first_pipe = next((row["decision"] for row in approach_rows if row["pipes"]), None)
+        seen = next((row for row in approach_rows if row["pipes"]), None)
+        first_pipe = None if seen is None else seen["decision"]
         if contact_row is None or first_pipe is None:
             lead = None
         else:
             lead = contact_row["decision"] - first_pipe
         attempt["lead_decisions"] = lead
+        if seen is not None:
+            attempt["pipe_seen"] = {
+                "decision": seen["decision"],
+                "x": seen["x"],
+                "pipes": list(seen["pipes"]),
+            }
         stuck = bytes(frame.runner.serialize() or b"")
         if contact_row is not None:
             contact = contact_row["measured"]
@@ -627,20 +634,33 @@ def _finding(attempt: dict) -> str:
         parts.append(
             "At the first pipe, solid cells ahead of column 0 are "
             + (", ".join(occupied) if occupied else "none")
-            + f". The acceptance rule looks above the one-hot, on rows {hot - 2} and {hot - 1}."
+            + f". The rule reads the one-hot row {hot} and the row above it ({hot - 1}). "
+            + f"The floor is the row below the one-hot ({hot + 1})."
         )
     if goomba is not None and "enemy_col_offset" in goomba:
         parts.append(
             f"The goomba at x={goomba['x_pos']} on decision {goomba.get('decision')} "
             f"is a -1 at window row {goomba['enemy_window_row']}, column offset {goomba['enemy_col_offset']}."
         )
+    on_pipe = samples.get("on-pipe")
+    if on_pipe is not None:
+        solids = [index for index, row in enumerate(on_pipe["grid"]) if row and row[0] == 1]
+        parts.append(
+            f"On the pipe the one-hot is window row {on_pipe['one_hot']}. "
+            f"Column 0 is solid on window rows {solids or 'none'}."
+        )
+    seen = attempt.get("pipe_seen")
+    if seen:
+        parts.append(
+            f"The pipe first enters the forward view at decision {seen['decision']} "
+            f"(x={seen['x']}, offsets {seen['pipes']}), "
+            f"{attempt.get('lead_decisions')} decisions before contact."
+        )
     if attempt.get("fail_names"):
         parts.append(
-            "The two-high pipe is on the one-hot row and the row above it. "
-            "The rule requires both rows above the one-hot, and the floor cell on the one-hot row is empty. "
-            "The registered retries do not move that run. "
-            "Width 10 was not run, because a short lead was not the only failure. "
-            "No third grid was tried. Fixtures were not written."
+            "The checks did not accept this grid. "
+            "Width stays 7 unless a short lead is the only failure. "
+            "Fixtures were not written."
         )
     return " ".join(parts)
 

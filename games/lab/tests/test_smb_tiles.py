@@ -226,6 +226,27 @@ def test_an_observation_stamp_uses_that_documents_length():
     assert wide["observation"] == "smb-tiles-v1w10"
 
 
+def test_pipe_rule_uses_the_body_row_and_the_row_above():
+    checks = _checks()
+    rows = [[0] * 7 for _ in range(10)]
+    for offset in range(7):
+        rows[9][offset] = 1
+    rows[7][1] = rows[7][2] = 1
+    rows[8][1] = rows[8][2] = 1
+    assert checks.floor_solid(rows, 8) is True
+    assert checks.pipe_columns(rows, 8) == [1, 2]
+    assert checks.air_above(rows, 8, [1, 2]) is True
+    above_only = [[0] * 7 for _ in range(10)]
+    above_only[9][0] = 1
+    above_only[6][1] = above_only[7][1] = 1
+    assert checks.pipe_columns(above_only, 8) == []
+    body_only = [[0] * 7 for _ in range(10)]
+    body_only[8][0] = 1
+    assert checks.floor_solid(body_only, 8) is False
+    rows[5][1] = 1
+    assert checks.air_above(rows, 8, [1, 2]) is False
+
+
 @pytest.mark.skipif(not _EXPECT.is_file(), reason="validator has not accepted a grid")
 def test_accepted_dumps_match_the_recorded_screen():
     checks = _checks()

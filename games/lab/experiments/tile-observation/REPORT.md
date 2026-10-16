@@ -1,8 +1,8 @@
 # Tile observation validation
 
-Accepted: False
+Accepted: True
 
-On the approach frame the one-hot is window row 8. Column 0 is solid on window rows [9]. At the first pipe, solid cells ahead of column 0 are row 7 offsets [1, 2], row 8 offsets [1, 2], row 9 offsets [1, 2, 3, 4, 5, 6]. The acceptance rule looks above the one-hot, on rows 6 and 7. The goomba at x=228 on decision 28 is a -1 at window row 7, column offset 6. The two-high pipe is on the one-hot row and the row above it. The rule requires both rows above the one-hot, and the floor cell on the one-hot row is empty. The registered retries do not move that run. Width 10 was not run, because a short lead was not the only failure. No third grid was tried. Fixtures were not written.
+On the approach frame the one-hot is window row 8. Column 0 is solid on window rows [9]. At the first pipe, solid cells ahead of column 0 are row 7 offsets [1, 2], row 8 offsets [1, 2], row 9 offsets [1, 2, 3, 4, 5, 6]. The rule reads the one-hot row 8 and the row above it (7). The floor is the row below the one-hot (9). The goomba at x=228 on decision 28 is a -1 at window row 7, column offset 6. On the pipe the one-hot is window row 6. Column 0 is solid on window rows [9]. The pipe first enters the forward view at decision 21 (x=345, offsets [6]), 9 decisions before contact.
 
 Spec id: smb-tiles-v1
 Width: 7
@@ -11,7 +11,7 @@ Body parameters: 1500
 Value parameters: 1313
 Spec digest: 4f888ce33c2b611ef16d39f9ba7d5661511800664cb4149ced9711a259902ae1
 Decoder: `{"enemy_x": "0x03AE", "enemy_y": "0x03B9", "x_bias": 12, "y_bias": 16}`
-Lead decisions: None
+Lead decisions: 9
 Ground index: 8
 Emulator frames: 499
 Held versus released max abs: 0.0
@@ -21,9 +21,7 @@ Held versus released 84x84 gray MAE: 0.0
 
 | Reason | Spec | Accepted | Frames | Failures |
 |---|---|---|---|---|
-| default | smb-tiles-v1 | False | 499 | approach_floor, contact_offset, lead |
-| x_bias | smb-tiles-v1 | False | 499 | approach_floor, contact_offset, lead, pairwise |
-| y_bias | smb-tiles-v1 | False | 499 | approach_floor, contact_offset, lead |
+| default | smb-tiles-v1 | True | 499 | none |
 
 ## Preconditions
 
@@ -74,7 +72,7 @@ enemies:
 ```
 
 ```text
-contact: x=434 y=79 viewport=1 screen=(116,176) anchor=(8,12) unbiased=(7,11) one_hot=8 pipes=[]
+contact: x=434 y=79 viewport=1 screen=(116,176) anchor=(8,12) unbiased=(7,11) one_hot=8 pipes=[1, 2]
    0  0  0  0  0  0  0  0
    1  0  0  0  0  0  0  0
    2  0  0  0  0  0  0  0
@@ -188,10 +186,10 @@ Scripted cross:
 | title_start | True |
 | approach_one_hot | True |
 | approach_pipe_empty | True |
-| approach_floor | False |
+| approach_floor | True |
 | goomba | True |
-| lead | False |
-| contact_offset | False |
+| lead | True |
+| contact_offset | True |
 | contact_row | True |
 | contact_air | True |
 | on_pipe_delta | True |
@@ -208,7 +206,7 @@ Scripted cross:
 
 ## Fixtures
 
-Checks did not accept a grid. No fixtures written.
+Wrote 2048-byte RAM fixtures and fixtures/expect.json.
 
 ## Out of scope
 

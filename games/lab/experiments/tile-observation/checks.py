@@ -27,12 +27,16 @@ def one_hot_index(row: list[float]) -> int | None:
 
 
 def pipe_columns(rows: list[list[int]], ground_index: int) -> list[int]:
-    """Forward columns with solids on both window rows above the ground row."""
+    """Forward columns with solids on the body row and the row above it.
+
+    The one-hot row is Mario's body, not the brick floor. A two-high pipe
+    stands on that floor, so it occupies the body row and the row above.
+    """
     if ground_index is None or not rows:
         return []
-    lower = ground_index - 1
-    upper = ground_index - 2
-    if upper < 0 or lower < 0:
+    lower = ground_index
+    upper = ground_index - 1
+    if upper < 0 or lower >= len(rows):
         return []
     found = []
     for offset in range(1, len(rows[0])):
@@ -42,16 +46,20 @@ def pipe_columns(rows: list[list[int]], ground_index: int) -> list[int]:
 
 
 def floor_solid(rows: list[list[int]], ground_index: int) -> bool:
-    if ground_index is None or not rows or not 0 <= ground_index < len(rows):
+    """Column 0 of the row under the one-hot. That row is the brick floor."""
+    if ground_index is None or not rows:
         return False
-    return rows[ground_index][0] == 1
+    floor_row = ground_index + 1
+    if not 0 <= floor_row < len(rows):
+        return False
+    return rows[floor_row][0] == 1
 
 
 def air_above(rows: list[list[int]], ground_index: int, columns: list[int]) -> bool:
     """True when every cell above a two-high run is empty. No run means no air failure."""
     if not columns or ground_index is None:
         return True
-    top = ground_index - 2
+    top = ground_index - 1
     if top <= 0:
         return True
     for offset in columns:

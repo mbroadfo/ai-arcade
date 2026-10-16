@@ -62,15 +62,21 @@ Bytes the vector may read: `0x006D`, `0x0086`, `0x03AD`, `0x03B8`, `0x0500`–`0
 
 Preconditions, checked before unserialize: core SHA1 `e3d3a8436a3a0f3cc2c9164945dc4f87e616f243`, ROM SHA1 `ea343f4e445a9050d4b4fbac2c77d0693b1d0922`, approach `state.bin` length 13758 and sha256 `72c3ea8bd337c489e2a0c1adb3253de22457c8617c8162816dfbd25ae014a97e`. A reset that is not x=197, y=79 aborts that attempt.
 
-`ground_index` is the one-hot index on that approach frame. `pipe_columns` are offsets `1 .. width-1` with solids on both window rows above `ground_index`. The floor check is column 0 of `ground_index` only.
+`ground_index` is the one-hot index on that approach frame. It is Mario's body row. The brick floor is the window row under it.
+
+At the contact frame the NES pixels put Mario's red sprite on screen row 12 (pixels 192–207), the same row as the one-hot. RAM `0x03B8` is 176, and the +16 row bias lands on that sprite. Ground bricks fill screen rows 13 and 14. Pipe green fills screen rows 11 and 12 in the columns beside him, which are window rows 7 and 8 when the one-hot is window row 8. Screen row 10 is sky. The block buffer matches those rows. The first acceptance rule treated the one-hot as the floor and looked for the pipe on the two rows above it. That was the validator, and the decoder rows were left as they are. The grid stays 7×10.
+
+`pipe_columns` are offsets `1 .. width-1` with solids on both the one-hot row and the row above it. The floor check is column 0 of the row under the one-hot. A solid on the one-hot row is not the floor.
+
+The drawn goomba shares Mario's screen row. `0x03B9 // 16` writes the −1 one window row higher, which is the reviewed enemy formula, and the slack of one row accepts it. Those bytes were not given a bias.
 
 | Sample | Accept when |
 |---|---|
-| Approach x=197, y=79 | One-hot is a single 1 in 0..9, `pipe_columns` is empty, and the floor cell is solid |
+| Approach x=197, y=79 | One-hot is a single 1 in 0..9, `pipe_columns` is empty, and the floor cell under the one-hot is solid |
 | Goomba | Some decision with x<313, at least two decisions before death, has enemy id 6, column offset in `1 .. width-1`, window-row distance from `ground_index` in {0, 1}, and that cell is −1 |
 | Lead | `lead_decisions` ≥ 4. That is the decision gap from the first nonempty `pipe_columns` to the first x≥434 while holding RIGHT+A+B |
 | Contact | `pipe_columns` nonempty, minimum offset in {1, 2}, one-hot still `ground_index`, cells above the two-high run are 0 |
-| On the pipe | One-hot equals `ground_index - 2`, and column 0 has a solid on a lower window row |
+| On the pipe | One-hot equals `ground_index - 2`, and column 0 has a solid on a lower window row. At the sampled landing the pipe has left the anchor column, so that solid is the level floor |
 | Past x≥505, y back on the ground | One-hot returns to `ground_index`, and the vector differs from the contact vector. A nonempty `pipe_columns` is allowed. x=458 and x=472 are not this sample |
 | Held versus released | Eight emulator frames of RIGHT+A+B and eight of RIGHT+B, from the contact state, produce the same vector |
 | Scripted cross | Three decisions of RIGHT+B, then RIGHT+A+B, still reach x≥505 |
@@ -82,7 +88,7 @@ Preconditions, checked before unserialize: core SHA1 `e3d3a8436a3a0f3cc2c9164945
 Each retry runs once from the default decoder. A retry is not stacked onto another retry. There is no third grid and no `start_row` search.
 
 - Contact offset outside {1, 2}: one run with x bias 0. Y bias stays 16.
-- One-hot all zeros on the ground, floor cell not solid, or on-pipe row delta other than 2: one run with y bias 0. X bias stays 12.
+- One-hot all zeros on the ground, floor cell under the one-hot not solid, or on-pipe row delta other than 2: one run with y bias 0. X bias stays 12.
 - Goomba check fails: one run that places enemies from `0x0087` and `0x00CF`, still with `(byte // 16)` minus the same origin and the same slack {0, 1}.
 - If every check passes except `lead_decisions < 4`: one run at width 10, spec id `smb-tiles-v1w10`. A nonempty `pipe_columns` at x≥505 is not a failure of that run.
 - A second failure of the same check stops the slice. Width 10 failing lead, or failing any other check, stops the slice.
