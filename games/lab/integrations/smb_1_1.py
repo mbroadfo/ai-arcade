@@ -419,6 +419,199 @@ def ram_vector(ram: bytes) -> list[float]:
     ]
 
 
+# Registered observation documents. Disabled fields are omitted from the vector.
+_OBS_WIDTH = {"smb-tiles-v1": 7, "smb-tiles-v1w10": 10}
+_OBS_HEIGHT = 10
+_OBS_START_ROW = 4
+_OBS_CELL = 16
+_X_BIASES = (12, 0)
+_Y_BIASES = (16, 0)
+_ENEMY_PAIRS = ((0x03AE, 0x03B9), (0x0087, 0x00CF))
+_DEFAULT_DECODER = {
+    "x_bias": 12,
+    "y_bias": 16,
+    "enemy_x": "0x03AE",
+    "enemy_y": "0x03B9",
+}
+
+
+def _address(value) -> int:
+    if isinstance(value, str):
+        return int(value, 16)
+    return int(value)
+
+
+def _decoder(spec: dict, override: dict | None) -> dict:
+    chosen = dict(spec["decoder"])
+    if override:
+        chosen.update(override)
+    x_bias = int(chosen["x_bias"])
+    y_bias = int(chosen["y_bias"])
+    enemy_x = _address(chosen["enemy_x"])
+    enemy_y = _address(chosen["enemy_y"])
+    if x_bias not in _X_BIASES or y_bias not in _Y_BIASES:
+        raise ValueError("decoder bias is not one of the registered toggles")
+    if (enemy_x, enemy_y) not in _ENEMY_PAIRS:
+        raise ValueError("decoder enemy addresses are not one of the registered pairs")
+    return {
+        "x_bias": x_bias,
+        "y_bias": y_bias,
+        "enemy_x": f"0x{enemy_x:04X}",
+        "enemy_y": f"0x{enemy_y:04X}",
+    }
+
+
+def observation_spec(name: str | None = None) -> dict:
+    """The document the lab checks. Addresses stay in this adapter."""
+    from games.lab.observations import require_spec
+    key = "smb-tiles-v1" if name is None else str(name)
+    try:
+        width = _OBS_WIDTH[key]
+    except KeyError:
+        raise ValueError(f"unknown observation {key}") from None
+    cells = width * _OBS_HEIGHT
+    return require_spec({
+        "id": key,
+        "dtype": "float32",
+        "shape": [cells + _OBS_HEIGHT],
+        "low": -1.0,
+        "high": 1.0,
+        "layout": {
+            "cells": {"offset": 0, "length": cells, "values": [-1, 0, 1]},
+            "row": {"offset": cells, "length": _OBS_HEIGHT, "values": [0, 1]},
+            "motion": {"length": 2, "enabled": False},
+            "previous_action": {"length": 12, "enabled": False},
+        },
+        "grid": {
+            "start_row": _OBS_START_ROW,
+            "width": width,
+            "height": _OBS_HEIGHT,
+            "cell_px": _OBS_CELL,
+        },
+        "decoder": dict(_DEFAULT_DECODER),
+    })
+
+
+def observation_details(ram: bytes, *, spec_id: str = "smb-tiles-v1", decoder=None) -> dict:
+    """Decode one RAM image. The anchor cell keeps the block-buffer byte.
+
+    Reads stay on the anchor bytes, the block buffer 0x0500-0x069F, enemy
+    flags 0x000F-0x0013, and the selected enemy screen pair. Enemy id and
+    speed bytes are not read. Columns outside 0..15 and rows outside the
+    buffer are empty and are not read.
+    """
+    spec = observation_spec(spec_id)
+    chosen = _decoder(spec, decoder)
+    grid = spec["grid"]
+    start_row = int(grid["start_row"])
+    width = int(grid["width"])
+    height = int(grid["height"])
+    cell_px = int(grid["cell_px"])
+    x_bias = chosen["x_bias"]
+    y_bias = chosen["y_bias"]
+    enemy_x = _address(chosen["enemy_x"])
+    enemy_y = _address(chosen["enemy_y"])
+
+    screen_x = _byte(ram, 0x03AD)
+    screen_y = _byte(ram, 0x03B8)
+    level_x = _byte(ram, 0x006D) * 256 + _byte(ram, 0x0086)
+    mario_col = (screen_x + x_bias) // cell_px
+    mario_row = (screen_y + y_bias) // cell_px
+    x_start = level_x - screen_x
+
+    values: list[int] = []
+    cells = []
+    for window_row in range(height):
+        screen_row = start_row + window_row
+        sub_y = screen_row - 2
+        for col_offset in range(width):
+            screen_col = mario_col + col_offset
+            world_x = x_start + screen_col * cell_px
+            address = None
+            raw = 0
+            if screen_col < 0 or screen_col > 15 or world_x < 0 or sub_y < 0 or sub_y > 12:
+                value = 0
+            else:
+                page = (world_x // 256) % 2
+                sub_x = (world_x % 256) // cell_px
+                address = 0x0500 + page * 208 + sub_y * 16 + sub_x
+                raw = _byte(ram, address)
+                value = 1 if raw else 0
+            cells.append({
+                "index": window_row * width + col_offset,
+                "window_row": window_row,
+                "col_offset": col_offset,
+                "screen_row": screen_row,
+                "screen_col": screen_col,
+                "world_x": world_x,
+                "address": address,
+                "raw": raw,
+                "value": value,
+            })
+            values.append(value)
+
+    enemies = []
+    for slot in range(5):
+        flag = _byte(ram, 0x000F + slot)
+        if flag == 0:
+            continue
+        rel_x = _byte(ram, enemy_x + slot)
+        rel_y = _byte(ram, enemy_y + slot)
+        col = rel_x // cell_px
+        row = rel_y // cell_px
+        window_row = row - start_row
+        col_offset = col - mario_col
+        index = None
+        if 0 <= window_row < height and 0 <= col_offset < width:
+            index = window_row * width + col_offset
+            values[index] = -1
+            cells[index]["value"] = -1
+        enemies.append({
+            "slot": slot,
+            "flag": flag,
+            "screen_x": rel_x,
+            "screen_y": rel_y,
+            "col": col,
+            "row": row,
+            "window_row": window_row,
+            "col_offset": col_offset,
+            "index": index,
+        })
+
+    one_index = mario_row - start_row
+    if 0 <= one_index < height:
+        row_bits = [1.0 if bit == one_index else 0.0 for bit in range(height)]
+        reported = one_index
+    else:
+        row_bits = [0.0] * height
+        reported = None
+    vector = [float(value) for value in values]
+    vector.extend(row_bits)
+    return {
+        "vector": vector,
+        "width": width,
+        "height": height,
+        "start_row": start_row,
+        "screen_x": screen_x,
+        "screen_y": screen_y,
+        "level_x": level_x,
+        "x_start": x_start,
+        "mario_col": mario_col,
+        "mario_row": mario_row,
+        "unbiased_col": screen_x // cell_px,
+        "unbiased_row": screen_y // cell_px,
+        "one_hot_index": reported,
+        "cells": cells,
+        "enemies": enemies,
+        "decoder": chosen,
+        "spec_id": spec["id"],
+    }
+
+
+def observation_vector(ram: bytes, *, spec_id: str = "smb-tiles-v1", decoder=None) -> list[float]:
+    return observation_details(ram, spec_id=spec_id, decoder=decoder)["vector"]
+
+
 def skip_title(runner, limit: int = 600) -> None:
     """Press START until Mario is in the level and the timer has started to count down.
 
@@ -762,15 +955,27 @@ class _SMB:
     def diagnose(self, ram: bytes) -> dict:
         return diagnose(ram)
 
-    def stamp(self, objective=None) -> dict:
+    def observation_spec(self, name=None) -> dict:
+        return observation_spec(name)
+
+    def observation_vector(self, ram, *, spec_id="smb-tiles-v1", decoder=None) -> list[float]:
+        return observation_vector(ram, spec_id=spec_id, decoder=decoder)
+
+    def stamp(self, objective=None, observation=None) -> dict:
         name = self.objective if objective is None else str(objective)
         if name not in _ACCEPTED_OBJECTIVES:
             raise ValueError(f"unknown objective {name}")
-        return {
+        payload = {
             "actions": [list(chord) for chord in self.actions],
             "objective": name,
             "ram": len(self.ram_vector(bytes(2048))),
         }
+        if observation is None:
+            return payload
+        spec = self.observation_spec(str(observation))
+        payload["ram"] = int(spec["shape"][0])
+        payload["observation"] = spec["id"]
+        return payload
 
 
 INTEGRATION = _SMB()
