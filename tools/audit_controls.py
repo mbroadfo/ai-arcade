@@ -141,6 +141,7 @@ def analyze(raw):
     keyboards = [d for d in devices if d["keyboard"] and not d["virtual"] and not any(t in d["name"] for t in NOT_A_PANEL)]
     wireless = [d for d in devices if "Logitech" in d["name"] and d["keyboard"]]
     panel_pads = [d for d in pads if f"{d['vendor']}:{d['product']}" in PANEL_IDS]
+    other_pads = [d for d in devices if d["js"] is not None and not d["virtual"] and d not in panel_pads]  # e.g. the F310
     panel = pads + [k for k in keyboards if k not in pads]
 
     # --- who is there
@@ -180,8 +181,8 @@ def analyze(raw):
         say("WARN", "order", "the AI Arcade virtual pads sort BEFORE the physical panel (" + ", ".join(ordered) + "): "
                              "RetroArch and standalone MAME give Player 1 and Player 2 to the first two joysticks, so "
                              "the panel would be Player 3 and 4")
-    elif pads and ours and panel_pads and any(d["js"] < min(p["js"] for p in panel_pads) for d in pads if d not in panel_pads):
-        early = [d for d in pads if d not in panel_pads and d["js"] < min(p["js"] for p in panel_pads)]
+    elif ours and panel_pads and any(d["js"] < min(p["js"] for p in panel_pads) for d in other_pads):
+        early = [d for d in other_pads if d["js"] < min(p["js"] for p in panel_pads)]
         say("WARN", "order", "another gamepad (" + ", ".join(f"js{d['js']} {d['name'].strip()}" for d in early) + ") sorts BEFORE "
                              "the panel (" + ", ".join(ordered) + "): it would be Player 1, and the panel Players 2 and 3")
     elif pads and ours:
