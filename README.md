@@ -4,6 +4,69 @@ AI Arcade is an experimental architecture for allowing AI systems to discover, l
 
 The project is intentionally built around reproducible infrastructure and observable decision layers rather than one monolithic game-playing model.
 
+## Starting the arcade
+
+Day to day. Everything below assumes the Pi is installed (see "Reproducible Pi installation") and you are in the
+repository folder on the Windows PC with the virtual environment active:
+
+```powershell
+cd C:\Users\Mike\Documents\Code\ai-arcade
+.\.venv\Scripts\Activate.ps1
+```
+
+**1. The Pi.** Power it on. It boots straight into EmulationStation (the menu people use) and starts the controller
+broker by itself, so there is nothing to launch. To check it is up (`192.168.10.122` is the Pi's address; add
+`--host ADDRESS` to any tool if it changes):
+
+```powershell
+python .\tools\verify_pi.py --host 192.168.10.122 --timeout 60
+```
+
+**2. The Observatory, the control panel and dashboard (the "client app").** It runs on the PC and is used from a browser:
+
+```powershell
+python .\tools\observatory.py --listen 0.0.0.0
+```
+
+- On the PC open <http://localhost:8780/>. From a phone or tablet on the same Wi-Fi open `http://<the PC's address>:8780/`
+  (`ipconfig` shows it).
+- `--listen 0.0.0.0` lets anyone on your network open the page **and control the cabinet**. Leave it off
+  (`python .\tools\observatory.py`) to keep it to this PC. `--watch-only` shows the dashboard with no controls.
+- Leave the window open: closing it or ending the command stops the page. It must be started again after the PC
+  reboots; the Pi side keeps running without it.
+- It shows what is on the cabinet's screen. **GAMES** opens the picker: *Play* starts a game for a person, *AI plays* sets
+  up an AI run. While an AI game is running, **PAUSE**, **RESTART**, **STOP AI** and **EXIT** are in the header, and
+  **AUTOPLAY** keeps the AI playing the same game, run after run, to see how high it gets. More in `docs/AI_MODE.md`.
+
+**3. For the AI to play with a model** (Pac-Man and Ms. Pac-Man; Battlezone's "AI drives"), this project's own Ollama server
+must be running on port 11435 (it needs Docker and the NVIDIA GPU; the Zork project's server on 11434 is separate and is
+never touched):
+
+```powershell
+docker compose -f tools/ollama/compose.yml up -d
+```
+
+The first request after a cold start loads the model and takes about 40 seconds. Setup of the model volume is in
+`tools/ollama/README.md`. `docker compose -f tools/ollama/compose.yml down` stops it.
+
+**4. Back to people playing.** The **EXIT** or **BACK TO MENU** button in the Observatory, or:
+
+```powershell
+python .\tools\human_mode.py
+```
+
+stops AI mode and brings EmulationStation back on the screen.
+
+**After a reboot.** Pi reboot: nothing to do, wait about a minute and the menu appears. PC reboot: start the Observatory
+(step 2) and Ollama (step 3, if Docker does not start it) again.
+
+**Starting an AI game without the page** (for scripts and experiments): `python .\tools\start_pi_game.py --game
+arcade/pacman`, then `python .\tools\play.py --game arcade/pacman --decider ollama --model nimble --games 3`.
+
+**One-time Pi setup**, only on a new or rebuilt Pi, each safe to repeat: `install_pi.py` (broker, mappings),
+`configure_mame_controller.py` (MAME controls), `install_cabinet.py` (the Observatory's cabinet controls),
+`install_audio.py` (sound through the USB adapter). Details: `docs/PI_SETUP.md`.
+
 ## Current milestone
 
 The first complete vertical slice is working:
