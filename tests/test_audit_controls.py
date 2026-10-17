@@ -189,14 +189,6 @@ def test_the_summary_flags_a_button_wired_to_the_other_encoder_and_one_encoder_d
     assert any("one encoder is doing both" in x for x in same)
 
 
-def test_a_mouse_like_spinner_counts_once_per_direction_until_it_stops():
-    d = guided_capture.Detector()
-    spin = {"type": 2, "code": 0, "value": 3, "dev": "Spinner", "path": "/dev/input/event5", "phys": "usb-1.1"}
-    assert d.feed(spin, now=0.0)["direction"] == 1
-    assert d.feed(spin, now=0.1) is None and not d.idle(now=0.2)
-    assert d.feed({**spin, "value": -3}, now=0.3)["direction"] == -1
-    assert d.idle(now=2.0)
-
 
 def test_the_keyboard_and_the_gamepad_steer_the_capture_and_are_never_captured():
     kb = {"type": 1, "code": 31, "value": 1, "dev": "Logitech Wireless Keyboard PID:4023", "name": "KEY_S"}
@@ -242,3 +234,47 @@ def test_the_sections_cover_the_flight_controller_and_the_unused_trackball_butto
     assert [n for _, n in guided_capture.SECTIONS["flight"][1]] == ["button 1", "button 2"]
     assert not any("button" in n for _, n in guided_capture.SECTIONS["trackball"][1])
     assert [n for _, n in guided_capture.SECTIONS["p2stick"][1]] == ["UP", "DOWN", "RIGHT", "LEFT"]
+
+
+def spin(code, value, path="/dev/input/event8", dev="Trackball"):
+    return {"type": 2, "code": code, "value": value, "dev": dev, "path": path, "phys": "usb-1.4"}
+
+
+def judge(motions, min_motion=12):
+    """Feed (time, code, value) motions to a Detector, then ask it once the first half second is over."""
+    d = guided_capture.Detector(min_motion)
+    for at, code, value in motions:
+        assert d.feed(spin(code, value), now=at) is None  # motion alone never reports
+    return d, d.poll(now=motions[0][0] + guided_capture.REL_WINDOW + 0.01)
+
+
+def test_a_light_touch_on_a_trackball_or_spinner_is_not_a_press():
+    _, press = judge([(0.0, 0, 1), (0.1, 0, 2), (0.2, 1, 1)])  # 4 counts in all
+    assert press is None
+
+
+def test_the_direction_with_the_most_gain_wins_not_the_first_one_seen():
+    # the first twitch is sideways, the roll is up (axis 1, negative)
+    _, press = judge([(0.0, 0, 2), (0.1, 1, -9), (0.2, 1, -14), (0.3, 1, -8), (0.4, 0, 1)])
+    assert (press["kind"], press["code"], press["direction"]) == ("rel", 1, -1)
+
+
+def test_a_diagonal_roll_is_not_taken_for_a_direction():
+    _, press = judge([(0.0, 0, 20), (0.1, 1, 18)])
+    assert press is None
+
+
+def test_a_counted_motion_is_held_until_the_device_is_quiet():
+    d, press = judge([(0.0, 0, 15), (0.2, 0, 15)])
+    assert press["direction"] == 1 and not d.idle(now=0.6)
+    d.feed(spin(0, 5), now=0.9)  # still rolling: kept held, counted once
+    assert d.poll(now=1.5) is None and not d.idle(now=1.0)
+    assert d.idle(now=2.0)
+
+
+def test_the_most_gain_across_devices_wins():
+    d = guided_capture.Detector(12)
+    d.feed(spin(0, 14, path="/dev/input/event5", dev="Spinner"), now=0.0)
+    d.feed(spin(1, 40, path="/dev/input/event8"), now=0.0)
+    press = d.poll(now=0.6)
+    assert press["path"] == "/dev/input/event8" and press["code"] == 1

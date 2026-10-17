@@ -117,6 +117,10 @@ Stick: captured out of order (prompt "up" gave axis 1 positive, "down" axis 0 po
 
 ### Spinner and trackball
 
+The capture judges a spinner or trackball by its gain, not its first touch: motion is added up for half a second, and the
+direction with the most movement counts if it moved at least 12 counts and made up 60 % of everything it moved (`--min-motion`
+changes the 12).
+
 Spinner: clockwise = relative axis 0 positive, counter-clockwise negative. Trackball, first clean pass: up = relative
 axis 1 negative, down = positive, left = axis 0 negative, right = positive (later passes were scrambled by retries and
 by spinner events arriving while the trackball was rolled: to be re-captured, with an idle listen to see whether the
@@ -126,7 +130,7 @@ spinner chatters).
 
 | # | Problem | Status |
 | --- | --- | --- |
-| 1 | Player 2's stick directions are crossed | the owner will rewire, then `--section p2stick` |
+| 1 | Player 2's stick directions are on mixed-up terminals: up and left share the encoder's Y axis (up = Y positive, left = Y negative) and down and right share the X axis. Software can name each direction, but a diagonal that presses two switches on one axis (up+left, down+right) cancels to centre in the encoder and is lost. Four-way games are unaffected; 8-way games lose two of the four diagonals | optional but recommended: move each wire to the next terminal so up and down share Y and left and right share X, then `--section p2stick` |
 | 2 | The two encoders number their buttons differently (P1's action buttons are 294 to 299, P2's 288 to 293; the extra buttons differ in position and order too), so no single profile fits both | open: decided with the mapping approach below |
 | 3 | The two encoders have the same name, id and GUID; only the USB port differs, and Player 1 and 2 are told apart by enumeration order | open |
 | 4 | Another gamepad (the F310) took `js0`, putting the panel at `js1` and `js2` | unplug the spare; `audit_controls.py` warns |

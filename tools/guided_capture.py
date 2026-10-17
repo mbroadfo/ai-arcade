@@ -62,22 +62,29 @@ def command_of(e):
 def is_command_device(e):
     return "Logitech" in (e.get("dev") or "")
 REL_QUIET = 0.6  # seconds without motion before a spinner or trackball counts as stopped
+REL_WINDOW = 0.5  # a spinner or trackball is judged on the motion of its first half second
+MIN_MOTION = 12  # ... and must have moved this far (counts) in one direction to count at all
+DOMINANCE = 0.6  # ... and that direction must be this share of everything it moved (a diagonal roll is not a "left")
 
 
 class Detector:
     """Turns raw events into 'presses' one at a time, and says when everything is let go again.
 
     A key is pressed at value 1 and released at 0. An axis is pressed when it leaves the middle half of its range, in
-    one direction, and released when it comes back. Relative motion (a mouse-like spinner or trackball) is pressed in
-    the direction it moves and released after REL_QUIET seconds without motion. Everything is told apart by the device's
-    node (two identical encoders have the same name), and each press carries its USB port."""
+    one direction, and released when it comes back. A mouse-like spinner or trackball is judged on how far it moved, not
+    on the first touch: its motion is added up for REL_WINDOW seconds from the first movement, and the direction with the
+    most gain counts, if it moved at least `min_motion` counts and made up DOMINANCE of everything it moved. A brush or a
+    wobble is ignored, a sideways roll is not taken for "up". It is then held until the device is quiet for REL_QUIET.
+    Devices are told apart by node (two identical encoders have the same name); each press carries its USB port."""
 
-    def __init__(self):
+    def __init__(self, min_motion=MIN_MOTION):
+        self.min_motion = min_motion
         self.down = {}  # (path, kind, code) -> direction while held
-        self.rel_last = {}  # (path, code) -> (direction, time of last motion)
+        self.rel_win = {}  # path -> {"start", "sums": {code: motion}, "base"} while a motion is being measured
+        self.rel_held = {}  # path -> time of the last motion, while a counted motion is still going on
 
     def feed(self, e, now=None):
-        """-> a press dict, or None."""
+        """-> a press dict for a key or an axis, or None. Relative motion only accumulates: see poll."""
         now = time.time() if now is None else now
         who = e.get("path") or e["dev"]
         base = {"dev": e["dev"].strip(), "path": e.get("path"), "phys": e.get("phys"), "vid": e.get("vid")}
@@ -99,17 +106,38 @@ class Detector:
                 self.down[key] = now_dir
                 return {**base, "kind": "abs", "code": e["code"], "direction": now_dir, "name": None}
         elif e["type"] == 2 and e["value"]:
-            direction = 1 if e["value"] > 0 else -1
-            last = self.rel_last.get((who, e["code"]))
-            self.rel_last[(who, e["code"])] = (direction, now)
-            if last is None or last[0] != direction or now - last[1] > REL_QUIET:
-                return {**base, "kind": "rel", "code": e["code"], "direction": direction, "name": None}
+            if who in self.rel_held:  # a counted motion is still going on: keep it held, count nothing more
+                self.rel_held[who] = now
+                return None
+            win = self.rel_win.setdefault(who, {"start": now, "sums": {}, "base": base})
+            win["sums"][e["code"]] = win["sums"].get(e["code"], 0) + e["value"]
         return None
 
-    def idle(self, now=None):
-        """True when nothing is held and nothing has moved lately."""
+    def poll(self, now=None):
+        """Judge every spinner or trackball whose first half second is over. -> the press with the most gain, or None."""
         now = time.time() if now is None else now
-        return not self.down and all(now - t > REL_QUIET for _, t in self.rel_last.values())
+        best, best_gain = None, 0
+        for who, win in list(self.rel_win.items()):
+            if now - win["start"] < REL_WINDOW:
+                continue
+            del self.rel_win[who]
+            total = sum(abs(v) for v in win["sums"].values())
+            code, motion = max(win["sums"].items(), key=lambda kv: abs(kv[1]))
+            if abs(motion) < self.min_motion or abs(motion) < DOMINANCE * total:
+                continue  # a brush, a wobble, or too diagonal: not a direction
+            self.rel_held[who] = now
+            if abs(motion) > best_gain:
+                best_gain = abs(motion)
+                best = {**win["base"], "kind": "rel", "code": code, "direction": 1 if motion > 0 else -1, "name": None}
+        return best
+
+    def idle(self, now=None):
+        """True when nothing is held and nothing is moving: keys and axes up, motions quiet for REL_QUIET."""
+        now = time.time() if now is None else now
+        for who, last in list(self.rel_held.items()):
+            if now - last > REL_QUIET:
+                del self.rel_held[who]
+        return not self.down and not self.rel_win and not self.rel_held
 
 
 def identity(press):
@@ -136,9 +164,9 @@ def key_pressed():
     return None
 
 
-def run(events, steps, say=print, poll=key_pressed, timeout=25):
+def run(events, steps, say=print, poll=key_pressed, timeout=25, min_motion=MIN_MOTION):
     """Walk the steps. Returns {label: press or None (skipped)} in order."""
-    detector, got, taken, i = Detector(), {}, {}, 0
+    detector, got, taken, i = Detector(min_motion), {}, {}, 0
     while i < len(steps):
         group, name = steps[i]
         label = f"{group} {name}"
@@ -149,21 +177,23 @@ def run(events, steps, say=print, poll=key_pressed, timeout=25):
             if k in ("s", "b", "q"):
                 result = {"s": "skip", "b": "back", "q": "quit"}[k]
                 break
-            try:
-                e = events.get(timeout=0.1)
-            except queue.Empty:
-                continue
-            if "listening" in e:
-                continue
-            if is_command_device(e):  # steering, never a control
-                k = command_of(e)
-                if k:
-                    result = {"s": "skip", "b": "back", "q": "quit"}[k]
-                    break
-                continue
-            press = detector.feed(e)
+            press = detector.poll()  # a spinner or trackball whose first half second just ended
             if not press:
-                continue
+                try:
+                    e = events.get(timeout=0.1)
+                except queue.Empty:
+                    continue
+                if "listening" in e:
+                    continue
+                if is_command_device(e):  # steering, never a control
+                    k = command_of(e)
+                    if k:
+                        result = {"s": "skip", "b": "back", "q": "quit"}[k]
+                        break
+                    continue
+                press = detector.feed(e)
+                if not press:
+                    continue
             who = identity(press)
             if who in taken:
                 say(f"      that was already {taken[who]} ({describe(press).strip()}): press {label}")
@@ -176,6 +206,7 @@ def run(events, steps, say=print, poll=key_pressed, timeout=25):
         if result == "ok":
             let_go = time.time() + 5
             while not detector.idle() and time.time() < let_go:  # let go of it first
+                detector.poll()
                 try:
                     detector.feed(events.get(timeout=0.1))
                 except queue.Empty:
@@ -247,6 +278,9 @@ def main():
     parser.add_argument("--timeout", type=float, default=25, help="seconds to wait for each control before skipping it")
     parser.add_argument("--idle", type=float, metavar="SECONDS",
                         help="touch nothing for this long and list what the devices send by themselves")
+    parser.add_argument("--min-motion", type=int, default=MIN_MOTION,
+                        help="spinner and trackball: counts of movement in one direction before it counts "
+                             f"(default {MIN_MOTION}; raise it if a light touch still registers)")
     parser.add_argument("--check", action="store_true", help="listen for 4 seconds, list the devices, stop")
     parser.add_argument("--out", help="where to save (default runs/panel-capture-<time>.json)")
     args = parser.parse_args()
@@ -280,7 +314,7 @@ def main():
             print(f"\n=== {title}: {len(items)} controls")
             steps += items
         print("\nPress each control once when asked, then let go. Stand at the panel; this window needs to stay open.")
-        got = run(events, steps, timeout=args.timeout)
+        got = run(events, steps, timeout=args.timeout, min_motion=args.min_motion)
         if "free" in args.section:
             while True:
                 name = input("\nName another control to capture (blank to finish): ").strip()
