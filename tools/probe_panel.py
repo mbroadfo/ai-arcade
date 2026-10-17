@@ -24,11 +24,13 @@ import json, select, sys, time
 import evdev
 only = sys.argv[1]
 seconds = float(sys.argv[2])
-skip = ("pwr_button", "vc4-hdmi", "HDMI Jack", "AI Arcade Player", "Logitech", "KTMicro")
+commands = len(sys.argv) > 3 and sys.argv[3] == "commands"  # also the Logitech keyboard and gamepad (guided_capture)
+skip = ("pwr_button", "vc4-hdmi", "HDMI Jack", "AI Arcade Player", "KTMicro", "Logitech Wireless Mouse")
 devs = {}
 for path in evdev.list_devices():
     d = evdev.InputDevice(path)
-    if d.phys == "py-evdev-uinput" or any(s in d.name for s in skip) or (only and only != d.name):
+    if d.phys == "py-evdev-uinput" or any(s in d.name for s in skip) or (only and only != d.name) \
+            or ("Logitech" in d.name and not commands):
         continue
     devs[d.fd] = d
 print(json.dumps({"listening": [d.name + " " + d.phys for d in devs.values()]}), flush=True)

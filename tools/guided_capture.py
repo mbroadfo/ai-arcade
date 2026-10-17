@@ -6,13 +6,17 @@ devices (the AI Arcade virtual pads, the keyboard and the audio adapter are left
     python tools/guided_capture.py --section p1,p2      # only some sections (p1, p2, spinner, trackball, free)
     python tools/guided_capture.py --check              # listen for 4 seconds and list the devices, then stop
 
-While it waits:  s = skip this control,  b = go back one,  q = stop and save what it has.
+While it waits, from the panel's side of the room: on the Logitech keyboard or the Logitech F310 gamepad (both are
+commands only, never captured as controls):  S or gamepad A = skip this control,  B or gamepad B = go back one,
+Q or gamepad Start = stop and save what it has. The same s / b / q keys work in this terminal. Or just wait: a control
+nothing is pressed for is skipped after --timeout seconds (25 by default).
 A control it has already seen is refused ("already P1 UP"), so a wrong press does not shift everything after it.
 Result: runs/panel-capture-<time>.json and a summary of which USB port each player's controls came from.
 """
 import argparse
 import json
 import queue
+import re
 import sys
 import threading
 import time
@@ -35,6 +39,24 @@ SECTIONS = {
                   + [("TRACKBALL", f"button {n}") for n in (1, 2)]),
 }
 ORDER = ["p1", "p2", "spinner", "trackball"]
+# Command devices: never captured as controls. Their keys steer the capture (keyboard S, B, Q; the F310's A, B, Start).
+COMMAND_KEYS = {"KEY_S": "s", "KEY_B": "b", "KEY_Q": "q", "BTN_SOUTH": "s", "BTN_A": "s", "BTN_EAST": "b", "BTN_B": "b",
+                "BTN_START": "q"}
+
+
+def command_of(e):
+    """"s", "b" or "q" when this event is a command key press from a command device; None otherwise. Every other
+    event from a command device is ignored too (see is_command_device)."""
+    if e.get("type") == 1 and e.get("value") == 1 and is_command_device(e):
+        # evdev may report several names for one code ("['BTN_A', 'BTN_GAMEPAD', 'BTN_SOUTH']"): match whole names
+        for name in re.findall(r"[A-Z][A-Z_0-9]+", str(e.get("name"))):
+            if name in COMMAND_KEYS:
+                return COMMAND_KEYS[name]
+    return None
+
+
+def is_command_device(e):
+    return "Logitech" in (e.get("dev") or "")
 REL_QUIET = 0.6  # seconds without motion before a spinner or trackball counts as stopped
 
 
@@ -92,7 +114,7 @@ def identity(press):
 
 def stream(ssh, events, stop):
     """Run the reader on the Pi and put its events on a queue until `stop` is set."""
-    stdin, out, _ = ssh.exec_command("python3 - '' 3600", timeout=3700)
+    stdin, out, _ = ssh.exec_command("python3 - '' 3600 commands", timeout=3700)
     stdin.write(REMOTE)
     stdin.channel.shutdown_write()
     for line in out:
@@ -110,13 +132,13 @@ def key_pressed():
     return None
 
 
-def run(events, steps, say=print, poll=key_pressed, timeout=90):
+def run(events, steps, say=print, poll=key_pressed, timeout=25):
     """Walk the steps. Returns {label: press or None (skipped)} in order."""
     detector, got, taken, i = Detector(), {}, {}, 0
     while i < len(steps):
         group, name = steps[i]
         label = f"{group} {name}"
-        say(f"\n[{i + 1}/{len(steps)}] Press  {label}   (s skip, b back, q stop)")
+        say(f"\n[{i + 1}/{len(steps)}] Press  {label}   (skip: S / gamepad A; back: B; stop: Q / Start; or wait {timeout:g} s)")
         deadline, result = time.time() + timeout, "timeout"
         while time.time() < deadline:
             k = poll()
@@ -128,6 +150,12 @@ def run(events, steps, say=print, poll=key_pressed, timeout=90):
             except queue.Empty:
                 continue
             if "listening" in e:
+                continue
+            if is_command_device(e):  # steering, never a control
+                k = command_of(e)
+                if k:
+                    result = {"s": "skip", "b": "back", "q": "quit"}[k]
+                    break
                 continue
             press = detector.feed(e)
             if not press:
@@ -195,7 +223,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--host", default=DEFAULT_PI_HOST)
     parser.add_argument("--section", default=",".join(ORDER), help="comma list of: " + ", ".join(SECTIONS) + ", free")
-    parser.add_argument("--timeout", type=float, default=90, help="seconds to wait for each control before skipping it")
+    parser.add_argument("--timeout", type=float, default=25, help="seconds to wait for each control before skipping it")
     parser.add_argument("--check", action="store_true", help="listen for 4 seconds, list the devices, stop")
     parser.add_argument("--out", help="where to save (default runs/panel-capture-<time>.json)")
     args = parser.parse_args()

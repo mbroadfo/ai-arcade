@@ -196,3 +196,19 @@ def test_a_mouse_like_spinner_counts_once_per_direction_until_it_stops():
     assert d.feed(spin, now=0.1) is None and not d.idle(now=0.2)
     assert d.feed({**spin, "value": -3}, now=0.3)["direction"] == -1
     assert d.idle(now=2.0)
+
+
+def test_the_keyboard_and_the_gamepad_steer_the_capture_and_are_never_captured():
+    kb = {"type": 1, "code": 31, "value": 1, "dev": "Logitech Wireless Keyboard PID:4023", "name": "KEY_S"}
+    pad = {"type": 1, "code": 304, "value": 1, "dev": "Logitech Gamepad F310", "name": "['BTN_A', 'BTN_GAMEPAD', 'BTN_SOUTH']"}
+    space = {**kb, "name": "KEY_SPACE"}
+    assert guided_capture.command_of(kb) == "s" and guided_capture.command_of(pad) == "s"
+    assert guided_capture.command_of(space) is None  # KEY_SPACE is not KEY_S
+    assert guided_capture.command_of({**kb, "dev": "DragonRise Generic"}) is None
+    # a skip from the keyboard moves on without taking a control; the next press is the next control
+    got, _ = feed_all([kb, ev(1, 288, 1), ev(1, 288, 0)], [("P1", "UP"), ("P1", "A")])
+    assert got["P1 UP"] is None and got["P1 A"]["code"] == 288
+    # back and quit
+    q = {**kb, "name": "KEY_Q"}
+    got, _ = feed_all([ev(1, 288, 1), ev(1, 288, 0), q], [("P1", "A"), ("P1", "B")])
+    assert "P1 A" in got and "P1 B" not in got
