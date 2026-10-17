@@ -212,3 +212,19 @@ def test_the_keyboard_and_the_gamepad_steer_the_capture_and_are_never_captured()
     q = {**kb, "name": "KEY_Q"}
     got, _ = feed_all([ev(1, 288, 1), ev(1, 288, 0), q], [("P1", "A"), ("P1", "B")])
     assert "P1 A" in got and "P1 B" not in got
+
+
+F310 = """
+I: Bus=0003 Vendor=046d Product=c21d Version=0110
+N: Name="Logitech Gamepad F310"
+P: Phys=usb-xhci-hcd.1-2/input0
+H: Handlers=event15 js0
+
+"""
+
+
+def test_another_gamepad_that_sorts_before_the_panel_is_warned_about():
+    data = raw()
+    data["devices"] = F310 + data["devices"].replace("js0", "js3").replace("js1", "js4") + "\n" + PANEL.replace("js2", "js1")
+    report = audit_controls.analyze(data)
+    assert any("another gamepad (js0 Logitech Gamepad F310) sorts BEFORE the panel" in w for w in findings(report, "WARN"))

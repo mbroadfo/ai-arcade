@@ -18,6 +18,7 @@ import xml.etree.ElementTree as ET
 from gamelib import DEFAULT_PI_HOST
 
 CONFIGS = "/opt/retropie/configs"
+PANEL_IDS = {"0079:0006"}  # the panel's two DragonRise encoders (vendor:product); any other pad is "another pad"
 VIRTUAL_PHYS = "py-evdev-uinput"  # the AI Arcade broker's virtual pads (pi/controller_broker.py)
 NOT_A_PANEL = ("pwr_button", "vc4-hdmi", "HDMI Jack", "Logitech", "Power Button", "Consumer Control", "System Control",
                "KT USB Audio")  # the USB audio adapter has volume keys
@@ -139,6 +140,7 @@ def analyze(raw):
     pads = [d for d in devices if d["js"] is not None and not d["virtual"] and not any(t in d["name"] for t in NOT_A_PANEL)]
     keyboards = [d for d in devices if d["keyboard"] and not d["virtual"] and not any(t in d["name"] for t in NOT_A_PANEL)]
     wireless = [d for d in devices if "Logitech" in d["name"] and d["keyboard"]]
+    panel_pads = [d for d in pads if f"{d['vendor']}:{d['product']}" in PANEL_IDS]
     panel = pads + [k for k in keyboards if k not in pads]
 
     # --- who is there
@@ -178,6 +180,10 @@ def analyze(raw):
         say("WARN", "order", "the AI Arcade virtual pads sort BEFORE the physical panel (" + ", ".join(ordered) + "): "
                              "RetroArch and standalone MAME give Player 1 and Player 2 to the first two joysticks, so "
                              "the panel would be Player 3 and 4")
+    elif pads and ours and panel_pads and any(d["js"] < min(p["js"] for p in panel_pads) for d in pads if d not in panel_pads):
+        early = [d for d in pads if d not in panel_pads and d["js"] < min(p["js"] for p in panel_pads)]
+        say("WARN", "order", "another gamepad (" + ", ".join(f"js{d['js']} {d['name'].strip()}" for d in early) + ") sorts BEFORE "
+                             "the panel (" + ", ".join(ordered) + "): it would be Player 1, and the panel Players 2 and 3")
     elif pads and ours:
         say("OK", "order", "the physical panel sorts before the AI Arcade virtual pads (" + ", ".join(ordered) + ")")
     elif not pads and ours:
