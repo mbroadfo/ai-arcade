@@ -24,24 +24,24 @@ import json, select, sys, time
 import evdev
 only = sys.argv[1]
 seconds = float(sys.argv[2])
-skip = ("pwr_button", "vc4-hdmi", "HDMI Jack", "AI Arcade Player")
+skip = ("pwr_button", "vc4-hdmi", "HDMI Jack", "AI Arcade Player", "Logitech", "KTMicro")
 devs = {}
 for path in evdev.list_devices():
     d = evdev.InputDevice(path)
     if d.phys == "py-evdev-uinput" or any(s in d.name for s in skip) or (only and only != d.name):
         continue
     devs[d.fd] = d
-print(json.dumps({"listening": [d.name for d in devs.values()]}), flush=True)
+print(json.dumps({"listening": [d.name + " " + d.phys for d in devs.values()]}), flush=True)
 end = time.time() + seconds
 while time.time() < end and devs:
     ready, _, _ = select.select(list(devs), [], [], 0.2)
     for fd in ready:
         d = devs[fd]
         for e in d.read():
-            if e.type not in (1, 3) or (e.type == 1 and e.value == 2):
+            if e.type not in (1, 2, 3) or (e.type == 1 and e.value == 2):
                 continue
-            row = {"t": round(e.timestamp(), 3), "dev": d.name, "vid": "%04x:%04x" % (d.info.vendor, d.info.product),
-                   "type": e.type, "code": e.code, "value": e.value}
+            row = {"t": round(e.timestamp(), 3), "dev": d.name, "path": d.path, "phys": d.phys,
+                   "vid": "%04x:%04x" % (d.info.vendor, d.info.product), "type": e.type, "code": e.code, "value": e.value}
             if e.type == 3:
                 info = d.absinfo(e.code)
                 row["min"], row["max"] = info.min, info.max
@@ -65,29 +65,36 @@ def listen(ssh, seconds, device=""):
 
 
 def presses(events):
-    """Events -> the distinct controls pressed, in order of first press: [{dev, vid, kind, code, direction, name}].
+    """Events -> the distinct controls pressed, in order of first press: [{dev, path, phys, vid, kind, code, direction,
+    name}]. Two devices with the same name (a pair of identical encoders) are told apart by their path.
 
     A key press is value 1. An axis counts as pressed when it leaves the middle of its range (a quarter in from an end);
-    its direction is - or +. A hat or stick that returns to the middle is the release and is not a press."""
+    its direction is - or +. A hat or stick that returns to the middle is the release and is not a press. Relative
+    motion (a spinner or trackball, which are mice) counts as pressed in each direction it moves."""
     seen, out, axis_state = set(), [], {}
     for e in events:
         if "listening" in e:
             continue
+        who = e.get("path") or e["dev"]
+        base = {"dev": e["dev"], "path": e.get("path"), "phys": e.get("phys"), "vid": e.get("vid")}
         if e["type"] == 1 and e["value"] == 1:
-            key = (e["dev"], "key", e["code"], None)
-            entry = {"dev": e["dev"], "vid": e.get("vid"), "kind": "key", "code": e["code"], "direction": None,
-                     "name": e.get("name")}
+            key = (who, "key", e["code"], None)
+            entry = {**base, "kind": "key", "code": e["code"], "direction": None, "name": e.get("name")}
+        elif e["type"] == 2 and e["value"]:
+            direction = 1 if e["value"] > 0 else -1
+            key = (who, "rel", e["code"], direction)
+            entry = {**base, "kind": "rel", "code": e["code"], "direction": direction, "name": None}
         elif e["type"] == 3:
             lo, hi = e["min"], e["max"]
             span = max(hi - lo, 1)
             pos = (e["value"] - lo) / span
-            was = axis_state.get((e["dev"], e["code"]), 0)
+            was = axis_state.get((who, e["code"]), 0)
             now = -1 if pos < 0.25 else 1 if pos > 0.75 else 0
-            axis_state[(e["dev"], e["code"])] = now
+            axis_state[(who, e["code"])] = now
             if now == 0 or now == was:
                 continue
-            key = (e["dev"], "abs", e["code"], now)
-            entry = {"dev": e["dev"], "vid": e.get("vid"), "kind": "abs", "code": e["code"], "direction": now, "name": None}
+            key = (who, "abs", e["code"], now)
+            entry = {**base, "kind": "abs", "code": e["code"], "direction": now, "name": None}
         else:
             continue
         if key not in seen:
@@ -107,10 +114,17 @@ def assign(found, sequence=SEQUENCE):
     if len(found) > len(sequence):
         problems.append(f"{len(found) - len(sequence)} extra press(es) after {sequence[-1]}: " + ", ".join(
             f"{e['dev']} {e['kind']} {e['code']}" for e in found[len(sequence):]))
-    devices = sorted({e["dev"] for e in found})
+    devices = sorted({e.get("path") or e["dev"] for e in found})
     if len(devices) > 2:
         problems.append("presses came from more than two devices: " + ", ".join(devices))
     return mapping, problems
+
+
+def describe(e):
+    """One line for a press: where it came from and what it was."""
+    what = f"{e['kind']} {e['code']}" + (f" ({e['name']})" if e.get("name") else "") + \
+           (f" {'-' if e['direction'] < 0 else '+'}" if e["direction"] else "")
+    return f"{(e.get('phys') or e.get('path') or e['dev']):<28} {e['dev'].strip():<34} {what}"
 
 
 def connect(host):
@@ -130,9 +144,14 @@ def main():
     mode.add_argument("--list", action="store_true")
     mode.add_argument("--watch", type=float, metavar="SECONDS")
     mode.add_argument("--capture", action="store_true")
+    mode.add_argument("--survey", type=float, metavar="SECONDS",
+                      help="list every distinct control pressed, in order, with no expected sequence")
     parser.add_argument("--seconds", type=float, default=75, help="how long --capture listens (default 75)")
     parser.add_argument("--out", help="--capture: write the mapping here as JSON")
+    parser.add_argument("--names", help="--capture: the controls to be pressed, in order, comma separated "
+                                         "(default: the standard 24 for both players)")
     args = parser.parse_args()
+    sequence = [n.strip() for n in args.names.split(",")] if args.names else SEQUENCE
     ssh = connect(args.host)
     try:
         if args.list:
@@ -147,17 +166,19 @@ def main():
             for e in listen(ssh, args.watch, args.device):
                 print(json.dumps(e))
             return 0
+        if args.survey:
+            for e in presses(listen(ssh, args.survey, args.device)):
+                print(describe(e))
+            return 0
         print("Press each control once, about a second apart, in this order:")
-        print("  " + ", ".join(SEQUENCE))
+        print("  " + ", ".join(sequence))
         print(f"Listening for {args.seconds:g} s...", flush=True)
         found = presses(listen(ssh, args.seconds, args.device))
     finally:
         ssh.close()
-    mapping, problems = assign(found)
+    mapping, problems = assign(found, sequence)
     for name, e in mapping.items():
-        what = f"{e['kind']} {e['code']}" + (f" ({e['name']})" if e.get("name") else "") + \
-               (f" {'-' if e['direction'] < 0 else '+'}" if e["direction"] else "")
-        print(f"{name:<14} {e['dev']}  {what}")
+        print(f"{name:<14} {describe(e)}")
     for p in problems:
         print("PROBLEM:", p)
     if args.out:

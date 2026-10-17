@@ -19,7 +19,8 @@ from gamelib import DEFAULT_PI_HOST
 
 CONFIGS = "/opt/retropie/configs"
 VIRTUAL_PHYS = "py-evdev-uinput"  # the AI Arcade broker's virtual pads (pi/controller_broker.py)
-NOT_A_PANEL = ("pwr_button", "vc4-hdmi", "HDMI Jack", "Logitech", "Power Button", "Consumer Control", "System Control")
+NOT_A_PANEL = ("pwr_button", "vc4-hdmi", "HDMI Jack", "Logitech", "Power Button", "Consumer Control", "System Control",
+               "KT USB Audio")  # the USB audio adapter has volume keys
 
 COMMANDS = {
     "devices": "cat /proc/bus/input/devices",
@@ -150,14 +151,22 @@ def analyze(raw):
         say("INFO", "panel", "no physical panel device is connected (no gamepad-class device and no keyboard beyond the "
                               "wireless one): nothing to map yet")
     for d in pads:
-        say("INFO", "panel", f"gamepad-class device '{d['name']}' js{d['js']} {d['vendor']}:{d['product']} ({d['phys']})")
-        if d["name"] not in es:
-            say("FAIL", "EmulationStation", f"no es_input.cfg entry for '{d['name']}': the menu will not take it "
+        say("INFO", "panel", f"gamepad-class device '{d['name'].strip()}' js{d['js']} {d['vendor']}:{d['product']} ({d['phys']})")
+    for name in dict.fromkeys(d["name"] for d in pads):
+        if name not in es:
+            say("FAIL", "EmulationStation", f"no es_input.cfg entry for '{name.strip()}': the menu will not take it "
                                             "(run EmulationStation's input configuration, or install the profile)")
-        if d["name"] not in ra_names:
-            say("FAIL", "RetroArch", f"no autoconfig for '{d['name']}': RetroArch cores will not map it")
-        say("INFO", "MAME", f"standalone MAME addresses '{d['name']}' by order (JOYCODE_n), not by name: check n with "
-                            "the order below")
+        if name not in ra_names:
+            say("FAIL", "RetroArch", f"no autoconfig for '{name.strip()}': RetroArch cores will not map it")
+    if pads:
+        say("INFO", "MAME", "standalone MAME addresses joysticks by order (JOYCODE_n), not by name: check n with the order below")
+    for name, n in collections.Counter(d["name"] for d in pads).items():
+        if n > 1:
+            same = [d for d in pads if d["name"] == name]
+            say("WARN", "identity", f"{n} devices share the name '{name.strip()}' and the id {same[0]['vendor']}:{same[0]['product']}: "
+                                    "a profile by name or id cannot tell Player 1 from Player 2, so the order is the only "
+                                    "difference (" + ", ".join(f"js{d['js']} = {d['phys']}" for d in same)
+                                    + "); pin it to the USB port with a udev rule")
     for d in keyboards:
         say("INFO", "panel", f"keyboard-class device '{d['name']}' ({d['vendor']}:{d['product']}): every emulator already reads "
                              "a keyboard, so only Player 2 and the exit chord need keys")

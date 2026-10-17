@@ -174,6 +174,7 @@ In every game also check: Start, Coin, the exit chord, and that pressing P2's co
 | --- | --- | --- |
 | `tools/audit_controls.py` | reads the Pi, reports devices, which program maps them, who is Player 1 and 2, and what is missing (FAIL = a device nothing maps, WARN = misbehaves in some emulator). `--save` keeps the raw collection | nothing on the Pi |
 | `tools/probe_panel.py` | `--list`, `--watch N`, `--capture`: listens to the Pi's input devices (the virtual pads excluded), names each press from a stated order | nothing on the Pi; reads only, grabs nothing |
+| `tools/guided_capture.py` | **run it yourself at the panel**: says "Press P1 A", waits for it, shows which USB port and code it came from, refuses a control it has already seen, and reports a button wired to the wrong encoder. Sections: P1, P2, spinner, trackball. Saves `runs/panel-capture-<time>.json` | nothing on the Pi; reads only |
 | `tools/catalog_controls.py` | classifies the arcade catalog by control type and emulator | `docs/data/cabinet-controls-catalog.json` |
 
 Tests: `tests/test_audit_controls.py` (against a saved copy of the live Pi's files, plus a made-up panel).
