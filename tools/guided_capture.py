@@ -3,7 +3,9 @@ and moves on. Run it yourself in a terminal while standing at the panel. Read-on
 devices (the AI Arcade virtual pads, the keyboard and the audio adapter are left out) and changes nothing.
 
     python tools/guided_capture.py                      # P1, P2, the spinner and the trackball
-    python tools/guided_capture.py --section p1,p2      # only some sections (p1, p2, spinner, trackball, free)
+    python tools/guided_capture.py --section p2stick,flight,trackball   # only some sections
+                                                        # (p1, p2, p2stick, spinner, trackball, flight, free)
+    python tools/guided_capture.py --idle 10            # touch nothing for 10 s: which devices chatter by themselves
     python tools/guided_capture.py --check              # listen for 4 seconds and list the devices, then stop
 
 While it waits, from the panel's side of the room: on the Logitech keyboard or the Logitech F310 gamepad (both are
@@ -34,11 +36,13 @@ SECTIONS = {
            ["UP", "DOWN", "RIGHT", "LEFT", "A", "B", "X", "Y", "SNOWFLAKE", "STAR", "COIN 1", "P1 START", "ESC", "TAB"]]),
     "p2": ("Player 2's controller", [("P2", n) for n in
            ["UP", "DOWN", "RIGHT", "LEFT", "A", "B", "X", "Y", "SNOWFLAKE", "STAR", "COIN 2", "P2 START", "ENTER", "PAUSE"]]),
+    "p2stick": ("Player 2's stick alone (after rewiring it)", [("P2", n) for n in ["UP", "DOWN", "RIGHT", "LEFT"]]),
+    "flight": ("the flight controller", [("FLIGHT", "button 1"), ("FLIGHT", "button 2")]),
     "spinner": ("the spinner", [("SPINNER", "turn clockwise"), ("SPINNER", "turn counter-clockwise")]),
-    "trackball": ("the trackball", [("TRACKBALL", n) for n in ["roll up", "roll down", "roll left", "roll right"]]
-                  + [("TRACKBALL", f"button {n}") for n in (1, 2)]),
+    "trackball": ("the trackball (rolling only: its three buttons are not used)",
+                  [("TRACKBALL", n) for n in ["roll up", "roll down", "roll left", "roll right"]]),
 }
-ORDER = ["p1", "p2", "spinner", "trackball"]
+ORDER = ["p1", "p2", "spinner", "trackball", "flight"]
 # Command devices: never captured as controls. Their keys steer the capture (keyboard S, B, Q; the F310's A, B, Start).
 COMMAND_KEYS = {"KEY_S": "s", "KEY_B": "b", "KEY_Q": "q", "BTN_SOUTH": "s", "BTN_A": "s", "BTN_EAST": "b", "BTN_B": "b",
                 "BTN_START": "q"}
@@ -193,6 +197,23 @@ def run(events, steps, say=print, poll=key_pressed, timeout=25):
     return got
 
 
+def noise(events):
+    """Events seen while nobody touched anything -> {(port, kind, code): count}, the busiest first. A mouse-like device
+    that chatters (a spinner) or an axis that wanders shows up here. Command devices are left out."""
+    counts = {}
+    for e in events:
+        if "listening" in e or is_command_device(e):
+            continue
+        if e["type"] == 3:
+            span = max(e["max"] - e["min"], 1)
+            if 0.25 <= (e["value"] - e["min"]) / span <= 0.75:
+                continue  # an axis resting near the middle is not a press, only its jitter
+        kind = {1: "key", 2: "rel", 3: "abs"}.get(e["type"])
+        key = (e.get("phys") or e.get("path") or e["dev"], kind, e["code"])
+        counts[key] = counts.get(key, 0) + 1
+    return dict(sorted(counts.items(), key=lambda kv: -kv[1]))
+
+
 def summary(got):
     """Lines for the end: what came from where, and what looks wrong."""
     lines, ports, problems = [], {}, []
@@ -224,6 +245,8 @@ def main():
     parser.add_argument("--host", default=DEFAULT_PI_HOST)
     parser.add_argument("--section", default=",".join(ORDER), help="comma list of: " + ", ".join(SECTIONS) + ", free")
     parser.add_argument("--timeout", type=float, default=25, help="seconds to wait for each control before skipping it")
+    parser.add_argument("--idle", type=float, metavar="SECONDS",
+                        help="touch nothing for this long and list what the devices send by themselves")
     parser.add_argument("--check", action="store_true", help="listen for 4 seconds, list the devices, stop")
     parser.add_argument("--out", help="where to save (default runs/panel-capture-<time>.json)")
     args = parser.parse_args()
@@ -238,6 +261,17 @@ def main():
         if args.check:
             time.sleep(4)
             return 0
+        if args.idle:
+            print(f"\nTouch nothing for {args.idle:g} seconds...", flush=True)
+            time.sleep(args.idle)
+            seen = []
+            while not events.empty():
+                seen.append(events.get())
+            found = noise(seen)
+            print("Nothing sent anything by itself." if not found else "Sent by themselves (count, where, what):")
+            for (where, kind, code), n in found.items():
+                print(f"  {n:5d}  {where}  {kind} {code}")
+            return 1 if found else 0
         steps = []
         for name in [s.strip() for s in args.section.split(",") if s.strip()]:
             if name == "free":

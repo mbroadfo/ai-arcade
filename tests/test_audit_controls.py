@@ -228,3 +228,17 @@ def test_another_gamepad_that_sorts_before_the_panel_is_warned_about():
     data["devices"] = F310 + data["devices"].replace("js0", "js3").replace("js1", "js4") + "\n" + PANEL.replace("js2", "js1")
     report = audit_controls.analyze(data)
     assert any("another gamepad (js0 Logitech Gamepad F310) sorts BEFORE the panel" in w for w in findings(report, "WARN"))
+
+
+def test_idle_noise_counts_chatter_and_ignores_a_resting_axis_and_the_command_devices():
+    events = [ev(3, 2, 130), ev(3, 2, 131),  # an axis resting near the middle: jitter, not noise
+              {"type": 2, "code": 0, "value": 1, "dev": "Spinner", "path": "/dev/input/event5", "phys": "usb-1.1"},
+              {"type": 2, "code": 0, "value": -1, "dev": "Spinner", "path": "/dev/input/event5", "phys": "usb-1.1"},
+              {"type": 1, "code": 31, "value": 1, "dev": "Logitech Wireless Keyboard PID:4023", "name": "KEY_S"}]
+    assert guided_capture.noise(events) == {("usb-1.1", "rel", 0): 2}
+
+
+def test_the_sections_cover_the_flight_controller_and_the_unused_trackball_buttons_are_gone():
+    assert [n for _, n in guided_capture.SECTIONS["flight"][1]] == ["button 1", "button 2"]
+    assert not any("button" in n for _, n in guided_capture.SECTIONS["trackball"][1])
+    assert [n for _, n in guided_capture.SECTIONS["p2stick"][1]] == ["UP", "DOWN", "RIGHT", "LEFT"]

@@ -73,6 +73,75 @@ Bradley 10). Six action buttons per player plus Start and Coin therefore covers 
 | R6 | ES's `Keyboard` entry is shared by every keyboard. | a keyboard-style panel inherits (or must change) the Logitech's menu keys |
 | R7 | Text games (Frotz, sdltrs) need a keyboard. | the Logitech stays plugged in |
 
+## The panel as captured (17 October 2026)
+
+From `tools/guided_capture.py` with the panel wired (raw copy: `docs/data/panel-capture-2026-10-17.json`).
+
+### Devices
+
+| Device | USB port | Presents as | Notes |
+| --- | --- | --- | --- |
+| Player 1 encoder | `usb-xhci-hcd.0-1.2` | gamepad, `0079:0006` DragonRise Generic USB Joystick | 12 buttons (codes 288 to 299), axes X, Y, Z, RX, RZ and a hat; only X and Y are wired |
+| Player 2 encoder | `usb-xhci-hcd.0-1.3` | the same model, **the same name and id** | |
+| Spinner (GGG TurboTwist 2) | `usb-xhci-hcd.0-1.1` | mouse, `fafa:0060` | |
+| Trackball (GGG ICE-T) | `usb-xhci-hcd.0-1.4` | mouse, `fafa:0020` | its three mouse buttons are not used |
+| Flight controller | not yet captured | two buttons | which device they arrive on is to be captured |
+| Logitech F310 | `usb-xhci-hcd.1-2` | gamepad | a spare: it takes Player 1's slot when plugged in |
+
+A button's number in SDL, RetroArch and the Linux joystick interface is its code minus 288.
+
+### Player 1 (port 1.2)
+
+Stick: axis 1 negative = up, positive = down; axis 0 negative = left, positive = right (the standard sense).
+
+| Control | Code | Button | Control | Code | Button |
+| --- | ---: | ---: | --- | ---: | ---: |
+| A | 299 | 11 | Coin 1 | 293 | 5 |
+| B | 297 | 9 | P1 Start | 292 | 4 |
+| X | 296 | 8 | Esc | 291 | 3 |
+| Y | 298 | 10 | Tab | 290 | 2 |
+| Snowflake | 295 | 7 | Star | 294 | 6 |
+
+### Player 2 (port 1.3)
+
+| Control | Code | Button | Control | Code | Button |
+| --- | ---: | ---: | --- | ---: | ---: |
+| A | 293 | 5 | Coin 2 | 294 | 6 |
+| B | 291 | 3 | P2 Start | 295 | 7 |
+| X | 290 | 2 | Enter | 296 | 8 |
+| Y | 292 | 4 | Pause | 297 | 9 |
+| Snowflake | 289 | 1 | Star | 288 | 0 |
+
+Stick: captured out of order (prompt "up" gave axis 1 positive, "down" axis 0 positive, "right" axis 0 negative,
+"left" axis 1 negative), so it is **to be rewired and captured again**.
+
+### Spinner and trackball
+
+Spinner: clockwise = relative axis 0 positive, counter-clockwise negative. Trackball, first clean pass: up = relative
+axis 1 negative, down = positive, left = axis 0 negative, right = positive (later passes were scrambled by retries and
+by spinner events arriving while the trackball was rolled: to be re-captured, with an idle listen to see whether the
+spinner chatters).
+
+### Problems found
+
+| # | Problem | Status |
+| --- | --- | --- |
+| 1 | Player 2's stick directions are crossed | the owner will rewire, then `--section p2stick` |
+| 2 | The two encoders number their buttons differently (P1's action buttons are 294 to 299, P2's 288 to 293; the extra buttons differ in position and order too), so no single profile fits both | open: decided with the mapping approach below |
+| 3 | The two encoders have the same name, id and GUID; only the USB port differs, and Player 1 and 2 are told apart by enumeration order | open |
+| 4 | Another gamepad (the F310) took `js0`, putting the panel at `js1` and `js2` | unplug the spare; `audit_controls.py` warns |
+| 5 | Esc, Tab, Enter and Pause are joystick buttons, not keys | they need a mapping in each emulator |
+| 6 | The flight controller's two buttons are not yet seen | `--section flight` |
+| 7 | The spinner reported movement while only the trackball was rolled | `--idle 10`, then `--section spinner,trackball` |
+
+### Mapping approach, awaiting a decision
+
+A. per-player maps by USB position in RetroArch, MAME and AdvanceMAME (no new software; the order problem stays);
+B. a small daemon on the Pi that reads the two encoders by USB port and presents two clean virtual pads in the
+standard layout with fixed names and order (same pattern as the broker); recommended, because every emulator then
+sees one layout and problems 2, 3 and 5 are solved in one place;
+C. rewire P2's terminals to match P1 (solves only problem 2).
+
 ## The plan
 
 ### 1. One contract, three profile layers
@@ -116,7 +185,7 @@ keyboard, MAME's default keys already cover both players, and the work is RetroA
    Everything the Pi keeps is reproducible from the repo, per the rule that persistent Pi changes live in automation.
 4. The validation below, run together.
 
-## Missing information (please answer)
+## Missing information (answered in part on 17 October: see "The panel as captured")
 
 1. **The encoder**: make and model (I-PAC, Zero Delay, Brook, a Pi GPIO board...)? Does it show up as a **keyboard** or
    as **gamepads**, and is that selectable? A photo of the board, or `python tools/probe_panel.py --list` with it
@@ -174,7 +243,7 @@ In every game also check: Start, Coin, the exit chord, and that pressing P2's co
 | --- | --- | --- |
 | `tools/audit_controls.py` | reads the Pi, reports devices, which program maps them, who is Player 1 and 2, and what is missing (FAIL = a device nothing maps, WARN = misbehaves in some emulator). `--save` keeps the raw collection | nothing on the Pi |
 | `tools/probe_panel.py` | `--list`, `--watch N`, `--capture`: listens to the Pi's input devices (the virtual pads excluded), names each press from a stated order | nothing on the Pi; reads only, grabs nothing |
-| `tools/guided_capture.py` | **run it yourself at the panel**: says "Press P1 A", waits for it, shows which USB port and code it came from, refuses a control it has already seen, and reports a button wired to the wrong encoder. Sections: P1, P2, spinner, trackball. Saves `runs/panel-capture-<time>.json` | nothing on the Pi; reads only |
+| `tools/guided_capture.py` | **run it yourself at the panel**: says "Press P1 A", waits for it, shows which USB port and code it came from, refuses a control it has already seen, and reports a button wired to the wrong encoder. Sections: p1, p2, p2stick, spinner, trackball, flight, free; `--idle N` lists what chatters when nothing is touched. Skip, back and stop work from the Logitech keyboard or the F310. Saves `runs/panel-capture-<time>.json` | nothing on the Pi; reads only |
 | `tools/catalog_controls.py` | classifies the arcade catalog by control type and emulator | `docs/data/cabinet-controls-catalog.json` |
 
 Tests: `tests/test_audit_controls.py` (against a saved copy of the live Pi's files, plus a made-up panel).
