@@ -122,3 +122,29 @@ def test_the_pretend_panel_turns_names_into_the_encoders_events():
     assert s.events("P2", "UP", True) == [(1, synth_panel.EV_ABS, 1, 255)]  # P2 wiring: up reads Y positive
     assert s.events("P2", "LEFT", False) == [(1, synth_panel.EV_ABS, 0, 127)]  # released: back to the middle
     assert s.events("P2", "FLIGHT1", True) == [(1, synth_panel.EV_KEY, 299, 1)]
+
+
+def test_the_launchers_for_the_four_games_move_and_nothing_else_changes():
+    text = 'arcade_bzone = "advmame"\narcade_tempest = "advmame"\nnes_x = "lr-fceumm"\n'
+    new = pp.move_launchers(text)
+    assert 'arcade_bzone = "mame-0.251"' in new and 'arcade_tempest = "advmame"' in new and 'nes_x = "lr-fceumm"' in new
+    assert 'arcade_dkong = "mame-0.251"' in new  # added when it had no line
+    assert pp.move_launchers(new) == new  # idempotent
+
+
+def test_advmame_gets_only_the_buttons_its_event_driver_can_see():
+    visible_p1 = pp.advmame_visible_actions(PANEL, "P1")
+    assert visible_p1 == ["B", "X", "SNOWFLAKE", "STAR"]  # A (299) and Y (298) are not visible to it
+    assert pp.advmame_visible_actions(PANEL, "P2") == ["A", "Y"]
+    values = dict(pp.advmame_inputs(PANEL))
+    assert values["coin1"].startswith("joystick_button[0079_0006,b]") and values["start1"].startswith("joystick_button[0079_0006,y]")
+    assert values["p2_button1"].startswith("joystick_button[0079_0006_2,b]") and "p1_button5" not in values
+    assert values["p1_doubleright_up"] == "joystick_digital[0079_0006_2,stick,y,down]"  # P2's stick is inverted
+
+
+def test_the_advmame_rc_keeps_every_other_line():
+    rc = "config save_at_exit\ndevice_joystick auto\ninput_map[coin1] auto\ninput_map[p1_up] auto\n"
+    new = pp.merge_advmame_rc(rc, pp.advmame_inputs(PANEL))
+    assert new.startswith("config save_at_exit\ndevice_joystick auto\n")
+    assert "input_map[coin1] joystick_button[0079_0006,b] or keyboard[0,5]" in new and "input_map[p1_up] joystick_digital" in new
+    assert pp.merge_advmame_rc(new, pp.advmame_inputs(PANEL)) == new

@@ -11,6 +11,9 @@ Files written (all writable by the pi user; no sudo):
   RetroArch         /opt/retropie/configs/all/retroarch-joypads/<device>.cfg  the joypad autoconfig (cores read it by name)
   MAME 0.251        /home/pi/.mame/ctrlr/panel.cfg and the ctrlr line of /opt/retropie/configs/mame-0251/mame.ini
                     (human mode only: AI mode runs MAME with its own ctrlr file, tools/start_pi_game.py)
+  AdvanceMAME       the input_map[...] lines of /opt/retropie/configs/mame-advmame/advmame.rc (the other lines stay)
+  Launchers         the four AdvanceMAME games MAME 0.251 can run (Battlezone, Bradley, Donkey Kong, Pisces) move to MAME 0.251
+                    in /opt/retropie/configs/all/emulators.cfg
 Restart EmulationStation afterwards (the script does not: a game may be running); `python tools/human_mode.py` does.
 """
 import argparse
@@ -31,6 +34,8 @@ ES_INPUT = "/opt/retropie/configs/all/emulationstation/es_input.cfg"
 RA_DIR = "/opt/retropie/configs/all/retroarch-joypads"
 MAME_CTRLR = "/home/pi/.mame/ctrlr/panel.cfg"
 MAME_INI = "/opt/retropie/configs/mame-0251/mame.ini"
+ADVMAME_RC = "/opt/retropie/configs/mame-advmame/advmame.rc"
+EMULATORS_ALL = "/opt/retropie/configs/all/emulators.cfg"
 
 
 def connect(host):
@@ -59,12 +64,18 @@ def plan(panel, sftp):
     ini_old = read(sftp, MAME_INI)
     if ini_old is None:
         raise RuntimeError(f"{MAME_INI} is missing: run tools/install_mame_human.py first")
+    adv_old = read(sftp, ADVMAME_RC)
     wanted = [
         (ES_INPUT, es_old, pp.merge_es_input(es_old, entry, device["sdl_name"])),
         (f"{RA_DIR}/{device['evdev_name']}.cfg", read(sftp, f"{RA_DIR}/{device['evdev_name']}.cfg"), pp.retroarch_autoconfig(panel)),
         (MAME_CTRLR, read(sftp, MAME_CTRLR), pp.mame_ctrlr(panel)),
         (MAME_INI, ini_old, pp.mame_ini_with_ctrlr(ini_old, "panel")),
     ]
+    emu_old = read(sftp, EMULATORS_ALL)
+    if emu_old is not None:
+        wanted.append((EMULATORS_ALL, emu_old, pp.move_launchers(emu_old)))
+    if adv_old is not None:
+        wanted.append((ADVMAME_RC, adv_old, pp.merge_advmame_rc(adv_old, pp.advmame_inputs(panel))))
     return [(path, old, new) for path, old, new in wanted if old != new]
 
 

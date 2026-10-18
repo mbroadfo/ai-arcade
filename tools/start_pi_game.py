@@ -16,6 +16,12 @@ from gamelib import DEFAULT_GAME, DEFAULT_PI_HOST, ROOT, load_game, load_profile
 from probe_mame_input import MAME_LOG, run
 from state_regions import regions_lua
 
+# AI mode's MAME reads the broker's two virtual pads as joysticks 1 and 2 (the AI's controller file, aiarcade.cfg). A
+# physical panel or any other pad plugged into the Pi sorts before them and would take those numbers, so SDL is told to
+# ignore every device except the broker's (vendor 1209, products a101 and a102; pi/controller_broker.py). Checked with MAME
+# on 17 October 2026: with it MAME lists only "AI Arcade Player 1" and "AI Arcade Player 2".
+ONLY_AI_PADS = "SDL_GAMECONTROLLER_IGNORE_DEVICES_EXCEPT=0x1209/0xa101,0x1209/0xa102"
+
 REMOTE_DIR = "/home/pi/ai-arcade"
 STATE_FILE = "/dev/shm/ai-arcade-state.bin"
 SERVER_LOG = "/tmp/ai-arcade-state-server.log"
@@ -96,7 +102,7 @@ def main():
         run(ssh, f"pkill -f '{ES_PROCESS}' || true; "
                  f"timeout 10 sh -c \"while pgrep -f '{ES_PROCESS}' >/dev/null; do sleep 0.2; done\" || true")
         run(ssh, f"rm -f {STATE_FILE} {FRAME_FILE} {SETTINGS_NOW} {PAUSE_FILES}")
-        run(ssh, f"nohup env SDL_AUDIODRIVER=alsa AI_ARCADE_VIDEO_FPS={video_fps} "
+        run(ssh, f"nohup env SDL_AUDIODRIVER=alsa AI_ARCADE_VIDEO_FPS={video_fps} {ONLY_AI_PADS} "
                  f"mame {romset} -rompath {pi_rompath(system)} "
                  "-video accel -nowindow -skip_gameinfo -joystick -joystickprovider sdl "
                  + (f"-snapsize {snap[0]}x{snap[1]} " if snap else "") +

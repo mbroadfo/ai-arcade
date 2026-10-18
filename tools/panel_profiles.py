@@ -9,7 +9,7 @@ Pause (P2) pauses. EmulationStation is driven by Player 1's side (the two encode
 both: Player 2's buttons act as Player 1's in the menu until the wiring is changed to match).
 
 Button numbers: an SDL, RetroArch and MAME button is the evdev code minus the first button code (288), counted from 0
-(MAME names them from 1).
+(MAME names them from 1). AdvanceMAME names the same buttons trigger, thumb, thumb2, top, top2, pinkie, base, base2 ... base6.
 """
 import json
 import re
@@ -176,3 +176,112 @@ def expected_mame_fields(panel):
         out[(player, "COIN")] = [f"Coin {num}"]
         out[(player, "START")] = ["1 Player Start" if player == "P1" else "2 Players Start"]
     return out
+
+
+# ---------------------------------------------------------------- AdvanceMAME 3
+#
+# AdvanceMAME's default joystick driver ("event") treats this encoder as a gamepad and shows only six of its twelve buttons,
+# the codes 292 to 297, named y, b, tl, tr, tl2 and start (checked with the pretend panel on 17 October 2026). The other six
+# cannot be used. Its "sdl" driver shows all twelve but seems to see only four joysticks in all, and the AI Arcade pads take
+# two of those, so the event driver is kept. Each encoder is a joystick named vendor_product, the second with _2.
+# So each player gets the action buttons that are visible (in the panel's A, B, X, Y, Snowflake, Star order), coin and
+# start are on visible buttons, and menu and exit are chords of the visible coin and start buttons.
+
+ADV_EVENT_BUTTONS = {292: "y", 293: "b", 294: "tl", 295: "tr", 296: "tl2", 297: "start"}
+ADV_JOY = "0079_0006"
+ADV_OPTIONS = {}
+
+
+def _adv_name(panel, player, control):
+    """AdvanceMAME's name for a player's control, or None when its button is one the event driver does not show."""
+    return ADV_EVENT_BUTTONS.get(panel["players"][player]["buttons"].get(control))
+
+
+def _adv_direction(joy, direction_sign):
+    """joystick_digital[...] for a stick reading: abs 0 is x, abs 1 is y; a negative reading is left or up."""
+    axis, sign = direction_sign
+    if axis == 0:
+        word = "left" if sign < 0 else "right"
+        return f"joystick_digital[{joy},stick,x,{word}]"
+    word = "up" if sign < 0 else "down"
+    return f"joystick_digital[{joy},stick,y,{word}]"
+
+
+def advmame_visible_actions(panel, player):
+    """[control names] of a player's action buttons that AdvanceMAME can see, in the panel's order: BUTTON_1 first."""
+    return [c for c in panel["layout"]["action_order"] if _adv_name(panel, player, c)]
+
+
+def advmame_inputs(panel, joy1=ADV_JOY, joy2=ADV_JOY + "_2"):
+    """[(input_map name, value)] for advmame.rc."""
+    joy = {"P1": joy1, "P2": joy2}
+    keys = {"P1": {"up": "up", "down": "down", "left": "left", "right": "right"},
+            "P2": {"up": "r", "down": "f", "left": "d", "right": "g"}}
+    button_keys = {"P1": ["lcontrol", "lalt", "space", "lshift", "z", "x"], "P2": ["a", "s", "q", "w", "e", "i"]}
+
+    def button(player, control):
+        return f"joystick_button[{joy[player]},{_adv_name(panel, player, control)}]"
+
+    out = []
+    for player in ("P1", "P2"):
+        p = player.lower()
+        stick = panel["players"][player]["stick"]
+        for direction in ("up", "down", "left", "right"):
+            out.append((f"{p}_{direction}", f"{_adv_direction(joy[player], stick[direction][1:])} or keyboard[0,{keys[player][direction]}]"))
+        for n, control in enumerate(advmame_visible_actions(panel, player), 1):
+            out.append((f"{p}_button{n}", f"{button(player, control)} or keyboard[0,{button_keys[player][n - 1]}]"))
+    # twin-stick games (Battlezone, Ultra Tank): the left stick is Player 1's, the right stick is Player 2's
+    for side, player in (("left", "P1"), ("right", "P2")):
+        stick = panel["players"][player]["stick"]
+        for direction in ("up", "down", "left", "right"):
+            out.append((f"p1_double{side}_{direction}", _adv_direction(joy[player], stick[direction][1:])))
+    out += [("coin1", f"{button('P1', 'COIN')} or keyboard[0,5]"), ("start1", f"{button('P1', 'START')} or keyboard[0,1]"),
+            ("coin2", f"{button('P2', 'COIN')} or keyboard[0,6]"), ("start2", f"{button('P2', 'START')} or keyboard[0,2]")]
+    # P2's Enter and Pause are visible; Tab and Esc (on the P1 encoder) are not, so those two are chords
+    out += [("ui_select", f"{button('P2', 'ENTER')} or keyboard[0,enter]"),
+            ("ui_pause", f"{button('P2', 'PAUSE')} or keyboard[0,p]"),
+            ("ui_cancel", f"{button('P1', 'COIN')} {button('P1', 'START')} or keyboard[0,esc]"),
+            ("ui_configure", f"{button('P2', 'COIN')} {button('P2', 'START')} or keyboard[0,tab]")]
+    stick1 = panel["players"]["P1"]["stick"]
+    for direction in ("up", "down", "left", "right"):
+        out.append((f"ui_{direction}", f"{_adv_direction(joy1, stick1[direction][1:])} or keyboard[0,{direction}]"))
+    return out
+
+
+def merge_advmame_rc(text, inputs, options=None):
+    """advmame.rc with each input_map[name] line (and each option) replaced by the new value, or added at the end.
+    Everything else stays."""
+    options = ADV_OPTIONS if options is None else options
+    lines = text.splitlines()
+    wanted = {f"input_map[{name}]": value for name, value in inputs}
+    wanted.update(options)
+    seen = set()
+    for i, line in enumerate(lines):
+        key = line.split(" ", 1)[0]
+        if key in wanted:
+            lines[i] = f"{key} {wanted[key]}"
+            seen.add(key)
+    lines += [f"{key} {value}" for key, value in wanted.items() if key not in seen]
+    return "\n".join(lines) + "\n"
+
+
+# ---------------------------------------------------------------- which emulator runs which game
+
+# AdvanceMAME shows the panel's encoders with only six of their twelve buttons and no way to exit with the panel, so the
+# games it ran that MAME 0.251 can also run from the cabinet's ROMs (checked with `mame -verifyroms` on 17 October 2026)
+# move to MAME 0.251, whose panel map is complete and was tested. The other AdvanceMAME games stay on it.
+MOVE_TO_MAME251 = ["bzone", "bradley", "dkong", "pisces"]
+
+
+def move_launchers(text, games=MOVE_TO_MAME251, emulator="mame-0.251"):
+    """/opt/retropie/configs/all/emulators.cfg with each arcade game's launcher set to `emulator`. Other lines stay."""
+    lines = text.splitlines()
+    wanted = {f"arcade_{g}": emulator for g in games}
+    seen = set()
+    for i, line in enumerate(lines):
+        key = line.split("=", 1)[0].strip()
+        if key in wanted and "=" in line:
+            lines[i] = f'{key} = "{wanted[key]}"'
+            seen.add(key)
+    lines += [f'{key} = "{value}"' for key, value in wanted.items() if key not in seen]
+    return "\n".join(lines) + "\n"

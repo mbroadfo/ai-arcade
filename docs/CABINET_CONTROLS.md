@@ -263,6 +263,48 @@ Nothing else needs to move: Player 1, the spinner and the flight controller's bu
 After the rewiring only the changed controls are captured again (`guided_capture.py --section p2,trackball`), and then the
 profiles are built into a folder and shown as a diff before anything is installed.
 
+## Installed on the Pi (17 October 2026)
+
+`python tools/install_controls.py` (dry run), `--apply`, `--rollback`. Two backups: `controls-20261017-204007` (ES, RetroArch,
+MAME) and `controls-20261017-215236` (AdvanceMAME and the launcher moves), both in `/home/pi/ai-arcade/backups/`. Profiles are
+generated from `pi/controls/panel.json` by `tools/panel_profiles.py`.
+
+| Where | What changed |
+| --- | --- |
+| EmulationStation | `es_input.cfg`: an entry for "DragonRise Inc. Generic USB Joystick" (SDL's name and GUID): A accept, B back, Star and Snowflake page up and down, Tab select, Start the menu. Both encoders share it, so Player 2's buttons act as Player 1's in the menu (and its stick is inverted) |
+| RetroArch (the `lr-*` cores) | an autoconfig for the encoder by its kernel name: RetroPad B, A, Y, X, L, R are arcade buttons 1 to 6, Select is Coin, Start is Start; Esc is the hotkey and exit, Tab with Esc held the menu |
+| MAME 0.251 (human mode) | `/home/pi/.mame/ctrlr/panel.cfg`, and `mame.ini` uses it: both sticks, six buttons each, coin, start, the twin-stick right stick on the P2 stick, menu keys (Tab menu, Enter select, Esc back, Pause pause) |
+| AdvanceMAME | the `input_map[...]` lines of `advmame.rc` (see its limits below) |
+| Launchers | Battlezone, Bradley, Donkey Kong and Pisces moved from AdvanceMAME to MAME 0.251 (`mame -verifyroms` says it runs them from the cabinet's ROMs) |
+| AI mode | `tools/start_pi_game.py` tells SDL to ignore every device except the broker's two pads when it starts MAME |
+
+### Tested with the pretend panel (`tools/synth_panel.py`: two virtual encoders with the real name, id and buttons)
+
+| Check | Result |
+| --- | --- |
+| ES starts and calls both encoders "known joystick" (also after an unplanned reset) | pass |
+| ES key sequences against the AI Arcade pads' (`tools/check_es_panel.py`): move, open, back, launch, page down | 8 of 10 sequence runs match; the page-down sequences differ now and then (the panel's sometimes went one page further), cause not found |
+| MAME 0.251, Pac-Man: both sticks, coin, start, both players (`tools/check_mame_panel.py`) | pass, including Player 2's inverted stick |
+| MAME 0.251, Skydiver: buttons 1 and 2 for both players, and the flight stick's trigger and secondary | pass (the game has only two buttons, so buttons 3 to 6 are untested) |
+| MAME 0.251, Battlezone: left tread on the P1 stick, right tread on the P2 stick, fire, coin, start | pass |
+| MAME menu: Tab opens, Esc closes, Pause pauses and resumes | pass |
+| MAME: Esc leaving a game | **not shown**: it did not leave MAME in the test, nor did a real Esc key from a virtual keyboard, so the test setup may be the cause |
+| AdvanceMAME, Battlezone (`tools/check_advmame_panel.py`, recorded input): sticks, coin, start | pass (8 of the 10 presses reached the game; the others were buttons Battlezone does not use or ones AdvanceMAME cannot see) |
+| AI mode with the panel plugged in: Pac-Man started with `start_pi_game.py`, one game played by the rule player | pass (3 lives, about 5,000 points) |
+
+### Limits found
+
+- **AdvanceMAME** shows each encoder as a gamepad with only six of its twelve buttons: the codes 292 to 297 (names y, b, tl,
+  tr, tl2, start). The others cannot be used, and its other joystick driver (sdl) sees only four joysticks. So in the 20 games
+  that stay on it, Player 1 has Start, Coin, Star, Snowflake, X and B (A and Y are not seen) and Player 2 has A, Y, Coin,
+  Start, Enter and Pause. Buttons are numbered in the panel's order among the visible ones. The Tab and Esc buttons are not
+  seen, and none of the combinations tried (a button or a chord of coin and start on `ui_cancel` or `safequit`) made it quit:
+  an AdvanceMAME game is left with the keyboard's Esc. In Battlezone AdvanceMAME's fire is button 3 (Snowflake on Player 1).
+- **Not tested:** the RetroArch cores (installed, not run), buttons 3 to 6 of MAME games, the spinner and the trackball,
+  two extra USB controllers, the real panel in any of this.
+- **The Pi reset itself** several times in ten minutes on 17 October (an "orphan cleanup" on the next boot: a hard reset),
+  once with nothing running. It was stable for the next two hours. Cause unknown.
+
 ## The plan
 
 ### 1. One contract, three profile layers
@@ -365,6 +407,9 @@ In every game also check: Start, Coin, the exit chord, and that pressing P2's co
 | `tools/audit_controls.py` | reads the Pi, reports devices, which program maps them, who is Player 1 and 2, and what is missing (FAIL = a device nothing maps, WARN = misbehaves in some emulator). `--save` keeps the raw collection | nothing on the Pi |
 | `tools/probe_panel.py` | `--list`, `--watch N`, `--capture`: listens to the Pi's input devices (the virtual pads excluded), names each press from a stated order | nothing on the Pi; reads only, grabs nothing |
 | `tools/guided_capture.py` | **run it yourself at the panel**: says "Press P1 A", waits for it, shows which USB port and code it came from, refuses a control it has already seen, and reports a button wired to the wrong encoder. Sections: p1, p2, p2stick, spinner, trackball, flight, free; `--idle N` lists what chatters when nothing is touched. Skip, back and stop work from the Logitech keyboard or the F310. Saves `runs/panel-capture-<time>.json` | nothing on the Pi; reads only |
+| `tools/install_controls.py` | puts the panel's configuration on the Pi (ES, RetroArch, MAME 0.251, AdvanceMAME, the launcher moves): a dry run by default, `--apply` with a backup of every file and a rollback if it fails, `--rollback` | the files listed above, with `--apply` |
+| `tools/synth_panel.py`, `check_es_panel.py`, `check_mame_panel.py`, `check_advmame_panel.py` | a pretend panel on the Pi and the checks that press it: they restart EmulationStation and start games, so not while someone is playing | nothing permanent |
+| `tools/audit_controls.py` also warns when another pad (the F310) sorts before the panel | | |
 | `tools/catalog_controls.py` | classifies the arcade catalog by control type and emulator | `docs/data/cabinet-controls-catalog.json` |
 
 Tests: `tests/test_audit_controls.py` (against a saved copy of the live Pi's files, plus a made-up panel).

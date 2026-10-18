@@ -33,7 +33,11 @@ STICK_ROW = [(p, d) for p in PLAYERS for d in ("UP", "DOWN", "LEFT", "RIGHT")]
 BUTTONS_ROW = [(p, c) for p in PLAYERS for c in ("A", "B", "X", "Y", "SNOWFLAKE", "STAR")] + [("P2", "FLIGHT1"), ("P2", "FLIGHT2")]
 COIN_ROW = [(p, c) for p in PLAYERS for c in ("COIN", "START")]
 # game, what is pressed (in order)
-RUNS = [("pacman", STICK_ROW + COIN_ROW), ("skydiver", BUTTONS_ROW)]
+# Battlezone: two tread sticks. The P1 encoder's stick is the left tread and the P2 encoder's stick the right tread.
+BZONE = {("P1", "UP"): ["P1 Left Stick/Up"], ("P1", "DOWN"): ["P1 Left Stick/Down"],
+         ("P2", "UP"): ["P1 Right Stick/Up"], ("P2", "DOWN"): ["P1 Right Stick/Down"],
+         ("P1", "A"): ["P1 Button 1"], ("P1", "COIN"): ["Coin 1"], ("P1", "START"): ["1 Player Start"]}
+RUNS = [("pacman", STICK_ROW + COIN_ROW, None), ("skydiver", BUTTONS_ROW, None), ("bzone", list(BZONE), BZONE)]
 
 
 def mame_command(game, seconds, ctrlr):
@@ -154,8 +158,8 @@ def main():
             with sftp.open(CTRLR_TEST, "w") as f:
                 f.write(test.encode())
             print(f"\nTest file uses joysticks {first} and {first + 1} (the pretend encoders); production uses 1 and 2.\n")
-            for game, controls in RUNS:
-                results = check_run(ssh, panel, game, controls, expected)
+            for game, controls, special in RUNS:
+                results = check_run(ssh, panel, game, controls, special or expected)
                 print(f"{game}:")
                 for player, control, want, saw, status in results:
                     print(f"  {player} {control:<10} should press {want}, MAME saw {saw}  {status}")
