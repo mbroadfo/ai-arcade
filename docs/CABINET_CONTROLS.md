@@ -152,13 +152,59 @@ encoder by its USB port (and to give P2's spare terminals their own meaning).
 | 6 | The flight controller's two buttons are on P2's encoder (codes 298, 299), the same numbers as P1's Y and A | captured; mapped by port |
 | 7 | One spinner turn was reported while only the trackball was rolled; the trackball's axes are turned a quarter turn | probably touched; the rotation is handled in the mapping |
 
-### Mapping approach, awaiting a decision
+### Decisions so far (17 October)
 
-A. per-player maps by USB position in RetroArch, MAME and AdvanceMAME (no new software; the order problem stays);
-B. a small daemon on the Pi that reads the two encoders by USB port and presents two clean virtual pads in the
-standard layout with fixed names and order (same pattern as the broker); recommended, because every emulator then
-sees one layout and problems 2, 3 and 5 are solved in one place;
-C. rewire P2's terminals to match P1 (solves only problem 2).
+- **MAME's menu on the panel:** Tab opens it, the stick moves up and down, Enter selects, Esc backs out, Pause pauses MAME
+  (read from the owner's description; the panel's Esc and Tab are on the P1 encoder, Enter and Pause on the P2 encoder).
+  These are MAME's own default keys (Tab, Up/Down, Enter, Esc, P), so a mapping that delivers them as keyboard keys needs
+  no MAME configuration for them.
+- **Flight controller:** button 1 is the trigger, button 2 the secondary (codes 299 and 298 on the P2 encoder, taking
+  them in the order the capture asked, trigger first; to be confirmed).
+- **Trackball:** mounted with up toward the monitor, so the quarter turn is in its electronics. It has jumpers that can
+  swap and reverse its axes: to deliver up = relative Y negative and left = relative X negative they would have to swap
+  X and Y and reverse both. Or software can do it (below).
+
+## Mapping approaches compared
+
+The panel has to serve two kinds of player. **People**: one or two at the panel, in the menu, in MAME's own menu, in
+two-player games, with a spinner and a trackball, and with text games on the keyboard. **AI**, of several flavors:
+(1) the System One players, which play standalone MAME through the broker's virtual pads `AI Arcade Player 1/2`
+(MAME reads them as joysticks 1 and 2: `aiarcade.cfg`, and `bzone` uses joystick 2 as the right tread); (2) Windows-side
+automation that drives EmulationStation through the same pads (`controller_client.py`, `test_es_navigation.py`, the
+Observatory); (3) the lab policies (Battlezone) on the same path; (4) the Learning Lab, which trains on the PC and does not
+use the Pi's controls (not read for this document: if it ever plays on the cabinet it should use the same canonical
+actions); and later (5) a trained policy replayed on the cabinet, or learning from logged human play.
+
+The AI's pads must stay what MAME reads as joysticks 1 and 2. That is the constraint every approach has to respect, and
+the catch: standalone MAME numbers joysticks by the order they appear, and the panel's two encoders sort before the
+virtual pads.
+
+| | **A. Per-player maps in each emulator** | **B. A panel daemon: clean panel pads of its own** | **B2. A panel daemon feeding the existing `AI Arcade Player 1/2` pads** | **C. Rewire P2's buttons** |
+| --- | --- | --- | --- | --- |
+| What it is | write P1's and P2's button and axis maps into ES, RetroArch, MAME and AdvanceMAME by USB position | a service on the Pi reads the encoders by USB port (grabbing them), fixes axes, and creates `AI Arcade Panel P1/P2` in the standard layout, plus a virtual keyboard for Esc/Tab/Enter/Pause and virtual mice for the spinner and trackball | the same, but its output goes into the broker's existing pads, so people and AI share one pair of devices | change terminals so both encoders match |
+| New software | none | one service | one service **and a change to the broker** (a shared interface) | none |
+| **People: who is Player 1** | depends on enumeration order of two identical encoders (the same name, id and GUID); a flip swaps the players' maps; a spare gamepad (the F310) shifts everyone | the daemon decides by USB port and creates its pads in a fixed order, so it is deterministic (the spare gamepad can still sort first) | the same, and the only joysticks the emulators see are the broker's two (the encoders are grabbed) | no change |
+| People: menus and UI keys | per-emulator: MAME's ctrlr, RetroArch hotkey chords, ES's one map for both encoders (P2's buttons cannot drive the menu) | Esc/Tab/Enter/Pause become real key presses, which MAME, RetroArch (`escape` is already its hotkey) and ES already read: no per-emulator work | the same | no change |
+| People: spinner and trackball | rotation fixable in MAME and AdvanceMAME only; the four trackball games on RetroArch cores and AdvanceMAME need the jumpers | the daemon rotates and inverts the motion for every emulator | the same | no change |
+| People: P2's inverted stick, the flight buttons that share P1's button numbers | per-player maps handle them, but only if the order holds | handled once, in the daemon | handled once, in the daemon | partial |
+| **AI (System One, lab policies): MAME AI mode** | **breaks**: the virtual pads become joysticks 3 and 4 and `aiarcade.cfg` (joysticks 1 and 2) would point at the panel, so AI mode needs its own controller file and joystick numbers, which change with every spare gamepad | **still breaks**: the AI's pads are now behind the panel pads; the same numbering problem remains for AI mode | **unchanged**: the AI's pads remain joysticks 1 and 2, no file changes in AI mode | unchanged |
+| AI: Windows automation of ES | unchanged | unchanged | unchanged, and still the same devices | unchanged |
+| Human takes over from an AI run | the panel sees different joysticks than the AI: it can only steer if MAME is configured to read both | same | the panel and the AI drive the same pads: a rule is needed (for example in an AI run the panel may only pause, stop and use the MAME menu, not steer), which is a feature | n/a |
+| Learning Lab | no effect | no effect | one canonical interface on the Pi; human input could be logged in the same form for imitation learning | no effect |
+| Failure mode | a wrong order silently swaps or mangles players | a dead daemon means a dead panel; the AI is unaffected | a dead daemon means a dead panel; the AI and Windows keep working; a broker bug would affect everything | none |
+| Work and risk | many files, redone per emulator and per added emulator; fragile numbering | one service; AI mode still needs the numbering fix | one service plus the broker change (coordinate with the other owners of shared interfaces); least change to what already works | a soldering job that solves one of five problems |
+| Reversible | yes, per file | yes, stop the service | yes, stop the service; the broker change reverts | yes |
+
+**Recommendation: B2.** It is the only one that leaves AI mode alone. The AI keeps the two pads it has, and the emulators
+see only those two, so none of the panel's oddities (identical encoders, different button numbers, an inverted stick, a
+rotated trackball, flight buttons that look like P1's A and Y, Esc/Tab/Enter/Pause as buttons) reach any emulator. The
+cost is one service and a small broker change. If a broker change is not acceptable yet, **A plus an AI-mode setting that
+hides the panel from MAME** (to be tested: SDL can ignore a device by id with `SDL_GAMECONTROLLER_IGNORE_DEVICES`, and I have
+not confirmed that MAME honours it for joysticks) is the fallback, but it leaves the order fragility for people.
+
+Not yet verified for any of these: MAME's handling of two mice and an inverted or swapped trackball axis, and whether
+EmulationStation takes input from a virtual keyboard while a game is not running. Both are quick to test on the Pi when
+we get there.
 
 ## The plan
 
