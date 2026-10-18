@@ -85,7 +85,7 @@ From `tools/guided_capture.py` with the panel wired (raw copy: `docs/data/panel-
 | Player 2 encoder | `usb-xhci-hcd.0-1.3` | the same model, **the same name and id** | |
 | Spinner (GGG TurboTwist 2) | `usb-xhci-hcd.0-1.1` | mouse, `fafa:0060` | |
 | Trackball (GGG ICE-T) | `usb-xhci-hcd.0-1.4` | mouse, `fafa:0020` | its three mouse buttons are not used |
-| Flight controller | not yet captured | two buttons | which device they arrive on is to be captured |
+| Flight controller | on the **Player 2 encoder** (`1.3`) | two buttons, codes 299 and 298 (buttons 11 and 10), the encoder's two spare terminals | its stick is not used |
 | Logitech F310 | `usb-xhci-hcd.1-2` | gamepad | a spare: it takes Player 1's slot when plugged in |
 
 A button's number in SDL, RetroArch and the Linux joystick interface is its code minus 288.
@@ -122,10 +122,23 @@ The capture judges a spinner or trackball by its gain, not its first touch: moti
 direction with the most movement counts if it moved at least 12 counts and made up 60 % of everything it moved (`--min-motion`
 changes the 12).
 
-Spinner: clockwise = relative axis 0 positive, counter-clockwise negative. Trackball, first clean pass: up = relative
-axis 1 negative, down = positive, left = axis 0 negative, right = positive (later passes were scrambled by retries and
-by spinner events arriving while the trackball was rolled: to be re-captured, with an idle listen to see whether the
-spinner chatters).
+Captured with the gain-based detection (17 October, second run):
+
+| Control | Signal |
+| --- | --- |
+| Spinner clockwise / counter-clockwise | relative axis 0 positive / negative |
+| Trackball up / down | relative axis 0 positive / negative |
+| Trackball left / right | relative axis 1 positive / negative |
+
+The trackball's axes are **turned a quarter turn**: a mouse's right is relative X positive and its down is Y positive, so
+this trackball is mounted rotated (its right is the panel's up, its down the panel's left). The mapping must turn the axes
+back (MAME can map a trackball axis to either mouse axis, inverted or not; RetroArch cores take the mouse as it comes).
+The three mouse buttons are unused. One spinner turn was reported while only the trackball was being rolled: probably a
+touch on the spinner, not yet confirmed (`--idle 10` would show chatter).
+
+The flight controller's buttons are on the Player 2 encoder at codes 299 and 298, which on the Player 1 encoder are A and
+Y. A profile that goes by the pad's name would therefore read P2's flight buttons as A and Y: another reason to map each
+encoder by its USB port (and to give P2's spare terminals their own meaning).
 
 ### Problems found
 
@@ -136,8 +149,8 @@ spinner chatters).
 | 3 | The two encoders have the same name, id and GUID; only the USB port differs, and Player 1 and 2 are told apart by enumeration order | open |
 | 4 | Another gamepad (the F310) took `js0`, putting the panel at `js1` and `js2` | unplug the spare; `audit_controls.py` warns |
 | 5 | Esc, Tab, Enter and Pause are joystick buttons, not keys | they need a mapping in each emulator |
-| 6 | The flight controller's two buttons are not yet seen | `--section flight` |
-| 7 | The spinner reported movement while only the trackball was rolled | `--idle 10`, then `--section spinner,trackball` |
+| 6 | The flight controller's two buttons are on P2's encoder (codes 298, 299), the same numbers as P1's Y and A | captured; mapped by port |
+| 7 | One spinner turn was reported while only the trackball was rolled; the trackball's axes are turned a quarter turn | probably touched; the rotation is handled in the mapping |
 
 ### Mapping approach, awaiting a decision
 
