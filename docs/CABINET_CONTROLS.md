@@ -112,8 +112,9 @@ Stick: axis 1 negative = up, positive = down; axis 0 negative = left, positive =
 | Y | 292 | 4 | Pause | 297 | 9 |
 | Snowflake | 289 | 1 | Star | 288 | 0 |
 
-Stick: captured out of order (prompt "up" gave axis 1 positive, "down" axis 0 positive, "right" axis 0 negative,
-"left" axis 1 negative), so it is **to be rewired and captured again**.
+Stick, after the wire swap (17 October): up = axis 1 positive, down = axis 1 negative, right = axis 0 negative, left = axis 0
+positive. Each axis has one pair of opposite directions (so diagonals work), but both are the reverse of Player 1's. (Before
+the swap up and left shared an axis and the diagonals up-left and down-right were lost.)
 
 ### Spinner and trackball
 
@@ -130,7 +131,7 @@ spinner chatters).
 
 | # | Problem | Status |
 | --- | --- | --- |
-| 1 | Player 2's stick directions are on mixed-up terminals: up and left share the encoder's Y axis (up = Y positive, left = Y negative) and down and right share the X axis. Software can name each direction, but a diagonal that presses two switches on one axis (up+left, down+right) cancels to centre in the encoder and is lost. Four-way games are unaffected; 8-way games lose two of the four diagonals | optional but recommended: move each wire to the next terminal so up and down share Y and left and right share X, then `--section p2stick` |
+| 1 | Player 2's stick wires were on mixed-up terminals (up and left shared an axis, so the up-left and down-right diagonals cancelled). **Fixed on 17 October by swapping two wires**: up and down now share Y and left and right share X, so all four diagonals work. Both axes are now **inverted relative to Player 1** (up = Y positive, down = Y negative, right = X negative, left = X positive), which software handles (or swap up with down and left with right) | resolved, with the inversion to handle in the mapping |
 | 2 | The two encoders number their buttons differently (P1's action buttons are 294 to 299, P2's 288 to 293; the extra buttons differ in position and order too), so no single profile fits both | open: decided with the mapping approach below |
 | 3 | The two encoders have the same name, id and GUID; only the USB port differs, and Player 1 and 2 are told apart by enumeration order | open |
 | 4 | Another gamepad (the F310) took `js0`, putting the panel at `js1` and `js2` | unplug the spare; `audit_controls.py` warns |
