@@ -85,12 +85,18 @@ def parse_files(text):
     return {path: "\n".join(body) for path, body in files.items()}
 
 
+def squash(name):
+    """A device name with its runs of spaces collapsed and its ends trimmed: how SDL (so EmulationStation) names a pad
+    whose kernel name has extra spaces ("DragonRise Inc.   Generic   USB  Joystick  ")."""
+    return " ".join((name or "").split())
+
+
 def es_devices(text):
     """EmulationStation's es_input.cfg -> {device name: (type, guid)}."""
     if not text.strip():
         return {}
     root = ET.fromstring(text)
-    return {c.get("deviceName"): (c.get("type"), c.get("deviceGUID")) for c in root.iter("inputConfig")}
+    return {squash(c.get("deviceName")): (c.get("type"), c.get("deviceGUID")) for c in root.iter("inputConfig")}
 
 
 def mame_ports(text):
@@ -130,8 +136,8 @@ def analyze(raw):
     es = es_devices(raw["es_input"])
     ra = parse_cfg(raw["ra_cfg"])
     joypad_files = parse_files(raw["ra_joypads"])
-    ra_names = {parse_cfg(body).get("input_device") for body in joypad_files.values()}
-    ra_names |= {n.rsplit(".", 1)[0] for n in raw["ra_autoconfig"].split("\n") if n.endswith(".cfg")}
+    ra_names = {squash(parse_cfg(body).get("input_device")) for body in joypad_files.values()}
+    ra_names |= {squash(n.rsplit(".", 1)[0]) for n in raw["ra_autoconfig"].split("\n") if n.endswith(".cfg")}
     mame = {}
     for path, body in parse_files(raw["mame_ctrlr"]).items():
         mame[path.rsplit("/", 1)[-1]] = mame_ports(body)
@@ -156,10 +162,10 @@ def analyze(raw):
     for d in pads:
         say("INFO", "panel", f"gamepad-class device '{d['name'].strip()}' js{d['js']} {d['vendor']}:{d['product']} ({d['phys']})")
     for name in dict.fromkeys(d["name"] for d in pads):
-        if name not in es:
+        if squash(name) not in es:
             say("FAIL", "EmulationStation", f"no es_input.cfg entry for '{name.strip()}': the menu will not take it "
                                             "(run EmulationStation's input configuration, or install the profile)")
-        if name not in ra_names:
+        if squash(name) not in ra_names:
             say("FAIL", "RetroArch", f"no autoconfig for '{name.strip()}': RetroArch cores will not map it")
     if pads:
         say("INFO", "MAME", "standalone MAME addresses joysticks by order (JOYCODE_n), not by name: check n with the order below")
