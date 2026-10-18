@@ -8,4 +8,6 @@ CONFIG=/opt/retropie/configs/mame-0251
 game="$1"
 shift
 set=$(awk -F '\t' -v g="$game" '$1 == g { print $2; exit }' "$CONFIG/sets.tsv" 2>/dev/null)
-exec mame -inipath "$CONFIG" "${set:-$game}" "$@"
+# Sound goes through ALSA, whose default device is the USB audio adapter (pi/audio/asound.conf), as in AI mode
+# (tools/start_pi_game.py): without this SDL picks its own audio driver from whatever the login session offers.
+exec env SDL_AUDIODRIVER=alsa mame -inipath "$CONFIG" "${set:-$game}" "$@"

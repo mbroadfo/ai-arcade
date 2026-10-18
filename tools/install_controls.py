@@ -12,6 +12,8 @@ Files written (all writable by the pi user; no sudo):
   MAME 0.251        /home/pi/.mame/ctrlr/panel.cfg and the ctrlr line of /opt/retropie/configs/mame-0251/mame.ini
                     (human mode only: AI mode runs MAME with its own ctrlr file, tools/start_pi_game.py)
   AdvanceMAME       the input_map[...] lines of /opt/retropie/configs/mame-advmame/advmame.rc (the other lines stay)
+  Game settings     MAME cfg files for games whose factory setting does not suit a home cabinet (panel.json game_dips:
+                    Battlezone takes 1 coin for 1 credit)
   Launchers         the four AdvanceMAME games MAME 0.251 can run (Battlezone, Bradley, Donkey Kong, Pisces) move to MAME 0.251
                     in /opt/retropie/configs/all/emulators.cfg
 Restart EmulationStation afterwards (the script does not: a game may be running); `python tools/human_mode.py` does.
@@ -36,6 +38,7 @@ MAME_CTRLR = "/home/pi/.mame/ctrlr/panel.cfg"
 MAME_INI = "/opt/retropie/configs/mame-0251/mame.ini"
 ADVMAME_RC = "/opt/retropie/configs/mame-advmame/advmame.rc"
 EMULATORS_ALL = "/opt/retropie/configs/all/emulators.cfg"
+MAME_CFG_DIR = "/opt/retropie/configs/mame-0251/cfg"
 
 
 def connect(host):
@@ -74,6 +77,12 @@ def plan(panel, sftp):
     emu_old = read(sftp, EMULATORS_ALL)
     if emu_old is not None:
         wanted.append((EMULATORS_ALL, emu_old, pp.move_launchers(emu_old)))
+    for game, dip in panel.get("game_dips", {}).items():
+        if game == "comment":
+            continue
+        path = f"{MAME_CFG_DIR}/{game}.cfg"
+        old = read(sftp, path)
+        wanted.append((path, old, pp.set_game_dip(old, game, dip["tag"], dip["mask"], dip["defvalue"], dip["value"])))
     if adv_old is not None:
         wanted.append((ADVMAME_RC, adv_old, pp.merge_advmame_rc(adv_old, pp.advmame_inputs(panel))))
     return [(path, old, new) for path, old, new in wanted if old != new]

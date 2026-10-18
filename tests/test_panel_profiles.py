@@ -93,10 +93,13 @@ def test_the_joystick_numbers_can_be_moved_for_a_test_with_other_devices():
     assert p["P1_BUTTON1"].startswith("JOYCODE_5_BUTTON12") and p["P2_BUTTON1"].startswith("JOYCODE_6_BUTTON6")
 
 
-def test_the_ctrlr_file_is_valid_xml_with_every_port_once():
+def test_the_ctrlr_file_is_valid_xml_with_every_port_once_in_each_system():
     root = ET.fromstring(pp.mame_ctrlr(PANEL))
-    types = [p.get("type") for p in root.iter("port")]
-    assert len(types) == len(set(types)) == len(pp.mame_ports(PANEL))
+    for system in root.findall("system"):
+        types = [p.get("type") for p in system.iter("port")]
+        assert len(types) == len(set(types))
+    default = next(s for s in root.findall("system") if s.get("name") == "default")
+    assert len(list(default.iter("port"))) == len(pp.mame_ports(PANEL))
 
 
 def test_mame_ini_switches_its_controller_file():
@@ -148,3 +151,23 @@ def test_the_advmame_rc_keeps_every_other_line():
     assert new.startswith("config save_at_exit\ndevice_joystick auto\n")
     assert "input_map[coin1] joystick_button[0079_0006,b] or keyboard[0,5]" in new and "input_map[p1_up] joystick_digital" in new
     assert pp.merge_advmame_rc(new, pp.advmame_inputs(PANEL)) == new
+
+
+def test_battlezones_fire_is_the_flight_sticks_trigger_not_player_ones_a():
+    root = ET.fromstring(pp.mame_ctrlr(PANEL))
+    for game in ("bzone", "bzonea"):
+        system = next(s for s in root.findall("system") if s.get("name") == game)
+        ports = {p.get("type"): p.findtext("newseq") for p in system.iter("port")}
+        assert ports == {"P1_BUTTON1": "JOYCODE_2_BUTTON12"}  # the P2 encoder's code 299
+    default = next(s for s in root.findall("system") if s.get("name") == "default")
+    assert {p.get("type"): p.findtext("newseq") for p in default.iter("port")}["P1_BUTTON1"].startswith("JOYCODE_1_BUTTON12")
+
+
+def test_a_game_dip_is_added_to_a_cfg_that_keeps_its_counters_and_replaced_when_there_already():
+    mame_cfg = '\ufeff<?xml version="1.0"?>\n<mameconfig version="10">\n    <system name="bzone">\n        <counters>\n            <coins index="0" number="28" />\n        </counters>\n    </system>\n</mameconfig>\n'
+    new = pp.set_game_dip(mame_cfg, "bzone", ":DSW1", 3, 3, 2)
+    root = ET.fromstring(new)
+    assert root.find("system/counters/coins").get("number") == "28"
+    assert root.find("system/input/port").attrib == {"tag": ":DSW1", "type": "DIPSWITCH", "mask": "3", "defvalue": "3", "value": "2"}
+    assert pp.set_game_dip(new, "bzone", ":DSW1", 3, 3, 0).count("DIPSWITCH") == 1  # replaced, not added again
+    assert pp.set_game_dip(None, "bzone", ":DSW1", 3, 3, 2).count("DIPSWITCH") == 1  # no file yet

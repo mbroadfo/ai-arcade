@@ -33,10 +33,11 @@ STICK_ROW = [(p, d) for p in PLAYERS for d in ("UP", "DOWN", "LEFT", "RIGHT")]
 BUTTONS_ROW = [(p, c) for p in PLAYERS for c in ("A", "B", "X", "Y", "SNOWFLAKE", "STAR")] + [("P2", "FLIGHT1"), ("P2", "FLIGHT2")]
 COIN_ROW = [(p, c) for p in PLAYERS for c in ("COIN", "START")]
 # game, what is pressed (in order)
-# Battlezone: two tread sticks. The P1 encoder's stick is the left tread and the P2 encoder's stick the right tread.
+# Battlezone: two tread sticks (the P1 encoder's is the left tread, the P2 encoder's the right) and the flight stick's trigger as fire.
 BZONE = {("P1", "UP"): ["P1 Left Stick/Up"], ("P1", "DOWN"): ["P1 Left Stick/Down"],
          ("P2", "UP"): ["P1 Right Stick/Up"], ("P2", "DOWN"): ["P1 Right Stick/Down"],
-         ("P1", "A"): ["P1 Button 1"], ("P1", "COIN"): ["Coin 1"], ("P1", "START"): ["1 Player Start"]}
+         ("P2", "FLIGHT1"): ["P1 Button 1"], ("P1", "COIN"): ["Coin 1"], ("P1", "START"): ["1 Player Start"],
+         ("P2", "COIN"): ["Coin 2"], ("P2", "START"): ["2 Players Start"]}
 RUNS = [("pacman", STICK_ROW + COIN_ROW, None), ("skydiver", BUTTONS_ROW, None), ("bzone", list(BZONE), BZONE)]
 
 

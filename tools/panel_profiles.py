@@ -142,13 +142,32 @@ def mame_ports(panel, joy1=1, joy2=2):
     return ports
 
 
+def game_ports(panel, joy1=1, joy2=2):
+    """{MAME game: [(port type, sequence)]} for the games in panel.json's game_overrides: a port is pressed by another
+    control than the layout says (Battlezone's fire is the flight stick's trigger, on the P2 encoder)."""
+    joy = {"P1": joy1, "P2": joy2}
+    out = {}
+    for game, overrides in panel.get("game_overrides", {}).items():
+        if game == "comment":
+            continue
+        out[game] = [(port, f"JOYCODE_{joy[player]}_BUTTON{index(panel, player, control) + 1}")
+                     for port, (player, control) in overrides.items()]
+    return out
+
+
 def mame_ctrlr(panel, joy1=1, joy2=2):
     """The ctrlr file for human mode (/home/pi/.mame/ctrlr/panel.cfg): only the default section; MAME's own defaults
     still apply to everything not listed (players 3 and 4, analog controls, service keys)."""
     out = ['<?xml version="1.0"?>', '<mameconfig version="10">', '    <system name="default">', "        <input>"]
     for port, seq in mame_ports(panel, joy1, joy2):
         out += [f'            <port type="{port}">', f'                <newseq type="standard">{seq}</newseq>', "            </port>"]
-    out += ["        </input>", "    </system>", "</mameconfig>", ""]
+    out += ["        </input>", "    </system>"]
+    for game, ports in game_ports(panel, joy1, joy2).items():
+        out += [f'    <system name="{game}">', "        <input>"]
+        for port, seq in ports:
+            out += [f'            <port type="{port}">', f'                <newseq type="standard">{seq}</newseq>', "            </port>"]
+        out += ["        </input>", "    </system>"]
+    out += ["</mameconfig>", ""]
     return "\n".join(out)
 
 
@@ -285,3 +304,19 @@ def move_launchers(text, games=MOVE_TO_MAME251, emulator="mame-0.251"):
             seen.add(key)
     lines += [f'{key} = "{value}"' for key, value in wanted.items() if key not in seen]
     return "\n".join(lines) + "\n"
+
+
+def set_game_dip(cfg, system, tag, mask, defvalue, value):
+    """A MAME game's cfg file (/opt/retropie/configs/mame-0251/cfg/<game>.cfg) with one DIP switch setting. `cfg` may be
+    None (no file yet) or MAME's own file, which keeps its coin counters and other settings."""
+    line = f'            <port tag="{tag}" type="DIPSWITCH" mask="{mask}" defvalue="{defvalue}" value="{value}" />'
+    if not cfg:
+        return ('<?xml version="1.0"?>\n<mameconfig version="10">\n    <system name="%s">\n        <input>\n%s\n        </input>\n'
+                '    </system>\n</mameconfig>\n' % (system, line))
+    cfg = cfg.lstrip("\ufeff")
+    pattern = re.compile(r'[ \t]*<port tag="%s" type="DIPSWITCH" mask="%s"[^>]*/>\n?' % (re.escape(tag), mask))
+    if pattern.search(cfg):
+        return pattern.sub(lambda m: line + "\n", cfg, count=1)
+    if "<input>" in cfg:
+        return cfg.replace("<input>", "<input>\n" + line, 1)
+    return cfg.replace("</system>", "        <input>\n" + line + "\n        </input>\n    </system>", 1)
