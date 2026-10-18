@@ -206,6 +206,63 @@ Not yet verified for any of these: MAME's handling of two mice and an inverted o
 EmulationStation takes input from a virtual keyboard while a game is not running. Both are quick to test on the Pi when
 we get there.
 
+## Chosen approach: A, per-emulator maps (17 October)
+
+Decision: no panel daemon. Each emulator gets a map for the panel's controllers, and the panel is treated like any pair of
+identical USB gamepads. It must also take **two more USB controllers** (an F310 or any pad) for the four-player games
+(Gauntlet, Gauntlet II and Warlords on AdvanceMAME, Demolition Derby on lr-mame2003) and for games that play better with
+a real stick.
+
+The consequences for the plan:
+
+1. **One map per emulator, not one per player, if both encoders are wired the same.** ES and RetroArch match a pad by
+   name, and the two encoders have the same name, so they share one profile. Today their buttons are on different inputs, so
+   a shared profile would give P2 the wrong buttons. Rewiring P2 to P1's inputs (below) makes both encoders look like two
+   ordinary identical pads, and an extra pair of F310s works the same way. Without the rewiring the fallback is explicit
+   per-player bindings (`input_player2_*_btn` in RetroArch, `JOYCODE_2_*` in MAME), which work only while the order holds.
+2. **Player order is the one remaining risk.** Joysticks are numbered by the order they appear. The two encoders have
+   come up in the same order every time seen (port 1.2 first), but the F310 on the Pi's other USB bus came up before them.
+   An extra controller may do the same at boot. To be tested with controllers plugged in at boot and hot-plugged, over several
+   reboots, before anything is relied on. Mitigations to try: plug the extra pads into free ports on the panel's own hub;
+   RetroArch's per-player device reservation by name (the panel and the extra pads have different names); MAME's player
+   numbers are order only.
+3. **AI mode needs a safeguard.** The broker's virtual pads must be joysticks 1 and 2 for standalone MAME (`aiarcade.cfg`).
+   With the panel plugged in they would be 3 and 4. The AI-mode launch (`tools/start_pi_game.py`) will be changed to build
+   its controller file from the live joystick order, or to hide the panel from MAME, whichever tests out; it must be checked
+   before the panel's maps are installed. People playing never use that file.
+4. **Trackball:** no daemon, so only the jumpers fix the quarter turn for the RetroArch and AdvanceMAME trackball games
+   (Reactor, Missile Command, Crystal Castles, Marble Madness, Quantum). MAME can remap it in software for its own games.
+5. **Esc, Tab, Enter, Pause** are joystick buttons here, so each emulator maps them: MAME's UI keys to them, RetroArch's
+   hotkey chord (Select-style) for exit and menu.
+
+### Wiring changes asked for (all optional, but they make A robust)
+
+Assuming the encoder's input *n* is button *n*, code 287 + *n* (check with the capture afterwards).
+
+**Player 2's stick:** swap the up and down wires, and swap the left and right wires. Result: up = Y negative, down = Y
+positive, left = X negative, right = X positive, the same as Player 1.
+
+**Player 2's buttons:** move each to the input Player 1 uses for the same control:
+
+| Control | Now (input) | Move to (input) | Control | Now (input) | Move to (input) |
+| --- | ---: | ---: | --- | ---: | ---: |
+| A | 6 | 12 | Coin 2 | 7 | 6 |
+| B | 4 | 10 | P2 Start | 8 | 5 |
+| X | 3 | 9 | Enter (menu select) | 9 | 4 |
+| Y | 5 | 11 | Pause | 10 | 3 |
+| Snowflake | 2 | 8 | Flight trigger | 12 | 1 |
+| Star | 1 | 7 | Flight secondary | 11 | 2 |
+
+(Player 1 keeps inputs 3 to 12 as captured: Tab 3, Esc 4, Start 5, Coin 6, Star 7, Snowflake 8, X 9, B 10, Y 11, A 12;
+inputs 1 and 2 are unused on P1, and P2's flight buttons take them.)
+
+**Trackball jumpers:** swap X and Y and reverse both, so up = Y negative and left = X negative.
+
+Nothing else needs to move: Player 1, the spinner and the flight controller's buttons are fine as wired.
+
+After the rewiring only the changed controls are captured again (`guided_capture.py --section p2,trackball`), and then the
+profiles are built into a folder and shown as a diff before anything is installed.
+
 ## The plan
 
 ### 1. One contract, three profile layers
