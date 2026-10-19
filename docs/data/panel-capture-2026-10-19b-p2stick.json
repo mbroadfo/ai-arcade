@@ -1,0 +1,46 @@
+{
+ "captured": "2026-10-19 15:50:22",
+ "controls": {
+  "P2 UP": {
+   "dev": "DragonRise Inc.   Generic   USB  Joystick",
+   "path": "/dev/input/event8",
+   "phys": "usb-xhci-hcd.0-1.3/input0",
+   "vid": "0079:0006",
+   "kind": "abs",
+   "code": 1,
+   "direction": 1,
+   "name": null
+  },
+  "P2 DOWN": {
+   "dev": "DragonRise Inc.   Generic   USB  Joystick",
+   "path": "/dev/input/event8",
+   "phys": "usb-xhci-hcd.0-1.3/input0",
+   "vid": "0079:0006",
+   "kind": "abs",
+   "code": 1,
+   "direction": -1,
+   "name": null
+  },
+  "P2 RIGHT": {
+   "dev": "DragonRise Inc.   Generic   USB  Joystick",
+   "path": "/dev/input/event8",
+   "phys": "usb-xhci-hcd.0-1.3/input0",
+   "vid": "0079:0006",
+   "kind": "abs",
+   "code": 0,
+   "direction": -1,
+   "name": null
+  },
+  "P2 LEFT": {
+   "dev": "DragonRise Inc.   Generic   USB  Joystick",
+   "path": "/dev/input/event8",
+   "phys": "usb-xhci-hcd.0-1.3/input0",
+   "vid": "0079:0006",
+   "kind": "abs",
+   "code": 0,
+   "direction": 1,
+   "name": null
+  }
+ },
+ "problems": []
+}

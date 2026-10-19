@@ -112,11 +112,12 @@ Stick: axis 1 negative = up, positive = down; axis 0 negative = left, positive =
 | Y | 292 | 4 | Pause | 297 | 9 |
 | Snowflake | 289 | 1 | Star | 288 | 0 |
 
-Stick, after the second rewire (19 October): up = axis 1 negative, down = axis 1 positive (the same as Player 1), but
-right = axis 0 negative and left = axis 0 positive, still the reverse of Player 1's. (Before 19 October all four were
-reversed; before 17 October up and left shared an axis and the diagonals up-left and down-right were lost.) In
-EmulationStation, which cannot tell the two encoders apart, Player 2's left and right are therefore still reversed in the
-menu; swapping the left and right wires would fix that, after which `panel.json` needs one more update.
+Stick, as captured at 15:50 on 19 October (after two more rewiring attempts): up = axis 1 positive, down = axis 1 negative,
+right = axis 0 negative, left = axis 0 positive: all four reversed against Player 1, the same as on 17 October. (At 15:45 up
+and down matched Player 1's and left and right were reversed; the next change flipped up and down back and left and right
+stayed.) To match Player 1, both pairs must be swapped from here. In EmulationStation, which cannot tell the two encoders
+apart, Player 2's stick is then reversed in the menu; MAME, AdvanceMAME and RetroArch follow `panel.json`, which says what
+the wiring is now.
 
 ### Spinner and trackball
 
