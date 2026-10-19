@@ -274,9 +274,11 @@ generated from `pi/controls/panel.json` by `tools/panel_profiles.py`.
 | EmulationStation | `es_input.cfg`: an entry for "DragonRise Inc. Generic USB Joystick" (SDL's name and GUID): A accept, B back, Star and Snowflake page up and down, Tab select, Start the menu. Both encoders share it, so Player 2's buttons act as Player 1's in the menu (and its stick is inverted) |
 | RetroArch (the `lr-*` cores) | an autoconfig for the encoder by its kernel name: RetroPad B, A, Y, X, L, R are arcade buttons 1 to 6, Select is Coin, Start is Start; Esc is the hotkey and exit, Tab with Esc held the menu |
 | MAME 0.251 (human mode) | `/home/pi/.mame/ctrlr/panel.cfg`, and `mame.ini` uses it: both sticks, six buttons each, coin, start, the twin-stick right stick on the P2 stick, menu keys (Tab menu, Enter select, Esc back, Pause pause) |
-| AdvanceMAME | the `input_map[...]` lines of `advmame.rc` (see its limits below) |
+| AdvanceMAME | `device_joystick sdl` and the `input_map[...]` lines of `advmame.rc` (all twelve buttons, joysticks named `dragonrise_inc_generic_usb_joystick` and `_2`); the launcher line in both `emulators.cfg` files starts it with the AI Arcade pads hidden from SDL, so up to four controllers fit |
 | Launchers | Battlezone, Bradley, Donkey Kong and Pisces moved from AdvanceMAME to MAME 0.251 (`mame -verifyroms` says it runs them from the cabinet's ROMs) |
-| AI mode | `tools/start_pi_game.py` tells SDL to ignore every device except the broker's two pads when it starts MAME |
+| Battlezone | the flight stick's trigger is fire (not Player 1's A); one coin is one credit (`panel.json` `game_overrides` and `game_dips`) |
+| AI mode | `tools/start_pi_game.py` tells SDL to ignore every device except the broker's two pads when it starts MAME, and gives it `-audio_latency 4` |
+| Sound | `audio_latency 4` in `mame.ini` (and the launcher says `SDL_AUDIODRIVER=alsa`): MAME 0.251's default latency of 2 sends the USB adapter only silence |
 
 ### Tested with the pretend panel (`tools/synth_panel.py`: two virtual encoders with the real name, id and buttons)
 
@@ -289,17 +291,19 @@ generated from `pi/controls/panel.json` by `tools/panel_profiles.py`.
 | MAME 0.251, Battlezone: left tread on the P1 stick, right tread on the P2 stick, fire, coin, start | pass |
 | MAME menu: Tab opens, Esc closes, Pause pauses and resumes | pass |
 | MAME: Esc leaving a game | **not shown**: it did not leave MAME in the test, nor did a real Esc key from a virtual keyboard, so the test setup may be the cause |
+| Sound from MAME 0.251 (what SDL hands ALSA, captured during a Battlezone game) | with the default `audio_latency 2`: **all zeros**, though MAME's own mix was loud; with 3, 4 or 5: full level in every repeat. Fixed with 4 |
 | AdvanceMAME, Battlezone (`tools/check_advmame_panel.py`, recorded input): sticks, coin, start | pass (8 of the 10 presses reached the game; the others were buttons Battlezone does not use or ones AdvanceMAME cannot see) |
 | AI mode with the panel plugged in: Pac-Man started with `start_pi_game.py`, one game played by the rule player | pass (3 lives, about 5,000 points) |
 
 ### Limits found
 
-- **AdvanceMAME** shows each encoder as a gamepad with only six of its twelve buttons: the codes 292 to 297 (names y, b, tl,
-  tr, tl2, start). The others cannot be used, and its other joystick driver (sdl) sees only four joysticks. So in the 20 games
-  that stay on it, Player 1 has Start, Coin, Star, Snowflake, X and B (A and Y are not seen) and Player 2 has A, Y, Coin,
-  Start, Enter and Pause. Buttons are numbered in the panel's order among the visible ones. The Tab and Esc buttons are not
-  seen, and none of the combinations tried (a button or a chord of coin and start on `ui_cancel` or `safequit`) made it quit:
-  an AdvanceMAME game is left with the keyboard's Esc. In Battlezone AdvanceMAME's fire is button 3 (Snowflake on Player 1).
+- **AdvanceMAME** (the 20 games that stay on it). Its default joystick driver shows each encoder with only six of its
+  twelve buttons (codes 292 to 297) and no way to use the others, so it is switched to its `sdl` driver, which shows all
+  twelve but handles at most four joysticks: the launcher hides the AI Arcade pads from it. Checked on Arkanoid with the
+  pretend panel (recorded input): every control the game uses reached it, for both players (coin, start, button), and the
+  Pause button paused it. **Not shown:** that Tab opens its main menu and that Esc quits (AdvanceMAME asks for confirmation
+  before it quits, and the confirmation did not end the game in the test). If they do not work on the cabinet, the keyboard's
+  Tab and Esc do. Joust does not run at all on this Pi: its decoder ROM files are missing (the ROM audit lists them).
 - **Not tested:** the RetroArch cores (installed, not run), buttons 3 to 6 of MAME games, the spinner and the trackball,
   two extra USB controllers, the real panel in any of this.
 - **The Pi reset itself** several times in ten minutes on 17 October (an "orphan cleanup" on the next boot: a hard reset),

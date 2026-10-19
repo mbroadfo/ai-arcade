@@ -135,22 +135,39 @@ def test_the_launchers_for_the_four_games_move_and_nothing_else_changes():
     assert pp.move_launchers(new) == new  # idempotent
 
 
-def test_advmame_gets_only_the_buttons_its_event_driver_can_see():
-    visible_p1 = pp.advmame_visible_actions(PANEL, "P1")
-    assert visible_p1 == ["B", "X", "SNOWFLAKE", "STAR"]  # A (299) and Y (298) are not visible to it
-    assert pp.advmame_visible_actions(PANEL, "P2") == ["A", "Y"]
+def test_advmame_uses_its_sdl_driver_so_all_twelve_buttons_are_there():
     values = dict(pp.advmame_inputs(PANEL))
-    assert values["coin1"].startswith("joystick_button[0079_0006,b]") and values["start1"].startswith("joystick_button[0079_0006,y]")
-    assert values["p2_button1"].startswith("joystick_button[0079_0006_2,b]") and "p1_button5" not in values
-    assert values["p1_doubleright_up"] == "joystick_digital[0079_0006_2,stick,y,down]"  # P2's stick is inverted
+    assert values["p1_button1"].startswith("joystick_button[dragonrise_inc_generic_usb_joystick,button12]")  # A, code 299
+    assert values["coin1"].startswith("joystick_button[dragonrise_inc_generic_usb_joystick,button6]")
+    assert values["p2_button1"].startswith("joystick_button[dragonrise_inc_generic_usb_joystick_2,button6] or "
+                                           "joystick_button[dragonrise_inc_generic_usb_joystick_2,button12]")  # A and the trigger
+    assert values["p1_doubleright_up"] == "joystick_digital[dragonrise_inc_generic_usb_joystick_2,stick,y,down]"  # P2's stick
+    assert pp.ADV_OPTIONS == {"device_joystick": "sdl"}
 
 
-def test_the_advmame_rc_keeps_every_other_line():
+def test_advmame_has_the_four_function_buttons_on_the_panels_buttons():
+    values = dict(pp.advmame_inputs(PANEL))
+    assert values["ui_configure"].startswith("joystick_button[dragonrise_inc_generic_usb_joystick,button3]")  # Tab
+    assert values["ui_cancel"].startswith("joystick_button[dragonrise_inc_generic_usb_joystick,button4]")  # Esc
+    assert values["safequit"].startswith("joystick_button[dragonrise_inc_generic_usb_joystick,button4]")
+    assert values["ui_select"].startswith("joystick_button[dragonrise_inc_generic_usb_joystick_2,button9]")  # Enter
+    assert values["ui_pause"].startswith("joystick_button[dragonrise_inc_generic_usb_joystick_2,button10]")  # Pause
+
+
+def test_the_advmame_rc_keeps_every_other_line_and_sets_the_driver():
     rc = "config save_at_exit\ndevice_joystick auto\ninput_map[coin1] auto\ninput_map[p1_up] auto\n"
     new = pp.merge_advmame_rc(rc, pp.advmame_inputs(PANEL))
-    assert new.startswith("config save_at_exit\ndevice_joystick auto\n")
-    assert "input_map[coin1] joystick_button[0079_0006,b] or keyboard[0,5]" in new and "input_map[p1_up] joystick_digital" in new
+    assert new.startswith("config save_at_exit\ndevice_joystick sdl\n")
+    assert "input_map[coin1] joystick_button[dragonrise_inc_generic_usb_joystick,button6] or keyboard[0,5]" in new
     assert pp.merge_advmame_rc(new, pp.advmame_inputs(PANEL)) == new
+
+
+def test_the_advmame_launcher_hides_the_ai_pads_once():
+    text = 'advmame = "/opt/retropie/emulators/advmame/bin/advmame %BASENAME%"\ndefault = "mame-0.251"\n'
+    new = pp.advmame_launcher(text)
+    assert new.splitlines()[0] == ('advmame = "env SDL_GAMECONTROLLER_IGNORE_DEVICES=0x1209/0xa101,0x1209/0xa102 '
+                                   '/opt/retropie/emulators/advmame/bin/advmame %BASENAME%"')
+    assert new.splitlines()[1] == 'default = "mame-0.251"' and pp.advmame_launcher(new) == new
 
 
 def test_battlezones_fire_is_the_flight_sticks_trigger_not_player_ones_a():
@@ -171,3 +188,11 @@ def test_a_game_dip_is_added_to_a_cfg_that_keeps_its_counters_and_replaced_when_
     assert root.find("system/input/port").attrib == {"tag": ":DSW1", "type": "DIPSWITCH", "mask": "3", "defvalue": "3", "value": "2"}
     assert pp.set_game_dip(new, "bzone", ":DSW1", 3, 3, 0).count("DIPSWITCH") == 1  # replaced, not added again
     assert pp.set_game_dip(None, "bzone", ":DSW1", 3, 3, 2).count("DIPSWITCH") == 1  # no file yet
+
+
+def test_mame_ini_gets_the_audio_latency_that_is_not_silent():
+    ini = "rompath x\nctrlr                     aiarcade\nvideo accel\n"
+    new = pp.mame_ini_set(ini, "audio_latency", pp.AUDIO_LATENCY, "sound")
+    assert "audio_latency             4\n" in new and new.startswith(ini)
+    assert pp.mame_ini_set(new, "audio_latency", 5).count("audio_latency") == 1  # replaced, not added again
+    assert pp.AUDIO_LATENCY >= 3  # 2, MAME's default, plays silence through the adapter

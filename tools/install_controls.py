@@ -14,6 +14,7 @@ Files written (all writable by the pi user; no sudo):
   AdvanceMAME       the input_map[...] lines of /opt/retropie/configs/mame-advmame/advmame.rc (the other lines stay)
   Game settings     MAME cfg files for games whose factory setting does not suit a home cabinet (panel.json game_dips:
                     Battlezone takes 1 coin for 1 credit)
+  AdvanceMAME start the advmame lines of the two emulators.cfg files name the environment that hides the AI Arcade pads
   Launchers         the four AdvanceMAME games MAME 0.251 can run (Battlezone, Bradley, Donkey Kong, Pisces) move to MAME 0.251
                     in /opt/retropie/configs/all/emulators.cfg
 Restart EmulationStation afterwards (the script does not: a game may be running); `python tools/human_mode.py` does.
@@ -39,6 +40,7 @@ MAME_INI = "/opt/retropie/configs/mame-0251/mame.ini"
 ADVMAME_RC = "/opt/retropie/configs/mame-advmame/advmame.rc"
 EMULATORS_ALL = "/opt/retropie/configs/all/emulators.cfg"
 MAME_CFG_DIR = "/opt/retropie/configs/mame-0251/cfg"
+ADVMAME_LAUNCHERS = ("/opt/retropie/configs/arcade/emulators.cfg", "/opt/retropie/configs/mame-advmame/emulators.cfg")
 
 
 def connect(host):
@@ -72,7 +74,8 @@ def plan(panel, sftp):
         (ES_INPUT, es_old, pp.merge_es_input(es_old, entry, device["sdl_name"])),
         (f"{RA_DIR}/{device['evdev_name']}.cfg", read(sftp, f"{RA_DIR}/{device['evdev_name']}.cfg"), pp.retroarch_autoconfig(panel)),
         (MAME_CTRLR, read(sftp, MAME_CTRLR), pp.mame_ctrlr(panel)),
-        (MAME_INI, ini_old, pp.mame_ini_with_ctrlr(ini_old, "panel")),
+        (MAME_INI, ini_old, pp.mame_ini_set(pp.mame_ini_with_ctrlr(ini_old, "panel"), "audio_latency", pp.AUDIO_LATENCY,
+                                            "sound: the default latency (2) is silent on the USB adapter, see panel_profiles.AUDIO_LATENCY")),
     ]
     emu_old = read(sftp, EMULATORS_ALL)
     if emu_old is not None:
@@ -83,6 +86,10 @@ def plan(panel, sftp):
         path = f"{MAME_CFG_DIR}/{game}.cfg"
         old = read(sftp, path)
         wanted.append((path, old, pp.set_game_dip(old, game, dip["tag"], dip["mask"], dip["defvalue"], dip["value"])))
+    for path in ADVMAME_LAUNCHERS:
+        old = read(sftp, path)
+        if old is not None:
+            wanted.append((path, old, pp.advmame_launcher(old)))
     if adv_old is not None:
         wanted.append((ADVMAME_RC, adv_old, pp.merge_advmame_rc(adv_old, pp.advmame_inputs(panel))))
     return [(path, old, new) for path, old, new in wanted if old != new]

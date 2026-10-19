@@ -104,7 +104,7 @@ def main():
         run(ssh, f"rm -f {STATE_FILE} {FRAME_FILE} {SETTINGS_NOW} {PAUSE_FILES}")
         run(ssh, f"nohup env SDL_AUDIODRIVER=alsa AI_ARCADE_VIDEO_FPS={video_fps} {ONLY_AI_PADS} "
                  f"mame {romset} -rompath {pi_rompath(system)} "
-                 "-video accel -nowindow -skip_gameinfo -joystick -joystickprovider sdl "
+                 "-video accel -nowindow -skip_gameinfo -joystick -joystickprovider sdl -audio_latency 4 "
                  + (f"-snapsize {snap[0]}x{snap[1]} " if snap else "") +
                  "-ctrlrpath /home/pi/.mame/ctrlr -ctrlr aiarcade "
                  f"-autoboot_script {REMOTE_DIR}/autoboot.lua "

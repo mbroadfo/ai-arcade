@@ -179,6 +179,22 @@ def mame_ini_with_ctrlr(ini, name):
     return new
 
 
+# MAME 0.251's default audio_latency (2) gives the Pi's USB audio adapter nothing but silence: measured on 19 October 2026
+# by capturing what MAME hands ALSA during a Battlezone game (latency 2: all zeros; 3, 4 and 5: full-level sound, in every
+# repeat). 4 leaves a margin over the smallest value that works.
+AUDIO_LATENCY = 4
+
+
+def mame_ini_set(ini, key, value, comment=None):
+    """mame.ini with `key value` set: the line replaced if it is there, or added at the end (after a comment line)."""
+    line = f"{key:<25} {value}"
+    new, count = re.subn(rf"^{re.escape(key)}\s+\S+.*$", lambda m: line, ini, count=1, flags=re.M)
+    if count:
+        return new
+    extra = ("\n# " + comment if comment else "") + "\n" + line + "\n"
+    return ini.rstrip("\n") + "\n" + extra
+
+
 def expected_mame_fields(panel):
     """What each physical control should make MAME's input fields do: {(player, control): MAME field name(s)}. The test
     that presses the panel reads the fields back."""
@@ -199,21 +215,19 @@ def expected_mame_fields(panel):
 
 # ---------------------------------------------------------------- AdvanceMAME 3
 #
-# AdvanceMAME's default joystick driver ("event") treats this encoder as a gamepad and shows only six of its twelve buttons,
-# the codes 292 to 297, named y, b, tl, tr, tl2 and start (checked with the pretend panel on 17 October 2026). The other six
-# cannot be used. Its "sdl" driver shows all twelve but seems to see only four joysticks in all, and the AI Arcade pads take
-# two of those, so the event driver is kept. Each encoder is a joystick named vendor_product, the second with _2.
-# So each player gets the action buttons that are visible (in the panel's A, B, X, Y, Snowflake, Star order), coin and
-# start are on visible buttons, and menu and exit are chords of the visible coin and start buttons.
+# AdvanceMAME's default joystick driver ("event") treats this encoder as a gamepad and shows only six of its twelve buttons
+# (the codes 292 to 297), so Tab and Esc could not be used. Its "sdl" driver shows all twelve, named button1 to button12 (the
+# SDL button number plus one), and names the joysticks by their name with _2 for the second of a kind. That driver handles at
+# most four joysticks, and the AI Arcade pads would take two, so AdvanceMAME is started with those two hidden from SDL
+# (ADV_HIDE_AI_PADS, in the launcher line): the panel's two encoders and two more controllers fit.
 
-ADV_EVENT_BUTTONS = {292: "y", 293: "b", 294: "tl", 295: "tr", 296: "tl2", 297: "start"}
-ADV_JOY = "0079_0006"
-ADV_OPTIONS = {}
+ADV_JOY = "dragonrise_inc_generic_usb_joystick"
+ADV_OPTIONS = {"device_joystick": "sdl"}
+ADV_HIDE_AI_PADS = "SDL_GAMECONTROLLER_IGNORE_DEVICES=0x1209/0xa101,0x1209/0xa102"
 
 
-def _adv_name(panel, player, control):
-    """AdvanceMAME's name for a player's control, or None when its button is one the event driver does not show."""
-    return ADV_EVENT_BUTTONS.get(panel["players"][player]["buttons"].get(control))
+def _adv_button(joy, button):
+    return f"joystick_button[{joy},button{button + 1}]"
 
 
 def _adv_direction(joy, direction_sign):
@@ -226,41 +240,37 @@ def _adv_direction(joy, direction_sign):
     return f"joystick_digital[{joy},stick,y,{word}]"
 
 
-def advmame_visible_actions(panel, player):
-    """[control names] of a player's action buttons that AdvanceMAME can see, in the panel's order: BUTTON_1 first."""
-    return [c for c in panel["layout"]["action_order"] if _adv_name(panel, player, c)]
-
-
 def advmame_inputs(panel, joy1=ADV_JOY, joy2=ADV_JOY + "_2"):
     """[(input_map name, value)] for advmame.rc."""
     joy = {"P1": joy1, "P2": joy2}
     keys = {"P1": {"up": "up", "down": "down", "left": "left", "right": "right"},
             "P2": {"up": "r", "down": "f", "left": "d", "right": "g"}}
     button_keys = {"P1": ["lcontrol", "lalt", "space", "lshift", "z", "x"], "P2": ["a", "s", "q", "w", "e", "i"]}
-
-    def button(player, control):
-        return f"joystick_button[{joy[player]},{_adv_name(panel, player, control)}]"
-
     out = []
     for player in ("P1", "P2"):
         p = player.lower()
         stick = panel["players"][player]["stick"]
         for direction in ("up", "down", "left", "right"):
             out.append((f"{p}_{direction}", f"{_adv_direction(joy[player], stick[direction][1:])} or keyboard[0,{keys[player][direction]}]"))
-        for n, control in enumerate(advmame_visible_actions(panel, player), 1):
-            out.append((f"{p}_button{n}", f"{button(player, control)} or keyboard[0,{button_keys[player][n - 1]}]"))
-    # twin-stick games (Battlezone, Ultra Tank): the left stick is Player 1's, the right stick is Player 2's
+        for n, idx in actions(panel, player).items():
+            joys = " or ".join(_adv_button(joy[player], i) for i in idx)
+            out.append((f"{p}_button{n}", f"{joys} or keyboard[0,{button_keys[player][n - 1]}]"))
+    # twin-stick games (Ultra Tank): the left stick is Player 1's, the right stick is Player 2's
     for side, player in (("left", "P1"), ("right", "P2")):
         stick = panel["players"][player]["stick"]
         for direction in ("up", "down", "left", "right"):
             out.append((f"p1_double{side}_{direction}", _adv_direction(joy[player], stick[direction][1:])))
-    out += [("coin1", f"{button('P1', 'COIN')} or keyboard[0,5]"), ("start1", f"{button('P1', 'START')} or keyboard[0,1]"),
-            ("coin2", f"{button('P2', 'COIN')} or keyboard[0,6]"), ("start2", f"{button('P2', 'START')} or keyboard[0,2]")]
-    # P2's Enter and Pause are visible; Tab and Esc (on the P1 encoder) are not, so those two are chords
-    out += [("ui_select", f"{button('P2', 'ENTER')} or keyboard[0,enter]"),
-            ("ui_pause", f"{button('P2', 'PAUSE')} or keyboard[0,p]"),
-            ("ui_cancel", f"{button('P1', 'COIN')} {button('P1', 'START')} or keyboard[0,esc]"),
-            ("ui_configure", f"{button('P2', 'COIN')} {button('P2', 'START')} or keyboard[0,tab]")]
+    out += [("coin1", f"{_adv_button(joy1, index(panel, 'P1', 'COIN'))} or keyboard[0,5]"),
+            ("start1", f"{_adv_button(joy1, index(panel, 'P1', 'START'))} or keyboard[0,1]"),
+            ("coin2", f"{_adv_button(joy2, index(panel, 'P2', 'COIN'))} or keyboard[0,6]"),
+            ("start2", f"{_adv_button(joy2, index(panel, 'P2', 'START'))} or keyboard[0,2]")]
+    ui = panel["layout"]["ui"]
+    ui_map = {"menu": [("ui_configure", "tab")], "back": [("ui_cancel", "esc"), ("safequit", "esc")],
+              "select": [("ui_select", "enter")], "pause": [("ui_pause", "p")]}
+    for name, targets in ui_map.items():
+        player, control = ui[name]
+        for target, key in targets:
+            out.append((target, f"{_adv_button(joy[player], index(panel, player, control))} or keyboard[0,{key}]"))
     stick1 = panel["players"]["P1"]["stick"]
     for direction in ("up", "down", "left", "right"):
         out.append((f"ui_{direction}", f"{_adv_direction(joy1, stick1[direction][1:])} or keyboard[0,{direction}]"))
@@ -282,6 +292,15 @@ def merge_advmame_rc(text, inputs, options=None):
             seen.add(key)
     lines += [f"{key} {value}" for key, value in wanted.items() if key not in seen]
     return "\n".join(lines) + "\n"
+
+
+def advmame_launcher(text, hide=ADV_HIDE_AI_PADS):
+    """An emulators.cfg with the advmame line starting AdvanceMAME with `hide` in its environment. Other lines stay."""
+    out = []
+    for line in text.splitlines():
+        m = re.match(r'^(advmame\s*=\s*")(?:env [A-Z_]+=\S+ )?(/opt/retropie/emulators/advmame/bin/advmame.*)$', line)
+        out.append(f"{m.group(1)}env {hide} {m.group(2)}" if m else line)
+    return "\n".join(out) + "\n"
 
 
 # ---------------------------------------------------------------- which emulator runs which game
