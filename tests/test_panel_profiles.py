@@ -197,3 +197,34 @@ def test_mame_ini_gets_the_audio_latency_that_is_not_silent():
     assert "audio_latency             4\n" in new and new.startswith(ini)
     assert pp.mame_ini_set(new, "audio_latency", 5).count("audio_latency") == 1  # replaced, not added again
     assert pp.AUDIO_LATENCY >= 3  # 2, MAME's default, plays silence through the adapter
+
+
+# --- tools/stick_check.py
+import stick_check  # noqa: E402
+
+
+def axis_event(code, value):
+    return {"type": 3, "code": code, "value": value, "min": 0, "max": 255}
+
+
+def test_a_reading_is_named_as_it_would_be_on_players_ones_stick():
+    assert stick_check.reading(axis_event(1, 0)) == "UP" and stick_check.reading(axis_event(1, 255)) == "DOWN"
+    assert stick_check.reading(axis_event(0, 0)) == "LEFT" and stick_check.reading(axis_event(0, 255)) == "RIGHT"
+    assert stick_check.reading(axis_event(0, 127)) is None and stick_check.reading(axis_event(2, 255)) is None
+
+
+def test_the_plan_names_the_pairs_of_wires_to_swap():
+    # Player 2's stick on 19 October: everything reversed
+    notes, right = stick_check.plan({"UP": "DOWN", "DOWN": "UP", "LEFT": "RIGHT", "RIGHT": "LEFT"})
+    assert not right and len(notes) == 2
+    assert "UP and DOWN terminals" in notes[0] and "LEFT and RIGHT terminals" in notes[1]
+    # only up and down reversed: one swap
+    notes, right = stick_check.plan({"UP": "DOWN", "DOWN": "UP", "LEFT": "LEFT", "RIGHT": "RIGHT"})
+    assert not right and len(notes) == 1 and "UP and DOWN terminals" in notes[0]
+    # wired right: nothing to do
+    assert stick_check.plan({d: d for d in stick_check.ORDER}) == ([], True)
+
+
+def test_a_stick_that_is_crossed_between_the_axes_gets_a_circle_instruction():
+    notes, right = stick_check.plan({"UP": "DOWN", "DOWN": "LEFT", "LEFT": "RIGHT", "RIGHT": "UP"})  # the 17 October mix-up
+    assert not right and notes and "circle" in notes[0]
