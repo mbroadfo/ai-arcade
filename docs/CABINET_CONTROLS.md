@@ -112,9 +112,11 @@ Stick: axis 1 negative = up, positive = down; axis 0 negative = left, positive =
 | Y | 292 | 4 | Pause | 297 | 9 |
 | Snowflake | 289 | 1 | Star | 288 | 0 |
 
-Stick, after the wire swap (17 October): up = axis 1 positive, down = axis 1 negative, right = axis 0 negative, left = axis 0
-positive. Each axis has one pair of opposite directions (so diagonals work), but both are the reverse of Player 1's. (Before
-the swap up and left shared an axis and the diagonals up-left and down-right were lost.)
+Stick, after the second rewire (19 October): up = axis 1 negative, down = axis 1 positive (the same as Player 1), but
+right = axis 0 negative and left = axis 0 positive, still the reverse of Player 1's. (Before 19 October all four were
+reversed; before 17 October up and left shared an axis and the diagonals up-left and down-right were lost.) In
+EmulationStation, which cannot tell the two encoders apart, Player 2's left and right are therefore still reversed in the
+menu; swapping the left and right wires would fix that, after which `panel.json` needs one more update.
 
 ### Spinner and trackball
 
