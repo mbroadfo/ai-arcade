@@ -74,3 +74,19 @@ def test_battlezone_fire_keeps_the_pads_button():
 def test_ctrlr_still_parses():
     import xml.etree.ElementTree as ET
     ET.fromstring(pp.mame_ctrlr(PANEL, None, 2, {"P1": 1}))
+
+
+def test_sdl_guid_matches_what_sdl_reports():
+    assert pp.sdl_guid("0003", "046d", "c21d", "4014", "Logitech Gamepad F310") == "030005ff6d0400001dc2000014400000"
+    assert pp.sdl_guid("0003", "0079", "0006", "0110", "DragonRise Inc.   Generic   USB  Joystick  ") == PANEL["device"]["sdl_guid"]
+
+
+def test_only_pads_es_has_not_met_are_taught(tmp_path):
+    devices = pad_map.parse_devices("\n".join([P1, F310, AI]))
+    es = tmp_path / "es_input.cfg"
+    es.write_text("<inputList>\n</inputList>\n", encoding="utf-8")
+    assert pad_map.teach_es(devices, PANEL, es) == ["Logitech Gamepad F310"]
+    text = es.read_text(encoding="utf-8")
+    assert text.count('deviceName="Logitech Gamepad F310"') == 1 and 'type="hat"' in text
+    assert "AI Arcade" not in text and "DragonRise" not in text  # panel and AI pads have their own entries
+    assert pad_map.teach_es(devices, PANEL, es) == []  # nothing more to add the second time

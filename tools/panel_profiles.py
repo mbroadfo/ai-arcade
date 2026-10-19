@@ -57,6 +57,31 @@ def es_input_entry(panel):
     return "\n".join(lines) + "\n"
 
 
+def sdl_guid(bus, vendor, product, version, name):
+    """SDL's joystick GUID for a USB device, from /proc/bus/input/devices: bus, a CRC-16 of the kernel's device name
+    (poly 0xA001), then vendor, product and version, each little-endian with 0000 after. Matches the panel's GUID in
+    es_input.cfg and what EmulationStation logs for a Logitech F310 (030005ff6d0400001dc2000014400000)."""
+    crc = 0
+    for byte in name.encode():
+        crc ^= byte
+        for _ in range(8):
+            crc = (crc >> 1) ^ 0xA001 if crc & 1 else crc >> 1
+    le = lambda h: int(h, 16).to_bytes(2, "little").hex()  # noqa: E731
+    return f"{le(bus)}{crc.to_bytes(2, 'little').hex()}{le(vendor)}0000{le(product)}0000{le(version)}0000"
+
+
+def es_gamepad_entry(name, guid):
+    """The <inputConfig> for an ordinary gamepad in SDL's standard layout (a Logitech F310 in XInput mode, an Xbox pad):
+    the D-pad moves, A and B accept and go back, X and Y as they are, LB and RB page, Back is select, Start is start."""
+    rows = [("up", "hat", 0, 1), ("right", "hat", 0, 2), ("down", "hat", 0, 4), ("left", "hat", 0, 8),
+            ("a", "button", 0, 1), ("b", "button", 1, 1), ("x", "button", 2, 1), ("y", "button", 3, 1),
+            ("pageup", "button", 4, 1), ("pagedown", "button", 5, 1), ("select", "button", 6, 1), ("start", "button", 7, 1)]
+    lines = [f'  <inputConfig type="joystick" deviceName={quoteattr(name)} deviceGUID={quoteattr(guid)}>']
+    lines += [f'    <input name="{n}" type="{t}" id="{i}" value="{v}"/>' for n, t, i, v in rows]
+    lines.append("  </inputConfig>")
+    return "\n".join(lines) + "\n"
+
+
 def merge_es_input(existing, entry, device_name):
     """es_input.cfg with this device's <inputConfig> replaced (or added). Other devices are left byte for byte."""
     pattern = re.compile(r'[ \t]*<inputConfig [^>]*deviceName=("|\')' + re.escape(device_name) + r'\1[^>]*>.*?</inputConfig>\n?', re.S)

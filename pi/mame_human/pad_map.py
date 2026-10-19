@@ -33,9 +33,9 @@ def parse_devices(text):
         info = {}
         for line in block.splitlines():
             if line.startswith("I:"):
-                m = re.search(r"Vendor=(\w+) Product=(\w+)", line)
+                m = re.search(r"Bus=(\w+) Vendor=(\w+) Product=(\w+) Version=(\w+)", line)
                 if m:
-                    info["vendor"], info["product"] = m.group(1).lower(), m.group(2).lower()
+                    info["bus"], info["vendor"], info["product"], info["version"] = (g.lower() for g in m.groups())
             elif line.startswith("N:"):
                 info["name"] = line.split("=", 1)[1].strip().strip('"')
             elif line.startswith("P:"):
@@ -75,10 +75,43 @@ def hide_ai_pads():
     return "SDL_GAMECONTROLLER_IGNORE_DEVICES=" + ",".join(f"0x{v}/0x{p}" for v, p in sorted(AI_PADS))
 
 
+ES_INPUT = "/home/pi/.emulationstation/es_input.cfg"
+
+
+def unknown_pads(devices, es_text, panel):
+    """[(SDL name, GUID)] for plugged-in gamepads EmulationStation has no <inputConfig> for (not the panel, not AI pads)."""
+    import panel_profiles as pp
+    panel_ids = (panel["device"]["vendor_id"].lower(), panel["device"]["product_id"].lower())
+    out = []
+    for d in devices:
+        guid = pp.sdl_guid(d["bus"], d["vendor"], d["product"], d["version"], d.get("name", ""))
+        ids = (d.get("vendor"), d.get("product"))
+        if ids in AI_PADS or ids == panel_ids or f'deviceGUID="{guid}"' in es_text:
+            continue
+        out.append((" ".join(d.get("name", "?").split()), guid))
+    return out
+
+
+def teach_es(devices, panel, path=ES_INPUT):
+    """Add the standard gamepad layout to es_input.cfg for each pad it does not know. Returns the names added."""
+    import panel_profiles as pp
+    text = Path(path).read_text(encoding="utf-8")
+    added = []
+    for name, guid in unknown_pads(devices, text, panel):
+        text = pp.merge_es_input(text, pp.es_gamepad_entry(name, guid), name)
+        added.append(name)
+    if added:
+        Path(path).write_text(text, encoding="utf-8")
+    return added
+
+
 def main(argv):
     import panel_profiles as pp
     panel = pp.load_panel(HERE / "panel.json")
     devices = parse_devices(Path("/proc/bus/input/devices").read_text(errors="replace"))
+    if "--es" in argv:  # before EmulationStation starts: give every gamepad it has not met a map
+        print("; ".join(teach_es(devices, panel)) or "nothing to add")
+        return 0
     found = assign(devices, panel)
     if "--show" in argv:
         print(json.dumps(found, indent=1))
