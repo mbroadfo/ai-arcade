@@ -425,3 +425,17 @@ Tests: `tests/test_audit_controls.py` (against a saved copy of the live Pi's fil
 Until `install_controls.py --apply` runs, there is nothing to roll back. After it, each replaced file is kept as
 `*.before-panel` next to the original and `--rollback` restores them; ES's `es_input.cfg` already has
 `.bak` and `.pre-ai-arcade` copies from earlier.
+
+## Adapting to what is plugged in (19 October, evening)
+
+The panel's joystick numbers used to be fixed (encoders = 1 and 2). That broke as soon as anything else was plugged in or
+the AI started. Now each launch works it out:
+
+| Mode | Who is hidden | Who plays |
+|---|---|---|
+| AI run (`tools/start_pi_game.py`) | everything except the AI Arcade pads (`SDL_GAMECONTROLLER_IGNORE_DEVICES_EXCEPT`) | the AI pads are joysticks 1 and 2, as `aiarcade.cfg` expects |
+| Human MAME 0.251 (`pi/mame_human/mame_human.sh`) | the AI pads | `pi/mame_human/pad_map.py` reads `/proc/bus/input/devices`, finds the panel's encoders by USB port, treats any other gamepad as Player 1 then Player 2 (beside the panel), and writes `/tmp/ai-arcade-ctrlr/auto.cfg` for exactly that; the keyboard always works; anything unplugged is left out |
+
+Gamepads are assumed to be in the standard layout (Logitech F310 in XInput mode: A B X Y LB RB = buttons 1 to 6, Back =
+coin, Start = start, stick or D-pad moves). EmulationStation and RetroArch already choose by device name, so each device
+type has its own map there. Not yet done: AdvanceMAME and RetroArch player order with a gamepad, and pads as Players 3 and 4.

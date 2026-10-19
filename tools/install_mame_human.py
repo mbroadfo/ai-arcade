@@ -32,6 +32,8 @@ def main():
         for path in sorted((ROOT / "pi" / "mame_human").iterdir()):
             if path.is_file():
                 sftp.put(str(path), f"{CODE}/{path.name}")
+        for src in (ROOT / "tools" / "panel_profiles.py", ROOT / "pi" / "controls" / "panel.json"):  # pad_map.py's inputs
+            sftp.put(str(src), f"{CODE}/{src.name}")
         sftp.close()
         run(ssh, f"chmod +x {CODE}/*.sh {CODE}/*.py && cp {CODE}/mame.ini {CONFIG}/mame.ini")
         print(run(ssh, f"cd {CODE} && python3 convert.py status").strip())

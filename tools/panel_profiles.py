@@ -101,10 +101,58 @@ def _direction_code(joy, direction_sign):
     return f"JOYCODE_{joy}_{name}_{side}_SWITCH"
 
 
-def mame_ports(panel, joy1=1, joy2=2):
+def pad_terms(pad):
+    """What an ordinary gamepad (a Logitech F310 in XInput mode, or anything that reports as SDL's standard layout)
+    adds to a player's controls, as {MAME port suffix: sequence}. `pad` is MAME's joystick number for it. The stick
+    or the D-pad moves; A, B, X, Y, LB, RB are buttons 1 to 6; Back is coin and Start is start."""
+    out = {}
+    for direction, axis in (("UP", "YAXIS_UP"), ("DOWN", "YAXIS_DOWN"), ("LEFT", "XAXIS_LEFT"), ("RIGHT", "XAXIS_RIGHT")):
+        out[direction] = f"JOYCODE_{pad}_{axis}_SWITCH OR JOYCODE_{pad}_HSWITCH_{direction}"
+    for n in range(1, 7):
+        out[f"BUTTON{n}"] = f"JOYCODE_{pad}_BUTTON{n}"
+    out["COIN"] = f"JOYCODE_{pad}_BUTTON7"
+    out["START"] = f"JOYCODE_{pad}_BUTTON8"
+    return out
+
+
+def _drop_absent(seq, absent):
+    """A sequence without the terms that name a joystick number that is not plugged in."""
+    terms = [t for t in seq.split(" OR ") if not any(t.startswith(f"JOYCODE_{n}_") for n in absent)]
+    return " OR ".join(terms)
+
+
+def mame_ports(panel, joy1=1, joy2=2, pads=None):
     """[(MAME port type, input sequence)] for the default section: both players' sticks, six buttons, coin, start, and
     MAME's menu keys. joy1 and joy2 are MAME's joystick numbers for the P1 and P2 encoders (1 and 2 when the panel's
-    encoders are the first two joysticks, which the order checks must confirm)."""
+    encoders are the first two joysticks, which the order checks must confirm); None means that encoder is not plugged
+    in. pads is {"P1": joystick number, "P2": ...} for gamepads that also play as that player (pad_terms).
+    tools/... pi/mame_human/pad_map.py works these numbers out at every launch from what is plugged in."""
+    absent = [n for n, j in (("P1", joy1), ("P2", joy2)) if j is None]
+    joy1_, joy2_ = (j if j is not None else 90 + i for i, j in enumerate((joy1, joy2)))
+    ports = _mame_ports(panel, joy1_, joy2_)
+    gone = [90 + i for i, n in enumerate(("P1", "P2")) if n in absent]
+    pads = pads or {}
+    out = []
+    for port, seq in ports:
+        seq = _drop_absent(seq, gone)
+        for player, pad in pads.items():
+            t = pad_terms(pad)
+            suffix = port[3:] if port.startswith(player + "_") else None
+            if suffix in t:
+                seq += " OR " + t[suffix]
+            elif port == "COIN" + player[1] or port == "START" + player[1]:
+                seq += " OR " + t[port[:-1]]
+            elif player == "P1" and port in ("UI_UP", "UI_DOWN", "UI_LEFT", "UI_RIGHT"):
+                seq += " OR " + t[port[3:]]
+            elif player == "P1" and port == "UI_SELECT":
+                seq += " OR " + t["BUTTON1"]
+            elif player == "P1" and port == "UI_CANCEL":
+                seq += " OR " + t["BUTTON2"]
+        out.append((port, seq))
+    return out
+
+
+def _mame_ports(panel, joy1, joy2):
     joy = {"P1": joy1, "P2": joy2}
     ports = []
     keys = {"P1": {"up": "KEYCODE_UP", "down": "KEYCODE_DOWN", "left": "KEYCODE_LEFT", "right": "KEYCODE_RIGHT"},
@@ -142,27 +190,39 @@ def mame_ports(panel, joy1=1, joy2=2):
     return ports
 
 
-def game_ports(panel, joy1=1, joy2=2):
+def game_ports(panel, joy1=1, joy2=2, pads=None):
     """{MAME game: [(port type, sequence)]} for the games in panel.json's game_overrides: a port is pressed by another
-    control than the layout says (Battlezone's fire is the flight stick's trigger, on the P2 encoder)."""
+    control than the layout says (Battlezone's fire is the flight stick's trigger, on the P2 encoder). A gamepad's
+    button for the same port stays on it."""
     joy = {"P1": joy1, "P2": joy2}
+    pads = pads or {}
     out = {}
     for game, overrides in panel.get("game_overrides", {}).items():
         if game == "comment":
             continue
-        out[game] = [(port, f"JOYCODE_{joy[player]}_BUTTON{index(panel, player, control) + 1}")
-                     for port, (player, control) in overrides.items()]
+        rows = []
+        for port, (player, control) in overrides.items():
+            if joy[player] is None:
+                seq = ""
+            else:
+                seq = f"JOYCODE_{joy[player]}_BUTTON{index(panel, player, control) + 1}"
+            for owner, pad in pads.items():
+                if port.startswith(owner + "_") and port[3:] in pad_terms(pad):
+                    seq = (seq + " OR " if seq else "") + pad_terms(pad)[port[3:]]
+            if seq:
+                rows.append((port, seq))
+        out[game] = rows
     return out
 
 
-def mame_ctrlr(panel, joy1=1, joy2=2):
+def mame_ctrlr(panel, joy1=1, joy2=2, pads=None):
     """The ctrlr file for human mode (/home/pi/.mame/ctrlr/panel.cfg): only the default section; MAME's own defaults
     still apply to everything not listed (players 3 and 4, analog controls, service keys)."""
     out = ['<?xml version="1.0"?>', '<mameconfig version="10">', '    <system name="default">', "        <input>"]
-    for port, seq in mame_ports(panel, joy1, joy2):
+    for port, seq in mame_ports(panel, joy1, joy2, pads):
         out += [f'            <port type="{port}">', f'                <newseq type="standard">{seq}</newseq>', "            </port>"]
     out += ["        </input>", "    </system>"]
-    for game, ports in game_ports(panel, joy1, joy2).items():
+    for game, ports in game_ports(panel, joy1, joy2, pads).items():
         out += [f'    <system name="{game}">', "        <input>"]
         for port, seq in ports:
             out += [f'            <port type="{port}">', f'                <newseq type="standard">{seq}</newseq>', "            </port>"]

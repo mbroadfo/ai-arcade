@@ -10,4 +10,9 @@ shift
 set=$(awk -F '\t' -v g="$game" '$1 == g { print $2; exit }' "$CONFIG/sets.tsv" 2>/dev/null)
 # Sound goes through ALSA, whose default device is the USB audio adapter (pi/audio/asound.conf), as in AI mode
 # (tools/start_pi_game.py): without this SDL picks its own audio driver from whatever the login session offers.
-exec env SDL_AUDIODRIVER=alsa mame -inipath "$CONFIG" "${set:-$game}" "$@"
+# Controls adapt to whatever is plugged in (pad_map.py): the panel, any gamepad, the keyboard; the AI pads are hidden.
+# If it cannot run, mame.ini's own controller file (the panel's) applies.
+PAD_ARGS=
+eval "$(python3 "$(dirname "$0")/pad_map.py" 2>/dev/null)"
+# shellcheck disable=SC2086
+exec env SDL_AUDIODRIVER=alsa mame -inipath "$CONFIG" $PAD_ARGS "${set:-$game}" "$@"
