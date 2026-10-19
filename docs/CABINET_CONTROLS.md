@@ -112,12 +112,11 @@ Stick: axis 1 negative = up, positive = down; axis 0 negative = left, positive =
 | Y | 292 | 4 | Pause | 297 | 9 |
 | Snowflake | 289 | 1 | Star | 288 | 0 |
 
-Stick, as captured at 15:50 on 19 October (after two more rewiring attempts): up = axis 1 positive, down = axis 1 negative,
-right = axis 0 negative, left = axis 0 positive: all four reversed against Player 1, the same as on 17 October. (At 15:45 up
-and down matched Player 1's and left and right were reversed; the next change flipped up and down back and left and right
-stayed.) To match Player 1, both pairs must be swapped from here. In EmulationStation, which cannot tell the two encoders
-apart, Player 2's stick is then reversed in the menu; MAME, AdvanceMAME and RetroArch follow `panel.json`, which says what
-the wiring is now.
+Stick, final (19 October, 15:56, after the rewiring was checked): up = axis 1 negative, down = axis 1 positive, left =
+axis 0 negative, right = axis 0 positive: **the same as Player 1's**. (History: all four reversed until 17 October; up and
+down matched on 19 October 15:45; then three more changes of the wires.) EmulationStation, which cannot tell the encoders
+apart, now takes Player 2's stick as it takes Player 1's. `tools/stick_check.py` says which wires to swap if a stick drifts
+out of line again.
 
 ### Spinner and trackball
 
@@ -147,7 +146,7 @@ encoder by its USB port (and to give P2's spare terminals their own meaning).
 
 | # | Problem | Status |
 | --- | --- | --- |
-| 1 | Player 2's stick wires were on mixed-up terminals (up and left shared an axis, so the up-left and down-right diagonals cancelled). **Fixed on 17 October by swapping two wires**: up and down now share Y and left and right share X, so all four diagonals work. Both axes are now **inverted relative to Player 1** (up = Y positive, down = Y negative, right = X negative, left = X positive), which software handles (or swap up with down and left with right) | resolved, with the inversion to handle in the mapping |
+| 1 | Player 2's stick wires were on mixed-up terminals (up and left shared an axis, so the up-left and down-right diagonals cancelled), then reversed against Player 1's | **fixed on 19 October**: wired like Player 1's, checked with the stick capture |
 | 2 | The two encoders number their buttons differently (P1's action buttons are 294 to 299, P2's 288 to 293; the extra buttons differ in position and order too), so no single profile fits both | open: decided with the mapping approach below |
 | 3 | The two encoders have the same name, id and GUID; only the USB port differs, and Player 1 and 2 are told apart by enumeration order | open |
 | 4 | Another gamepad (the F310) took `js0`, putting the panel at `js1` and `js2` | unplug the spare; `audit_controls.py` warns |

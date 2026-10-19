@@ -65,8 +65,8 @@ def test_the_retroarch_autoconfig_names_the_raw_device_and_maps_arcade_buttons_i
 def test_mame_maps_each_player_to_its_own_encoder_and_the_second_stick_is_inverted():
     p = ports()
     assert p["P1_JOYSTICK_UP"].startswith("JOYCODE_1_YAXIS_UP_SWITCH")
-    assert p["P2_JOYSTICK_UP"].startswith("JOYCODE_2_YAXIS_DOWN_SWITCH")  # P2 wiring as last captured: up reads Y positive
-    assert p["P2_JOYSTICK_LEFT"].startswith("JOYCODE_2_XAXIS_RIGHT_SWITCH")  # and left reads X positive
+    assert p["P2_JOYSTICK_UP"].startswith("JOYCODE_2_YAXIS_UP_SWITCH")  # P2 is wired like P1 since 19 October 15:56
+    assert p["P2_JOYSTICK_LEFT"].startswith("JOYCODE_2_XAXIS_LEFT_SWITCH")
     assert p["P1_BUTTON1"].startswith("JOYCODE_1_BUTTON12") and p["P1_BUTTON6"].startswith("JOYCODE_1_BUTTON7")
     assert p["P2_BUTTON1"].startswith("JOYCODE_2_BUTTON6 OR JOYCODE_2_BUTTON12")  # A, and the flight trigger
     assert p["P2_BUTTON2"].startswith("JOYCODE_2_BUTTON4 OR JOYCODE_2_BUTTON11")
@@ -85,7 +85,7 @@ def test_mame_coin_start_and_menu_keys_follow_the_decisions():
 def test_twin_stick_games_get_the_second_stick_as_the_right_stick():
     p = ports()
     assert p["P1_JOYSTICKLEFT_UP"] == "JOYCODE_1_YAXIS_UP_SWITCH"
-    assert p["P1_JOYSTICKRIGHT_UP"] == "JOYCODE_2_YAXIS_DOWN_SWITCH"
+    assert p["P1_JOYSTICKRIGHT_UP"] == "JOYCODE_2_YAXIS_UP_SWITCH"
 
 
 def test_the_joystick_numbers_can_be_moved_for_a_test_with_other_devices():
@@ -122,8 +122,8 @@ def test_the_pretend_panel_turns_names_into_the_encoders_events():
     assert s.events("P1", "A", True) == [(0, synth_panel.EV_KEY, 299, 1)]
     assert s.events("P1", "A", False) == [(0, synth_panel.EV_KEY, 299, 0)]
     assert s.events("P1", "UP", True) == [(0, synth_panel.EV_ABS, 1, 0)]  # P1 up reads Y negative
-    assert s.events("P2", "UP", True) == [(1, synth_panel.EV_ABS, 1, 255)]  # P2 up reads Y positive
-    assert s.events("P2", "LEFT", True) == [(1, synth_panel.EV_ABS, 0, 255)]  # and left reads X positive
+    assert s.events("P2", "UP", True) == [(1, synth_panel.EV_ABS, 1, 0)]  # P2 is wired like P1: up reads Y negative
+    assert s.events("P2", "LEFT", True) == [(1, synth_panel.EV_ABS, 0, 0)]  # and left reads X negative
     assert s.events("P2", "LEFT", False) == [(1, synth_panel.EV_ABS, 0, 127)]  # released: back to the middle
     assert s.events("P2", "FLIGHT1", True) == [(1, synth_panel.EV_KEY, 299, 1)]
 
@@ -142,7 +142,7 @@ def test_advmame_uses_its_sdl_driver_so_all_twelve_buttons_are_there():
     assert values["coin1"].startswith("joystick_button[dragonrise_inc_generic_usb_joystick,button6]")
     assert values["p2_button1"].startswith("joystick_button[dragonrise_inc_generic_usb_joystick_2,button6] or "
                                            "joystick_button[dragonrise_inc_generic_usb_joystick_2,button12]")  # A and the trigger
-    assert values["p1_doubleright_up"] == "joystick_digital[dragonrise_inc_generic_usb_joystick_2,stick,y,down]"  # P2's stick
+    assert values["p1_doubleright_up"] == "joystick_digital[dragonrise_inc_generic_usb_joystick_2,stick,y,up]"  # P2's stick
     assert pp.ADV_OPTIONS == {"device_joystick": "sdl"}
 
 
