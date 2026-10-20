@@ -147,10 +147,16 @@ def retroarch_players(devices, panel):
     return [(n, index, who) for n, (index, who) in enumerate(panels + pads, 1) if n <= 4]
 
 
-def apply_pad_overrides(binds, player, games, rom):
-    """A gamepad's explicit binds with the game's changes: "retroarch_pad" in the controls.json of the game whose ROM
-    this is (games from panel_profiles.load_game_controls). No file, no change."""
-    changes = {k: v for k, v in games.get(Path(rom or "").stem, {}).get("retroarch_pad", {}).items() if k != "comment"}
+def game_key(system, rom):
+    """How panel_profiles.load_game_controls names a game: "<system>/<ROM name>" (the ROM name is the file's, without its
+    extension)."""
+    return f"{system or 'arcade'}/{Path(rom or '').stem}"
+
+
+def apply_pad_overrides(binds, player, games, game):
+    """A gamepad's explicit binds with the game's changes: "retroarch_pad" in the controls.json of `game` (a game_key;
+    games from panel_profiles.load_game_controls). No file, no change."""
+    changes = {k: v for k, v in games.get(game, {}).get("retroarch_pad", {}).items() if k != "comment"}
     out = []
     for line in binds:
         key, _, value = line.partition(" = ")
@@ -171,11 +177,11 @@ def retroarch_mouse_index(mice, panel, pointer):
     return None
 
 
-def apply_panel_overrides(binds, player, who, panel, games, rom):
+def apply_panel_overrides(binds, player, who, panel, games, game):
     """A panel encoder's explicit binds with the game's changes: "retroarch_panel" in its controls.json, {RetroPad name:
     panel control}. The control's button number is that encoder's own (Player 1's and Player 2's differ)."""
     import panel_profiles as pp
-    changes = {k: v for k, v in games.get(Path(rom or "").stem, {}).get("retroarch_panel", {}).items() if k != "comment"}
+    changes = {k: v for k, v in games.get(game, {}).get("retroarch_panel", {}).items() if k != "comment"}
     out = []
     for line in binds:
         key, _, value = line.partition(" = ")
@@ -207,6 +213,7 @@ def main(argv):
     if "--ra" in argv:  # runcommand-onstart: before a RetroArch core starts
         rest = argv[argv.index("--ra") + 1:]
         rom, system = (rest + ["", ""])[:2]  # --ra ROM SYSTEM, as runcommand gives them
+        game = game_key(system, rom)
         teach_retroarch(devices, panel)
         lines = []
         for n, index, who in retroarch_players(devices, panel):
@@ -215,12 +222,12 @@ def main(argv):
                     pp.retroarch_gamepad_autoconfig(d["name"], d["vendor"], d["product"]))
             binds, hotkeys = pp.retroarch_player_binds(text, n)
             if who:
-                binds = apply_panel_overrides(binds, n, who, panel, games, rom)
+                binds = apply_panel_overrides(binds, n, who, panel, games, game)
             else:
-                binds = apply_pad_overrides(binds, n, games, rom)
+                binds = apply_pad_overrides(binds, n, games, game)
             lines += [f'input_player{n}_joypad_index = "{index}"'] + binds + (hotkeys if n == 1 else [])
         mice = parse_devices(Path("/proc/bus/input/devices").read_text(errors="replace"), r"mouse\d+")
-        mouse = retroarch_mouse_index(mice, panel, games.get(Path(rom or "").stem, {}).get("pointer"))
+        mouse = retroarch_mouse_index(mice, panel, games.get(game, {}).get("pointer"))
         if mouse is not None:
             lines.append(f'input_player1_mouse_index = "{mouse}"')
         Path(RA_PLAYERS).write_text("\n".join(lines) + "\n", encoding="utf-8")
