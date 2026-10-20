@@ -163,6 +163,8 @@ def promoted_parent(root: Path, model: str, stamp: dict | None = None, *, protoc
                 rate = float(evaluation.get("success_rate") or 0)
             except (TypeError, ValueError):
                 continue
+            if protocol.get("require_success") and rate <= 0:
+                continue
             ranked = score if sense == "maximize" else -score
             candidates.append({
                 "_rank": (rate, ranked, -index),

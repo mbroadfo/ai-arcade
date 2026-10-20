@@ -12,6 +12,15 @@ os.environ.setdefault("OMP_NUM_THREADS", "1")
 os.environ.setdefault("MKL_NUM_THREADS", "1")
 
 
+def _sha256_file(path: Path) -> str:
+    import hashlib
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1 << 20), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 def atomic_json(path: Path, data: dict) -> None:
     """Write JSON by replace. Retry when Windows has the destination open."""
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -78,6 +87,9 @@ class LifeTracker:
         self.best_flag = False
         self.episodes = 0
         self.deaths = 0
+        self.last_termination = None
+        self.last_frames = None
+        self.last_components = None
 
     def published_score(self):
         if self.best_score is None:
@@ -90,7 +102,7 @@ class LifeTracker:
         return int(self.saved_score)
 
     def status(self, steps: int, finished: bool) -> dict:
-        return {
+        payload = {
             **self.meta,
             "steps": int(steps),
             "episodes": self.episodes,
@@ -100,6 +112,13 @@ class LifeTracker:
             "flag": self.best_flag,
             "finished": bool(finished),
         }
+        if self.last_termination is not None:
+            payload["termination"] = self.last_termination
+        if self.last_frames is not None:
+            payload["frames"] = self.last_frames
+        if self.last_components is not None:
+            payload["components"] = self.last_components
+        return payload
 
     def restore(self, status: dict | None, tape: dict | None) -> None:
         """Continue a maximize seat from the numbers it already wrote.
@@ -170,6 +189,7 @@ class LifeTracker:
     def close(self, info: dict, keep) -> bool:
         """Commit the episode. keep() saves a film and weights when it returns true."""
         self.episodes += 1
+        self._note_outcome(info)
         if info.get("dead"):
             self.deaths += 1
         if self.minimize:
@@ -201,6 +221,26 @@ class LifeTracker:
     def _note_flag(self, info: dict) -> None:
         if "flag_get" in info and info.get("flag_get"):
             self.best_flag = True
+
+    def _note_outcome(self, info: dict) -> None:
+        if not isinstance(info, dict):
+            return
+        if info.get("termination"):
+            self.last_termination = str(info.get("termination"))
+        if "frames" in info:
+            try:
+                self.last_frames = int(info.get("frames") or 0)
+            except (TypeError, ValueError):
+                self.last_frames = None
+        components = info.get("components")
+        if isinstance(components, dict):
+            copied = {}
+            for key, value in components.items():
+                try:
+                    copied[str(key)] = float(value)
+                except (TypeError, ValueError):
+                    continue
+            self.last_components = copied
 
     def _remember(self, info: dict) -> None:
         for key, attr in (("world", "mark_world"), ("stage", "mark_stage")):
@@ -477,12 +517,19 @@ def train(
     meta: dict,
     resume: bool,
     seed_from: Path | None = None,
+    init_from: Path | None = None,
 ) -> dict:
-    """Resume continues a checkpoint. seed_from loads record-life weights and trains a full budget."""
-    if seed_from is not None and resume:
-        raise ValueError("pass seed-from or resume, not both")
+    """Resume continues a checkpoint. seed_from loads record-life weights and trains a full budget.
+
+    init_from loads weights whose controls and observation width match, even when
+    the objective differs. The source stays an initialization. The saved stamp
+    is the objective being trained.
+    """
+    modes = sum(1 for flag in (resume, seed_from is not None, init_from is not None) if flag)
+    if modes > 1:
+        raise ValueError("pass seed-from, init-from, or resume, not more than one")
     from games.lab.models import registry
-    from games.lab.stamp import matches, write_stamp
+    from games.lab.stamp import matches, read_stamp, write_stamp
     seat_dir.mkdir(parents=True, exist_ok=True)
     checkpoint = seat_dir / "checkpoint.zip"
     stamp = meta.get("stamp")
@@ -509,6 +556,24 @@ def train(
             reset = True
         else:
             model, remaining, reset = fresh()
+    elif init_from is not None:
+        path = Path(init_from)
+        if not path.is_file():
+            raise FileNotFoundError(path)
+        from games.lab.objective import explicit_init_allowed
+        source = read_stamp(path)
+        if not explicit_init_allowed(source, stamp):
+            raise ValueError("init-from weights do not match this action set and observation width")
+        model = registry.load(model_id, str(path), env)
+        model.set_random_seed(int(seed))
+        remaining = steps
+        reset = True
+        meta["initialized_from"] = {
+            "path": str(path),
+            "sha256": _sha256_file(path),
+            "objective": source.get("objective"),
+            "role": "initialization",
+        }
     else:
         model, remaining, reset = fresh()
     callback = SeatCallback(seat_dir, meta).cb
@@ -605,6 +670,41 @@ def _practice_entry(args) -> int:
     return 0
 
 
+def _bare_entry(args) -> int:
+    """Train one objective with no shared run, no hint, and no champion floor.
+
+    Weights cross objectives only through --init-from. The checkpoint written
+    here carries this run's stamp, and the source is recorded as initialization.
+    """
+    if args.seed_from:
+        raise SystemExit("bare training uses --init-from so the source objective stays on the record")
+    from games.lab.registry import get
+    integration = get(args.integration or None)
+    opener = getattr(integration, "open_env", None)
+    if integration is None or not callable(opener):
+        raise SystemExit("bare training needs an adapter that opens an environment")
+    env = opener(args.rom, objective=args.objective)
+    seat_dir = Path(args.seat_dir)
+    n_actions = int(env.action_space.n)
+    meta = _seat_meta(args, integration, n_actions, 0)
+    meta["bare"] = True
+    meta["floor"] = 0
+    if hasattr(integration, "stamp"):
+        meta["stamp"] = integration.stamp(args.objective)
+    init_from = Path(args.init_from) if args.init_from else None
+    train(
+        env,
+        args.model,
+        args.seed,
+        args.steps,
+        seat_dir,
+        meta,
+        args.resume,
+        init_from=init_from,
+    )
+    return 0
+
+
 def _train_entry(args) -> int:
     from games.lab.env import RouteEnv, make_env
     from games.lab.lineage import champion
@@ -658,6 +758,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--objective", required=True)
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--seed-from", default="")
+    parser.add_argument("--init-from", default="")
+    parser.add_argument("--bare", action="store_true")
     parser.add_argument("--practice", action="store_true")
     args = parser.parse_args(argv)
     from games.lab.paths import hold_requested
@@ -666,6 +768,10 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.practice:
         return _practice_entry(args)
+    if args.bare:
+        return _bare_entry(args)
+    if args.init_from:
+        raise SystemExit("init-from requires --bare")
     return _train_entry(args)
 
 

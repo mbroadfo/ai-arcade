@@ -16,6 +16,9 @@ from games.lab.actions import BUTTON_ID, for_system
 from games.lab.contract import sense_of
 from games.lab.cores import ensure_core
 from games.lab.libretro import LibretroRunner
+from games.lab.objective import next_stall_run, stalled
+
+_COMPONENT_KEYS = ("progress", "completion", "stall", "death", "time", "total")
 
 
 class FrameEnv(gym.Env):
@@ -81,14 +84,61 @@ class ScoredEnv(gym.Wrapper):
     stage in its own facts.
     """
 
-    def __init__(self, env: FrameEnv, integration, step_limit: int = 20000):
+    def __init__(self, env: FrameEnv, integration, step_limit: int = 20000, *,
+                 objective=None, scenario=None):
         super().__init__(env)
         self.integration = integration
         self.step_limit = step_limit
+        self._objective = objective
+        self._scenario = scenario
         self._progress = 0
         self._steps = 0
         self._seen_time = False
         self._clear = {"cleared": False, "at": None}
+        self._paid = False
+        self._stall_run = 0
+        self._stall_limit = None
+        self._components = {key: 0.0 for key in _COMPONENT_KEYS}
+
+    def _active_objective(self) -> str:
+        if self._objective:
+            return str(self._objective)
+        named = getattr(self.integration, "objective", None)
+        return "" if named is None else str(named)
+
+    def _frame_skip(self) -> int:
+        try:
+            return max(int(getattr(self.env.unwrapped, "frame_skip", 1) or 1), 1)
+        except (TypeError, ValueError):
+            return 1
+
+    def _read_limit(self) -> None:
+        limit_of = getattr(self.integration, "stall_limit", None)
+        if not callable(limit_of):
+            self._stall_limit = None
+            return
+        self._stall_limit = limit_of(self._active_objective(), self._scenario)
+
+    def _reset_books(self) -> None:
+        self._paid = False
+        self._stall_run = 0
+        self._components = {key: 0.0 for key in _COMPONENT_KEYS}
+        self._read_limit()
+
+    def _annotate(self, info: dict, reason: str) -> None:
+        info["frames"] = self._steps * self._frame_skip()
+        info["components"] = dict(self._components)
+        info["stall_run"] = self._stall_run
+        info["termination"] = reason
+
+    def _add_components(self, bundle: dict, reward: float) -> None:
+        for key in ("progress", "completion", "stall", "death", "time"):
+            try:
+                amount = float(bundle.get(key) or 0.0)
+            except (TypeError, ValueError):
+                amount = 0.0
+            self._components[key] = self._components.get(key, 0.0) + amount
+        self._components["total"] = self._components.get("total", 0.0) + reward
 
     def _facts(self) -> dict:
         describe = getattr(self.integration, "describe", None)
@@ -125,10 +175,12 @@ class ScoredEnv(gym.Wrapper):
         self._steps = 0
         self._seen_time = self._running(facts)
         self._clear = {"cleared": False, "at": None}
+        self._reset_books()
         self._show(info, facts)
         info["score"] = self._progress
-        info["objective"] = self.integration.objective
+        info["objective"] = self._active_objective()
         info["dead"] = False
+        self._annotate(info, "")
         return self.env.unwrapped.runner.rgb.copy(), info
 
     def step(self, action):
@@ -141,16 +193,44 @@ class ScoredEnv(gym.Wrapper):
         note_clear = getattr(self.integration, "note_clear", None)
         if callable(note_clear):
             self._clear = note_clear(self._clear, facts)
-        if not callable(reward_of):
+        bundle_of = getattr(self.integration, "reward_bundle", None)
+        bundle = None
+        if callable(bundle_of):
+            bundle = bundle_of(
+                self._active_objective(),
+                self._progress,
+                facts,
+                self._seen_time,
+                bool(self._clear.get("cleared")),
+                self._clear.get("at") if self._clear.get("cleared") else None,
+                frame_skip=self._frame_skip(),
+                paid=self._paid,
+                scenario=self._scenario,
+            )
+        gained = None
+        stop = False
+        if isinstance(bundle, dict):
+            reward = float(bundle["total"])
+            self._progress = int(bundle["high"])
+            dead = bool(bundle["dead"])
+            self._paid = bool(bundle.get("paid"))
+            stop = bool(bundle.get("stop"))
+            try:
+                gained = int(bundle.get("gained") or 0)
+            except (TypeError, ValueError):
+                gained = 0
+            self._add_components(bundle, reward)
+            self._stall_run = next_stall_run(self._stall_run, gained)
+        elif not callable(reward_of):
             measured = self._measure(facts)
             dead = bool(facts.get("dead"))
             if sense_of(self.integration) == "minimize":
                 self._progress = measured
                 reward = -float(measured)
             else:
-                gained = max(0, measured - self._progress)
-                self._progress += gained
-                reward = float(gained)
+                gained_now = max(0, measured - self._progress)
+                self._progress += gained_now
+                reward = float(gained_now)
         elif callable(note_clear):
             place = self._clear.get("at") if self._clear.get("cleared") else None
             reward, self._progress, dead = reward_of(
@@ -158,16 +238,31 @@ class ScoredEnv(gym.Wrapper):
             )
         else:
             reward, self._progress, dead = reward_of(self._progress, facts, self._seen_time)
-        if dead or self._steps >= self.step_limit:
-            terminated = dead
-            truncated = not dead
+        if dead:
+            terminated = True
+            truncated = False
+            reason = "death"
+        elif stop:
+            terminated = True
+            truncated = False
+            reason = "complete"
+        elif gained is not None and stalled(self._stall_run, self._stall_limit):
+            terminated = False
+            truncated = True
+            reason = "stall"
+        elif self._steps >= self.step_limit:
+            terminated = False
+            truncated = True
+            reason = "step_limit"
         else:
             terminated = False
             truncated = False
+            reason = ""
         self._show(info, facts)
         info["score"] = self._progress
-        info["objective"] = self.integration.objective
+        info["objective"] = self._active_objective()
         info["dead"] = dead
+        self._annotate(info, reason)
         return self.env.unwrapped.runner.rgb.copy(), reward, terminated, truncated, info
 
 
@@ -321,7 +416,8 @@ class RouteEnv(gym.Wrapper):
         return obs, reward, terminated, truncated, info
 
 
-def make_env(system: str, rom_path, integration=None, frame_skip: int = 4) -> gym.Env:
+def make_env(system: str, rom_path, integration=None, frame_skip: int = 4, *,
+             objective=None, scenario=None) -> gym.Env:
     runner = LibretroRunner(ensure_core(system), rom_path, BUTTON_ID)
     actions = integration.actions if integration is not None else for_system(system)
     if integration is not None:
@@ -332,5 +428,5 @@ def make_env(system: str, rom_path, integration=None, frame_skip: int = 4) -> gy
         prepare = None
     env = FrameEnv(runner, actions, frame_skip=frame_skip, prepare=prepare)
     if integration is not None:
-        return ScoredEnv(env, integration)
+        return ScoredEnv(env, integration, objective=objective, scenario=scenario)
     return SurvivalEnv(env)

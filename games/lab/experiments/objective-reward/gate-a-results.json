@@ -1,0 +1,66 @@
+{
+  "recorded": "2026-10-14",
+  "objective": "progress",
+  "model": "ppo_cnn",
+  "frame_skip": 4,
+  "assisted": false,
+  "deterministic_action": ["RIGHT", "A", "B"],
+  "reward_mismatch_max": 0.000006,
+  "starts": {
+    "title": {"x": 40, "y": 79},
+    "obstacle_state": {
+      "path": "state.bin",
+      "bytes": 13758,
+      "sha256": "72c3ea8bd337c489e2a0c1adb3253de22457c8617c8162816dfbd25ae014a97e",
+      "x": 197,
+      "y": 79
+    }
+  },
+  "checkpoints": [
+    {
+      "name": "champion",
+      "sha256": "0d31d9fd5ae3cdab1531f72e33938a584e93f7549061e9de49ed26b2a18cf7ec"
+    },
+    {
+      "name": "generation-145-red",
+      "sha256": "e3c1a3f91547c137155f40290870277f52c5af81a5eccf239c06d5325f27d7c6"
+    }
+  ],
+  "title_run": {
+    "decisions": 37,
+    "emulator_frames": 148,
+    "termination": "dead_sprite",
+    "final_x": 313,
+    "points": 0,
+    "jump_presses": 37,
+    "times_y_left_ground": 1,
+    "goomba_id": 6,
+    "reward": {"progress": 543.01, "stall": 1.0, "death": 256.0, "total": 286.01}
+  },
+  "pipe_run": {
+    "decisions": 180,
+    "emulator_frames": 720,
+    "termination": "step_limit",
+    "pipe_contact_x": 434,
+    "stall_decisions": 150,
+    "stall_emulator_frames": 600,
+    "physics_during_stall": "ground",
+    "points": 100,
+    "reward": {"progress": 470.042, "stall": 151.0, "death": 0.0, "total": 319.042}
+  },
+  "fresh_jump_probe": {
+    "release": ["RIGHT", "B"],
+    "release_decisions": 3,
+    "press": ["RIGHT", "A", "B"],
+    "left_ground": true,
+    "y_speed": -4,
+    "landed_on_pipe_x": 458
+  },
+  "stochastic_seed_0": {
+    "decisions": 120,
+    "right_a_b": 100,
+    "other_actions": 20,
+    "jump_rises": 25,
+    "final_x": 594
+  }
+}

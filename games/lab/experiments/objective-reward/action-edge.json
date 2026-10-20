@@ -1,0 +1,894 @@
+{
+  "pipe_contact": {
+    "decision": 33,
+    "x": 434,
+    "y": 79,
+    "time": 390,
+    "dead": false,
+    "termination": ""
+  },
+  "on_pipe_x": 472,
+  "held_out": [
+    {
+      "path": "held-out-past-pipe.bin",
+      "sha256": "4aead3929fddf62ea5f8eefb3b83868f8849719baf0b9ef756a21e976dd42141",
+      "bytes": 13758,
+      "role": "held-out",
+      "x": 505,
+      "y": 79,
+      "decision_after_release": 19
+    },
+    {
+      "path": "held-out-later.bin",
+      "sha256": "cfce5b42f75e25299dae999900eeed5505f5a97b13f70d6531a97ef79d719172",
+      "bytes": 13758,
+      "role": "held-out",
+      "x": 594,
+      "y": 79,
+      "decision_after_release": 34
+    }
+  ],
+  "cross_trace": [
+    {
+      "decision": 1,
+      "action": [
+        "RIGHT",
+        "B"
+      ],
+      "x": 434,
+      "y": 79,
+      "time": 390,
+      "physics": "ground",
+      "y_speed": 0,
+      "dead": false,
+      "termination": "",
+      "components": {
+        "progress": 0.0,
+        "completion": 0.0,
+        "stall": 0.05,
+        "death": 0.0,
+        "time": 0.004,
+        "total": -0.054000000000000006
+      }
+    },
+    {
+      "decision": 2,
+      "action": [
+        "RIGHT",
+        "B"
+      ],
+      "x": 434,
+      "y": 79,
+      "time": 390,
+      "physics": "ground",
+      "y_speed": 0,
+      "dead": false,
+      "termination": "",
+      "components": {
+        "progress": 0.0,
+        "completion": 0.0,
+        "stall": 0.1,
+        "death": 0.0,
+        "time": 0.008,
+        "total": -0.10800000000000001
+      }
+    },
+    {
+      "decision": 3,
+      "action": [
+        "RIGHT",
+        "B"
+      ],
+      "x": 434,
+      "y": 79,
+      "time": 390,
+      "physics": "ground",
+      "y_speed": 0,
+      "dead": false,
+      "termination": "",
+      "components": {
+        "progress": 0.0,
+        "completion": 0.0,
+        "stall": 0.15000000000000002,
+        "death": 0.0,
+        "time": 0.012,
+        "total": -0.16200000000000003
+      }
+    },
+    {
+      "decision": 4,
+      "action": [
+        "RIGHT",
+        "A",
+        "B"
+      ],
+      "x": 434,
+      "y": 95,
+      "time": 390,
+      "physics": "jumping",
+      "y_speed": -4,
+      "dead": false,
+      "termination": "",
+      "components": {
+        "progress": 0.0,
+        "completion": 0.0,
+        "stall": 0.2,
+        "death": 0.0,
+        "time": 0.016,
+        "total": -0.21600000000000003
+      }
+    },
+    {
+      "decision": 5,
+      "action": [
+        "RIGHT",
+        "A",
+        "B"
+      ],
+      "x": 434,
+      "y": 108,
+      "time": 390,
+      "physics": "jumping",
+      "y_speed": -3,
+      "dead": false,
+      "termination": "",
+      "components": {
+        "progress": 0.0,
+        "completion": 0.0,
+        "stall": 0.25,
+        "death": 0.0,
+        "time": 0.02,
+        "total": -0.27
+      }
+    },
+    {
+      "decision": 6,
+      "action": [
+        "RIGHT",
+        "A",
+        "B"
+      ],
+      "x": 435,
+      "y": 119,
+      "time": 389,
+      "physics": "jumping",
+      "y_speed": -3,
+      "dead": false,
+      "termination": "",
+      "components": {
+        "progress": 0.0077050781250000006,
+        "completion": 0.0,
+        "stall": 0.25,
+        "death": 0.0,
+        "time": 0.024,
+        "total": -0.26629492187500003
+      }
+    },
+    {
+      "decision": 7,
+      "action": [
+        "RIGHT",
+        "A",
+        "B"
+      ],
+      "x": 437,
+      "y": 128,
+      "time": 389,
+      "physics": "jumping",
+      "y_speed": -2,
+      "dead": false,
+      "termination": "",
+      "components": {
+        "progress": 0.023115234375,
+        "completion": 0.0,
+        "stall": 0.25,
+        "death": 0.0,
+        "time": 0.028,
+        "total": -0.254884765625
+      }
+    },
+    {
+      "decision": 8,
+      "action": [
+        "RIGHT",
+        "A",
+        "B"
+      ],
+      "x": 439,
+      "y": 136,
+      "time": 389,
+      "physics": "jumping",
+      "y_speed": -2,
+      "dead": false,
+      "termination": "",
+      "components": {
+        "progress": 0.038525390625,
+        "completion": 0.0,
+        "stall": 0.25,
+        "death": 0.0,
+        "time": 0.032,
+        "total": -0.243474609375
+      }
+    },
+    {
+      "decision": 9,
+      "action": [
+        "RIGHT",
+        "A",
+        "B"
+      ],
+      "x": 442,
+      "y": 141,
+      "time": 389,
+      "physics": "jumping",
+      "y_speed": -1,
+      "dead": false,
+      "termination": "",
+      "components": {
+        "progress": 0.061640625000000004,
+        "completion": 0.0,
+        "stall": 0.25,
+        "death": 0.0,
+        "time": 0.036000000000000004,
+        "total": -0.224359375
+      }
+    },
+    {
+      "decision": 10,
+      "action": [
+        "RIGHT",
+        "A",
+        "B"
+      ],
+      "x": 446,
+      "y": 144,
+      "time": 389,
+      "physics": "jumping",
+      "y_speed": -1,
+      "dead": false,
+      "termination": "",
+      "components": {
+        "progress": 0.0924609375,
+        "completion": 0.0,
+        "stall": 0.25,
+        "death": 0.0,
+        "time": 0.04000000000000001,
+        "total": -0.1975390625
+      }
+    },
+    {
+      "decision": 11,
+      "action": [
+        "RIGHT",
+        "A",
+        "B"
+      ],
+      "x": 450,
+      "y": 145,
+      "time": 389,
+      "physics": "jumping",
+      "y_speed": 0,
+      "dead": false,
+      "termination": "",
+      "components": {
+        "progress": 0.12328125000000001,
+        "completion": 0.0,
+        "stall": 0.25,
+        "death": 0.0,
+        "time": 0.04400000000000001,
+        "total": -0.17071875
+      }
+    },
+    {
+      "decision": 12,
+      "action": [
+        "RIGHT",
+        "A",
+        "B"
+      ],
+      "x": 455,
+      "y": 143,
+      "time": 388,
+      "physics": "jumping",
+      "y_speed": 1,
+      "dead": false,
+      "termination": "",
+      "components": {
+        "progress": 0.16175781250000001,
+        "completion": 0.0,
+        "stall": 0.25,
+        "death": 0.0,
+        "time": 0.048000000000000015,
+        "total": -0.1362421875
+      }
+    },
+    {
+      "decision": 13,
+      "action": [
+        "RIGHT",
+        "A",
+        "B"
+      ],
+      "x": 460,
+      "y": 133,
+      "time": 388,
+      "physics": "jumping",
+      "y_speed": 3,
+      "dead": false,
+      "termination": "",
+      "components": {
+        "progress": 0.20023437500000002,
+        "completion": 0.0,
+        "stall": 0.25,
+        "death": 0.0,
+        "time": 0.05200000000000002,
+        "total": -0.101765625
+      }
+    },
+    {
+      "decision": 14,
+      "action": [
+        "RIGHT",
+        "A",
+        "B"
+      ],
+      "x": 466,
+      "y": 117,
+      "time": 388,
+      "physics": "jumping",
+      "y_speed": 4,
+      "dead": false,
+      "termination": "",
+      "components": {
+        "progress": 0.24640625000000002,
+        "completion": 0.0,
+        "stall": 0.25,
+        "death": 0.0,
+        "time": 0.05600000000000002,
+        "total": -0.05959375
+      }
+    },
+    {
+      "decision": 15,
+      "action": [
+        "RIGHT",
+        "A",
+        "B"
+      ],
+      "x": 472,
+      "y": 111,
+      "time": 388,
+      "physics": "ground",
+      "y_speed": 0,
+      "dead": false,
+      "termination": "",
+      "components": {
+        "progress": 0.292578125,
+        "completion": 0.0,
+        "stall": 0.25,
+        "death": 0.0,
+        "time": 0.060000000000000026,
+        "total": -0.017421875000000003
+      }
+    },
+    {
+      "decision": 16,
+      "action": [
+        "RIGHT",
+        "A",
+        "B"
+      ],
+      "x": 479,
+      "y": 111,
+      "time": 388,
+      "physics": "falling",
+      "y_speed": 0,
+      "dead": false,
+      "termination": "",
+      "components": {
+        "progress": 0.3464453125,
+        "completion": 0.0,
+        "stall": 0.25,
+        "death": 0.0,
+        "time": 0.06400000000000003,
+        "total": 0.03244531249999999
+      }
+    },
+    {
+      "decision": 17,
+      "action": [
+        "RIGHT",
+        "A",
+        "B"
+      ],
+      "x": 487,
+      "y": 107,
+      "time": 388,
+      "physics": "falling",
+      "y_speed": 2,
+      "dead": false,
+      "termination": "",
+      "components": {
+        "progress": 0.4080078125,
+        "completion": 0.0,
+        "stall": 0.25,
+        "death": 0.0,
+        "time": 0.06800000000000003,
+        "total": 0.09000781249999999
+      }
+    },
+    {
+      "decision": 18,
+      "action": [
+        "RIGHT",
+        "A",
+        "B"
+      ],
+      "x": 496,
+      "y": 95,
+      "time": 387,
+      "physics": "falling",
+      "y_speed": 3,
+      "dead": false,
+      "termination": "",
+      "components": {
+        "progress": 0.477177734375,
+        "completion": 0.0,
+        "stall": 0.25,
+        "death": 0.0,
+        "time": 0.07200000000000004,
+        "total": 0.155177734375
+      }
+    },
+    {
+      "decision": 19,
+      "action": [
+        "RIGHT",
+        "A",
+        "B"
+      ],
+      "x": 505,
+      "y": 79,
+      "time": 387,
+      "physics": "ground",
+      "y_speed": 0,
+      "dead": false,
+      "termination": "",
+      "components": {
+        "progress": 0.54634765625,
+        "completion": 0.0,
+        "stall": 0.25,
+        "death": 0.0,
+        "time": 0.07600000000000004,
+        "total": 0.22034765624999997
+      }
+    },
+    {
+      "decision": 20,
+      "action": [
+        "RIGHT",
+        "A",
+        "B"
+      ],
+      "x": 515,
+      "y": 79,
+      "time": 387,
+      "physics": "ground",
+      "y_speed": 0,
+      "dead": false,
+      "termination": "",
+      "components": {
+        "progress": 0.6232031250000001,
+        "completion": 0.0,
+        "stall": 0.25,
+        "death": 0.0,
+        "time": 0.08000000000000004,
+        "total": 0.29320312499999995
+      }
+    },
+    {
+      "decision": 21,
+      "action": [
+        "RIGHT",
+        "A",
+        "B"
+      ],
+      "x": 525,
+      "y": 79,
+      "time": 387,
+      "physics": "ground",
+      "y_speed": 0,
+      "dead": false,
+      "termination": "",
+      "components": {
+        "progress": 0.7000585937500001,
+        "completion": 0.0,
+        "stall": 0.25,
+        "death": 0.0,
+        "time": 0.08400000000000005,
+        "total": 0.36605859374999994
+      }
+    },
+    {
+      "decision": 22,
+      "action": [
+        "RIGHT",
+        "A",
+        "B"
+      ],
+      "x": 535,
+      "y": 79,
+      "time": 387,
+      "physics": "ground",
+      "y_speed": 0,
+      "dead": false,
+      "termination": "",
+      "components": {
+        "progress": 0.7769140625000002,
+        "completion": 0.0,
+        "stall": 0.25,
+        "death": 0.0,
+        "time": 0.08800000000000005,
+        "total": 0.4389140624999999
+      }
+    },
+    {
+      "decision": 23,
+      "action": [
+        "RIGHT",
+        "A",
+        "B"
+      ],
+      "x": 545,
+      "y": 79,
+      "time": 387,
+      "physics": "ground",
+      "y_speed": 0,
+      "dead": false,
+      "termination": "",
+      "components": {
+        "progress": 0.8537695312500002,
+        "completion": 0.0,
+        "stall": 0.25,
+        "death": 0.0,
+        "time": 0.09200000000000005,
+        "total": 0.5117695312499999
+      }
+    },
+    {
+      "decision": 24,
+      "action": [
+        "RIGHT",
+        "A",
+        "B"
+      ],
+      "x": 555,
+      "y": 79,
+      "time": 386,
+      "physics": "ground",
+      "y_speed": 0,
+      "dead": false,
+      "termination": "",
+      "components": {
+        "progress": 0.9305273437500002,
+        "completion": 0.0,
+        "stall": 0.25,
+        "death": 0.0,
+        "time": 0.09600000000000006,
+        "total": 0.5845273437499999
+      }
+    },
+    {
+      "decision": 25,
+      "action": [
+        "RIGHT",
+        "A",
+        "B"
+      ],
+      "x": 565,
+      "y": 79,
+      "time": 386,
+      "physics": "ground",
+      "y_speed": 0,
+      "dead": false,
+      "termination": "",
+      "components": {
+        "progress": 1.0072851562500003,
+        "completion": 0.0,
+        "stall": 0.25,
+        "death": 0.0,
+        "time": 0.10000000000000006,
+        "total": 0.65728515625
+      }
+    },
+    {
+      "decision": 26,
+      "action": [
+        "RIGHT",
+        "A",
+        "B"
+      ],
+      "x": 575,
+      "y": 79,
+      "time": 386,
+      "physics": "ground",
+      "y_speed": 0,
+      "dead": false,
+      "termination": "",
+      "components": {
+        "progress": 1.0840429687500002,
+        "completion": 0.0,
+        "stall": 0.25,
+        "death": 0.0,
+        "time": 0.10400000000000006,
+        "total": 0.73004296875
+      }
+    },
+    {
+      "decision": 27,
+      "action": [
+        "RIGHT",
+        "A",
+        "B"
+      ],
+      "x": 585,
+      "y": 79,
+      "time": 386,
+      "physics": "ground",
+      "y_speed": 0,
+      "dead": false,
+      "termination": "",
+      "components": {
+        "progress": 1.16080078125,
+        "completion": 0.0,
+        "stall": 0.25,
+        "death": 0.0,
+        "time": 0.10800000000000007,
+        "total": 0.80280078125
+      }
+    },
+    {
+      "decision": 28,
+      "action": [
+        "RIGHT",
+        "A",
+        "B"
+      ],
+      "x": 594,
+      "y": 79,
+      "time": 386,
+      "physics": "ground",
+      "y_speed": 0,
+      "dead": false,
+      "termination": "",
+      "components": {
+        "progress": 1.2298828125,
+        "completion": 0.0,
+        "stall": 0.25,
+        "death": 0.0,
+        "time": 0.11200000000000007,
+        "total": 0.8678828125
+      }
+    },
+    {
+      "decision": 29,
+      "action": [
+        "RIGHT",
+        "A",
+        "B"
+      ],
+      "x": 594,
+      "y": 79,
+      "time": 386,
+      "physics": "ground",
+      "y_speed": 0,
+      "dead": false,
+      "termination": "",
+      "components": {
+        "progress": 1.2298828125,
+        "completion": 0.0,
+        "stall": 0.3,
+        "death": 0.0,
+        "time": 0.11600000000000008,
+        "total": 0.8138828124999999
+      }
+    },
+    {
+      "decision": 30,
+      "action": [
+        "RIGHT",
+        "A",
+        "B"
+      ],
+      "x": 594,
+      "y": 79,
+      "time": 385,
+      "physics": "ground",
+      "y_speed": 0,
+      "dead": false,
+      "termination": "",
+      "components": {
+        "progress": 1.2298828125,
+        "completion": 0.0,
+        "stall": 0.35,
+        "death": 0.0,
+        "time": 0.12000000000000008,
+        "total": 0.7598828124999999
+      }
+    },
+    {
+      "decision": 31,
+      "action": [
+        "RIGHT",
+        "A",
+        "B"
+      ],
+      "x": 594,
+      "y": 79,
+      "time": 385,
+      "physics": "ground",
+      "y_speed": 0,
+      "dead": false,
+      "termination": "",
+      "components": {
+        "progress": 1.2298828125,
+        "completion": 0.0,
+        "stall": 0.39999999999999997,
+        "death": 0.0,
+        "time": 0.12400000000000008,
+        "total": 0.7058828124999998
+      }
+    },
+    {
+      "decision": 32,
+      "action": [
+        "RIGHT",
+        "A",
+        "B"
+      ],
+      "x": 594,
+      "y": 79,
+      "time": 385,
+      "physics": "ground",
+      "y_speed": 0,
+      "dead": false,
+      "termination": "",
+      "components": {
+        "progress": 1.2298828125,
+        "completion": 0.0,
+        "stall": 0.44999999999999996,
+        "death": 0.0,
+        "time": 0.12800000000000009,
+        "total": 0.6518828124999998
+      }
+    },
+    {
+      "decision": 33,
+      "action": [
+        "RIGHT",
+        "A",
+        "B"
+      ],
+      "x": 594,
+      "y": 79,
+      "time": 385,
+      "physics": "ground",
+      "y_speed": 0,
+      "dead": false,
+      "termination": "",
+      "components": {
+        "progress": 1.2298828125,
+        "completion": 0.0,
+        "stall": 0.49999999999999994,
+        "death": 0.0,
+        "time": 0.1320000000000001,
+        "total": 0.5978828124999997
+      }
+    },
+    {
+      "decision": 34,
+      "action": [
+        "RIGHT",
+        "A",
+        "B"
+      ],
+      "x": 594,
+      "y": 79,
+      "time": 385,
+      "physics": "ground",
+      "y_speed": 0,
+      "dead": false,
+      "termination": "",
+      "components": {
+        "progress": 1.2298828125,
+        "completion": 0.0,
+        "stall": 0.5499999999999999,
+        "death": 0.0,
+        "time": 0.1360000000000001,
+        "total": 0.5438828124999997
+      }
+    }
+  ],
+  "action_edge": {
+    "method": "From the stuck pipe savestate, advance 8 emulator frames holding RIGHT+A+B, and 8 frames holding RIGHT+B. Bytes that also change between 4 and 8 held frames are treated as ordinary time.",
+    "controls_changed": false,
+    "actions": 12,
+    "pre_decision_image": "the savestate frame. Both choices see it before either button runs.",
+    "held": {
+      "x": 434,
+      "y": 79,
+      "time": 390,
+      "physics": "ground",
+      "x_speed": 0,
+      "y_speed": 0,
+      "dead": false
+    },
+    "released": {
+      "x": 434,
+      "y": 79,
+      "time": 390,
+      "physics": "ground",
+      "x_speed": 0,
+      "y_speed": 0,
+      "dead": false
+    },
+    "gray_mae": 0.0,
+    "gray_max_abs": 0,
+    "before_vs_held_gray_mae": 0.655,
+    "ram_vector_equal": true,
+    "ram_vector_held": [
+      0.10595703125,
+      0.30980392156862746,
+      0.975,
+      0.5,
+      0.0,
+      0.0,
+      0.0,
+      0.125,
+      0.25
+    ],
+    "ram_vector_released": [
+      0.10595703125,
+      0.30980392156862746,
+      0.975,
+      0.5,
+      0.0,
+      0.0,
+      0.0,
+      0.125,
+      0.25
+    ],
+    "ram_bytes_differ": 4,
+    "buttonish_addresses": [
+      {
+        "address": 10,
+        "held": 192,
+        "released": 64
+      },
+      {
+        "address": 13,
+        "held": 192,
+        "released": 64
+      },
+      {
+        "address": 1788,
+        "held": 193,
+        "released": 65
+      },
+      {
+        "address": 1866,
+        "held": 193,
+        "released": 65
+      }
+    ],
+    "buttonish_count": 4
+  },
+  "training_resets": [
+    "title"
+  ],
+  "evaluation_only": [
+    "state.bin",
+    "held-out-past-pipe.bin",
+    "held-out-later.bin"
+  ]
+}

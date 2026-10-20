@@ -1,0 +1,38 @@
+{
+  "steps": 16384,
+  "seed": 0,
+  "model": "ppo_cnn",
+  "frame_skip": 4,
+  "eval_limit_decisions": 800,
+  "init_sha256": "0d31d9fd5ae3cdab1531f72e33938a584e93f7549061e9de49ed26b2a18cf7ec",
+  "init_role": "initialization",
+  "init_objective": "progress",
+  "rom": "C:\\Users\\Mike\\mario-lab\\roms\\smb.nes",
+  "pipe_state_sha256": "72c3ea8bd337c489e2a0c1adb3253de22457c8617c8162816dfbd25ae014a97e",
+  "held_out": [
+    {
+      "path": "held-out-past-pipe.bin",
+      "sha256": "4aead3929fddf62ea5f8eefb3b83868f8849719baf0b9ef756a21e976dd42141",
+      "bytes": 13758,
+      "role": "held-out",
+      "x": 505,
+      "y": 79,
+      "decision_after_release": 19
+    },
+    {
+      "path": "held-out-later.bin",
+      "sha256": "cfce5b42f75e25299dae999900eeed5505f5a97b13f70d6531a97ef79d719172",
+      "bytes": 13758,
+      "role": "held-out",
+      "x": 594,
+      "y": 79,
+      "decision_after_release": 34
+    }
+  ],
+  "on_pipe_x": 472,
+  "device": "cpu",
+  "cuda_visible_devices": "-1",
+  "bare": true,
+  "tapes": false,
+  "hints": false
+}

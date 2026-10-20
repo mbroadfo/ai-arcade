@@ -13,7 +13,8 @@ ALLOWED = {
     ROOT / "integrations" / "__init__.py",
     ROOT / "integrations" / "smb_1_1.py",
 }
-SKIP = {"mario", "tests", "__pycache__"}
+# experiments/ measures one game. It is not an engine module.
+SKIP = {"mario", "tests", "experiments", "__pycache__"}
 TOKENS = re.compile(
     r"\bsmb_1_1\b"
     r"|\bSMB_ACTIONS\b"
