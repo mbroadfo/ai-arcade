@@ -47,7 +47,18 @@ Pac-Man ghosts and fruit eaten, energizers, feasts, reflexes, parks, refuges).
 
 Compare runs with `python tools/compare_runs.py <label parts>`.
 
-## Adding a game
+## Putting a game on the cabinet for people
+
+Copy the ROM into the Pi's folder for its system (`/home/pi/RetroPie/roms/<system>/`), then:
+
+    python tools/onboard_game.py arcade/<rom>      # or nes/<rom>, atari2600/<rom>, ...
+
+It checks the game, asks MAME about its controls (trackball or spinner, whether the players take turns, coin switches), runs the
+same launch check EmulationStation's launch gets, writes `games/arcade/<rom>/controls.json`, and prints **ASK** for anything a
+person has to decide. `--dry-run` writes nothing; `--install` puts it on the Pi. Restart EmulationStation to see a new file.
+(Making an AI play it is the next section.)
+
+## Adding a game for the AI
 
 1. `python tools/game_profile.py <romset> --system <system>` (controls, score RAM)
 2. `python tools/discover_state.py <romset> --system <system>` (RAM discovery)

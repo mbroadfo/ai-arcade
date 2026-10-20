@@ -21,7 +21,7 @@ GAMES_DIR = Path(__file__).resolve().parent.parent / "games"
 
 
 def load_game_controls(root=GAMES_DIR):
-    """{ROM name: that game's controls.json} for every games/<system>/<game>/controls.json. A game's own folder says
+    """{"<system>/<ROM name>": that game's controls.json} for every games/<system>/<game>/controls.json. A game's own folder says
     where its controls differ from the cabinet's defaults (the "roms" it covers, an "emulator", MAME "panel" port
     changes, a "dip" setting, "retroarch_pad" button changes); a game with no file, or no entry, gets the defaults. The
     framework knows no game by name."""
@@ -30,7 +30,7 @@ def load_game_controls(root=GAMES_DIR):
         data = json.loads(path.read_text(encoding="utf-8"))
         data["_system"] = path.parent.parent.name
         for rom in data.get("roms") or [path.parent.name]:
-            out[rom] = data
+            out[f"{data['_system']}/{rom}"] = data  # the system is part of the key: two systems may share a ROM name
     return out
 
 
@@ -271,7 +271,10 @@ def game_ports(panel, joy1=1, joy2=2, pads=None, games=None):
     joy = {"P1": joy1, "P2": joy2}
     pads = pads or {}
     out = {}
-    for rom, game in (games or {}).items():
+    for key, game in (games or {}).items():
+        if game.get("_system") != "arcade":  # MAME's controller file is for the arcade system
+            continue
+        rom = key.split("/", 1)[1]
         overrides = {k: v for k, v in game.get("panel", {}).items() if k != "comment"}
         if not overrides:
             continue
@@ -314,7 +317,10 @@ def game_sections(panel, joy1, joy2, pads, games):
     game win over that. The machine name is "mame" in the file (the set the cabinet runs) or else the ROM names."""
     overrides = game_ports(panel, joy1, joy2, pads, games)
     out = {}
-    for rom, game in (games or {}).items():
+    for key, game in (games or {}).items():
+        if game.get("_system") != "arcade":
+            continue
+        rom = key.split("/", 1)[1]
         rows = {}
         if game.get("play") in ("single", "turns"):
             rows.update(shared_ports(panel, joy1, joy2, pads, game["play"] == "single"))
@@ -482,7 +488,7 @@ def advmame_launcher(text, hide=ADV_HIDE_AI_PADS):
 
 def launcher_moves(games):
     """{emulators.cfg key (<system>_<rom>): emulator} for every game whose controls.json asks for one."""
-    return {f"{g['_system']}_{rom}": g["emulator"] for rom, g in sorted(games.items()) if g.get("emulator")}
+    return {f"{g['_system']}_{key.split('/', 1)[1]}": g["emulator"] for key, g in sorted(games.items()) if g.get("emulator")}
 
 
 def move_launchers(text, moves):

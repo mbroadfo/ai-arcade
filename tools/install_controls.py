@@ -81,13 +81,17 @@ def plan(panel, sftp):
     emu_old = read(sftp, EMULATORS_ALL)
     if emu_old is not None:
         wanted.append((EMULATORS_ALL, emu_old, pp.move_launchers(emu_old, pp.launcher_moves(games))))
-    for game, controls in games.items():
-        dip = controls.get("dip")
-        if not dip:
+    for key, controls in games.items():
+        dips = controls.get("dips") or ([controls["dip"]] if controls.get("dip") else [])
+        if not dips or controls.get("_system") != "arcade":
             continue
-        path = f"{MAME_CFG_DIR}/{game}.cfg"
-        old = read(sftp, path)
-        wanted.append((path, old, pp.set_game_dip(old, game, dip["tag"], dip["mask"], dip["defvalue"], dip["value"])))
+        for game in controls.get("mame") or [key.split("/", 1)[1]]:  # MAME's cfg is named for the set it runs
+            path = f"{MAME_CFG_DIR}/{game}.cfg"
+            old = read(sftp, path)
+            new = old
+            for dip in dips:
+                new = pp.set_game_dip(new, game, dip["tag"], dip["mask"], dip["defvalue"], dip["value"])
+            wanted.append((path, old, new))
     for path in ADVMAME_LAUNCHERS:
         old = read(sftp, path)
         if old is not None:

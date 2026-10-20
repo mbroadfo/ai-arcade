@@ -120,11 +120,11 @@ def test_a_games_own_folder_changes_the_pads_buttons_and_no_folder_means_the_def
     games = pp.load_game_controls()
     pad, _ = pp.retroarch_player_binds(pp.retroarch_gamepad_autoconfig("F310", "046d", "c21d"), 1)
     for rom in ("asteroid", "astdelux"):  # thrust moves from X to B
-        changed = pad_map.apply_pad_overrides(pad, 1, games, f"/home/pi/RetroPie/roms/arcade/{rom}.zip")
+        changed = pad_map.apply_pad_overrides(pad, 1, games, f"arcade/{rom}")
         assert 'input_player1_y_btn = "1"' in changed and 'input_player1_a_btn = "2"' in changed
         assert 'input_player1_b_btn = "0"' in changed and 'input_player1_x_btn = "3"' in changed  # fire and hyperspace stay
-    assert pad_map.apply_pad_overrides(pad, 1, games, "/roms/pacman.zip") == pad
-    assert pad_map.apply_pad_overrides(pad, 1, {}, "/roms/asteroid.zip") == pad  # the framework alone knows no game
+    assert pad_map.apply_pad_overrides(pad, 1, games, "arcade/pacman") == pad
+    assert pad_map.apply_pad_overrides(pad, 1, {}, "arcade/asteroid") == pad  # the framework alone knows no game
 
 
 def test_the_framework_names_no_game():
@@ -155,7 +155,7 @@ def test_retroarch_picks_the_mouse_a_game_asks_for_and_none_when_it_is_missing()
 
 def test_every_game_that_plays_with_the_spinner_or_trackball_says_so_in_its_own_folder():
     games = pp.load_game_controls()
-    pointers = {rom: g["pointer"] for rom, g in games.items() if "pointer" in g}
+    pointers = {key.split("/", 1)[1]: g["pointer"] for key, g in games.items() if "pointer" in g}
     assert {"missile", "centiped", "wacko", "marble"} <= {r for r, p in pointers.items() if p == "trackball"}
     assert {"tempest", "arkanoid", "sbrkout", "superbug"} <= {r for r, p in pointers.items() if p == "spinner"}
     assert set(pointers.values()) <= {"spinner", "trackball"}
@@ -169,13 +169,13 @@ def test_a_games_folder_can_move_a_panel_button_for_both_players():
     games = pp.load_game_controls()
     for player, n in (("P1", 1), ("P2", 2)):
         binds, _ = pp.retroarch_player_binds(pp.retroarch_autoconfig(PANEL, player, "arcade"), n)
-        changed = pad_map.apply_panel_overrides(binds, n, player, PANEL, games, "/roms/missile.zip")
+        changed = pad_map.apply_panel_overrides(binds, n, player, PANEL, games, "arcade/missile")
         snowflake = pp.index(PANEL, player, "SNOWFLAKE")
         assert f'input_player{n}_x_btn = "{snowflake}"' in changed  # the third battery (MAME button 3 is RetroPad X in the arcade core)
         for kept in ("b", "y"):  # the first two batteries stay on panel A and B
             assert [l for l in changed if l.startswith(f"input_player{n}_{kept}_btn")] == [l for l in binds if l.startswith(f"input_player{n}_{kept}_btn")]
-        assert pad_map.apply_panel_overrides(binds, n, player, PANEL, games, "/roms/pacman.zip") == binds
-        assert pad_map.apply_panel_overrides(binds, n, player, PANEL, {}, "/roms/missile.zip") == binds
+        assert pad_map.apply_panel_overrides(binds, n, player, PANEL, games, "arcade/pacman") == binds
+        assert pad_map.apply_panel_overrides(binds, n, player, PANEL, {}, "arcade/missile") == binds
 
 
 def test_the_arcade_cores_read_buttons_1_to_6_from_retropad_b_y_x_a_l_r_and_consoles_keep_the_snes_order():
@@ -211,16 +211,18 @@ def test_the_pads_dpad_uses_mames_hat_names():
 def test_player_two_can_play_player_ones_controls_in_take_turns_and_single_games_only():
     games = pp.load_game_controls()
     sections = pp.game_sections(PANEL, 2, 3, {"P1": 1}, games)
-    assert games["tron"]["play"] == "turns" and games["tron"]["mame"] == ["tron2"]
+    assert games["arcade/tron"]["play"] == "turns" and games["arcade/tron"]["mame"] == ["tron2"]
     tron = dict(sections["tron2"])  # keyed by the set the cabinet runs
     stick, fire = tron["P1_JOYSTICK_UP"], tron["P1_BUTTON1"]
     assert "JOYCODE_2_YAXIS_UP_SWITCH" in stick and "JOYCODE_3_YAXIS_UP_SWITCH" in stick  # P1's and P2's encoders
     assert "JOYCODE_2_BUTTON12" in fire and "JOYCODE_3_BUTTON12" in fire  # P1's A and P2's flight trigger
     assert "COIN1" not in tron and "START1" not in tron  # in a two-player game P2's start stays the "2 players" start
-    single = next(r for r, g in games.items() if g.get("play") == "single")
-    assert {"COIN1", "START1"} <= set(dict(sections[(games[single].get("mame") or [single])[0]]))  # one player: either start
-    simultaneous = next(r for r, g in games.items() if g.get("play") == "simultaneous")
-    assert (games[simultaneous].get("mame") or [simultaneous])[0] not in sections  # head to head: untouched
+    def machine(key):
+        return (games[key].get("mame") or [key.split("/", 1)[1]])[0]
+    single = next(k for k, g in games.items() if g.get("play") == "single")
+    assert {"COIN1", "START1"} <= set(dict(sections[machine(single)]))  # one player: either start
+    simultaneous = next(k for k, g in games.items() if g.get("play") == "simultaneous")
+    assert machine(simultaneous) not in sections  # head to head: untouched
     assert pp.shared_ports(PANEL, 1, None, {}, False) == []  # no second encoder, nothing to share
     import xml.etree.ElementTree as ET
     root = ET.fromstring(pp.mame_ctrlr(PANEL, 2, 3, {"P1": 1}, games))
@@ -231,3 +233,14 @@ def test_battlezones_own_fire_override_still_wins_over_sharing():
     games = pp.load_game_controls()
     bz = dict(pp.game_sections(PANEL, 1, 2, {}, games)["bzone"])
     assert bz["P1_BUTTON1"] == "JOYCODE_2_BUTTON12"  # the flight stick's trigger only: its own entry, not P1's A and P2's buttons
+
+
+def test_two_systems_can_share_a_rom_name_without_their_settings_colliding(tmp_path):
+    for system, pointer in (("arcade", "trackball"), ("atari2600", "spinner")):
+        folder = tmp_path / system / "centipede"
+        folder.mkdir(parents=True)
+        (folder / "controls.json").write_text('{"roms": ["centipede"], "pointer": "%s"}' % pointer, encoding="utf-8")
+    games = pp.load_game_controls(tmp_path)
+    assert games["arcade/centipede"]["pointer"] == "trackball" and games["atari2600/centipede"]["pointer"] == "spinner"
+    assert pad_map.game_key("atari2600", "/home/pi/RetroPie/roms/atari2600/centipede.zip") == "atari2600/centipede"
+    assert pad_map.game_key("", "x/pacman.zip") == "arcade/pacman"  # no system given: the arcade
