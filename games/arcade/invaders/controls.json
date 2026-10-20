@@ -1,0 +1,7 @@
+{
+  "comment": "Space Invaders / Space Invaders M (1978): this game's controls, where they differ from the cabinet's defaults. Read by pi/mame_human/pad_map.py.",
+  "roms": [
+    "invaders"
+  ],
+  "play": "simultaneous"
+}

@@ -1,0 +1,8 @@
+{
+  "comment": "Mad Planets (1983): this game's controls, where they differ from the cabinet's defaults. Read by pi/mame_human/pad_map.py.",
+  "roms": [
+    "mplanets"
+  ],
+  "pointer": "spinner",
+  "play": "single"
+}

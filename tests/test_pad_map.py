@@ -92,9 +92,9 @@ def test_only_pads_es_has_not_met_are_taught(tmp_path):
     assert pad_map.teach_es(devices, PANEL, es) == []  # nothing more to add the second time
 
 
-def test_retroarch_players_pad_first_then_the_panel_and_ai_pads_are_skipped():
+def test_retroarch_players_the_panel_is_one_and_two_then_the_pads_and_ai_pads_are_skipped():
     devices = pad_map.parse_devices("\n".join([P1, P2, F310, AI]))  # events 7, 9, 12, 13 -> P1, F310, P2, AI
-    assert pad_map.retroarch_players(devices, PANEL) == [(1, 1, None), (2, 0, "P1"), (3, 2, "P2")]
+    assert pad_map.retroarch_players(devices, PANEL) == [(1, 0, "P1"), (2, 2, "P2"), (3, 1, None)]
     assert pad_map.retroarch_players(pad_map.parse_devices("\n".join([P1, P2, AI])), PANEL) == [(1, 0, "P1"), (2, 1, "P2")]
 
 
@@ -132,3 +132,102 @@ def test_the_framework_names_no_game():
     for path in (ROOT / "tools" / "panel_profiles.py", ROOT / "pi" / "mame_human" / "pad_map.py", ROOT / "pi" / "controls" / "panel.json"):
         text = path.read_text(encoding="utf-8")
         assert not re.search(r"\b(asteroid|astdelux|bzone|bzonea|bradley|dkong|pisces)\b", text), path.name
+
+
+def mouse_block(vendor, product, name, phys, event):
+    return (f'I: Bus=0003 Vendor={vendor} Product={product} Version=0111\nN: Name="{name}"\nP: Phys={phys}\n'
+            f"H: Handlers=mouse{event} event{event}\n")
+
+
+SPINNER = mouse_block("fafa", "0060", "GGG TurboTwist 2 Spinner", "usb-xhci-hcd.0-1.1/input0", 4)
+TRACKBALL = mouse_block("fafa", "0020", "GGG Electric ICE-T Trackball", "usb-xhci-hcd.0-1.4/input0", 6)
+LOGITECH = mouse_block("046d", "4023", "Logitech Wireless Mouse", "usb-xhci-hcd.0-2/input1:2", 3)
+
+
+def test_retroarch_picks_the_mouse_a_game_asks_for_and_none_when_it_is_missing():
+    mice = pad_map.parse_devices("\n".join([SPINNER, LOGITECH, TRACKBALL]), r"mouse\d+")  # event order 3, 4, 6
+    assert [m["name"] for m in mice] == ["Logitech Wireless Mouse", "GGG TurboTwist 2 Spinner", "GGG Electric ICE-T Trackball"]
+    assert pad_map.retroarch_mouse_index(mice, PANEL, "spinner") == 1
+    assert pad_map.retroarch_mouse_index(mice, PANEL, "trackball") == 2
+    assert pad_map.retroarch_mouse_index(mice, PANEL, None) is None
+    assert pad_map.retroarch_mouse_index(pad_map.parse_devices(LOGITECH, r"mouse\d+"), PANEL, "trackball") is None
+
+
+def test_every_game_that_plays_with_the_spinner_or_trackball_says_so_in_its_own_folder():
+    games = pp.load_game_controls()
+    pointers = {rom: g["pointer"] for rom, g in games.items() if "pointer" in g}
+    assert {"missile", "centiped", "wacko", "marble"} <= {r for r, p in pointers.items() if p == "trackball"}
+    assert {"tempest", "arkanoid", "sbrkout", "superbug"} <= {r for r, p in pointers.items() if p == "spinner"}
+    assert set(pointers.values()) <= {"spinner", "trackball"}
+
+
+def test_retroarch_with_only_a_gamepad_it_is_player_one():
+    assert pad_map.retroarch_players(pad_map.parse_devices("\n".join([F310, AI])), PANEL) == [(1, 0, None)]
+
+
+def test_a_games_folder_can_move_a_panel_button_for_both_players():
+    games = pp.load_game_controls()
+    for player, n in (("P1", 1), ("P2", 2)):
+        binds, _ = pp.retroarch_player_binds(pp.retroarch_autoconfig(PANEL, player, "arcade"), n)
+        changed = pad_map.apply_panel_overrides(binds, n, player, PANEL, games, "/roms/missile.zip")
+        snowflake = pp.index(PANEL, player, "SNOWFLAKE")
+        assert f'input_player{n}_x_btn = "{snowflake}"' in changed  # the third battery (MAME button 3 is RetroPad X in the arcade core)
+        for kept in ("b", "y"):  # the first two batteries stay on panel A and B
+            assert [l for l in changed if l.startswith(f"input_player{n}_{kept}_btn")] == [l for l in binds if l.startswith(f"input_player{n}_{kept}_btn")]
+        assert pad_map.apply_panel_overrides(binds, n, player, PANEL, games, "/roms/pacman.zip") == binds
+        assert pad_map.apply_panel_overrides(binds, n, player, PANEL, {}, "/roms/missile.zip") == binds
+
+
+def test_the_arcade_cores_read_buttons_1_to_6_from_retropad_b_y_x_a_l_r_and_consoles_keep_the_snes_order():
+    def button(text, name):
+        return next(l for l in text.splitlines() if l.startswith(f"input_{name}_btn")).split('"')[1]
+    arcade, console = pp.retroarch_autoconfig(PANEL, "P1", "arcade"), pp.retroarch_autoconfig(PANEL, "P1", "nes")
+    panel_b = str(pp.index(PANEL, "P1", "B"))
+    assert button(arcade, "y") == panel_b and button(arcade, "a") == str(pp.index(PANEL, "P1", "Y"))  # button 2 is RetroPad Y
+    assert button(console, "a") == panel_b and button(console, "y") == str(pp.index(PANEL, "P1", "X"))  # consoles as before
+
+
+def test_mame_numbers_joysticks_by_event_number_but_retroarch_by_device_path(tmp_path, monkeypatch):
+    """On the Pi the pad (event 7) is MAME's Joy 1 and the encoders (events 8, 9) are Joy 2 and 3, while RetroArch lists the
+    encoders first. The fixtures have no /sys, so make the udev order differ explicitly."""
+    pad = block("046d", "c21d", "Logitech Gamepad F310", "usb-xhci-hcd.1-2/input0", 7)
+    e1 = block("0079", "0006", "DragonRise", "usb-xhci-hcd.0-1.2/input0", 8)
+    e2 = block("0079", "0006", "DragonRise", "usb-xhci-hcd.0-1.3/input0", 9)
+    paths = {7: "/sys/b/event7", 8: "/sys/a/event8", 9: "/sys/a/event9"}
+    monkeypatch.setattr(pad_map.os.path, "exists", lambda p: True)
+    monkeypatch.setattr(pad_map.os.path, "realpath", lambda p: paths[int(p.rsplit("event", 1)[1])])
+    devices = pad_map.parse_devices("\n".join([pad, e1, e2]))  # udev order: encoders, then the pad
+    assert [d["event"] for d in devices] == [8, 9, 7]
+    found = pad_map.assign(pad_map.sdl_order(devices), PANEL)  # SDL's order: pad first
+    assert (found["joy1"], found["joy2"], found["pads"]) == (2, 3, {"P1": 1})
+    assert [(n, i, w) for n, i, w in pad_map.retroarch_players(devices, PANEL)] == [(1, 0, "P1"), (2, 1, "P2"), (3, 2, None)]
+
+
+def test_the_pads_dpad_uses_mames_hat_names():
+    t = pp.pad_terms(3)
+    assert t["UP"] == "JOYCODE_3_YAXIS_UP_SWITCH OR JOYCODE_3_HAT1UP" and "HSWITCH" not in str(t)
+
+
+def test_player_two_can_play_player_ones_controls_in_take_turns_and_single_games_only():
+    games = pp.load_game_controls()
+    sections = pp.game_sections(PANEL, 2, 3, {"P1": 1}, games)
+    assert games["tron"]["play"] == "turns" and games["tron"]["mame"] == ["tron2"]
+    tron = dict(sections["tron2"])  # keyed by the set the cabinet runs
+    stick, fire = tron["P1_JOYSTICK_UP"], tron["P1_BUTTON1"]
+    assert "JOYCODE_2_YAXIS_UP_SWITCH" in stick and "JOYCODE_3_YAXIS_UP_SWITCH" in stick  # P1's and P2's encoders
+    assert "JOYCODE_2_BUTTON12" in fire and "JOYCODE_3_BUTTON12" in fire  # P1's A and P2's flight trigger
+    assert "COIN1" not in tron and "START1" not in tron  # in a two-player game P2's start stays the "2 players" start
+    single = next(r for r, g in games.items() if g.get("play") == "single")
+    assert {"COIN1", "START1"} <= set(dict(sections[(games[single].get("mame") or [single])[0]]))  # one player: either start
+    simultaneous = next(r for r, g in games.items() if g.get("play") == "simultaneous")
+    assert (games[simultaneous].get("mame") or [simultaneous])[0] not in sections  # head to head: untouched
+    assert pp.shared_ports(PANEL, 1, None, {}, False) == []  # no second encoder, nothing to share
+    import xml.etree.ElementTree as ET
+    root = ET.fromstring(pp.mame_ctrlr(PANEL, 2, 3, {"P1": 1}, games))
+    assert {s.get("name") for s in root.findall("system")} >= {"default", "tron2", "pacman", "bzone"}
+
+
+def test_battlezones_own_fire_override_still_wins_over_sharing():
+    games = pp.load_game_controls()
+    bz = dict(pp.game_sections(PANEL, 1, 2, {}, games)["bzone"])
+    assert bz["P1_BUTTON1"] == "JOYCODE_2_BUTTON12"  # the flight stick's trigger only: its own entry, not P1's A and P2's buttons

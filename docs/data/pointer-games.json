@@ -1,0 +1,621 @@
+{
+ "source": "cabinet-controls-catalog.json",
+ "games": [
+  {
+   "zip": "arkanoid",
+   "mame_name": "arkanoid",
+   "title": "Arkanoid (World, older)",
+   "year": "1986",
+   "emulator": "advmame",
+   "players": 2,
+   "device": "spinner",
+   "mame_controls": [
+    "dial"
+   ],
+   "buttons": 1
+  },
+  {
+   "zip": "cchasm",
+   "mame_name": "cchasm",
+   "title": "Cosmic Chasm (set 1)",
+   "year": "1983",
+   "emulator": "advmame",
+   "players": 1,
+   "device": "spinner",
+   "mame_controls": [
+    "dial"
+   ],
+   "buttons": 3
+  },
+  {
+   "zip": "omegrace",
+   "mame_name": "omegrace",
+   "title": "Omega Race (set 1)",
+   "year": "1981",
+   "emulator": "advmame",
+   "players": 2,
+   "device": "spinner",
+   "mame_controls": [
+    "dial"
+   ],
+   "buttons": 2
+  },
+  {
+   "zip": "polepos2",
+   "mame_name": "polepos2",
+   "title": "Pole Position II (Japan)",
+   "year": "1983",
+   "emulator": "advmame",
+   "players": 1,
+   "device": "spinner",
+   "mame_controls": [
+    "dial",
+    "pedal"
+   ],
+   "buttons": 1
+  },
+  {
+   "zip": "spyhunt",
+   "mame_name": "spyhunt",
+   "title": "Spy Hunter",
+   "year": "1983",
+   "emulator": "advmame",
+   "players": 1,
+   "device": "spinner",
+   "mame_controls": [
+    "paddle",
+    "pedal"
+   ],
+   "buttons": 5
+  },
+  {
+   "zip": "tempest",
+   "mame_name": "tempest",
+   "title": "Tempest (rev 3, Revised Hardware)",
+   "year": "1980",
+   "emulator": "advmame",
+   "players": 2,
+   "device": "spinner",
+   "mame_controls": [
+    "dial"
+   ],
+   "buttons": 2
+  },
+  {
+   "zip": "turbo",
+   "mame_name": "turbo",
+   "title": "Turbo (program 1513-1515)",
+   "year": "1981",
+   "emulator": "advmame",
+   "players": 1,
+   "device": "spinner",
+   "mame_controls": [
+    "dial",
+    "pedal"
+   ],
+   "buttons": 1
+  },
+  {
+   "zip": "warlords",
+   "mame_name": "warlords",
+   "title": "Warlords",
+   "year": "1980",
+   "emulator": "advmame",
+   "players": 4,
+   "device": "spinner",
+   "mame_controls": [
+    "paddle"
+   ],
+   "buttons": 1
+  },
+  {
+   "zip": "circus",
+   "mame_name": "circus",
+   "title": "Circus / Acrobat TV",
+   "year": "1977",
+   "emulator": "lr-mame2000",
+   "players": 1,
+   "device": "spinner",
+   "mame_controls": [
+    "paddle"
+   ],
+   "buttons": 0
+  },
+  {
+   "zip": "fireone",
+   "mame_name": "fireone",
+   "title": "Fire One",
+   "year": "1979",
+   "emulator": "lr-mame2000",
+   "players": 2,
+   "device": "spinner",
+   "mame_controls": [
+    "paddle"
+   ],
+   "buttons": 2
+  },
+  {
+   "zip": "aztarac",
+   "mame_name": "aztarac",
+   "title": "Aztarac",
+   "year": "1983",
+   "emulator": "lr-mame2003",
+   "players": 1,
+   "device": "spinner",
+   "mame_controls": [
+    "dial"
+   ],
+   "buttons": 2
+  },
+  {
+   "zip": "boxingb",
+   "mame_name": "boxingb",
+   "title": "Boxing Bugs",
+   "year": "1981",
+   "emulator": "lr-mame2003",
+   "players": 2,
+   "device": "spinner",
+   "mame_controls": [
+    "dial"
+   ],
+   "buttons": 3
+  },
+  {
+   "zip": "demoderb",
+   "mame_name": "demoderb",
+   "title": "Demolition Derby",
+   "year": "1984",
+   "emulator": "lr-mame2003",
+   "players": 4,
+   "device": "spinner",
+   "mame_controls": [
+    "dial"
+   ],
+   "buttons": 2
+  },
+  {
+   "zip": "mhavoc",
+   "mame_name": "mhavoc",
+   "title": "Major Havoc (rev 3)",
+   "year": "1983",
+   "emulator": "lr-mame2003",
+   "players": 2,
+   "device": "spinner",
+   "mame_controls": [
+    "dial"
+   ],
+   "buttons": 2
+  },
+  {
+   "zip": "polepos",
+   "mame_name": "polepos",
+   "title": "Pole Position (World)",
+   "year": "1982",
+   "emulator": "lr-mame2003",
+   "players": 1,
+   "device": "spinner",
+   "mame_controls": [
+    "dial",
+    "pedal"
+   ],
+   "buttons": 1
+  },
+  {
+   "zip": "speedfrk",
+   "mame_name": "speedfrk",
+   "title": "Speed Freak",
+   "year": "1979",
+   "emulator": "lr-mame2003",
+   "players": 2,
+   "device": "spinner",
+   "mame_controls": [
+    "dial"
+   ],
+   "buttons": 1
+  },
+  {
+   "zip": "startrek",
+   "mame_name": "startrek",
+   "title": "Star Trek",
+   "year": "1982",
+   "emulator": "lr-mame2003",
+   "players": 1,
+   "device": "spinner",
+   "mame_controls": [
+    "dial"
+   ],
+   "buttons": 4
+  },
+  {
+   "zip": "tacscan",
+   "mame_name": "tacscan",
+   "title": "Tac/Scan",
+   "year": "1982",
+   "emulator": "lr-mame2003",
+   "players": 1,
+   "device": "spinner",
+   "mame_controls": [
+    "dial"
+   ],
+   "buttons": 2
+  },
+  {
+   "zip": "zektor",
+   "mame_name": "zektor",
+   "title": "Zektor (revision B)",
+   "year": "1982",
+   "emulator": "lr-mame2003",
+   "players": 1,
+   "device": "spinner",
+   "mame_controls": [
+    "dial"
+   ],
+   "buttons": 2
+  },
+  {
+   "zip": "blstroid",
+   "mame_name": "blstroid",
+   "title": "Blasteroids (rev 4)",
+   "year": "1987",
+   "emulator": "mame-0.251",
+   "players": 2,
+   "device": "spinner",
+   "mame_controls": [
+    "dial"
+   ],
+   "buttons": 4
+  },
+  {
+   "zip": "exterm",
+   "mame_name": "exterm",
+   "title": "Exterminator",
+   "year": "1989",
+   "emulator": "mame-0.251",
+   "players": 2,
+   "device": "spinner",
+   "mame_controls": [
+    "dial"
+   ],
+   "buttons": 2
+  },
+  {
+   "zip": "moonwar",
+   "mame_name": "moonwar",
+   "title": "Moonwar",
+   "year": "1981",
+   "emulator": "mame-0.251",
+   "players": 2,
+   "device": "spinner",
+   "mame_controls": [
+    "dial"
+   ],
+   "buttons": 4
+  },
+  {
+   "zip": "mplanets",
+   "mame_name": "mplanets",
+   "title": "Mad Planets",
+   "year": "1983",
+   "emulator": "mame-0.251",
+   "players": 1,
+   "device": "spinner",
+   "mame_controls": [
+    "dial"
+   ],
+   "buttons": 2
+  },
+  {
+   "zip": "nitedrvr",
+   "mame_name": "nitedrvr",
+   "title": "Night Driver",
+   "year": "1976",
+   "emulator": "mame-0.251",
+   "players": 1,
+   "device": "spinner",
+   "mame_controls": [
+    "dial"
+   ],
+   "buttons": 8
+  },
+  {
+   "zip": "sbrkout",
+   "mame_name": "sbrkout",
+   "title": "Super Breakout (rev 04)",
+   "year": "1978",
+   "emulator": "mame-0.251",
+   "players": 1,
+   "device": "spinner",
+   "mame_controls": [
+    "paddle"
+   ],
+   "buttons": 1
+  },
+  {
+   "zip": "subs",
+   "mame_name": "subs",
+   "title": "Subs",
+   "year": "1977",
+   "emulator": "mame-0.251",
+   "players": 2,
+   "device": "spinner",
+   "mame_controls": [
+    "dial"
+   ],
+   "buttons": 1
+  },
+  {
+   "zip": "superbug",
+   "mame_name": "superbug",
+   "title": "Super Bug",
+   "year": "1977",
+   "emulator": "mame-0.251",
+   "players": 1,
+   "device": "spinner",
+   "mame_controls": [
+    "dial"
+   ],
+   "buttons": 6
+  },
+  {
+   "zip": "tron",
+   "mame_name": "tron2",
+   "title": "Tron (6/25)",
+   "year": "1982",
+   "emulator": "mame-0.251",
+   "players": 2,
+   "device": "spinner",
+   "mame_controls": [
+    "dial"
+   ],
+   "buttons": 1
+  },
+  {
+   "zip": "marble",
+   "mame_name": "marble",
+   "title": "Marble Madness (set 1)",
+   "year": "1984",
+   "emulator": "advmame",
+   "players": 2,
+   "device": "trackball",
+   "mame_controls": [
+    "trackball"
+   ],
+   "buttons": 0
+  },
+  {
+   "zip": "milliped",
+   "mame_name": "milliped",
+   "title": "Millipede",
+   "year": "1982",
+   "emulator": "advmame",
+   "players": 2,
+   "device": "trackball",
+   "mame_controls": [
+    "trackball"
+   ],
+   "buttons": 1
+  },
+  {
+   "zip": "quantum",
+   "mame_name": "quantum",
+   "title": "Quantum (rev 2)",
+   "year": "1982",
+   "emulator": "advmame",
+   "players": 1,
+   "device": "trackball",
+   "mame_controls": [
+    "trackball"
+   ],
+   "buttons": 0
+  },
+  {
+   "zip": "reactor",
+   "mame_name": "reactor",
+   "title": "Reactor",
+   "year": "1982",
+   "emulator": "lr-mame2000",
+   "players": 1,
+   "device": "trackball",
+   "mame_controls": [
+    "trackball"
+   ],
+   "buttons": 2
+  },
+  {
+   "zip": "ccastles",
+   "mame_name": "ccastles",
+   "title": "Crystal Castles (version 4)",
+   "year": "1983",
+   "emulator": "lr-mame2003",
+   "players": 2,
+   "device": "trackball",
+   "mame_controls": [
+    "trackball"
+   ],
+   "buttons": 3
+  },
+  {
+   "zip": "centiped",
+   "mame_name": "centiped",
+   "title": "Centipede (revision 4)",
+   "year": "1980",
+   "emulator": "lr-mame2003",
+   "players": 1,
+   "device": "trackball",
+   "mame_controls": [
+    "trackball"
+   ],
+   "buttons": 1
+  },
+  {
+   "zip": "missile",
+   "mame_name": "missile",
+   "title": "Missile Command (rev 3)",
+   "year": "1980",
+   "emulator": "lr-mame2003",
+   "players": 2,
+   "device": "trackball",
+   "mame_controls": [
+    "trackball"
+   ],
+   "buttons": 3
+  },
+  {
+   "zip": "bking",
+   "mame_name": "bking",
+   "title": "Birdie King",
+   "year": "1982",
+   "emulator": "mame-0.251",
+   "players": 2,
+   "device": "trackball",
+   "mame_controls": [
+    "trackball"
+   ],
+   "buttons": 0
+  },
+  {
+   "zip": "dotron",
+   "mame_name": "dotrona",
+   "title": "Discs of Tron (Upright, 9/22/83)",
+   "year": "1983",
+   "emulator": "mame-0.251",
+   "players": 1,
+   "device": "trackball",
+   "mame_controls": [
+    "dial",
+    "trackball"
+   ],
+   "buttons": 4
+  },
+  {
+   "zip": "gridlee",
+   "mame_name": "gridlee",
+   "title": "Gridlee",
+   "year": "1983",
+   "emulator": "mame-0.251",
+   "players": 2,
+   "device": "trackball",
+   "mame_controls": [
+    "trackball"
+   ],
+   "buttons": 1
+  },
+  {
+   "zip": "wacko",
+   "mame_name": "wacko",
+   "title": "Wacko",
+   "year": "1982",
+   "emulator": "mame-0.251",
+   "players": 2,
+   "device": "trackball",
+   "mame_controls": [
+    "trackball"
+   ],
+   "buttons": 0
+  },
+  {
+   "zip": "buckrog",
+   "mame_name": "buckrog",
+   "title": "Buck Rogers: Planet of Zoom",
+   "year": "1982",
+   "emulator": "advmame",
+   "players": 1,
+   "device": null,
+   "mame_controls": [
+    "pedal"
+   ],
+   "buttons": 3
+  },
+  {
+   "zip": "cracksht",
+   "mame_name": "cracksht",
+   "title": "Crackshot (version 2.0)",
+   "year": "1985",
+   "emulator": "lr-mame2000",
+   "players": 1,
+   "device": null,
+   "mame_controls": [
+    "lightgun"
+   ],
+   "buttons": 1
+  },
+  {
+   "zip": "crossbow",
+   "mame_name": "crossbow",
+   "title": "Crossbow (version 2.0)",
+   "year": "1983",
+   "emulator": "lr-mame2000",
+   "players": 1,
+   "device": null,
+   "mame_controls": [
+    "lightgun"
+   ],
+   "buttons": 1
+  },
+  {
+   "zip": "llander",
+   "mame_name": "llander",
+   "title": "Lunar Lander (rev 2)",
+   "year": "1979",
+   "emulator": "lr-mame2003",
+   "players": 1,
+   "device": null,
+   "mame_controls": [
+    "pedal"
+   ],
+   "buttons": 3
+  },
+  {
+   "zip": "boothill",
+   "mame_name": "boothill",
+   "title": "Boot Hill",
+   "year": "1977",
+   "emulator": "mame-0.251",
+   "players": 2,
+   "device": null,
+   "mame_controls": [
+    "positional"
+   ],
+   "buttons": 1
+  },
+  {
+   "zip": "gunfight",
+   "mame_name": "gunfight",
+   "title": "Gun Fight (set 1)",
+   "year": "1975",
+   "emulator": "mame-0.251",
+   "players": 2,
+   "device": null,
+   "mame_controls": [
+    "positional"
+   ],
+   "buttons": 1
+  },
+  {
+   "zip": "seawolf",
+   "mame_name": "seawolf",
+   "title": "Sea Wolf (set 1)",
+   "year": "1976",
+   "emulator": "mame-0.251",
+   "players": 1,
+   "device": null,
+   "mame_controls": [
+    "positional"
+   ],
+   "buttons": 1
+  },
+  {
+   "zip": "seawolf2",
+   "mame_name": "seawolf2",
+   "title": "Sea Wolf II",
+   "year": "1978",
+   "emulator": "mame-0.251",
+   "players": 2,
+   "device": null,
+   "mame_controls": [
+    "positional"
+   ],
+   "buttons": 1
+  }
+ ]
+}

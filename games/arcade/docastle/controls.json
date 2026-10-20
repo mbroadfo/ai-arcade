@@ -1,0 +1,7 @@
+{
+  "comment": "Mr. Do's Castle (set 1) (1983): this game's controls, where they differ from the cabinet's defaults. Read by pi/mame_human/pad_map.py.",
+  "roms": [
+    "docastle"
+  ],
+  "play": "turns"
+}

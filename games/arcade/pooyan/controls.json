@@ -1,0 +1,7 @@
+{
+  "comment": "Pooyan (1982): this game's controls, where they differ from the cabinet's defaults. Read by pi/mame_human/pad_map.py.",
+  "roms": [
+    "pooyan"
+  ],
+  "play": "turns"
+}

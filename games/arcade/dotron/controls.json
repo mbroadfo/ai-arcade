@@ -1,0 +1,11 @@
+{
+  "comment": "Discs of Tron (Upright, 9/22/83) (1983): this game's controls, where they differ from the cabinet's defaults. Read by pi/mame_human/pad_map.py.",
+  "roms": [
+    "dotron"
+  ],
+  "pointer": "trackball",
+  "play": "single",
+  "mame": [
+    "dotrona"
+  ]
+}

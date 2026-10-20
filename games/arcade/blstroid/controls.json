@@ -1,0 +1,8 @@
+{
+  "comment": "Blasteroids (rev 4) (1987): this game's controls, where they differ from the cabinet's defaults. Read by pi/mame_human/pad_map.py.",
+  "roms": [
+    "blstroid"
+  ],
+  "pointer": "spinner",
+  "play": "simultaneous"
+}

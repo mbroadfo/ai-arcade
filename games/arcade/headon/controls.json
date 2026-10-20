@@ -1,0 +1,7 @@
+{
+  "comment": "Head On (2 players) (1979): this game's controls, where they differ from the cabinet's defaults. Read by pi/mame_human/pad_map.py.",
+  "roms": [
+    "headon"
+  ],
+  "play": "single"
+}

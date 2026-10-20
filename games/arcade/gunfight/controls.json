@@ -1,0 +1,7 @@
+{
+  "comment": "Gun Fight (set 1) (1975): this game's controls, where they differ from the cabinet's defaults. Read by pi/mame_human/pad_map.py.",
+  "roms": [
+    "gunfight"
+  ],
+  "play": "simultaneous"
+}

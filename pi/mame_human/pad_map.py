@@ -28,15 +28,22 @@ CTRLR_NAME = "auto"
 
 
 def order_key(d):
-    """Where udev lists a joystick, which is the order RetroArch and SDL (so MAME) number them in: by the device's path
-    in /sys, not by its event number (a pad on the other USB bus comes after both panel encoders whatever its event
-    number, and the AI pads, which are virtual, come last). Where /sys is not there (tests), by event number."""
+    """Where udev lists a joystick, which is the order RetroArch numbers them in: by the device's path in /sys, not by its
+    event number (a pad on the other USB bus comes after both panel encoders whatever its event number, and the AI pads,
+    which are virtual, come last). Where /sys is not there (tests), by event number. SDL, and so MAME, numbers them by event
+    number instead (see sdl_order): MAME on this Pi listed the Logitech pad first, RetroArch listed it third."""
     path = f"/sys/class/input/event{d['event']}"
     return (0, os.path.realpath(path)) if os.path.exists(path) else (1, f"{d['event']:08d}")
 
 
-def parse_devices(text):
-    """/proc/bus/input/devices -> [{name, vendor, product, phys, event}] for every joystick, in udev's order."""
+def sdl_order(devices):
+    """The joysticks in the order SDL, and so MAME, numbers them: by event device number (seen with MAME's own device list)."""
+    return sorted(devices, key=lambda d: d["event"])
+
+
+def parse_devices(text, kind=r"js\d+"):
+    """/proc/bus/input/devices -> [{name, vendor, product, phys, event}] for every joystick, or (kind = the mouse handler
+    pattern) every mouse, in udev's order."""
     out = []
     for block in text.strip().split("\n\n"):
         info = {}
@@ -51,7 +58,7 @@ def parse_devices(text):
                 info["phys"] = line.split("=", 1)[1].strip()
             elif line.startswith("H:"):
                 handlers = line.split("=", 1)[1].split()
-                if any(re.fullmatch(r"js\d+", h) for h in handlers):
+                if any(re.fullmatch(kind, h) for h in handlers):
                     ev = [int(h[5:]) for h in handlers if re.fullmatch(r"event\d+", h)]
                     info["event"] = ev[0] if ev else None
         if "event" in info and info["event"] is not None:
@@ -123,8 +130,8 @@ RA_PLAYERS = "/dev/shm/ai-arcade-pads.cfg"
 def retroarch_players(devices, panel):
     """RetroArch's player order: [(player number, joypad index, "P1"/"P2" for a panel encoder or None for a gamepad)].
     RetroArch counts every joypad (the AI pads too) in the order the kernel lists them. It cannot let two devices share
-    a player, so when a gamepad is plugged in it plays Player 1 (the next one Player 2) and the panel's encoders follow;
-    with no gamepad the panel is 1 and 2."""
+    a player, so the panel's encoders are Players 1 and 2 whenever they are plugged in, and gamepads follow (Players 3 and 4,
+    for four-player games); with no panel a gamepad is Player 1. (MAME 0.251 does let a gamepad play beside the panel.)"""
     panel_ids = (panel["device"]["vendor_id"].lower(), panel["device"]["product_id"].lower())
     ports = {panel["players"][p]["usb_port"]: p for p in ("P1", "P2")}
     pads, panels = [], []
@@ -136,7 +143,8 @@ def retroarch_players(devices, panel):
             panels.append((index, next((p for port, p in ports.items() if port in d.get("phys", "")), None)))
         else:
             pads.append((index, None))
-    return [(n, index, who) for n, (index, who) in enumerate(pads + panels, 1) if n <= 4]
+    panels.sort(key=lambda item: item[1] or "P9")  # P1's encoder first
+    return [(n, index, who) for n, (index, who) in enumerate(panels + pads, 1) if n <= 4]
 
 
 def apply_pad_overrides(binds, player, games, rom):
@@ -148,6 +156,31 @@ def apply_pad_overrides(binds, player, games, rom):
         key, _, value = line.partition(" = ")
         name = key[len(f"input_player{player}_"):-len("_btn")] if key.endswith("_btn") else None
         out.append(f'{key} = "{changes[name]}"' if name in changes else line)
+    return out
+
+
+def retroarch_mouse_index(mice, panel, pointer):
+    """RetroArch's number for the mouse a game wants ("spinner" or "trackball" from its controls.json), or None when the
+    game wants none or that mouse is not plugged in. RetroArch counts every mouse in udev's order (parse_devices)."""
+    want = panel.get("pointers", {}).get(pointer)
+    if not want:
+        return None
+    for index, m in enumerate(mice):
+        if (m.get("vendor"), m.get("product")) == (want["vendor_id"].lower(), want["product_id"].lower()):
+            return index
+    return None
+
+
+def apply_panel_overrides(binds, player, who, panel, games, rom):
+    """A panel encoder's explicit binds with the game's changes: "retroarch_panel" in its controls.json, {RetroPad name:
+    panel control}. The control's button number is that encoder's own (Player 1's and Player 2's differ)."""
+    import panel_profiles as pp
+    changes = {k: v for k, v in games.get(Path(rom or "").stem, {}).get("retroarch_panel", {}).items() if k != "comment"}
+    out = []
+    for line in binds:
+        key, _, value = line.partition(" = ")
+        name = key[len(f"input_player{player}_"):-len("_btn")] if key.endswith("_btn") else None
+        out.append(f'{key} = "{pp.index(panel, who, changes[name])}"' if name in changes else line)
     return out
 
 
@@ -172,23 +205,30 @@ def main(argv):
     devices = parse_devices(Path("/proc/bus/input/devices").read_text(errors="replace"))
     games = pp.load_game_controls(HERE / "games")  # the games' own controls.json, copied here by install_mame_human.py
     if "--ra" in argv:  # runcommand-onstart: before a RetroArch core starts
-        rom = argv[argv.index("--ra") + 1] if len(argv) > argv.index("--ra") + 1 else ""
+        rest = argv[argv.index("--ra") + 1:]
+        rom, system = (rest + ["", ""])[:2]  # --ra ROM SYSTEM, as runcommand gives them
         teach_retroarch(devices, panel)
         lines = []
         for n, index, who in retroarch_players(devices, panel):
             d = devices[index]
-            text = (pp.retroarch_autoconfig(panel, who) if who else
+            text = (pp.retroarch_autoconfig(panel, who, system) if who else
                     pp.retroarch_gamepad_autoconfig(d["name"], d["vendor"], d["product"]))
             binds, hotkeys = pp.retroarch_player_binds(text, n)
-            if not who:
+            if who:
+                binds = apply_panel_overrides(binds, n, who, panel, games, rom)
+            else:
                 binds = apply_pad_overrides(binds, n, games, rom)
             lines += [f'input_player{n}_joypad_index = "{index}"'] + binds + (hotkeys if n == 1 else [])
+        mice = parse_devices(Path("/proc/bus/input/devices").read_text(errors="replace"), r"mouse\d+")
+        mouse = retroarch_mouse_index(mice, panel, games.get(Path(rom or "").stem, {}).get("pointer"))
+        if mouse is not None:
+            lines.append(f'input_player1_mouse_index = "{mouse}"')
         Path(RA_PLAYERS).write_text("\n".join(lines) + "\n", encoding="utf-8")
         return 0
     if "--es" in argv:  # before EmulationStation starts: give every gamepad it has not met a map
         print("; ".join(teach_es(devices, panel)) or "nothing to add")
         return 0
-    found = assign(devices, panel)
+    found = assign(sdl_order(devices), panel)  # MAME takes SDL's order; RetroArch (--ra above) takes udev's
     if "--show" in argv:
         print(json.dumps(found, indent=1))
         return 0

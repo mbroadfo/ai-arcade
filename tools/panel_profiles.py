@@ -107,11 +107,12 @@ def merge_es_input(existing, entry, device_name):
 
 # ---------------------------------------------------------------- RetroArch
 
-def retroarch_autoconfig(panel, player="P1"):
-    """The joypad autoconfig. RetroPad B, A, Y, X, L, R are the arcade BUTTON_1..6 (as mame2003 reads them); Select is
-    Coin and Start is Start. Esc is the hotkey and the exit (alone, as on the keyboard), Tab with Esc held opens the menu."""
+def retroarch_autoconfig(panel, player="P1", system=None):
+    """The joypad autoconfig. The panel's six action buttons press the RetroPad buttons panel.json "retroarch" lists for the
+    system (SNES order by default; B, Y, X, A, L, R for the arcade cores); Select is Coin and Start is Start. Esc is the hotkey and the exit (alone, as on the keyboard), Tab with Esc held opens the menu."""
     d = panel["device"]
-    names = {1: "b", 2: "a", 3: "y", 4: "x", 5: "l", 6: "r"}
+    orders = panel.get("retroarch", {}).get("button_order", {})
+    names = dict(enumerate(orders.get(system) or orders.get("default") or ["b", "a", "y", "x", "l", "r"], 1))
     first = actions(panel, player)
     lines = [f'input_device = "{d["evdev_name"]}"', 'input_driver = "udev"',
              f'input_vendor_id = "{int(d["vendor_id"], 16)}"', f'input_product_id = "{int(d["product_id"], 16)}"', ""]
@@ -181,7 +182,7 @@ def pad_terms(pad):
     or the D-pad moves; A, B, X, Y, LB, RB are buttons 1 to 6; Back is coin and Start is start."""
     out = {}
     for direction, axis in (("UP", "YAXIS_UP"), ("DOWN", "YAXIS_DOWN"), ("LEFT", "XAXIS_LEFT"), ("RIGHT", "XAXIS_RIGHT")):
-        out[direction] = f"JOYCODE_{pad}_{axis}_SWITCH OR JOYCODE_{pad}_HSWITCH_{direction}"
+        out[direction] = f"JOYCODE_{pad}_{axis}_SWITCH OR JOYCODE_{pad}_HAT1{direction}"
     for n in range(1, 7):
         out[f"BUTTON{n}"] = f"JOYCODE_{pad}_BUTTON{n}"
     out["COIN"] = f"JOYCODE_{pad}_BUTTON7"
@@ -289,6 +290,41 @@ def game_ports(panel, joy1=1, joy2=2, pads=None, games=None):
     return out
 
 
+def shared_ports(panel, joy1, joy2, pads, single):
+    """[(port, sequence)] that let Player 2's encoder (its stick and its buttons, the flight stick's two buttons included)
+    play Player 1's ports too, for a game where the players take turns on one set of controls or only one plays: the
+    P1 sequences with Player 2's added. For a single-player game Player 2's coin and start also work as Player 1's; for a
+    two-player game they stay Player 2's (START2 is the "2 players" start). Empty when the second encoder is not there."""
+    if joy2 is None:
+        return []
+    base = dict(mame_ports(panel, joy1, joy2, pads))
+    stick = panel["players"]["P2"]["stick"]
+    extra = {f"P1_JOYSTICK_{d.upper()}": _direction_code(joy2, stick[d][1:]) for d in ("up", "down", "left", "right")}
+    for n, idx in actions(panel, "P2").items():
+        extra[f"P1_BUTTON{n}"] = " OR ".join(f"JOYCODE_{joy2}_BUTTON{i + 1}" for i in idx)
+    if single:
+        extra["COIN1"] = f"JOYCODE_{joy2}_BUTTON{index(panel, 'P2', 'COIN') + 1}"
+        extra["START1"] = f"JOYCODE_{joy2}_BUTTON{index(panel, 'P2', 'START') + 1}"
+    return [(port, f"{base[port]} OR {seq}") for port, seq in extra.items()]
+
+
+def game_sections(panel, joy1, joy2, pads, games):
+    """{MAME machine name: [(port, sequence)]} for every game with its own section: those whose controls.json says
+    "play": "single" or "turns" get Player 2's encoder on Player 1's ports (shared_ports), and any "panel" changes of the
+    game win over that. The machine name is "mame" in the file (the set the cabinet runs) or else the ROM names."""
+    overrides = game_ports(panel, joy1, joy2, pads, games)
+    out = {}
+    for rom, game in (games or {}).items():
+        rows = {}
+        if game.get("play") in ("single", "turns"):
+            rows.update(shared_ports(panel, joy1, joy2, pads, game["play"] == "single"))
+        rows.update(dict(overrides.get(rom, [])))
+        if rows:
+            for name in game.get("mame") or [rom]:
+                out.setdefault(name, {}).update(rows)
+    return {name: list(rows.items()) for name, rows in out.items()}
+
+
 def mame_ctrlr(panel, joy1=1, joy2=2, pads=None, games=None):
     """The ctrlr file for human mode (/home/pi/.mame/ctrlr/panel.cfg): only the default section; MAME's own defaults
     still apply to everything not listed (players 3 and 4, analog controls, service keys)."""
@@ -296,7 +332,7 @@ def mame_ctrlr(panel, joy1=1, joy2=2, pads=None, games=None):
     for port, seq in mame_ports(panel, joy1, joy2, pads):
         out += [f'            <port type="{port}">', f'                <newseq type="standard">{seq}</newseq>', "            </port>"]
     out += ["        </input>", "    </system>"]
-    for game, ports in game_ports(panel, joy1, joy2, pads, games).items():
+    for game, ports in game_sections(panel, joy1, joy2, pads, games).items():
         out += [f'    <system name="{game}">', "        <input>"]
         for port, seq in ports:
             out += [f'            <port type="{port}">', f'                <newseq type="standard">{seq}</newseq>', "            </port>"]
@@ -439,20 +475,21 @@ def advmame_launcher(text, hide=ADV_HIDE_AI_PADS):
 
 # ---------------------------------------------------------------- which emulator runs which game
 
-# AdvanceMAME shows the panel's encoders with only six of their twelve buttons and no way to exit with the panel, so a
-# game whose controls.json names "emulator": "mame-0.251" runs there instead (its panel map is complete and was tested).
+# A game whose controls.json names an "emulator" runs on it instead of the one it has. The panel's map is complete and
+# tested in MAME 0.251; AdvanceMAME shows the panel's encoders with only six of their twelve buttons and no way to exit
+# with the panel, and has no per-device mouse. RetroArch's lr-mame2003 picks the mouse a game wants (pad_map.py).
 
 
-def launcher_keys(games, emulator="mame-0.251"):
-    """The emulators.cfg keys (<system>_<rom>) of the games whose controls.json asks for `emulator`."""
-    return sorted(f"{g['_system']}_{rom}" for rom, g in games.items() if g.get("emulator") == emulator)
+def launcher_moves(games):
+    """{emulators.cfg key (<system>_<rom>): emulator} for every game whose controls.json asks for one."""
+    return {f"{g['_system']}_{rom}": g["emulator"] for rom, g in sorted(games.items()) if g.get("emulator")}
 
 
-def move_launchers(text, keys, emulator="mame-0.251"):
-    """/opt/retropie/configs/all/emulators.cfg with each game's launcher (keys from launcher_keys) set to `emulator`.
-    Other lines stay."""
+def move_launchers(text, moves):
+    """/opt/retropie/configs/all/emulators.cfg with each game's launcher set as `moves` says ({key: emulator}, from
+    launcher_moves). Other lines stay."""
     lines = text.splitlines()
-    wanted = {key: emulator for key in keys}
+    wanted = dict(moves)
     seen = set()
     for i, line in enumerate(lines):
         key = line.split("=", 1)[0].strip()

@@ -1,0 +1,46 @@
+{
+ "captured": "2026-10-20 12:32:38",
+ "controls": {
+  "TRACKBALL roll up": {
+   "dev": "GGG Electric ICE-T Trackball",
+   "path": "/dev/input/event6",
+   "phys": "usb-xhci-hcd.0-1.4/input0",
+   "vid": "fafa:0020",
+   "kind": "rel",
+   "code": 1,
+   "direction": -1,
+   "name": null
+  },
+  "TRACKBALL roll down": {
+   "dev": "GGG Electric ICE-T Trackball",
+   "path": "/dev/input/event6",
+   "phys": "usb-xhci-hcd.0-1.4/input0",
+   "vid": "fafa:0020",
+   "kind": "rel",
+   "code": 1,
+   "direction": 1,
+   "name": null
+  },
+  "TRACKBALL roll left": {
+   "dev": "GGG Electric ICE-T Trackball",
+   "path": "/dev/input/event6",
+   "phys": "usb-xhci-hcd.0-1.4/input0",
+   "vid": "fafa:0020",
+   "kind": "rel",
+   "code": 0,
+   "direction": -1,
+   "name": null
+  },
+  "TRACKBALL roll right": {
+   "dev": "GGG Electric ICE-T Trackball",
+   "path": "/dev/input/event6",
+   "phys": "usb-xhci-hcd.0-1.4/input0",
+   "vid": "fafa:0020",
+   "kind": "rel",
+   "code": 0,
+   "direction": 1,
+   "name": null
+  }
+ },
+ "problems": []
+}

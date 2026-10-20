@@ -1,0 +1,7 @@
+{
+  "comment": "Time Pilot (1982): this game's controls, where they differ from the cabinet's defaults. Read by pi/mame_human/pad_map.py.",
+  "roms": [
+    "timeplt"
+  ],
+  "play": "turns"
+}
