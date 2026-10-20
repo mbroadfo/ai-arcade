@@ -155,7 +155,7 @@ def main():
             if SYNTH_NAME not in order:
                 raise RuntimeError("MAME did not see the pretend encoders")
             first = order.index(SYNTH_NAME) + 1
-            test = pp.mame_ctrlr(panel_def, joy1=first, joy2=first + 1)
+            test = pp.mame_ctrlr(panel_def, joy1=first, joy2=first + 1, games=pp.load_game_controls())
             with sftp.open(CTRLR_TEST, "w") as f:
                 f.write(test.encode())
             print(f"\nTest file uses joysticks {first} and {first + 1} (the pretend encoders); production uses 1 and 2.\n")

@@ -115,39 +115,5 @@
       ]
     },
     "es_menu_player": "P1"
-  },
-  "game_overrides": {
-    "comment": "MAME games whose controls differ from the layout. A MAME port type and the panel control that presses it.",
-    "bzone": {
-      "P1_BUTTON1": [
-        "P2",
-        "FLIGHT1"
-      ]
-    },
-    "bzonea": {
-      "P1_BUTTON1": [
-        "P2",
-        "FLIGHT1"
-      ]
-    }
-  },
-  "game_dips": {
-    "comment": "MAME game settings for human mode (the factory default of many Atari games is 2 coins for 1 credit): system, DIP switch tag, mask, factory value, wanted value. Battlezone: 1 coin, 1 credit.",
-    "bzone": {
-      "tag": ":DSW1",
-      "mask": 3,
-      "defvalue": 3,
-      "value": 2
-    }
-  },
-  "pad_overrides": {
-    "comment": "RetroArch games where a gamepad's buttons differ from the standard layout. RetroPad name -> the pad's button number (SDL order: A 0, B 1, X 2, Y 3, LB 4, RB 5). Gamepad only; the panel is unchanged.",
-    "asteroid": {
-      "comment": "Fire is the pad's A, hyperspace its Y; thrust moves from X to B (RetroPad Y and A trade places; Asteroids has no use for RetroPad A).",
-      "binds": {
-        "y": 1,
-        "a": 2
-      }
-    }
   }
 }

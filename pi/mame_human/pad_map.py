@@ -139,9 +139,10 @@ def retroarch_players(devices, panel):
     return [(n, index, who) for n, (index, who) in enumerate(pads + panels, 1) if n <= 4]
 
 
-def apply_pad_overrides(binds, player, panel, rom):
-    """A gamepad's explicit binds with the game's changes from panel.json "pad_overrides" (keyed by the ROM's name)."""
-    changes = panel.get("pad_overrides", {}).get(Path(rom or "").stem, {}).get("binds", {})
+def apply_pad_overrides(binds, player, games, rom):
+    """A gamepad's explicit binds with the game's changes: "retroarch_pad" in the controls.json of the game whose ROM
+    this is (games from panel_profiles.load_game_controls). No file, no change."""
+    changes = {k: v for k, v in games.get(Path(rom or "").stem, {}).get("retroarch_pad", {}).items() if k != "comment"}
     out = []
     for line in binds:
         key, _, value = line.partition(" = ")
@@ -169,6 +170,7 @@ def main(argv):
     import panel_profiles as pp
     panel = pp.load_panel(HERE / "panel.json")
     devices = parse_devices(Path("/proc/bus/input/devices").read_text(errors="replace"))
+    games = pp.load_game_controls(HERE / "games")  # the games' own controls.json, copied here by install_mame_human.py
     if "--ra" in argv:  # runcommand-onstart: before a RetroArch core starts
         rom = argv[argv.index("--ra") + 1] if len(argv) > argv.index("--ra") + 1 else ""
         teach_retroarch(devices, panel)
@@ -179,7 +181,7 @@ def main(argv):
                     pp.retroarch_gamepad_autoconfig(d["name"], d["vendor"], d["product"]))
             binds, hotkeys = pp.retroarch_player_binds(text, n)
             if not who:
-                binds = apply_pad_overrides(binds, n, panel, rom)
+                binds = apply_pad_overrides(binds, n, games, rom)
             lines += [f'input_player{n}_joypad_index = "{index}"'] + binds + (hotkeys if n == 1 else [])
         Path(RA_PLAYERS).write_text("\n".join(lines) + "\n", encoding="utf-8")
         return 0
@@ -191,7 +193,7 @@ def main(argv):
         print(json.dumps(found, indent=1))
         return 0
     os.makedirs(CTRLR_DIR, exist_ok=True)
-    text = pp.mame_ctrlr(panel, found["joy1"], found["joy2"], found["pads"])
+    text = pp.mame_ctrlr(panel, found["joy1"], found["joy2"], found["pads"], games)
     Path(CTRLR_DIR, CTRLR_NAME + ".cfg").write_text(text, encoding="utf-8")
     print(f"export {hide_ai_pads()}")
     print(f"PAD_ARGS='-ctrlrpath {CTRLR_DIR} -ctrlr {CTRLR_NAME}'")

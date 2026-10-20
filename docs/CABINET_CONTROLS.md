@@ -278,7 +278,7 @@ generated from `pi/controls/panel.json` by `tools/panel_profiles.py`.
 | MAME 0.251 (human mode) | `/home/pi/.mame/ctrlr/panel.cfg`, and `mame.ini` uses it: both sticks, six buttons each, coin, start, the twin-stick right stick on the P2 stick, menu keys (Tab menu, Enter select, Esc back, Pause pause) |
 | AdvanceMAME | `device_joystick sdl` and the `input_map[...]` lines of `advmame.rc` (all twelve buttons, joysticks named `dragonrise_inc_generic_usb_joystick` and `_2`); the launcher line in both `emulators.cfg` files starts it with the AI Arcade pads hidden from SDL, so up to four controllers fit |
 | Launchers | Battlezone, Bradley, Donkey Kong and Pisces moved from AdvanceMAME to MAME 0.251 (`mame -verifyroms` says it runs them from the cabinet's ROMs) |
-| Battlezone | the flight stick's trigger is fire (not Player 1's A); one coin is one credit (`panel.json` `game_overrides` and `game_dips`) |
+| Battlezone | the flight stick's trigger is fire (not Player 1's A); one coin is one credit (`games/arcade/bzone/controls.json`) |
 | AI mode | `tools/start_pi_game.py` tells SDL to ignore every device except the broker's two pads when it starts MAME, and gives it `-audio_latency 4` |
 | Sound | `audio_latency 4` in `mame.ini` (and the launcher says `SDL_AUDIODRIVER=alsa`): MAME 0.251's default latency of 2 sends the USB adapter only silence |
 
@@ -449,3 +449,14 @@ core: it writes a RetroArch layout for any gamepad that has none (Back = coin, S
 Guide+Start exits, Guide+Back opens the menu; Guide is the hotkey so Back and Start are only coin and start) and writes explicit per-player binds to `/dev/shm/ai-arcade-pads.cfg`, which the global `retroarch.cfg` includes (runcommand rewrites its own per-launch options file after the hook runs, so appending there does not work). Explicit binds are
 needed because RetroArch's autoconfig ties a pad's buttons to the port it was found in (the pad was found in port 3), not
 the player it is meant to be. To play the cabinet's panel as Player 1 in RetroArch, unplug the gamepad.
+
+## Per-game controls live in the game's own folder
+
+The framework (`tools/panel_profiles.py`, `pi/mame_human/pad_map.py`, `pi/controls/panel.json`) knows no game by name; a test
+fails if it does. A game that differs from the cabinet's defaults has a `games/<system>/<game>/controls.json`; with no file
+(or no entry in it) it gets the defaults. Fields, all optional: `roms` (the ROM names it covers; default the folder name),
+`emulator` (`mame-0.251` moves its launcher off AdvanceMAME), `panel` (MAME 0.251 port -> panel control), `dip` (a MAME DIP
+switch value), `retroarch_pad` (a gamepad's button changes in RetroArch: RetroPad name -> the pad's button number).
+`install_controls.py` and `install_mame_human.py` read these and copy them to the Pi. Today: Battlezone (fire is the trigger,
+1 coin = 1 credit, MAME 0.251), Bradley, Donkey Kong and Pisces (MAME 0.251), Asteroids and Asteroids Deluxe (thrust on the
+pad's B). Asteroids Deluxe's change is not yet checked with the real pad.

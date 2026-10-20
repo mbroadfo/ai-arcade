@@ -34,6 +34,10 @@ def main():
                 sftp.put(str(path), f"{CODE}/{path.name}")
         for src in (ROOT / "tools" / "panel_profiles.py", ROOT / "pi" / "controls" / "panel.json"):  # pad_map.py's inputs
             sftp.put(str(src), f"{CODE}/{src.name}")
+        for controls in sorted((ROOT / "games").glob("*/*/controls.json")):  # each game's own control changes
+            folder = f"{CODE}/games/{controls.parent.parent.name}/{controls.parent.name}"
+            run(ssh, f"mkdir -p {folder}")
+            sftp.put(str(controls), f"{folder}/controls.json")
         hook = "/opt/retropie/configs/all/runcommand-onstart.sh"  # RetroArch cores: gamepad layouts and player order
         sftp.put(str(ROOT / "pi" / "controls" / "runcommand-onstart.sh"), hook)
         run(ssh, f"chmod +x {hook}")

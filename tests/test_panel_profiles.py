@@ -130,10 +130,10 @@ def test_the_pretend_panel_turns_names_into_the_encoders_events():
 
 def test_the_launchers_for_the_four_games_move_and_nothing_else_changes():
     text = 'arcade_bzone = "advmame"\narcade_tempest = "advmame"\nnes_x = "lr-fceumm"\n'
-    new = pp.move_launchers(text)
+    new = pp.move_launchers(text, pp.launcher_keys(pp.load_game_controls()))
     assert 'arcade_bzone = "mame-0.251"' in new and 'arcade_tempest = "advmame"' in new and 'nes_x = "lr-fceumm"' in new
     assert 'arcade_dkong = "mame-0.251"' in new  # added when it had no line
-    assert pp.move_launchers(new) == new  # idempotent
+    assert pp.move_launchers(new, pp.launcher_keys(pp.load_game_controls())) == new  # idempotent
 
 
 def test_advmame_uses_its_sdl_driver_so_all_twelve_buttons_are_there():
@@ -172,7 +172,7 @@ def test_the_advmame_launcher_hides_the_ai_pads_once():
 
 
 def test_battlezones_fire_is_the_flight_sticks_trigger_not_player_ones_a():
-    root = ET.fromstring(pp.mame_ctrlr(PANEL))
+    root = ET.fromstring(pp.mame_ctrlr(PANEL, games=pp.load_game_controls()))
     for game in ("bzone", "bzonea"):
         system = next(s for s in root.findall("system") if s.get("name") == game)
         ports = {p.get("type"): p.findtext("newseq") for p in system.iter("port")}

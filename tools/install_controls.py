@@ -12,10 +12,10 @@ Files written (all writable by the pi user; no sudo):
   MAME 0.251        /home/pi/.mame/ctrlr/panel.cfg and the ctrlr line of /opt/retropie/configs/mame-0251/mame.ini
                     (human mode only: AI mode runs MAME with its own ctrlr file, tools/start_pi_game.py)
   AdvanceMAME       the input_map[...] lines of /opt/retropie/configs/mame-advmame/advmame.rc (the other lines stay)
-  Game settings     MAME cfg files for games whose factory setting does not suit a home cabinet (panel.json game_dips:
+  Game settings     MAME cfg files for games whose factory setting does not suit a home cabinet (a "dip" in the game's own controls.json:
                     Battlezone takes 1 coin for 1 credit)
   AdvanceMAME start the advmame lines of the two emulators.cfg files name the environment that hides the AI Arcade pads
-  Launchers         the four AdvanceMAME games MAME 0.251 can run (Battlezone, Bradley, Donkey Kong, Pisces) move to MAME 0.251
+  Launchers         the AdvanceMAME games whose controls.json says "emulator": "mame-0.251" move to MAME 0.251
                     in /opt/retropie/configs/all/emulators.cfg
 Restart EmulationStation afterwards (the script does not: a game may be running); `python tools/human_mode.py` does.
 """
@@ -62,6 +62,7 @@ def read(sftp, path):
 def plan(panel, sftp):
     """[(path, old text or None, new text)] for every file that would change."""
     device = panel["device"]
+    games = pp.load_game_controls()
     entry = pp.es_input_entry(panel)
     es_old = read(sftp, ES_INPUT)
     if es_old is None:
@@ -73,15 +74,16 @@ def plan(panel, sftp):
     wanted = [
         (ES_INPUT, es_old, pp.merge_es_input(es_old, entry, device["sdl_name"])),
         (f"{RA_DIR}/{device['evdev_name']}.cfg", read(sftp, f"{RA_DIR}/{device['evdev_name']}.cfg"), pp.retroarch_autoconfig(panel)),
-        (MAME_CTRLR, read(sftp, MAME_CTRLR), pp.mame_ctrlr(panel)),
+        (MAME_CTRLR, read(sftp, MAME_CTRLR), pp.mame_ctrlr(panel, games=games)),
         (MAME_INI, ini_old, pp.mame_ini_set(pp.mame_ini_with_ctrlr(ini_old, "panel"), "audio_latency", pp.AUDIO_LATENCY,
                                             "sound: the default latency (2) is silent on the USB adapter, see panel_profiles.AUDIO_LATENCY")),
     ]
     emu_old = read(sftp, EMULATORS_ALL)
     if emu_old is not None:
-        wanted.append((EMULATORS_ALL, emu_old, pp.move_launchers(emu_old)))
-    for game, dip in panel.get("game_dips", {}).items():
-        if game == "comment":
+        wanted.append((EMULATORS_ALL, emu_old, pp.move_launchers(emu_old, pp.launcher_keys(games))))
+    for game, controls in games.items():
+        dip = controls.get("dip")
+        if not dip:
             continue
         path = f"{MAME_CFG_DIR}/{game}.cfg"
         old = read(sftp, path)

@@ -17,6 +17,21 @@ from pathlib import Path
 from xml.sax.saxutils import quoteattr
 
 PANEL_JSON = Path(__file__).resolve().parent.parent / "pi" / "controls" / "panel.json"
+GAMES_DIR = Path(__file__).resolve().parent.parent / "games"
+
+
+def load_game_controls(root=GAMES_DIR):
+    """{ROM name: that game's controls.json} for every games/<system>/<game>/controls.json. A game's own folder says
+    where its controls differ from the cabinet's defaults (the "roms" it covers, an "emulator", MAME "panel" port
+    changes, a "dip" setting, "retroarch_pad" button changes); a game with no file, or no entry, gets the defaults. The
+    framework knows no game by name."""
+    out = {}
+    for path in sorted(Path(root).glob("*/*/controls.json")):
+        data = json.loads(path.read_text(encoding="utf-8"))
+        data["_system"] = path.parent.parent.name
+        for rom in data.get("roms") or [path.parent.name]:
+            out[rom] = data
+    return out
 
 
 def load_panel(path=PANEL_JSON):
@@ -249,15 +264,15 @@ def _mame_ports(panel, joy1, joy2):
     return ports
 
 
-def game_ports(panel, joy1=1, joy2=2, pads=None):
-    """{MAME game: [(port type, sequence)]} for the games in panel.json's game_overrides: a port is pressed by another
-    control than the layout says (Battlezone's fire is the flight stick's trigger, on the P2 encoder). A gamepad's
-    button for the same port stays on it."""
+def game_ports(panel, joy1=1, joy2=2, pads=None, games=None):
+    """{MAME game: [(port type, sequence)]} for the games whose controls.json has a "panel" section: a port is pressed
+    by another control than the layout says. A gamepad's button for the same port stays on it."""
     joy = {"P1": joy1, "P2": joy2}
     pads = pads or {}
     out = {}
-    for game, overrides in panel.get("game_overrides", {}).items():
-        if game == "comment":
+    for rom, game in (games or {}).items():
+        overrides = {k: v for k, v in game.get("panel", {}).items() if k != "comment"}
+        if not overrides:
             continue
         rows = []
         for port, (player, control) in overrides.items():
@@ -270,18 +285,18 @@ def game_ports(panel, joy1=1, joy2=2, pads=None):
                     seq = (seq + " OR " if seq else "") + pad_terms(pad)[port[3:]]
             if seq:
                 rows.append((port, seq))
-        out[game] = rows
+        out[rom] = rows
     return out
 
 
-def mame_ctrlr(panel, joy1=1, joy2=2, pads=None):
+def mame_ctrlr(panel, joy1=1, joy2=2, pads=None, games=None):
     """The ctrlr file for human mode (/home/pi/.mame/ctrlr/panel.cfg): only the default section; MAME's own defaults
     still apply to everything not listed (players 3 and 4, analog controls, service keys)."""
     out = ['<?xml version="1.0"?>', '<mameconfig version="10">', '    <system name="default">', "        <input>"]
     for port, seq in mame_ports(panel, joy1, joy2, pads):
         out += [f'            <port type="{port}">', f'                <newseq type="standard">{seq}</newseq>', "            </port>"]
     out += ["        </input>", "    </system>"]
-    for game, ports in game_ports(panel, joy1, joy2, pads).items():
+    for game, ports in game_ports(panel, joy1, joy2, pads, games).items():
         out += [f'    <system name="{game}">', "        <input>"]
         for port, seq in ports:
             out += [f'            <port type="{port}">', f'                <newseq type="standard">{seq}</newseq>', "            </port>"]
@@ -424,16 +439,20 @@ def advmame_launcher(text, hide=ADV_HIDE_AI_PADS):
 
 # ---------------------------------------------------------------- which emulator runs which game
 
-# AdvanceMAME shows the panel's encoders with only six of their twelve buttons and no way to exit with the panel, so the
-# games it ran that MAME 0.251 can also run from the cabinet's ROMs (checked with `mame -verifyroms` on 17 October 2026)
-# move to MAME 0.251, whose panel map is complete and was tested. The other AdvanceMAME games stay on it.
-MOVE_TO_MAME251 = ["bzone", "bradley", "dkong", "pisces"]
+# AdvanceMAME shows the panel's encoders with only six of their twelve buttons and no way to exit with the panel, so a
+# game whose controls.json names "emulator": "mame-0.251" runs there instead (its panel map is complete and was tested).
 
 
-def move_launchers(text, games=MOVE_TO_MAME251, emulator="mame-0.251"):
-    """/opt/retropie/configs/all/emulators.cfg with each arcade game's launcher set to `emulator`. Other lines stay."""
+def launcher_keys(games, emulator="mame-0.251"):
+    """The emulators.cfg keys (<system>_<rom>) of the games whose controls.json asks for `emulator`."""
+    return sorted(f"{g['_system']}_{rom}" for rom, g in games.items() if g.get("emulator") == emulator)
+
+
+def move_launchers(text, keys, emulator="mame-0.251"):
+    """/opt/retropie/configs/all/emulators.cfg with each game's launcher (keys from launcher_keys) set to `emulator`.
+    Other lines stay."""
     lines = text.splitlines()
-    wanted = {f"arcade_{g}": emulator for g in games}
+    wanted = {key: emulator for key in keys}
     seen = set()
     for i, line in enumerate(lines):
         key = line.split("=", 1)[0].strip()

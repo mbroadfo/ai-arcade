@@ -67,7 +67,7 @@ def test_two_gamepads_play_one_and_two_beside_the_panel():
 
 
 def test_battlezone_fire_keeps_the_pads_button():
-    games = pp.game_ports(PANEL, 1, 2, {"P1": 3})
+    games = pp.game_ports(PANEL, 1, 2, {"P1": 3}, pp.load_game_controls())
     assert dict(games["bzone"])["P1_BUTTON1"] == "JOYCODE_2_BUTTON12 OR JOYCODE_3_BUTTON1"
 
 
@@ -116,9 +116,19 @@ def test_retroarch_autoconfig_is_written_once_for_unknown_pads(tmp_path):
     assert pad_map.teach_retroarch(devices, PANEL, tmp_path) == []
 
 
-def test_asteroids_thrust_moves_to_the_pads_b_button_for_the_pad_only():
+def test_a_games_own_folder_changes_the_pads_buttons_and_no_folder_means_the_defaults():
+    games = pp.load_game_controls()
     pad, _ = pp.retroarch_player_binds(pp.retroarch_gamepad_autoconfig("F310", "046d", "c21d"), 1)
-    changed = pad_map.apply_pad_overrides(pad, 1, PANEL, "/home/pi/RetroPie/roms/arcade/asteroid.zip")
-    assert 'input_player1_y_btn = "1"' in changed and 'input_player1_a_btn = "2"' in changed
-    assert 'input_player1_b_btn = "0"' in changed and 'input_player1_x_btn = "3"' in changed  # fire and hyperspace stay
-    assert pad_map.apply_pad_overrides(pad, 1, PANEL, "/roms/pacman.zip") == pad
+    for rom in ("asteroid", "astdelux"):  # thrust moves from X to B
+        changed = pad_map.apply_pad_overrides(pad, 1, games, f"/home/pi/RetroPie/roms/arcade/{rom}.zip")
+        assert 'input_player1_y_btn = "1"' in changed and 'input_player1_a_btn = "2"' in changed
+        assert 'input_player1_b_btn = "0"' in changed and 'input_player1_x_btn = "3"' in changed  # fire and hyperspace stay
+    assert pad_map.apply_pad_overrides(pad, 1, games, "/roms/pacman.zip") == pad
+    assert pad_map.apply_pad_overrides(pad, 1, {}, "/roms/asteroid.zip") == pad  # the framework alone knows no game
+
+
+def test_the_framework_names_no_game():
+    import re
+    for path in (ROOT / "tools" / "panel_profiles.py", ROOT / "pi" / "mame_human" / "pad_map.py", ROOT / "pi" / "controls" / "panel.json"):
+        text = path.read_text(encoding="utf-8")
+        assert not re.search(r"\b(asteroid|astdelux|bzone|bzonea|bradley|dkong|pisces)\b", text), path.name

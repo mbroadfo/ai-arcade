@@ -1,0 +1,7 @@
+{
+  "comment": "Runs in MAME 0.251, not AdvanceMAME (whose panel map lacks six buttons and has no exit); checked with mame -verifyroms on 17 October 2026.",
+  "roms": [
+    "dkong"
+  ],
+  "emulator": "mame-0.251"
+}
