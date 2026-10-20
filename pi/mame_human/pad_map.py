@@ -139,6 +139,17 @@ def retroarch_players(devices, panel):
     return [(n, index, who) for n, (index, who) in enumerate(pads + panels, 1) if n <= 4]
 
 
+def apply_pad_overrides(binds, player, panel, rom):
+    """A gamepad's explicit binds with the game's changes from panel.json "pad_overrides" (keyed by the ROM's name)."""
+    changes = panel.get("pad_overrides", {}).get(Path(rom or "").stem, {}).get("binds", {})
+    out = []
+    for line in binds:
+        key, _, value = line.partition(" = ")
+        name = key[len(f"input_player{player}_"):-len("_btn")] if key.endswith("_btn") else None
+        out.append(f'{key} = "{changes[name]}"' if name in changes else line)
+    return out
+
+
 def teach_retroarch(devices, panel, joypads=RA_JOYPADS):
     """Write RetroArch's autoconfig for each gamepad that has none. Returns the names added."""
     import panel_profiles as pp
@@ -159,6 +170,7 @@ def main(argv):
     panel = pp.load_panel(HERE / "panel.json")
     devices = parse_devices(Path("/proc/bus/input/devices").read_text(errors="replace"))
     if "--ra" in argv:  # runcommand-onstart: before a RetroArch core starts
+        rom = argv[argv.index("--ra") + 1] if len(argv) > argv.index("--ra") + 1 else ""
         teach_retroarch(devices, panel)
         lines = []
         for n, index, who in retroarch_players(devices, panel):
@@ -166,6 +178,8 @@ def main(argv):
             text = (pp.retroarch_autoconfig(panel, who) if who else
                     pp.retroarch_gamepad_autoconfig(d["name"], d["vendor"], d["product"]))
             binds, hotkeys = pp.retroarch_player_binds(text, n)
+            if not who:
+                binds = apply_pad_overrides(binds, n, panel, rom)
             lines += [f'input_player{n}_joypad_index = "{index}"'] + binds + (hotkeys if n == 1 else [])
         Path(RA_PLAYERS).write_text("\n".join(lines) + "\n", encoding="utf-8")
         return 0

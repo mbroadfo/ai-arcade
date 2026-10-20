@@ -114,3 +114,11 @@ def test_retroarch_autoconfig_is_written_once_for_unknown_pads(tmp_path):
     text = (tmp_path / "Logitech Gamepad F310.cfg").read_text(encoding="utf-8")
     assert 'input_select_btn = "6"' in text and 'input_vendor_id = "1133"' in text and "h0up" in text
     assert pad_map.teach_retroarch(devices, PANEL, tmp_path) == []
+
+
+def test_asteroids_thrust_moves_to_the_pads_b_button_for_the_pad_only():
+    pad, _ = pp.retroarch_player_binds(pp.retroarch_gamepad_autoconfig("F310", "046d", "c21d"), 1)
+    changed = pad_map.apply_pad_overrides(pad, 1, PANEL, "/home/pi/RetroPie/roms/arcade/asteroid.zip")
+    assert 'input_player1_y_btn = "1"' in changed and 'input_player1_a_btn = "2"' in changed
+    assert 'input_player1_b_btn = "0"' in changed and 'input_player1_x_btn = "3"' in changed  # fire and hyperspace stay
+    assert pad_map.apply_pad_overrides(pad, 1, PANEL, "/roms/pacman.zip") == pad
