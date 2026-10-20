@@ -321,6 +321,8 @@ def main():
                            cwd=ROOT / "tools", check=False)
     elif report.asks:
         print(f"\n{report.asks} item(s) need a person (ASK above); nothing is installed until they are settled.")
+    elif system != "arcade":
+        print("\nNothing to write for this system: it is ready (EmulationStation picks the file up the next time it starts).")
     else:
         print("\nNothing left to decide. Put it on the Pi: python tools/install_mame_human.py; "
               "python tools/install_controls.py --apply (or run this again with --install).")
