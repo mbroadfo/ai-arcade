@@ -1,0 +1,9 @@
+{
+  "comment": "Quantum (rev 2) (1982): this game's controls, where they differ from the cabinet's defaults. Read by pi/mame_human/pad_map.py.",
+  "roms": [
+    "quantum"
+  ],
+  "pointer": "trackball",
+  "emulator": "lr-mame2003",
+  "emulator_why": "AdvanceMAME has no per-device mouse and a partial panel map; this game loads and takes the spinner or trackball in lr-mame2003 (checked 20 October 2026)."
+}

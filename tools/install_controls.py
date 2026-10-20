@@ -15,7 +15,7 @@ Files written (all writable by the pi user; no sudo):
   Game settings     MAME cfg files for games whose factory setting does not suit a home cabinet (a "dip" in the game's own controls.json:
                     Battlezone takes 1 coin for 1 credit)
   AdvanceMAME start the advmame lines of the two emulators.cfg files name the environment that hides the AI Arcade pads
-  Launchers         the AdvanceMAME games whose controls.json says "emulator": "mame-0.251" move to MAME 0.251
+  Launchers         the games whose controls.json names an "emulator" move to it
                     in /opt/retropie/configs/all/emulators.cfg
 Restart EmulationStation afterwards (the script does not: a game may be running); `python tools/human_mode.py` does.
 """
@@ -80,7 +80,7 @@ def plan(panel, sftp):
     ]
     emu_old = read(sftp, EMULATORS_ALL)
     if emu_old is not None:
-        wanted.append((EMULATORS_ALL, emu_old, pp.move_launchers(emu_old, pp.launcher_keys(games))))
+        wanted.append((EMULATORS_ALL, emu_old, pp.move_launchers(emu_old, pp.launcher_moves(games))))
     for game, controls in games.items():
         dip = controls.get("dip")
         if not dip:

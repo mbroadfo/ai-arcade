@@ -35,8 +35,9 @@ def order_key(d):
     return (0, os.path.realpath(path)) if os.path.exists(path) else (1, f"{d['event']:08d}")
 
 
-def parse_devices(text):
-    """/proc/bus/input/devices -> [{name, vendor, product, phys, event}] for every joystick, in udev's order."""
+def parse_devices(text, kind=r"js\d+"):
+    """/proc/bus/input/devices -> [{name, vendor, product, phys, event}] for every joystick, or (kind = the mouse handler
+    pattern) every mouse, in udev's order."""
     out = []
     for block in text.strip().split("\n\n"):
         info = {}
@@ -51,7 +52,7 @@ def parse_devices(text):
                 info["phys"] = line.split("=", 1)[1].strip()
             elif line.startswith("H:"):
                 handlers = line.split("=", 1)[1].split()
-                if any(re.fullmatch(r"js\d+", h) for h in handlers):
+                if any(re.fullmatch(kind, h) for h in handlers):
                     ev = [int(h[5:]) for h in handlers if re.fullmatch(r"event\d+", h)]
                     info["event"] = ev[0] if ev else None
         if "event" in info and info["event"] is not None:
@@ -151,6 +152,18 @@ def apply_pad_overrides(binds, player, games, rom):
     return out
 
 
+def retroarch_mouse_index(mice, panel, pointer):
+    """RetroArch's number for the mouse a game wants ("spinner" or "trackball" from its controls.json), or None when the
+    game wants none or that mouse is not plugged in. RetroArch counts every mouse in udev's order (parse_devices)."""
+    want = panel.get("pointers", {}).get(pointer)
+    if not want:
+        return None
+    for index, m in enumerate(mice):
+        if (m.get("vendor"), m.get("product")) == (want["vendor_id"].lower(), want["product_id"].lower()):
+            return index
+    return None
+
+
 def teach_retroarch(devices, panel, joypads=RA_JOYPADS):
     """Write RetroArch's autoconfig for each gamepad that has none. Returns the names added."""
     import panel_profiles as pp
@@ -183,6 +196,10 @@ def main(argv):
             if not who:
                 binds = apply_pad_overrides(binds, n, games, rom)
             lines += [f'input_player{n}_joypad_index = "{index}"'] + binds + (hotkeys if n == 1 else [])
+        mice = parse_devices(Path("/proc/bus/input/devices").read_text(errors="replace"), r"mouse\d+")
+        mouse = retroarch_mouse_index(mice, panel, games.get(Path(rom or "").stem, {}).get("pointer"))
+        if mouse is not None:
+            lines.append(f'input_player1_mouse_index = "{mouse}"')
         Path(RA_PLAYERS).write_text("\n".join(lines) + "\n", encoding="utf-8")
         return 0
     if "--es" in argv:  # before EmulationStation starts: give every gamepad it has not met a map

@@ -132,3 +132,30 @@ def test_the_framework_names_no_game():
     for path in (ROOT / "tools" / "panel_profiles.py", ROOT / "pi" / "mame_human" / "pad_map.py", ROOT / "pi" / "controls" / "panel.json"):
         text = path.read_text(encoding="utf-8")
         assert not re.search(r"\b(asteroid|astdelux|bzone|bzonea|bradley|dkong|pisces)\b", text), path.name
+
+
+def mouse_block(vendor, product, name, phys, event):
+    return (f'I: Bus=0003 Vendor={vendor} Product={product} Version=0111\nN: Name="{name}"\nP: Phys={phys}\n'
+            f"H: Handlers=mouse{event} event{event}\n")
+
+
+SPINNER = mouse_block("fafa", "0060", "GGG TurboTwist 2 Spinner", "usb-xhci-hcd.0-1.1/input0", 4)
+TRACKBALL = mouse_block("fafa", "0020", "GGG Electric ICE-T Trackball", "usb-xhci-hcd.0-1.4/input0", 6)
+LOGITECH = mouse_block("046d", "4023", "Logitech Wireless Mouse", "usb-xhci-hcd.0-2/input1:2", 3)
+
+
+def test_retroarch_picks_the_mouse_a_game_asks_for_and_none_when_it_is_missing():
+    mice = pad_map.parse_devices("\n".join([SPINNER, LOGITECH, TRACKBALL]), r"mouse\d+")  # event order 3, 4, 6
+    assert [m["name"] for m in mice] == ["Logitech Wireless Mouse", "GGG TurboTwist 2 Spinner", "GGG Electric ICE-T Trackball"]
+    assert pad_map.retroarch_mouse_index(mice, PANEL, "spinner") == 1
+    assert pad_map.retroarch_mouse_index(mice, PANEL, "trackball") == 2
+    assert pad_map.retroarch_mouse_index(mice, PANEL, None) is None
+    assert pad_map.retroarch_mouse_index(pad_map.parse_devices(LOGITECH, r"mouse\d+"), PANEL, "trackball") is None
+
+
+def test_every_game_that_plays_with_the_spinner_or_trackball_says_so_in_its_own_folder():
+    games = pp.load_game_controls()
+    pointers = {rom: g["pointer"] for rom, g in games.items() if "pointer" in g}
+    assert {"missile", "centiped", "wacko", "marble"} <= {r for r, p in pointers.items() if p == "trackball"}
+    assert {"tempest", "arkanoid", "sbrkout", "superbug"} <= {r for r, p in pointers.items() if p == "spinner"}
+    assert set(pointers.values()) <= {"spinner", "trackball"}

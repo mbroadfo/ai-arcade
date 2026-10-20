@@ -128,12 +128,14 @@ def test_the_pretend_panel_turns_names_into_the_encoders_events():
     assert s.events("P2", "FLIGHT1", True) == [(1, synth_panel.EV_KEY, 299, 1)]
 
 
-def test_the_launchers_for_the_four_games_move_and_nothing_else_changes():
-    text = 'arcade_bzone = "advmame"\narcade_tempest = "advmame"\nnes_x = "lr-fceumm"\n'
-    new = pp.move_launchers(text, pp.launcher_keys(pp.load_game_controls()))
-    assert 'arcade_bzone = "mame-0.251"' in new and 'arcade_tempest = "advmame"' in new and 'nes_x = "lr-fceumm"' in new
+def test_the_launchers_for_the_games_that_name_an_emulator_move_and_nothing_else_changes():
+    text = 'arcade_bzone = "advmame"\narcade_buckrog = "advmame"\narcade_tempest = "advmame"\nnes_x = "lr-fceumm"\n'
+    moves = pp.launcher_moves(pp.load_game_controls())
+    new = pp.move_launchers(text, moves)
+    assert 'arcade_bzone = "mame-0.251"' in new and 'arcade_tempest = "lr-mame2003"' in new  # each game's own folder says where
+    assert 'arcade_buckrog = "advmame"' in new and 'nes_x = "lr-fceumm"' in new  # a game that names none stays
     assert 'arcade_dkong = "mame-0.251"' in new  # added when it had no line
-    assert pp.move_launchers(new, pp.launcher_keys(pp.load_game_controls())) == new  # idempotent
+    assert pp.move_launchers(new, moves) == new  # idempotent
 
 
 def test_advmame_uses_its_sdl_driver_so_all_twelve_buttons_are_there():

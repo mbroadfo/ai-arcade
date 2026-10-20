@@ -439,20 +439,21 @@ def advmame_launcher(text, hide=ADV_HIDE_AI_PADS):
 
 # ---------------------------------------------------------------- which emulator runs which game
 
-# AdvanceMAME shows the panel's encoders with only six of their twelve buttons and no way to exit with the panel, so a
-# game whose controls.json names "emulator": "mame-0.251" runs there instead (its panel map is complete and was tested).
+# A game whose controls.json names an "emulator" runs on it instead of the one it has. The panel's map is complete and
+# tested in MAME 0.251; AdvanceMAME shows the panel's encoders with only six of their twelve buttons and no way to exit
+# with the panel, and has no per-device mouse. RetroArch's lr-mame2003 picks the mouse a game wants (pad_map.py).
 
 
-def launcher_keys(games, emulator="mame-0.251"):
-    """The emulators.cfg keys (<system>_<rom>) of the games whose controls.json asks for `emulator`."""
-    return sorted(f"{g['_system']}_{rom}" for rom, g in games.items() if g.get("emulator") == emulator)
+def launcher_moves(games):
+    """{emulators.cfg key (<system>_<rom>): emulator} for every game whose controls.json asks for one."""
+    return {f"{g['_system']}_{rom}": g["emulator"] for rom, g in sorted(games.items()) if g.get("emulator")}
 
 
-def move_launchers(text, keys, emulator="mame-0.251"):
-    """/opt/retropie/configs/all/emulators.cfg with each game's launcher (keys from launcher_keys) set to `emulator`.
-    Other lines stay."""
+def move_launchers(text, moves):
+    """/opt/retropie/configs/all/emulators.cfg with each game's launcher set as `moves` says ({key: emulator}, from
+    launcher_moves). Other lines stay."""
     lines = text.splitlines()
-    wanted = {key: emulator for key in keys}
+    wanted = dict(moves)
     seen = set()
     for i, line in enumerate(lines):
         key = line.split("=", 1)[0].strip()

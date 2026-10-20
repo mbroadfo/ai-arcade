@@ -115,5 +115,18 @@
       ]
     },
     "es_menu_player": "P1"
+  },
+  "pointers": {
+    "comment": "The cabinet's two mice, by USB id (vendor and product, hex). A game's controls.json says which one it wants (\"pointer\": \"spinner\" or \"trackball\").",
+    "spinner": {
+      "name": "GGG TurboTwist 2 Spinner",
+      "vendor_id": "fafa",
+      "product_id": "0060"
+    },
+    "trackball": {
+      "name": "GGG Electric ICE-T Trackball",
+      "vendor_id": "fafa",
+      "product_id": "0020"
+    }
   }
 }
