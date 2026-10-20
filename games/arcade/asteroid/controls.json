@@ -1,0 +1,13 @@
+{
+  "comment": "This game's controls, where they differ from the cabinet's defaults. Read by pi/mame_human/pad_map.py.",
+  "roms": [
+    "asteroid",
+    "asteroid1",
+    "asteroid2"
+  ],
+  "retroarch_pad": {
+    "comment": "A gamepad in RetroArch: RetroPad name -> the pad's button number (SDL order: A 0, B 1, X 2, Y 3, LB 4, RB 5). Thrust moves from X to B (RetroPad Y and A trade places; the game has no use for RetroPad A). Fire stays on A, hyperspace (shield in Deluxe) on Y.",
+    "y": 1,
+    "a": 2
+  }
+}

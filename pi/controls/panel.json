@@ -1,0 +1,119 @@
+{
+  "comment": "The panel as captured on 17 October 2026 (docs/CABINET_CONTROLS.md, docs/data/panel-capture-*.json). Codes are Linux evdev button codes; an SDL, RetroArch or MAME button number is the code minus 288. Axes: abs 0 is X, abs 1 is Y; a sign is the direction of the reading (negative: left or up on a standard stick). Both players are the same encoder model; they differ only by USB port.",
+  "device": {
+    "evdev_name": "DragonRise Inc.   Generic   USB  Joystick  ",
+    "sdl_name": "DragonRise Inc. Generic USB Joystick",
+    "sdl_guid": "0300457e790000000600000010010000",
+    "vendor_id": "0079",
+    "product_id": "0006",
+    "first_button_code": 288
+  },
+  "players": {
+    "P1": {
+      "usb_port": "usb-xhci-hcd.0-1.2/input0",
+      "stick": {
+        "up": [
+          "abs",
+          1,
+          -1
+        ],
+        "down": [
+          "abs",
+          1,
+          1
+        ],
+        "left": [
+          "abs",
+          0,
+          -1
+        ],
+        "right": [
+          "abs",
+          0,
+          1
+        ]
+      },
+      "buttons": {
+        "A": 299,
+        "B": 297,
+        "X": 296,
+        "Y": 298,
+        "SNOWFLAKE": 295,
+        "STAR": 294,
+        "COIN": 293,
+        "START": 292,
+        "ESC": 291,
+        "TAB": 290
+      }
+    },
+    "P2": {
+      "usb_port": "usb-xhci-hcd.0-1.3/input0",
+      "stick": {
+        "up": [
+          "abs",
+          1,
+          -1
+        ],
+        "down": [
+          "abs",
+          1,
+          1
+        ],
+        "left": [
+          "abs",
+          0,
+          -1
+        ],
+        "right": [
+          "abs",
+          0,
+          1
+        ]
+      },
+      "buttons": {
+        "A": 293,
+        "B": 291,
+        "X": 290,
+        "Y": 292,
+        "SNOWFLAKE": 289,
+        "STAR": 288,
+        "COIN": 294,
+        "START": 295,
+        "ENTER": 296,
+        "PAUSE": 297,
+        "FLIGHT1": 299,
+        "FLIGHT2": 298
+      }
+    }
+  },
+  "layout": {
+    "comment": "What each physical control means to a game. BUTTON_1..6 are the arcade action buttons in this order; the flight stick's trigger and secondary also act as Player 2's BUTTON_1 and BUTTON_2.",
+    "action_order": [
+      "A",
+      "B",
+      "X",
+      "Y",
+      "SNOWFLAKE",
+      "STAR"
+    ],
+    "ui": {
+      "menu": [
+        "P1",
+        "TAB"
+      ],
+      "back": [
+        "P1",
+        "ESC"
+      ],
+      "select": [
+        "P2",
+        "ENTER"
+      ],
+      "pause": [
+        "P2",
+        "PAUSE"
+      ]
+    },
+    "es_menu_player": "P1"
+  }
+}

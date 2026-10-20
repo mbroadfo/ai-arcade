@@ -32,6 +32,19 @@ def main():
         for path in sorted((ROOT / "pi" / "mame_human").iterdir()):
             if path.is_file():
                 sftp.put(str(path), f"{CODE}/{path.name}")
+        for src in (ROOT / "tools" / "panel_profiles.py", ROOT / "pi" / "controls" / "panel.json"):  # pad_map.py's inputs
+            sftp.put(str(src), f"{CODE}/{src.name}")
+        for controls in sorted((ROOT / "games").glob("*/*/controls.json")):  # each game's own control changes
+            folder = f"{CODE}/games/{controls.parent.parent.name}/{controls.parent.name}"
+            run(ssh, f"mkdir -p {folder}")
+            sftp.put(str(controls), f"{folder}/controls.json")
+        hook = "/opt/retropie/configs/all/runcommand-onstart.sh"  # RetroArch cores: gamepad layouts and player order
+        sftp.put(str(ROOT / "pi" / "controls" / "runcommand-onstart.sh"), hook)
+        run(ssh, f"chmod +x {hook}")
+        # RetroArch reads this include after its other settings: the per-launch players file the hook writes
+        cfg = "/opt/retropie/configs/all/retroarch.cfg"
+        include = '#include "/dev/shm/ai-arcade-pads.cfg"'
+        run(ssh, f"grep -qF '{include}' {cfg} || (cp {cfg} {cfg}.before-pads && printf '\n{include}\n' >> {cfg})")
         sftp.close()
         run(ssh, f"chmod +x {CODE}/*.sh {CODE}/*.py && cp {CODE}/mame.ini {CONFIG}/mame.ini")
         print(run(ssh, f"cd {CODE} && python3 convert.py status").strip())

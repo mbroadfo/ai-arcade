@@ -1,0 +1,351 @@
+{
+ "captured": "2026-10-17 17:09:08",
+ "controls": {
+  "P1 UP": {
+   "dev": "DragonRise Inc.   Generic   USB  Joystick",
+   "path": "/dev/input/event8",
+   "phys": "usb-xhci-hcd.0-1.2/input0",
+   "vid": "0079:0006",
+   "kind": "abs",
+   "code": 1,
+   "direction": -1,
+   "name": null
+  },
+  "P1 DOWN": {
+   "dev": "DragonRise Inc.   Generic   USB  Joystick",
+   "path": "/dev/input/event8",
+   "phys": "usb-xhci-hcd.0-1.2/input0",
+   "vid": "0079:0006",
+   "kind": "abs",
+   "code": 1,
+   "direction": 1,
+   "name": null
+  },
+  "P1 RIGHT": {
+   "dev": "DragonRise Inc.   Generic   USB  Joystick",
+   "path": "/dev/input/event8",
+   "phys": "usb-xhci-hcd.0-1.2/input0",
+   "vid": "0079:0006",
+   "kind": "abs",
+   "code": 0,
+   "direction": 1,
+   "name": null
+  },
+  "P1 LEFT": {
+   "dev": "DragonRise Inc.   Generic   USB  Joystick",
+   "path": "/dev/input/event8",
+   "phys": "usb-xhci-hcd.0-1.2/input0",
+   "vid": "0079:0006",
+   "kind": "abs",
+   "code": 0,
+   "direction": -1,
+   "name": null
+  },
+  "P1 A": {
+   "dev": "DragonRise Inc.   Generic   USB  Joystick",
+   "path": "/dev/input/event8",
+   "phys": "usb-xhci-hcd.0-1.2/input0",
+   "vid": "0079:0006",
+   "kind": "key",
+   "code": 299,
+   "direction": null,
+   "name": "BTN_BASE6"
+  },
+  "P1 B": {
+   "dev": "DragonRise Inc.   Generic   USB  Joystick",
+   "path": "/dev/input/event8",
+   "phys": "usb-xhci-hcd.0-1.2/input0",
+   "vid": "0079:0006",
+   "kind": "key",
+   "code": 297,
+   "direction": null,
+   "name": "BTN_BASE4"
+  },
+  "P1 X": {
+   "dev": "DragonRise Inc.   Generic   USB  Joystick",
+   "path": "/dev/input/event8",
+   "phys": "usb-xhci-hcd.0-1.2/input0",
+   "vid": "0079:0006",
+   "kind": "key",
+   "code": 296,
+   "direction": null,
+   "name": "BTN_BASE3"
+  },
+  "P1 Y": {
+   "dev": "DragonRise Inc.   Generic   USB  Joystick",
+   "path": "/dev/input/event8",
+   "phys": "usb-xhci-hcd.0-1.2/input0",
+   "vid": "0079:0006",
+   "kind": "key",
+   "code": 298,
+   "direction": null,
+   "name": "BTN_BASE5"
+  },
+  "P1 SNOWFLAKE": {
+   "dev": "DragonRise Inc.   Generic   USB  Joystick",
+   "path": "/dev/input/event8",
+   "phys": "usb-xhci-hcd.0-1.2/input0",
+   "vid": "0079:0006",
+   "kind": "key",
+   "code": 295,
+   "direction": null,
+   "name": "BTN_BASE2"
+  },
+  "P1 STAR": {
+   "dev": "DragonRise Inc.   Generic   USB  Joystick",
+   "path": "/dev/input/event8",
+   "phys": "usb-xhci-hcd.0-1.2/input0",
+   "vid": "0079:0006",
+   "kind": "key",
+   "code": 294,
+   "direction": null,
+   "name": "BTN_BASE"
+  },
+  "P1 COIN 1": {
+   "dev": "DragonRise Inc.   Generic   USB  Joystick",
+   "path": "/dev/input/event8",
+   "phys": "usb-xhci-hcd.0-1.2/input0",
+   "vid": "0079:0006",
+   "kind": "key",
+   "code": 293,
+   "direction": null,
+   "name": "BTN_PINKIE"
+  },
+  "P1 P1 START": {
+   "dev": "DragonRise Inc.   Generic   USB  Joystick",
+   "path": "/dev/input/event8",
+   "phys": "usb-xhci-hcd.0-1.2/input0",
+   "vid": "0079:0006",
+   "kind": "key",
+   "code": 292,
+   "direction": null,
+   "name": "BTN_TOP2"
+  },
+  "P1 ESC": {
+   "dev": "DragonRise Inc.   Generic   USB  Joystick",
+   "path": "/dev/input/event8",
+   "phys": "usb-xhci-hcd.0-1.2/input0",
+   "vid": "0079:0006",
+   "kind": "key",
+   "code": 291,
+   "direction": null,
+   "name": "BTN_TOP"
+  },
+  "P1 TAB": {
+   "dev": "DragonRise Inc.   Generic   USB  Joystick",
+   "path": "/dev/input/event8",
+   "phys": "usb-xhci-hcd.0-1.2/input0",
+   "vid": "0079:0006",
+   "kind": "key",
+   "code": 290,
+   "direction": null,
+   "name": "BTN_THUMB2"
+  },
+  "P2 UP": {
+   "dev": "DragonRise Inc.   Generic   USB  Joystick",
+   "path": "/dev/input/event13",
+   "phys": "usb-xhci-hcd.0-1.3/input0",
+   "vid": "0079:0006",
+   "kind": "abs",
+   "code": 1,
+   "direction": 1,
+   "name": null
+  },
+  "P2 DOWN": {
+   "dev": "DragonRise Inc.   Generic   USB  Joystick",
+   "path": "/dev/input/event13",
+   "phys": "usb-xhci-hcd.0-1.3/input0",
+   "vid": "0079:0006",
+   "kind": "abs",
+   "code": 0,
+   "direction": 1,
+   "name": null
+  },
+  "P2 RIGHT": {
+   "dev": "DragonRise Inc.   Generic   USB  Joystick",
+   "path": "/dev/input/event13",
+   "phys": "usb-xhci-hcd.0-1.3/input0",
+   "vid": "0079:0006",
+   "kind": "abs",
+   "code": 0,
+   "direction": -1,
+   "name": null
+  },
+  "P2 LEFT": {
+   "dev": "DragonRise Inc.   Generic   USB  Joystick",
+   "path": "/dev/input/event13",
+   "phys": "usb-xhci-hcd.0-1.3/input0",
+   "vid": "0079:0006",
+   "kind": "abs",
+   "code": 1,
+   "direction": -1,
+   "name": null
+  },
+  "P2 A": {
+   "dev": "DragonRise Inc.   Generic   USB  Joystick",
+   "path": "/dev/input/event13",
+   "phys": "usb-xhci-hcd.0-1.3/input0",
+   "vid": "0079:0006",
+   "kind": "key",
+   "code": 293,
+   "direction": null,
+   "name": "BTN_PINKIE"
+  },
+  "P2 B": {
+   "dev": "DragonRise Inc.   Generic   USB  Joystick",
+   "path": "/dev/input/event13",
+   "phys": "usb-xhci-hcd.0-1.3/input0",
+   "vid": "0079:0006",
+   "kind": "key",
+   "code": 291,
+   "direction": null,
+   "name": "BTN_TOP"
+  },
+  "P2 X": {
+   "dev": "DragonRise Inc.   Generic   USB  Joystick",
+   "path": "/dev/input/event13",
+   "phys": "usb-xhci-hcd.0-1.3/input0",
+   "vid": "0079:0006",
+   "kind": "key",
+   "code": 290,
+   "direction": null,
+   "name": "BTN_THUMB2"
+  },
+  "P2 Y": {
+   "dev": "DragonRise Inc.   Generic   USB  Joystick",
+   "path": "/dev/input/event13",
+   "phys": "usb-xhci-hcd.0-1.3/input0",
+   "vid": "0079:0006",
+   "kind": "key",
+   "code": 292,
+   "direction": null,
+   "name": "BTN_TOP2"
+  },
+  "P2 SNOWFLAKE": {
+   "dev": "DragonRise Inc.   Generic   USB  Joystick",
+   "path": "/dev/input/event13",
+   "phys": "usb-xhci-hcd.0-1.3/input0",
+   "vid": "0079:0006",
+   "kind": "key",
+   "code": 289,
+   "direction": null,
+   "name": "BTN_THUMB"
+  },
+  "P2 STAR": {
+   "dev": "DragonRise Inc.   Generic   USB  Joystick",
+   "path": "/dev/input/event13",
+   "phys": "usb-xhci-hcd.0-1.3/input0",
+   "vid": "0079:0006",
+   "kind": "key",
+   "code": 288,
+   "direction": null,
+   "name": "['BTN_JOYSTICK', 'BTN_TRIGGER']"
+  },
+  "P2 COIN 2": {
+   "dev": "DragonRise Inc.   Generic   USB  Joystick",
+   "path": "/dev/input/event13",
+   "phys": "usb-xhci-hcd.0-1.3/input0",
+   "vid": "0079:0006",
+   "kind": "key",
+   "code": 294,
+   "direction": null,
+   "name": "BTN_BASE"
+  },
+  "P2 P2 START": {
+   "dev": "DragonRise Inc.   Generic   USB  Joystick",
+   "path": "/dev/input/event13",
+   "phys": "usb-xhci-hcd.0-1.3/input0",
+   "vid": "0079:0006",
+   "kind": "key",
+   "code": 295,
+   "direction": null,
+   "name": "BTN_BASE2"
+  },
+  "P2 ENTER": {
+   "dev": "DragonRise Inc.   Generic   USB  Joystick",
+   "path": "/dev/input/event13",
+   "phys": "usb-xhci-hcd.0-1.3/input0",
+   "vid": "0079:0006",
+   "kind": "key",
+   "code": 296,
+   "direction": null,
+   "name": "BTN_BASE3"
+  },
+  "P2 PAUSE": {
+   "dev": "DragonRise Inc.   Generic   USB  Joystick",
+   "path": "/dev/input/event13",
+   "phys": "usb-xhci-hcd.0-1.3/input0",
+   "vid": "0079:0006",
+   "kind": "key",
+   "code": 297,
+   "direction": null,
+   "name": "BTN_BASE4"
+  },
+  "SPINNER turn clockwise": {
+   "dev": "GGG TurboTwist 2 Spinner",
+   "path": "/dev/input/event4",
+   "phys": "usb-xhci-hcd.0-1.1/input0",
+   "vid": "fafa:0060",
+   "kind": "rel",
+   "code": 0,
+   "direction": 1,
+   "name": null
+  },
+  "SPINNER turn counter-clockwise": {
+   "dev": "GGG TurboTwist 2 Spinner",
+   "path": "/dev/input/event4",
+   "phys": "usb-xhci-hcd.0-1.1/input0",
+   "vid": "fafa:0060",
+   "kind": "rel",
+   "code": 0,
+   "direction": -1,
+   "name": null
+  },
+  "TRACKBALL roll up": {
+   "dev": "GGG Electric ICE-T Trackball",
+   "path": "/dev/input/event6",
+   "phys": "usb-xhci-hcd.0-1.4/input0",
+   "vid": "fafa:0020",
+   "kind": "rel",
+   "code": 0,
+   "direction": 1,
+   "name": null
+  },
+  "TRACKBALL roll down": {
+   "dev": "GGG Electric ICE-T Trackball",
+   "path": "/dev/input/event6",
+   "phys": "usb-xhci-hcd.0-1.4/input0",
+   "vid": "fafa:0020",
+   "kind": "rel",
+   "code": 0,
+   "direction": -1,
+   "name": null
+  },
+  "TRACKBALL roll left": {
+   "dev": "GGG Electric ICE-T Trackball",
+   "path": "/dev/input/event6",
+   "phys": "usb-xhci-hcd.0-1.4/input0",
+   "vid": "fafa:0020",
+   "kind": "rel",
+   "code": 1,
+   "direction": 1,
+   "name": null
+  },
+  "TRACKBALL roll right": {
+   "dev": "GGG Electric ICE-T Trackball",
+   "path": "/dev/input/event6",
+   "phys": "usb-xhci-hcd.0-1.4/input0",
+   "vid": "fafa:0020",
+   "kind": "rel",
+   "code": 1,
+   "direction": -1,
+   "name": null
+  },
+  "TRACKBALL button 1": null,
+  "TRACKBALL button 2": null
+ },
+ "problems": [
+  "TRACKBALL button 1: nothing was pressed",
+  "TRACKBALL button 2: nothing was pressed"
+ ]
+}

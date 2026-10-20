@@ -1,0 +1,22 @@
+{
+  "comment": "This game's controls, where they differ from the cabinet's defaults (pi/controls/panel.json). Read by tools/install_controls.py and pi/mame_human/pad_map.py; nothing here is known to the framework by name.",
+  "roms": [
+    "bzone",
+    "bzonea"
+  ],
+  "emulator": "mame-0.251",
+  "panel": {
+    "comment": "MAME 0.251 port -> the panel control that presses it: fire is the flight stick's trigger, on the P2 encoder.",
+    "P1_BUTTON1": [
+      "P2",
+      "FLIGHT1"
+    ]
+  },
+  "dip": {
+    "comment": "factory is 2 coins for 1 credit; a home cabinet wants 1 for 1",
+    "tag": ":DSW1",
+    "mask": 3,
+    "defvalue": 3,
+    "value": 2
+  }
+}

@@ -1,0 +1,86 @@
+{
+ "captured": "2026-10-17 18:22:59",
+ "controls": {
+  "FLIGHT button 1": {
+   "dev": "DragonRise Inc.   Generic   USB  Joystick",
+   "path": "/dev/input/event13",
+   "phys": "usb-xhci-hcd.0-1.3/input0",
+   "vid": "0079:0006",
+   "kind": "key",
+   "code": 299,
+   "direction": null,
+   "name": "BTN_BASE6"
+  },
+  "FLIGHT button 2": {
+   "dev": "DragonRise Inc.   Generic   USB  Joystick",
+   "path": "/dev/input/event13",
+   "phys": "usb-xhci-hcd.0-1.3/input0",
+   "vid": "0079:0006",
+   "kind": "key",
+   "code": 298,
+   "direction": null,
+   "name": "BTN_BASE5"
+  },
+  "SPINNER turn clockwise": {
+   "dev": "GGG TurboTwist 2 Spinner",
+   "path": "/dev/input/event4",
+   "phys": "usb-xhci-hcd.0-1.1/input0",
+   "vid": "fafa:0060",
+   "kind": "rel",
+   "code": 0,
+   "direction": 1,
+   "name": null
+  },
+  "SPINNER turn counter-clockwise": {
+   "dev": "GGG TurboTwist 2 Spinner",
+   "path": "/dev/input/event4",
+   "phys": "usb-xhci-hcd.0-1.1/input0",
+   "vid": "fafa:0060",
+   "kind": "rel",
+   "code": 0,
+   "direction": -1,
+   "name": null
+  },
+  "TRACKBALL roll up": {
+   "dev": "GGG Electric ICE-T Trackball",
+   "path": "/dev/input/event6",
+   "phys": "usb-xhci-hcd.0-1.4/input0",
+   "vid": "fafa:0020",
+   "kind": "rel",
+   "code": 0,
+   "direction": 1,
+   "name": null
+  },
+  "TRACKBALL roll down": {
+   "dev": "GGG Electric ICE-T Trackball",
+   "path": "/dev/input/event6",
+   "phys": "usb-xhci-hcd.0-1.4/input0",
+   "vid": "fafa:0020",
+   "kind": "rel",
+   "code": 0,
+   "direction": -1,
+   "name": null
+  },
+  "TRACKBALL roll left": {
+   "dev": "GGG Electric ICE-T Trackball",
+   "path": "/dev/input/event6",
+   "phys": "usb-xhci-hcd.0-1.4/input0",
+   "vid": "fafa:0020",
+   "kind": "rel",
+   "code": 1,
+   "direction": 1,
+   "name": null
+  },
+  "TRACKBALL roll right": {
+   "dev": "GGG Electric ICE-T Trackball",
+   "path": "/dev/input/event6",
+   "phys": "usb-xhci-hcd.0-1.4/input0",
+   "vid": "fafa:0020",
+   "kind": "rel",
+   "code": 1,
+   "direction": -1,
+   "name": null
+  }
+ },
+ "problems": []
+}
