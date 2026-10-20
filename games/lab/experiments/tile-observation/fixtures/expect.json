@@ -1,0 +1,50 @@
+{
+  "spec_id": "smb-tiles-v1",
+  "spec_digest": "4f888ce33c2b611ef16d39f9ba7d5661511800664cb4149ced9711a259902ae1",
+  "decoder": {
+    "x_bias": 12,
+    "y_bias": 16,
+    "enemy_x": "0x03AE",
+    "enemy_y": "0x03B9"
+  },
+  "width": 7,
+  "height": 10,
+  "ground_index": 8,
+  "samples": {
+    "title": {
+      "file": "title.bin",
+      "sha256": "745c70257008eab01711b4b40890eaaeb7bde0ddec4863e5f5dc05ddf2a12dcb",
+      "one_hot": 8
+    },
+    "approach": {
+      "file": "approach.bin",
+      "sha256": "de840a7ceef746e6bf8d732cd7a249e32672b16c6583f19e868a85f1804c2341",
+      "one_hot": 8,
+      "pipe_columns": []
+    },
+    "goomba": {
+      "file": "goomba.bin",
+      "sha256": "e25ea10a33988b9039dc9dae7434d6d67e443908882012b8988c833520fab612",
+      "one_hot": 8,
+      "enemy_index": 55,
+      "enemy_window_row": 7,
+      "enemy_col_offset": 6
+    },
+    "contact": {
+      "file": "contact.bin",
+      "sha256": "1570f9256149c883469cc97425ef36385a99aa449f75ada1765b095d5726f28d",
+      "one_hot": 8,
+      "pipe_min": 1
+    },
+    "on-pipe": {
+      "file": "on-pipe.bin",
+      "sha256": "44fce5a055a2d49c12d9d4a0c1f25920f4e6f9efd3970e73a79265803800089a",
+      "one_hot": 6
+    },
+    "past": {
+      "file": "past.bin",
+      "sha256": "26f048978d0c15136d6e4127c3b55ae3868e53689608ce804dfd56b89e9be0bf",
+      "one_hot": 8
+    }
+  }
+}
