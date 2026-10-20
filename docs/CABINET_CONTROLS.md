@@ -442,8 +442,9 @@ type has its own map there. Not yet done: AdvanceMAME and RetroArch player order
 
 ### RetroArch cores (lr-mame2003 and the rest) with a gamepad
 
-RetroArch cannot share a player between devices, so a gamepad that is plugged in plays Player 1 (a second one Player 2) and
-the panel's encoders follow; with no gamepad the panel is Players 1 and 2 (each encoder now with its own button map).
+RetroArch cannot share a player between devices, so the panel's encoders are Players 1 and 2 whenever they are plugged in and any
+gamepad follows as Player 3 (then 4), for four-player games; with no panel a gamepad is Player 1. (An earlier rule put a pad first;
+that left the panel's fire buttons, coin and exit dead whenever the pad was plugged in. MAME 0.251 lets a pad play beside the panel.)
 `pi/controls/runcommand-onstart.sh` (installed by `install_mame_human.py`) runs `pad_map.py --ra` before every RetroArch
 core: it writes a RetroArch layout for any gamepad that has none (Back = coin, Start = start, A/B/X/Y/LB/RB = buttons 1 to 6,
 Guide+Start exits, Guide+Back opens the menu; Guide is the hotkey so Back and Start are only coin and start) and writes explicit per-player binds to `/dev/shm/ai-arcade-pads.cfg`, which the global `retroarch.cfg` includes (runcommand rewrites its own per-launch options file after the hook runs, so appending there does not work). Explicit binds are

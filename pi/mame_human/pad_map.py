@@ -124,8 +124,8 @@ RA_PLAYERS = "/dev/shm/ai-arcade-pads.cfg"
 def retroarch_players(devices, panel):
     """RetroArch's player order: [(player number, joypad index, "P1"/"P2" for a panel encoder or None for a gamepad)].
     RetroArch counts every joypad (the AI pads too) in the order the kernel lists them. It cannot let two devices share
-    a player, so when a gamepad is plugged in it plays Player 1 (the next one Player 2) and the panel's encoders follow;
-    with no gamepad the panel is 1 and 2."""
+    a player, so the panel's encoders are Players 1 and 2 whenever they are plugged in, and gamepads follow (Players 3 and 4,
+    for four-player games); with no panel a gamepad is Player 1. (MAME 0.251 does let a gamepad play beside the panel.)"""
     panel_ids = (panel["device"]["vendor_id"].lower(), panel["device"]["product_id"].lower())
     ports = {panel["players"][p]["usb_port"]: p for p in ("P1", "P2")}
     pads, panels = [], []
@@ -137,7 +137,8 @@ def retroarch_players(devices, panel):
             panels.append((index, next((p for port, p in ports.items() if port in d.get("phys", "")), None)))
         else:
             pads.append((index, None))
-    return [(n, index, who) for n, (index, who) in enumerate(pads + panels, 1) if n <= 4]
+    panels.sort(key=lambda item: item[1] or "P9")  # P1's encoder first
+    return [(n, index, who) for n, (index, who) in enumerate(panels + pads, 1) if n <= 4]
 
 
 def apply_pad_overrides(binds, player, games, rom):

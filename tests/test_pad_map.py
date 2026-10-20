@@ -92,9 +92,9 @@ def test_only_pads_es_has_not_met_are_taught(tmp_path):
     assert pad_map.teach_es(devices, PANEL, es) == []  # nothing more to add the second time
 
 
-def test_retroarch_players_pad_first_then_the_panel_and_ai_pads_are_skipped():
+def test_retroarch_players_the_panel_is_one_and_two_then_the_pads_and_ai_pads_are_skipped():
     devices = pad_map.parse_devices("\n".join([P1, P2, F310, AI]))  # events 7, 9, 12, 13 -> P1, F310, P2, AI
-    assert pad_map.retroarch_players(devices, PANEL) == [(1, 1, None), (2, 0, "P1"), (3, 2, "P2")]
+    assert pad_map.retroarch_players(devices, PANEL) == [(1, 0, "P1"), (2, 2, "P2"), (3, 1, None)]
     assert pad_map.retroarch_players(pad_map.parse_devices("\n".join([P1, P2, AI])), PANEL) == [(1, 0, "P1"), (2, 1, "P2")]
 
 
@@ -159,3 +159,7 @@ def test_every_game_that_plays_with_the_spinner_or_trackball_says_so_in_its_own_
     assert {"missile", "centiped", "wacko", "marble"} <= {r for r, p in pointers.items() if p == "trackball"}
     assert {"tempest", "arkanoid", "sbrkout", "superbug"} <= {r for r, p in pointers.items() if p == "spinner"}
     assert set(pointers.values()) <= {"spinner", "trackball"}
+
+
+def test_retroarch_with_only_a_gamepad_it_is_player_one():
+    assert pad_map.retroarch_players(pad_map.parse_devices("\n".join([F310, AI])), PANEL) == [(1, 0, None)]
