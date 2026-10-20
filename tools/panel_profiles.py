@@ -92,26 +92,59 @@ def merge_es_input(existing, entry, device_name):
 
 # ---------------------------------------------------------------- RetroArch
 
-def retroarch_autoconfig(panel):
+def retroarch_autoconfig(panel, player="P1"):
     """The joypad autoconfig. RetroPad B, A, Y, X, L, R are the arcade BUTTON_1..6 (as mame2003 reads them); Select is
     Coin and Start is Start. Esc is the hotkey and the exit (alone, as on the keyboard), Tab with Esc held opens the menu."""
     d = panel["device"]
     names = {1: "b", 2: "a", 3: "y", 4: "x", 5: "l", 6: "r"}
-    first = actions(panel, "P1")
+    first = actions(panel, player)
     lines = [f'input_device = "{d["evdev_name"]}"', 'input_driver = "udev"',
              f'input_vendor_id = "{int(d["vendor_id"], 16)}"', f'input_product_id = "{int(d["product_id"], 16)}"', ""]
-    stick = panel["players"]["P1"]["stick"]
+    stick = panel["players"][player]["stick"]
     for direction in ("left", "right", "up", "down"):
         _, axis, sign = stick[direction]
         lines.append(f'input_{direction}_axis = "{"+" if sign > 0 else "-"}{axis}"')
     lines.append("")
     for n, retro in names.items():
         lines.append(f'input_{retro}_btn = "{first[n][0]}"')
-    lines += ["", f'input_select_btn = "{index(panel, "P1", "COIN")}"', f'input_start_btn = "{index(panel, "P1", "START")}"', "",
-              f'input_enable_hotkey_btn = "{index(panel, "P1", "ESC")}"',
-              f'input_exit_emulator_btn = "{index(panel, "P1", "ESC")}"',
-              f'input_menu_toggle_btn = "{index(panel, "P1", "TAB")}"', ""]
+    lines += ["", f'input_select_btn = "{index(panel, player, "COIN")}"', f'input_start_btn = "{index(panel, player, "START")}"', ""]
+    if player == "P1":  # Esc and Tab are on Player 1's encoder
+        lines += [f'input_enable_hotkey_btn = "{index(panel, "P1", "ESC")}"',
+                  f'input_exit_emulator_btn = "{index(panel, "P1", "ESC")}"',
+                  f'input_menu_toggle_btn = "{index(panel, "P1", "TAB")}"', ""]
     return "\n".join(lines)
+
+
+HOTKEY_BINDS = ("input_enable_hotkey_btn", "input_exit_emulator_btn", "input_menu_toggle_btn")
+
+
+def retroarch_player_binds(autoconfig, player_number):
+    """An autoconfig file's button, axis and D-pad lines as one player's explicit binds (input_player2_b_btn = ...),
+    for the RetroArch options file appended at launch. RetroArch gives explicit binds priority over its autoconfig,
+    and autoconfig alone ties a pad's buttons to the port it was found in, not the player it is meant to be.
+    Returns (that player's lines, the hotkey lines, which belong to the device that plays Player 1)."""
+    lines, hotkeys = [], []
+    for line in autoconfig.splitlines():
+        key, _, value = line.partition(" = ")
+        if key in HOTKEY_BINDS:
+            hotkeys.append(line)
+        elif key.startswith("input_") and key.endswith(("_btn", "_axis")):
+            lines.append(f"input_player{player_number}_{key[len('input_'):]} = {value}")
+    return lines, hotkeys
+
+
+def retroarch_gamepad_autoconfig(name, vendor, product):
+    """RetroArch's joypad autoconfig for an ordinary gamepad in the standard layout (as RetroArch's own Logitech F310
+    XInput file): RetroPad B, A, Y, X are the pad's A, B, X, Y; Back is Select (the arcade coin), Start is Start. The D-pad
+    or the left stick moves. Back held is the hotkey: Back+Start exits the game, the Guide button opens RetroArch's menu."""
+    return "\n".join([
+        f'input_device = "{name}"', 'input_driver = "udev"',
+        f'input_vendor_id = "{int(vendor, 16)}"', f'input_product_id = "{int(product, 16)}"', "",
+        'input_b_btn = "0"', 'input_a_btn = "1"', 'input_y_btn = "2"', 'input_x_btn = "3"',
+        'input_l_btn = "4"', 'input_r_btn = "5"', 'input_select_btn = "6"', 'input_start_btn = "7"',
+        'input_up_btn = "h0up"', 'input_down_btn = "h0down"', 'input_left_btn = "h0left"', 'input_right_btn = "h0right"',
+        'input_l_x_plus_axis = "+0"', 'input_l_x_minus_axis = "-0"', 'input_l_y_plus_axis = "+1"', 'input_l_y_minus_axis = "-1"',
+        'input_enable_hotkey_btn = "6"', 'input_exit_emulator_btn = "7"', 'input_menu_toggle_btn = "8"', ""])
 
 
 # ---------------------------------------------------------------- MAME 0.251

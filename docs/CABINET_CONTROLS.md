@@ -439,3 +439,13 @@ the AI started. Now each launch works it out:
 Gamepads are assumed to be in the standard layout (Logitech F310 in XInput mode: A B X Y LB RB = buttons 1 to 6, Back =
 coin, Start = start, stick or D-pad moves). EmulationStation and RetroArch already choose by device name, so each device
 type has its own map there. Not yet done: AdvanceMAME and RetroArch player order with a gamepad, and pads as Players 3 and 4.
+
+### RetroArch cores (lr-mame2003 and the rest) with a gamepad
+
+RetroArch cannot share a player between devices, so a gamepad that is plugged in plays Player 1 (a second one Player 2) and
+the panel's encoders follow; with no gamepad the panel is Players 1 and 2 (each encoder now with its own button map).
+`pi/controls/runcommand-onstart.sh` (installed by `install_mame_human.py`) runs `pad_map.py --ra` before every RetroArch
+core: it writes a RetroArch layout for any gamepad that has none (Back = coin, Start = start, A/B/X/Y/LB/RB = buttons 1 to 6,
+Back+Start exits, Guide opens the menu) and appends explicit per-player binds to `/dev/shm/retroarch.cfg`. Explicit binds are
+needed because RetroArch's autoconfig ties a pad's buttons to the port it was found in (the pad was found in port 3), not
+the player it is meant to be. To play the cabinet's panel as Player 1 in RetroArch, unplug the gamepad.

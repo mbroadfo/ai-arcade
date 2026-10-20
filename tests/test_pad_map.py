@@ -90,3 +90,26 @@ def test_only_pads_es_has_not_met_are_taught(tmp_path):
     assert text.count('deviceName="Logitech Gamepad F310"') == 1 and 'type="hat"' in text
     assert "AI Arcade" not in text and "DragonRise" not in text  # panel and AI pads have their own entries
     assert pad_map.teach_es(devices, PANEL, es) == []  # nothing more to add the second time
+
+
+def test_retroarch_players_pad_first_then_the_panel_and_ai_pads_are_skipped():
+    devices = pad_map.parse_devices("\n".join([P1, P2, F310, AI]))  # events 7, 9, 12, 13 -> P1, F310, P2, AI
+    assert pad_map.retroarch_players(devices, PANEL) == [(1, 1, None), (2, 0, "P1"), (3, 2, "P2")]
+    assert pad_map.retroarch_players(pad_map.parse_devices("\n".join([P1, P2, AI])), PANEL) == [(1, 0, "P1"), (2, 1, "P2")]
+
+
+def test_retroarch_explicit_binds_follow_the_player_not_the_port():
+    pad, hotkeys = pp.retroarch_player_binds(pp.retroarch_gamepad_autoconfig("F310", "046d", "c21d"), 1)
+    assert "input_player1_select_btn = \"6\"" in pad and "input_player1_up_btn = \"h0up\"" in pad
+    assert not any(l.startswith(("input_device", "input_driver", "input_vendor")) for l in pad)
+    assert 'input_exit_emulator_btn = "7"' in hotkeys
+    p2, no_hotkeys = pp.retroarch_player_binds(pp.retroarch_autoconfig(PANEL, "P2"), 2)
+    assert "input_player2_b_btn" in " ".join(p2) and no_hotkeys == []
+
+
+def test_retroarch_autoconfig_is_written_once_for_unknown_pads(tmp_path):
+    devices = pad_map.parse_devices("\n".join([P1, F310, AI]))
+    assert pad_map.teach_retroarch(devices, PANEL, tmp_path) == ["Logitech Gamepad F310"]
+    text = (tmp_path / "Logitech Gamepad F310.cfg").read_text(encoding="utf-8")
+    assert 'input_select_btn = "6"' in text and 'input_vendor_id = "1133"' in text and "h0up" in text
+    assert pad_map.teach_retroarch(devices, PANEL, tmp_path) == []

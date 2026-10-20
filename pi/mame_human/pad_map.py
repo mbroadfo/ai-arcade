@@ -105,10 +105,61 @@ def teach_es(devices, panel, path=ES_INPUT):
     return added
 
 
+RA_JOYPADS = "/opt/retropie/configs/all/retroarch-joypads"
+RA_APPEND = "/dev/shm/retroarch.cfg"  # runcommand's per-launch RetroArch options, appended last
+
+
+def retroarch_players(devices, panel):
+    """RetroArch's player order: [(player number, joypad index, "P1"/"P2" for a panel encoder or None for a gamepad)].
+    RetroArch counts every joypad (the AI pads too) in the order the kernel lists them. It cannot let two devices share
+    a player, so when a gamepad is plugged in it plays Player 1 (the next one Player 2) and the panel's encoders follow;
+    with no gamepad the panel is 1 and 2."""
+    panel_ids = (panel["device"]["vendor_id"].lower(), panel["device"]["product_id"].lower())
+    ports = {panel["players"][p]["usb_port"]: p for p in ("P1", "P2")}
+    pads, panels = [], []
+    for index, d in enumerate(devices):
+        ids = (d.get("vendor"), d.get("product"))
+        if ids in AI_PADS:
+            continue
+        if ids == panel_ids:
+            panels.append((index, next((p for port, p in ports.items() if port in d.get("phys", "")), None)))
+        else:
+            pads.append((index, None))
+    return [(n, index, who) for n, (index, who) in enumerate(pads + panels, 1) if n <= 4]
+
+
+def teach_retroarch(devices, panel, joypads=RA_JOYPADS):
+    """Write RetroArch's autoconfig for each gamepad that has none. Returns the names added."""
+    import panel_profiles as pp
+    panel_ids = (panel["device"]["vendor_id"].lower(), panel["device"]["product_id"].lower())
+    added = []
+    for d in devices:
+        ids = (d.get("vendor"), d.get("product"))
+        path = Path(joypads, d["name"] + ".cfg")
+        if ids in AI_PADS or ids == panel_ids or path.exists():
+            continue
+        path.write_text(pp.retroarch_gamepad_autoconfig(d["name"], *ids), encoding="utf-8")
+        added.append(d["name"])
+    return added
+
+
 def main(argv):
     import panel_profiles as pp
     panel = pp.load_panel(HERE / "panel.json")
     devices = parse_devices(Path("/proc/bus/input/devices").read_text(errors="replace"))
+    if "--ra" in argv:  # runcommand-onstart: before a RetroArch core starts
+        teach_retroarch(devices, panel)
+        if Path(RA_APPEND).exists():
+            lines = []
+            for n, index, who in retroarch_players(devices, panel):
+                d = devices[index]
+                text = (pp.retroarch_autoconfig(panel, who) if who else
+                        pp.retroarch_gamepad_autoconfig(d["name"], d["vendor"], d["product"]))
+                binds, hotkeys = pp.retroarch_player_binds(text, n)
+                lines += [f'input_player{n}_joypad_index = "{index}"'] + binds + (hotkeys if n == 1 else [])
+            with open(RA_APPEND, "a", encoding="utf-8") as f:
+                f.write("\n".join(lines) + "\n")
+        return 0
     if "--es" in argv:  # before EmulationStation starts: give every gamepad it has not met a map
         print("; ".join(teach_es(devices, panel)) or "nothing to add")
         return 0
