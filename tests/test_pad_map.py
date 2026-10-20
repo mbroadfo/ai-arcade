@@ -185,3 +185,24 @@ def test_the_arcade_cores_read_buttons_1_to_6_from_retropad_b_y_x_a_l_r_and_cons
     panel_b = str(pp.index(PANEL, "P1", "B"))
     assert button(arcade, "y") == panel_b and button(arcade, "a") == str(pp.index(PANEL, "P1", "Y"))  # button 2 is RetroPad Y
     assert button(console, "a") == panel_b and button(console, "y") == str(pp.index(PANEL, "P1", "X"))  # consoles as before
+
+
+def test_mame_numbers_joysticks_by_event_number_but_retroarch_by_device_path(tmp_path, monkeypatch):
+    """On the Pi the pad (event 7) is MAME's Joy 1 and the encoders (events 8, 9) are Joy 2 and 3, while RetroArch lists the
+    encoders first. The fixtures have no /sys, so make the udev order differ explicitly."""
+    pad = block("046d", "c21d", "Logitech Gamepad F310", "usb-xhci-hcd.1-2/input0", 7)
+    e1 = block("0079", "0006", "DragonRise", "usb-xhci-hcd.0-1.2/input0", 8)
+    e2 = block("0079", "0006", "DragonRise", "usb-xhci-hcd.0-1.3/input0", 9)
+    paths = {7: "/sys/b/event7", 8: "/sys/a/event8", 9: "/sys/a/event9"}
+    monkeypatch.setattr(pad_map.os.path, "exists", lambda p: True)
+    monkeypatch.setattr(pad_map.os.path, "realpath", lambda p: paths[int(p.rsplit("event", 1)[1])])
+    devices = pad_map.parse_devices("\n".join([pad, e1, e2]))  # udev order: encoders, then the pad
+    assert [d["event"] for d in devices] == [8, 9, 7]
+    found = pad_map.assign(pad_map.sdl_order(devices), PANEL)  # SDL's order: pad first
+    assert (found["joy1"], found["joy2"], found["pads"]) == (2, 3, {"P1": 1})
+    assert [(n, i, w) for n, i, w in pad_map.retroarch_players(devices, PANEL)] == [(1, 0, "P1"), (2, 1, "P2"), (3, 2, None)]
+
+
+def test_the_pads_dpad_uses_mames_hat_names():
+    t = pp.pad_terms(3)
+    assert t["UP"] == "JOYCODE_3_YAXIS_UP_SWITCH OR JOYCODE_3_HAT1UP" and "HSWITCH" not in str(t)

@@ -28,11 +28,17 @@ CTRLR_NAME = "auto"
 
 
 def order_key(d):
-    """Where udev lists a joystick, which is the order RetroArch and SDL (so MAME) number them in: by the device's path
-    in /sys, not by its event number (a pad on the other USB bus comes after both panel encoders whatever its event
-    number, and the AI pads, which are virtual, come last). Where /sys is not there (tests), by event number."""
+    """Where udev lists a joystick, which is the order RetroArch numbers them in: by the device's path in /sys, not by its
+    event number (a pad on the other USB bus comes after both panel encoders whatever its event number, and the AI pads,
+    which are virtual, come last). Where /sys is not there (tests), by event number. SDL, and so MAME, numbers them by event
+    number instead (see sdl_order): MAME on this Pi listed the Logitech pad first, RetroArch listed it third."""
     path = f"/sys/class/input/event{d['event']}"
     return (0, os.path.realpath(path)) if os.path.exists(path) else (1, f"{d['event']:08d}")
+
+
+def sdl_order(devices):
+    """The joysticks in the order SDL, and so MAME, numbers them: by event device number (seen with MAME's own device list)."""
+    return sorted(devices, key=lambda d: d["event"])
 
 
 def parse_devices(text, kind=r"js\d+"):
@@ -222,7 +228,7 @@ def main(argv):
     if "--es" in argv:  # before EmulationStation starts: give every gamepad it has not met a map
         print("; ".join(teach_es(devices, panel)) or "nothing to add")
         return 0
-    found = assign(devices, panel)
+    found = assign(sdl_order(devices), panel)  # MAME takes SDL's order; RetroArch (--ra above) takes udev's
     if "--show" in argv:
         print(json.dumps(found, indent=1))
         return 0

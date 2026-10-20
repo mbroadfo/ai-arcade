@@ -182,7 +182,7 @@ def pad_terms(pad):
     or the D-pad moves; A, B, X, Y, LB, RB are buttons 1 to 6; Back is coin and Start is start."""
     out = {}
     for direction, axis in (("UP", "YAXIS_UP"), ("DOWN", "YAXIS_DOWN"), ("LEFT", "XAXIS_LEFT"), ("RIGHT", "XAXIS_RIGHT")):
-        out[direction] = f"JOYCODE_{pad}_{axis}_SWITCH OR JOYCODE_{pad}_HSWITCH_{direction}"
+        out[direction] = f"JOYCODE_{pad}_{axis}_SWITCH OR JOYCODE_{pad}_HAT1{direction}"
     for n in range(1, 7):
         out[f"BUTTON{n}"] = f"JOYCODE_{pad}_BUTTON{n}"
     out["COIN"] = f"JOYCODE_{pad}_BUTTON7"

@@ -488,3 +488,12 @@ up = Y negative, down = Y positive, left = X negative, right = X positive. No so
 
 Not done: sensitivity tuning with the real spinner (a spinner game may feel too fast or slow; MAME and RetroArch each have a
 sensitivity setting), second trackball or spinner for two-player games, pedals, light guns, Sea Wolf's periscope.
+
+### Joystick numbers differ between MAME and RetroArch (20 October 2026)
+
+With the Logitech pad plugged in, MAME (SDL) numbered the joysticks by device number (pad = Joy 1, the encoders Joy 2 and 3),
+while RetroArch (udev) numbered them by device path (encoders first, pad third). `pad_map.py` had used the udev order for both,
+so MAME's panel coin and start (Tron) went to the wrong joystick. MAME now uses SDL's order (checked against MAME's own
+joystick list), RetroArch keeps udev's. The pad's D-pad names for MAME were also wrong (`HSWITCH`; MAME's are `HAT1UP` etc.).
+Known and not fixed: MAME's default dial and paddle ports for a second player read "Joy 2 A1", which is now the first
+encoder's stick; it matters only in two-player dial games.
