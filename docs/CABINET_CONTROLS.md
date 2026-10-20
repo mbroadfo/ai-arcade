@@ -446,6 +446,6 @@ RetroArch cannot share a player between devices, so a gamepad that is plugged in
 the panel's encoders follow; with no gamepad the panel is Players 1 and 2 (each encoder now with its own button map).
 `pi/controls/runcommand-onstart.sh` (installed by `install_mame_human.py`) runs `pad_map.py --ra` before every RetroArch
 core: it writes a RetroArch layout for any gamepad that has none (Back = coin, Start = start, A/B/X/Y/LB/RB = buttons 1 to 6,
-Back+Start exits, Guide opens the menu) and appends explicit per-player binds to `/dev/shm/retroarch.cfg`. Explicit binds are
+Guide+Start exits, Guide+Back opens the menu; Guide is the hotkey so Back and Start are only coin and start) and appends explicit per-player binds to `/dev/shm/retroarch.cfg`. Explicit binds are
 needed because RetroArch's autoconfig ties a pad's buttons to the port it was found in (the pad was found in port 3), not
 the player it is meant to be. To play the cabinet's panel as Player 1 in RetroArch, unplug the gamepad.

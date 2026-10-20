@@ -136,7 +136,7 @@ def retroarch_player_binds(autoconfig, player_number):
 def retroarch_gamepad_autoconfig(name, vendor, product):
     """RetroArch's joypad autoconfig for an ordinary gamepad in the standard layout (as RetroArch's own Logitech F310
     XInput file): RetroPad B, A, Y, X are the pad's A, B, X, Y; Back is Select (the arcade coin), Start is Start. The D-pad
-    or the left stick moves. Back held is the hotkey: Back+Start exits the game, the Guide button opens RetroArch's menu."""
+    or the left stick moves. The Guide button is the hotkey (Back and Start stay coin and start): Guide+Start exits the game, Guide+Back opens RetroArch's menu."""
     return "\n".join([
         f'input_device = "{name}"', 'input_driver = "udev"',
         f'input_vendor_id = "{int(vendor, 16)}"', f'input_product_id = "{int(product, 16)}"', "",
@@ -144,7 +144,7 @@ def retroarch_gamepad_autoconfig(name, vendor, product):
         'input_l_btn = "4"', 'input_r_btn = "5"', 'input_select_btn = "6"', 'input_start_btn = "7"',
         'input_up_btn = "h0up"', 'input_down_btn = "h0down"', 'input_left_btn = "h0left"', 'input_right_btn = "h0right"',
         'input_l_x_plus_axis = "+0"', 'input_l_x_minus_axis = "-0"', 'input_l_y_plus_axis = "+1"', 'input_l_y_minus_axis = "-1"',
-        'input_enable_hotkey_btn = "6"', 'input_exit_emulator_btn = "7"', 'input_menu_toggle_btn = "8"', ""])
+        'input_enable_hotkey_btn = "8"', 'input_exit_emulator_btn = "7"', 'input_menu_toggle_btn = "6"', ""])
 
 
 # ---------------------------------------------------------------- MAME 0.251
