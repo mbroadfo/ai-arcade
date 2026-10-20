@@ -8,7 +8,8 @@ controller file for exactly that. Whatever is plugged in works; whatever is miss
   - the keyboard always works (MAME's own keys, in every sequence);
   - the AI Arcade pads are hidden from the game, so they can never take a joystick number.
 
-Joystick numbers are the order SDL (and so MAME) lists the joysticks: by event device number, AI pads left out.
+Joystick numbers are the order udev lists the joysticks, which SDL (so MAME) and RetroArch use: by the device's path in /sys
+(see order_key), AI pads left out for MAME.
 Output (for `eval`): environment for the launch and the ctrlr options. Standalone: `pad_map.py --show` says what it found.
 
 Pure functions up top; nothing here decides anything about a game.
@@ -26,8 +27,16 @@ CTRLR_DIR = "/tmp/ai-arcade-ctrlr"
 CTRLR_NAME = "auto"
 
 
+def order_key(d):
+    """Where udev lists a joystick, which is the order RetroArch and SDL (so MAME) number them in: by the device's path
+    in /sys, not by its event number (a pad on the other USB bus comes after both panel encoders whatever its event
+    number, and the AI pads, which are virtual, come last). Where /sys is not there (tests), by event number."""
+    path = f"/sys/class/input/event{d['event']}"
+    return (0, os.path.realpath(path)) if os.path.exists(path) else (1, f"{d['event']:08d}")
+
+
 def parse_devices(text):
-    """/proc/bus/input/devices -> [{name, vendor, product, phys, event}] for every joystick, in event order."""
+    """/proc/bus/input/devices -> [{name, vendor, product, phys, event}] for every joystick, in udev's order."""
     out = []
     for block in text.strip().split("\n\n"):
         info = {}
@@ -47,7 +56,7 @@ def parse_devices(text):
                     info["event"] = ev[0] if ev else None
         if "event" in info and info["event"] is not None:
             out.append(info)
-    return sorted(out, key=lambda d: d["event"])
+    return sorted(out, key=order_key)
 
 
 def assign(devices, panel):
