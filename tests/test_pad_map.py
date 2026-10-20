@@ -101,6 +101,7 @@ def test_retroarch_players_pad_first_then_the_panel_and_ai_pads_are_skipped():
 def test_retroarch_explicit_binds_follow_the_player_not_the_port():
     pad, hotkeys = pp.retroarch_player_binds(pp.retroarch_gamepad_autoconfig("F310", "046d", "c21d"), 1)
     assert "input_player1_select_btn = \"6\"" in pad and "input_player1_up_btn = \"h0up\"" in pad
+    assert 'input_player1_left_axis = "-0"' in pad and 'input_player1_down_axis = "+1"' in pad  # the stick moves too
     assert not any(l.startswith(("input_device", "input_driver", "input_vendor")) for l in pad)
     assert 'input_enable_hotkey_btn = "8"' in hotkeys and 'input_exit_emulator_btn = "7"' in hotkeys
     p2, no_hotkeys = pp.retroarch_player_binds(pp.retroarch_autoconfig(PANEL, "P2"), 2)
