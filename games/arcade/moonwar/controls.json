@@ -3,5 +3,6 @@
   "roms": [
     "moonwar"
   ],
-  "pointer": "spinner"
+  "pointer": "spinner",
+  "play": "turns"
 }

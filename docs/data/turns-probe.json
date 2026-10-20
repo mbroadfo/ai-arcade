@@ -1,0 +1,1155 @@
+{
+ "comment": "MAME 0.251's own answer, per game that runs in it (tools/mame_turns_probe.lua, 20 October 2026): how many of Player 2's controls are cocktail-only. play: single (one player), turns (Player 2's controls are cocktail-only: the players take turns on one set), simultaneous (Player 2 has controls of its own).",
+ "games": {
+  "amidar": {
+   "set": "amidar1",
+   "p2_fields": 5,
+   "p2_cocktail": 5,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "anteater": {
+   "set": "anteater",
+   "p2_fields": 0,
+   "p2_cocktail": 0,
+   "p2_real": 0,
+   "cabinet_dip": false,
+   "p3_fields": 0,
+   "players": 1,
+   "play": "single"
+  },
+  "armorcar": {
+   "set": "armorcar",
+   "p2_fields": 6,
+   "p2_cocktail": 6,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "astinvad": {
+   "set": "astinvad",
+   "p2_fields": 3,
+   "p2_cocktail": 3,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "astrof": {
+   "set": "astrof",
+   "p2_fields": 3,
+   "p2_cocktail": 3,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "atlantis": {
+   "set": "atlantis",
+   "p2_fields": 6,
+   "p2_cocktail": 6,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "bagman": {
+   "set": "bagman",
+   "p2_fields": 5,
+   "p2_cocktail": 5,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "bking": {
+   "set": "bking",
+   "p2_fields": 2,
+   "p2_cocktail": 2,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "blockade": {
+   "set": "blockade",
+   "p2_fields": 4,
+   "p2_cocktail": 0,
+   "p2_real": 4,
+   "cabinet_dip": false,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "simultaneous"
+  },
+  "blstroid": {
+   "set": "blstroid",
+   "p2_fields": 5,
+   "p2_cocktail": 0,
+   "p2_real": 5,
+   "cabinet_dip": false,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "simultaneous"
+  },
+  "blueprnt": {
+   "set": "blueprnt",
+   "p2_fields": 5,
+   "p2_cocktail": 5,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "bnj": {
+   "set": "bnjm",
+   "p2_fields": 5,
+   "p2_cocktail": 5,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "bombjack": {
+   "set": "bombjack",
+   "p2_fields": 5,
+   "p2_cocktail": 5,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "boothill": {
+   "set": "boothill",
+   "p2_fields": 5,
+   "p2_cocktail": 0,
+   "p2_real": 5,
+   "cabinet_dip": false,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "simultaneous"
+  },
+  "brubber": {
+   "set": "brubber",
+   "p2_fields": 5,
+   "p2_cocktail": 5,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "btime": {
+   "set": "btime",
+   "p2_fields": 5,
+   "p2_cocktail": 5,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "canyon": {
+   "set": "canyon",
+   "p2_fields": 1,
+   "p2_cocktail": 0,
+   "p2_real": 1,
+   "cabinet_dip": false,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "simultaneous"
+  },
+  "carnival": {
+   "set": "carnival",
+   "p2_fields": 0,
+   "p2_cocktail": 0,
+   "p2_real": 0,
+   "cabinet_dip": false,
+   "p3_fields": 0,
+   "players": 1,
+   "play": "single"
+  },
+  "cavenger": {
+   "set": "cavenger",
+   "p2_fields": 6,
+   "p2_cocktail": 6,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "cclimber": {
+   "set": "cclimber",
+   "p2_fields": 8,
+   "p2_cocktail": 8,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "congo": {
+   "set": "congo",
+   "p2_fields": 5,
+   "p2_cocktail": 5,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "cosmicg": {
+   "set": "cosmicg",
+   "p2_fields": 3,
+   "p2_cocktail": 3,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "crush": {
+   "set": "crush",
+   "p2_fields": 4,
+   "p2_cocktail": 4,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "depthch": {
+   "set": "depthch",
+   "p2_fields": 0,
+   "p2_cocktail": 0,
+   "p2_real": 0,
+   "cabinet_dip": false,
+   "p3_fields": 0,
+   "players": 1,
+   "play": "single"
+  },
+  "digdug2": {
+   "set": "digdug2",
+   "p2_fields": 6,
+   "p2_cocktail": 6,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "digger": {
+   "set": "digger",
+   "p2_fields": 0,
+   "p2_cocktail": 0,
+   "p2_real": 0,
+   "cabinet_dip": false,
+   "p3_fields": 0,
+   "players": 1,
+   "play": "single"
+  },
+  "docastle": {
+   "set": "docastle",
+   "p2_fields": 6,
+   "p2_cocktail": 6,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "dodgem": {
+   "set": "dodgem",
+   "p2_fields": 0,
+   "p2_cocktail": 0,
+   "p2_real": 0,
+   "cabinet_dip": false,
+   "p3_fields": 0,
+   "players": 1,
+   "play": "single"
+  },
+  "dorunrun": {
+   "set": "dorunrun",
+   "p2_fields": 6,
+   "p2_cocktail": 6,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "dotron": {
+   "set": "dotrona",
+   "p2_fields": 0,
+   "p2_cocktail": 0,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 1,
+   "play": "single"
+  },
+  "dowild": {
+   "set": "dowild",
+   "p2_fields": 6,
+   "p2_cocktail": 6,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "exterm": {
+   "set": "exterm",
+   "p2_fields": 7,
+   "p2_cocktail": 0,
+   "p2_real": 7,
+   "cabinet_dip": false,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "simultaneous"
+  },
+  "fnkyfish": {
+   "set": "fnkyfish",
+   "p2_fields": 5,
+   "p2_cocktail": 5,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "frogger": {
+   "set": "frogger",
+   "p2_fields": 4,
+   "p2_cocktail": 4,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "gridlee": {
+   "set": "gridlee",
+   "p2_fields": 3,
+   "p2_cocktail": 3,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "gunfight": {
+   "set": "gunfight",
+   "p2_fields": 5,
+   "p2_cocktail": 0,
+   "p2_real": 5,
+   "cabinet_dip": false,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "simultaneous"
+  },
+  "gyruss": {
+   "set": "gyruss",
+   "p2_fields": 5,
+   "p2_cocktail": 5,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "headon": {
+   "set": "headon",
+   "p2_fields": 0,
+   "p2_cocktail": 0,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 1,
+   "play": "single"
+  },
+  "hustler": {
+   "set": "hustler",
+   "p2_fields": 5,
+   "p2_cocktail": 5,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "insector": {
+   "set": "insector",
+   "p2_fields": 6,
+   "p2_cocktail": 6,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "invad2ct": {
+   "set": "invad2ct",
+   "p2_fields": 3,
+   "p2_cocktail": 0,
+   "p2_real": 3,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "simultaneous"
+  },
+  "invaders": {
+   "set": "invaders",
+   "p2_fields": 3,
+   "p2_cocktail": 0,
+   "p2_real": 3,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "simultaneous"
+  },
+  "invadpt2": {
+   "set": "invadpt2",
+   "p2_fields": 3,
+   "p2_cocktail": 0,
+   "p2_real": 3,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "simultaneous"
+  },
+  "invinco": {
+   "set": "invinco",
+   "p2_fields": 0,
+   "p2_cocktail": 0,
+   "p2_real": 0,
+   "cabinet_dip": false,
+   "p3_fields": 0,
+   "players": 1,
+   "play": "single"
+  },
+  "irobot": {
+   "set": "irobot",
+   "p2_fields": 0,
+   "p2_cocktail": 0,
+   "p2_real": 0,
+   "cabinet_dip": false,
+   "p3_fields": 0,
+   "players": 1,
+   "play": "single"
+  },
+  "jack": {
+   "set": "jack",
+   "p2_fields": 6,
+   "p2_cocktail": 6,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "jedi": {
+   "set": "jedi",
+   "p2_fields": 0,
+   "p2_cocktail": 0,
+   "p2_real": 0,
+   "cabinet_dip": false,
+   "p3_fields": 0,
+   "players": 1,
+   "play": "single"
+  },
+  "journey": {
+   "set": "journey",
+   "p2_fields": 5,
+   "p2_cocktail": 5,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "jrpacman": {
+   "set": "jrpacman",
+   "p2_fields": 4,
+   "p2_cocktail": 4,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "jumpbug": {
+   "set": "jumpbug",
+   "p2_fields": 5,
+   "p2_cocktail": 5,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "jumpcoas": {
+   "set": "jumpcoasa",
+   "p2_fields": 5,
+   "p2_cocktail": 5,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "junglek": {
+   "set": "junglek",
+   "p2_fields": 5,
+   "p2_cocktail": 5,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "jungler": {
+   "set": "jungler",
+   "p2_fields": 5,
+   "p2_cocktail": 5,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "kangaroo": {
+   "set": "kangaroo",
+   "p2_fields": 5,
+   "p2_cocktail": 5,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "ladybug": {
+   "set": "ladybug",
+   "p2_fields": 4,
+   "p2_cocktail": 4,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "lazercmd": {
+   "set": "lazercmd",
+   "p2_fields": 6,
+   "p2_cocktail": 0,
+   "p2_real": 6,
+   "cabinet_dip": false,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "simultaneous"
+  },
+  "lnc": {
+   "set": "lnc",
+   "p2_fields": 5,
+   "p2_cocktail": 5,
+   "p2_real": 0,
+   "cabinet_dip": false,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "lrescue": {
+   "set": "lrescue",
+   "p2_fields": 3,
+   "p2_cocktail": 0,
+   "p2_real": 3,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "simultaneous"
+  },
+  "mappy": {
+   "set": "mappy",
+   "p2_fields": 3,
+   "p2_cocktail": 3,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "minefld": {
+   "set": "minefld",
+   "p2_fields": 0,
+   "p2_cocktail": 0,
+   "p2_real": 0,
+   "cabinet_dip": false,
+   "p3_fields": 0,
+   "players": 1,
+   "play": "single"
+  },
+  "mineswpr": {
+   "set": "mineswpr",
+   "p2_fields": 4,
+   "p2_cocktail": 0,
+   "p2_real": 4,
+   "cabinet_dip": false,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "simultaneous"
+  },
+  "monsterb": {
+   "set": "monsterb",
+   "p2_fields": 5,
+   "p2_cocktail": 5,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "moonwar": {
+   "set": "moonwar",
+   "p2_fields": 4,
+   "p2_cocktail": 4,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "mplanets": {
+   "set": "mplanets",
+   "p2_fields": 0,
+   "p2_cocktail": 0,
+   "p2_real": 0,
+   "cabinet_dip": false,
+   "p3_fields": 0,
+   "players": 1,
+   "play": "single"
+  },
+  "mshuttle": {
+   "set": "mshuttle",
+   "p2_fields": 4,
+   "p2_cocktail": 4,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "mspacman": {
+   "set": "mspacman",
+   "p2_fields": 4,
+   "p2_cocktail": 4,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "natodef": {
+   "set": "natodef",
+   "p2_fields": 5,
+   "p2_cocktail": 5,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "nitedrvr": {
+   "set": "nitedrvr",
+   "p2_fields": 0,
+   "p2_cocktail": 0,
+   "p2_real": 0,
+   "cabinet_dip": false,
+   "p3_fields": 0,
+   "players": 1,
+   "play": "single"
+  },
+  "nyny": {
+   "set": "nyny",
+   "p2_fields": 3,
+   "p2_cocktail": 3,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "pacman": {
+   "set": "pacman",
+   "p2_fields": 4,
+   "p2_cocktail": 4,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "pacplus": {
+   "set": "pacplus",
+   "p2_fields": 4,
+   "p2_cocktail": 4,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "panic": {
+   "set": "panic",
+   "p2_fields": 6,
+   "p2_cocktail": 6,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "pengo": {
+   "set": "pengo",
+   "p2_fields": 5,
+   "p2_cocktail": 5,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "phoenix": {
+   "set": "phoenix",
+   "p2_fields": 4,
+   "p2_cocktail": 4,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "pitfall2": {
+   "set": "pitfall2",
+   "p2_fields": 6,
+   "p2_cocktail": 6,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "pleiads": {
+   "set": "pleiads",
+   "p2_fields": 3,
+   "p2_cocktail": 3,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "polaris": {
+   "set": "polarisb",
+   "p2_fields": 5,
+   "p2_cocktail": 0,
+   "p2_real": 5,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "simultaneous"
+  },
+  "pooyan": {
+   "set": "pooyan",
+   "p2_fields": 3,
+   "p2_cocktail": 3,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "popeye": {
+   "set": "popeye",
+   "p2_fields": 5,
+   "p2_cocktail": 5,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "puckman": {
+   "set": "puckmanb",
+   "p2_fields": 4,
+   "p2_cocktail": 4,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "pulsar": {
+   "set": "pulsar",
+   "p2_fields": 0,
+   "p2_cocktail": 0,
+   "p2_real": 0,
+   "cabinet_dip": false,
+   "p3_fields": 0,
+   "players": 1,
+   "play": "single"
+  },
+  "qix": {
+   "set": "qix",
+   "p2_fields": 6,
+   "p2_cocktail": 6,
+   "p2_real": 0,
+   "cabinet_dip": false,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "r2dtank": {
+   "set": "r2dtank",
+   "p2_fields": 5,
+   "p2_cocktail": 5,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "radarscp": {
+   "set": "radarscpc",
+   "p2_fields": 3,
+   "p2_cocktail": 3,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "redalert": {
+   "set": "redalert",
+   "p2_fields": 3,
+   "p2_cocktail": 3,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "sbrkout": {
+   "set": "sbrkout",
+   "p2_fields": 0,
+   "p2_cocktail": 0,
+   "p2_real": 0,
+   "cabinet_dip": false,
+   "p3_fields": 0,
+   "players": 1,
+   "play": "single"
+  },
+  "scobra": {
+   "set": "scobra",
+   "p2_fields": 6,
+   "p2_cocktail": 6,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "scramble": {
+   "set": "scramble",
+   "p2_fields": 6,
+   "p2_cocktail": 6,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "seawolf2": {
+   "set": "seawolf2",
+   "p2_fields": 1,
+   "p2_cocktail": 0,
+   "p2_real": 1,
+   "cabinet_dip": false,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "simultaneous"
+  },
+  "seawolf": {
+   "set": "seawolf",
+   "p2_fields": 0,
+   "p2_cocktail": 0,
+   "p2_real": 0,
+   "cabinet_dip": false,
+   "p3_fields": 0,
+   "players": 1,
+   "play": "single"
+  },
+  "sharkatt": {
+   "set": "sharkatt",
+   "p2_fields": 6,
+   "p2_cocktail": 6,
+   "p2_real": 0,
+   "cabinet_dip": false,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "shollow": {
+   "set": "shollow",
+   "p2_fields": 4,
+   "p2_cocktail": 4,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "skyraid": {
+   "set": "skyraid",
+   "p2_fields": 0,
+   "p2_cocktail": 0,
+   "p2_real": 0,
+   "cabinet_dip": false,
+   "p3_fields": 0,
+   "players": 1,
+   "play": "single"
+  },
+  "snapjack": {
+   "set": "snapjack",
+   "p2_fields": 4,
+   "p2_cocktail": 4,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "solarfox": {
+   "set": "solarfox",
+   "p2_fields": 6,
+   "p2_cocktail": 6,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "spacecr": {
+   "set": "spacecr",
+   "p2_fields": 4,
+   "p2_cocktail": 4,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "spacefb": {
+   "set": "spacefbe2",
+   "p2_fields": 4,
+   "p2_cocktail": 4,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "starforc": {
+   "set": "starforc",
+   "p2_fields": 5,
+   "p2_cocktail": 5,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "starjack": {
+   "set": "starjack",
+   "p2_fields": 6,
+   "p2_cocktail": 6,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "starshp1": {
+   "set": "starshp1",
+   "p2_fields": 0,
+   "p2_cocktail": 0,
+   "p2_real": 0,
+   "cabinet_dip": false,
+   "p3_fields": 0,
+   "players": 1,
+   "play": "single"
+  },
+  "subroc3d": {
+   "set": "subroc3d",
+   "p2_fields": 0,
+   "p2_cocktail": 0,
+   "p2_real": 0,
+   "cabinet_dip": false,
+   "p3_fields": 0,
+   "players": 1,
+   "play": "single"
+  },
+  "subs": {
+   "set": "subs",
+   "p2_fields": 2,
+   "p2_cocktail": 0,
+   "p2_real": 2,
+   "cabinet_dip": false,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "simultaneous"
+  },
+  "superbug": {
+   "set": "superbug",
+   "p2_fields": 0,
+   "p2_cocktail": 0,
+   "p2_real": 0,
+   "cabinet_dip": false,
+   "p3_fields": 0,
+   "players": 1,
+   "play": "single"
+  },
+  "superpac": {
+   "set": "superpac",
+   "p2_fields": 5,
+   "p2_cocktail": 5,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "swimmer": {
+   "set": "swimmer",
+   "p2_fields": 5,
+   "p2_cocktail": 5,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "szaxxon": {
+   "set": "szaxxon",
+   "p2_fields": 5,
+   "p2_cocktail": 5,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "tankfrce": {
+   "set": "tankfrce",
+   "p2_fields": 7,
+   "p2_cocktail": 0,
+   "p2_real": 7,
+   "cabinet_dip": false,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "simultaneous"
+  },
+  "tapper": {
+   "set": "tapperb",
+   "p2_fields": 5,
+   "p2_cocktail": 5,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "thehand": {
+   "set": "thehand",
+   "p2_fields": 7,
+   "p2_cocktail": 0,
+   "p2_real": 7,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "simultaneous"
+  },
+  "thief": {
+   "set": "thief",
+   "p2_fields": 4,
+   "p2_cocktail": 4,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "timeplt": {
+   "set": "timeplt",
+   "p2_fields": 5,
+   "p2_cocktail": 5,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "tron": {
+   "set": "tron2",
+   "p2_fields": 6,
+   "p2_cocktail": 6,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "tutankhm": {
+   "set": "tutankhm",
+   "p2_fields": 7,
+   "p2_cocktail": 7,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "vanguard": {
+   "set": "vanguard",
+   "p2_fields": 8,
+   "p2_cocktail": 8,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  },
+  "wacko": {
+   "set": "wacko",
+   "p2_fields": 6,
+   "p2_cocktail": 6,
+   "p2_real": 0,
+   "cabinet_dip": true,
+   "p3_fields": 0,
+   "players": 2,
+   "play": "turns"
+  }
+ }
+}

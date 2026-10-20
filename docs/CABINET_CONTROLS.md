@@ -497,3 +497,17 @@ so MAME's panel coin and start (Tron) went to the wrong joystick. MAME now uses 
 joystick list), RetroArch keeps udev's. The pad's D-pad names for MAME were also wrong (`HSWITCH`; MAME's are `HAT1UP` etc.).
 Known and not fixed: MAME's default dial and paddle ports for a second player read "Joy 2 A1", which is now the first
 encoder's stick; it matters only in two-player dial games.
+
+## Either side of the panel plays take-turns and single-player games (20 October 2026)
+
+MAME 0.251 marks Player 2's controls `cocktail` when they are only the second face of a cocktail cabinet (the players take
+turns on one set). `tools/mame_turns_probe.lua` asked MAME about every game that runs in it (`docs/data/turns-probe.json`):
+**78 take turns, 20 are single-player, 17 are head to head** (Player 2 has controls of its own: Blockade, Canyon Bomber,
+Subs, Sea Wolf II, Space Invaders and its variants, Blasteroids and a few more). `tools/classify_turns.py` writes the answer into
+each game's own folder (`"play"`, and `"mame"` for the set the cabinet runs). For `single` and `turns` games, Player 2's encoder
+(stick, buttons, the flight stick's two buttons) also plays Player 1's ports (`panel_profiles.shared_ports`); in a single-player
+game Player 2's coin and start also work as Player 1's, in a two-player game they stay Player 2's. Head-to-head games are untouched.
+
+Not covered: the other 117 games run in RetroArch or AdvanceMAME, which cannot share a player between two devices (RetroArch) or
+were not classified (MAME cannot run them to ask). They can be covered by moving them to MAME 0.251 (the conversion project),
+or by a small service that merges the two encoders into one virtual controller.

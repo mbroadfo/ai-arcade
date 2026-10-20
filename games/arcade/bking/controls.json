@@ -3,5 +3,6 @@
   "roms": [
     "bking"
   ],
-  "pointer": "trackball"
+  "pointer": "trackball",
+  "play": "turns"
 }

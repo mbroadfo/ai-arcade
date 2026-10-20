@@ -3,5 +3,6 @@
   "roms": [
     "mplanets"
   ],
-  "pointer": "spinner"
+  "pointer": "spinner",
+  "play": "single"
 }

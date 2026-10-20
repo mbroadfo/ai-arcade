@@ -3,5 +3,6 @@
   "roms": [
     "superbug"
   ],
-  "pointer": "spinner"
+  "pointer": "spinner",
+  "play": "single"
 }

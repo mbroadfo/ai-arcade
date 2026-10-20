@@ -3,5 +3,6 @@
   "roms": [
     "wacko"
   ],
-  "pointer": "trackball"
+  "pointer": "trackball",
+  "play": "turns"
 }

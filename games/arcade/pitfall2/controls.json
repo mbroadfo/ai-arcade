@@ -1,0 +1,7 @@
+{
+  "comment": "Pitfall II (315-5093) (1985): this game's controls, where they differ from the cabinet's defaults. Read by pi/mame_human/pad_map.py.",
+  "roms": [
+    "pitfall2"
+  ],
+  "play": "turns"
+}

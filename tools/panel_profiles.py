@@ -290,6 +290,41 @@ def game_ports(panel, joy1=1, joy2=2, pads=None, games=None):
     return out
 
 
+def shared_ports(panel, joy1, joy2, pads, single):
+    """[(port, sequence)] that let Player 2's encoder (its stick and its buttons, the flight stick's two buttons included)
+    play Player 1's ports too, for a game where the players take turns on one set of controls or only one plays: the
+    P1 sequences with Player 2's added. For a single-player game Player 2's coin and start also work as Player 1's; for a
+    two-player game they stay Player 2's (START2 is the "2 players" start). Empty when the second encoder is not there."""
+    if joy2 is None:
+        return []
+    base = dict(mame_ports(panel, joy1, joy2, pads))
+    stick = panel["players"]["P2"]["stick"]
+    extra = {f"P1_JOYSTICK_{d.upper()}": _direction_code(joy2, stick[d][1:]) for d in ("up", "down", "left", "right")}
+    for n, idx in actions(panel, "P2").items():
+        extra[f"P1_BUTTON{n}"] = " OR ".join(f"JOYCODE_{joy2}_BUTTON{i + 1}" for i in idx)
+    if single:
+        extra["COIN1"] = f"JOYCODE_{joy2}_BUTTON{index(panel, 'P2', 'COIN') + 1}"
+        extra["START1"] = f"JOYCODE_{joy2}_BUTTON{index(panel, 'P2', 'START') + 1}"
+    return [(port, f"{base[port]} OR {seq}") for port, seq in extra.items()]
+
+
+def game_sections(panel, joy1, joy2, pads, games):
+    """{MAME machine name: [(port, sequence)]} for every game with its own section: those whose controls.json says
+    "play": "single" or "turns" get Player 2's encoder on Player 1's ports (shared_ports), and any "panel" changes of the
+    game win over that. The machine name is "mame" in the file (the set the cabinet runs) or else the ROM names."""
+    overrides = game_ports(panel, joy1, joy2, pads, games)
+    out = {}
+    for rom, game in (games or {}).items():
+        rows = {}
+        if game.get("play") in ("single", "turns"):
+            rows.update(shared_ports(panel, joy1, joy2, pads, game["play"] == "single"))
+        rows.update(dict(overrides.get(rom, [])))
+        if rows:
+            for name in game.get("mame") or [rom]:
+                out.setdefault(name, {}).update(rows)
+    return {name: list(rows.items()) for name, rows in out.items()}
+
+
 def mame_ctrlr(panel, joy1=1, joy2=2, pads=None, games=None):
     """The ctrlr file for human mode (/home/pi/.mame/ctrlr/panel.cfg): only the default section; MAME's own defaults
     still apply to everything not listed (players 3 and 4, analog controls, service keys)."""
@@ -297,7 +332,7 @@ def mame_ctrlr(panel, joy1=1, joy2=2, pads=None, games=None):
     for port, seq in mame_ports(panel, joy1, joy2, pads):
         out += [f'            <port type="{port}">', f'                <newseq type="standard">{seq}</newseq>', "            </port>"]
     out += ["        </input>", "    </system>"]
-    for game, ports in game_ports(panel, joy1, joy2, pads, games).items():
+    for game, ports in game_sections(panel, joy1, joy2, pads, games).items():
         out += [f'    <system name="{game}">', "        <input>"]
         for port, seq in ports:
             out += [f'            <port type="{port}">', f'                <newseq type="standard">{seq}</newseq>', "            </port>"]

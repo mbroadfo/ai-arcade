@@ -3,5 +3,9 @@
   "roms": [
     "tron"
   ],
-  "pointer": "spinner"
+  "pointer": "spinner",
+  "play": "turns",
+  "mame": [
+    "tron2"
+  ]
 }

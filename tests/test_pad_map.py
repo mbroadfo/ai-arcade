@@ -206,3 +206,28 @@ def test_mame_numbers_joysticks_by_event_number_but_retroarch_by_device_path(tmp
 def test_the_pads_dpad_uses_mames_hat_names():
     t = pp.pad_terms(3)
     assert t["UP"] == "JOYCODE_3_YAXIS_UP_SWITCH OR JOYCODE_3_HAT1UP" and "HSWITCH" not in str(t)
+
+
+def test_player_two_can_play_player_ones_controls_in_take_turns_and_single_games_only():
+    games = pp.load_game_controls()
+    sections = pp.game_sections(PANEL, 2, 3, {"P1": 1}, games)
+    assert games["tron"]["play"] == "turns" and games["tron"]["mame"] == ["tron2"]
+    tron = dict(sections["tron2"])  # keyed by the set the cabinet runs
+    stick, fire = tron["P1_JOYSTICK_UP"], tron["P1_BUTTON1"]
+    assert "JOYCODE_2_YAXIS_UP_SWITCH" in stick and "JOYCODE_3_YAXIS_UP_SWITCH" in stick  # P1's and P2's encoders
+    assert "JOYCODE_2_BUTTON12" in fire and "JOYCODE_3_BUTTON12" in fire  # P1's A and P2's flight trigger
+    assert "COIN1" not in tron and "START1" not in tron  # in a two-player game P2's start stays the "2 players" start
+    single = next(r for r, g in games.items() if g.get("play") == "single")
+    assert {"COIN1", "START1"} <= set(dict(sections[(games[single].get("mame") or [single])[0]]))  # one player: either start
+    simultaneous = next(r for r, g in games.items() if g.get("play") == "simultaneous")
+    assert (games[simultaneous].get("mame") or [simultaneous])[0] not in sections  # head to head: untouched
+    assert pp.shared_ports(PANEL, 1, None, {}, False) == []  # no second encoder, nothing to share
+    import xml.etree.ElementTree as ET
+    root = ET.fromstring(pp.mame_ctrlr(PANEL, 2, 3, {"P1": 1}, games))
+    assert {s.get("name") for s in root.findall("system")} >= {"default", "tron2", "pacman", "bzone"}
+
+
+def test_battlezones_own_fire_override_still_wins_over_sharing():
+    games = pp.load_game_controls()
+    bz = dict(pp.game_sections(PANEL, 1, 2, {}, games)["bzone"])
+    assert bz["P1_BUTTON1"] == "JOYCODE_2_BUTTON12"  # the flight stick's trigger only: its own entry, not P1's A and P2's buttons

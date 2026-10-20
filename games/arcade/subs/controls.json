@@ -3,5 +3,6 @@
   "roms": [
     "subs"
   ],
-  "pointer": "spinner"
+  "pointer": "spinner",
+  "play": "simultaneous"
 }

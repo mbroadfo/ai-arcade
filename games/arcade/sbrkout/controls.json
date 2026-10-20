@@ -3,5 +3,6 @@
   "roms": [
     "sbrkout"
   ],
-  "pointer": "spinner"
+  "pointer": "spinner",
+  "play": "single"
 }

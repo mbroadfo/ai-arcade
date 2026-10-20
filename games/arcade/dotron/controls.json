@@ -3,5 +3,9 @@
   "roms": [
     "dotron"
   ],
-  "pointer": "trackball"
+  "pointer": "trackball",
+  "play": "single",
+  "mame": [
+    "dotrona"
+  ]
 }

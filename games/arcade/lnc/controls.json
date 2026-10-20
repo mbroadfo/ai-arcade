@@ -1,0 +1,7 @@
+{
+  "comment": "Lock'n'Chase (1981): this game's controls, where they differ from the cabinet's defaults. Read by pi/mame_human/pad_map.py.",
+  "roms": [
+    "lnc"
+  ],
+  "play": "turns"
+}

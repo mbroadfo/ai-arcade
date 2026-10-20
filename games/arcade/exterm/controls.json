@@ -3,5 +3,6 @@
   "roms": [
     "exterm"
   ],
-  "pointer": "spinner"
+  "pointer": "spinner",
+  "play": "simultaneous"
 }

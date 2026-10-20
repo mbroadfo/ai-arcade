@@ -3,5 +3,6 @@
   "roms": [
     "nitedrvr"
   ],
-  "pointer": "spinner"
+  "pointer": "spinner",
+  "play": "single"
 }

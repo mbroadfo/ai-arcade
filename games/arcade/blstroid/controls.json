@@ -3,5 +3,6 @@
   "roms": [
     "blstroid"
   ],
-  "pointer": "spinner"
+  "pointer": "spinner",
+  "play": "simultaneous"
 }

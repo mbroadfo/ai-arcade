@@ -3,5 +3,6 @@
   "roms": [
     "gridlee"
   ],
-  "pointer": "trackball"
+  "pointer": "trackball",
+  "play": "turns"
 }
