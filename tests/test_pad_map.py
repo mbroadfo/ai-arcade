@@ -163,3 +163,15 @@ def test_every_game_that_plays_with_the_spinner_or_trackball_says_so_in_its_own_
 
 def test_retroarch_with_only_a_gamepad_it_is_player_one():
     assert pad_map.retroarch_players(pad_map.parse_devices("\n".join([F310, AI])), PANEL) == [(1, 0, None)]
+
+
+def test_a_games_folder_can_move_a_panel_button_for_both_players():
+    games = pp.load_game_controls()
+    for player, n in (("P1", 1), ("P2", 2)):
+        binds, _ = pp.retroarch_player_binds(pp.retroarch_autoconfig(PANEL, player), n)
+        changed = pad_map.apply_panel_overrides(binds, n, player, PANEL, games, "/roms/missile.zip")
+        snowflake = pp.index(PANEL, player, "SNOWFLAKE")
+        assert f'input_player{n}_y_btn = "{snowflake}"' in changed  # the third battery
+        assert [l for l in changed if l.startswith(f"input_player{n}_b_btn")] == [l for l in binds if l.startswith(f"input_player{n}_b_btn")]
+        assert pad_map.apply_panel_overrides(binds, n, player, PANEL, games, "/roms/pacman.zip") == binds
+        assert pad_map.apply_panel_overrides(binds, n, player, PANEL, {}, "/roms/missile.zip") == binds

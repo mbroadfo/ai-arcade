@@ -3,5 +3,9 @@
   "roms": [
     "missile"
   ],
-  "pointer": "trackball"
+  "pointer": "trackball",
+  "retroarch_panel": {
+    "comment": "The panel's buttons in RetroArch, where this game wants others than the cabinet's defaults: RetroPad name -> the panel control that presses it, for both players' encoders. The three batteries, left to right, are RetroPad B, A and Y: panel A, B, Snowflake (the default third is X).",
+    "y": "SNOWFLAKE"
+  }
 }

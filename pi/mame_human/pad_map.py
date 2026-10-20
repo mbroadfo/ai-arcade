@@ -165,6 +165,19 @@ def retroarch_mouse_index(mice, panel, pointer):
     return None
 
 
+def apply_panel_overrides(binds, player, who, panel, games, rom):
+    """A panel encoder's explicit binds with the game's changes: "retroarch_panel" in its controls.json, {RetroPad name:
+    panel control}. The control's button number is that encoder's own (Player 1's and Player 2's differ)."""
+    import panel_profiles as pp
+    changes = {k: v for k, v in games.get(Path(rom or "").stem, {}).get("retroarch_panel", {}).items() if k != "comment"}
+    out = []
+    for line in binds:
+        key, _, value = line.partition(" = ")
+        name = key[len(f"input_player{player}_"):-len("_btn")] if key.endswith("_btn") else None
+        out.append(f'{key} = "{pp.index(panel, who, changes[name])}"' if name in changes else line)
+    return out
+
+
 def teach_retroarch(devices, panel, joypads=RA_JOYPADS):
     """Write RetroArch's autoconfig for each gamepad that has none. Returns the names added."""
     import panel_profiles as pp
@@ -194,7 +207,9 @@ def main(argv):
             text = (pp.retroarch_autoconfig(panel, who) if who else
                     pp.retroarch_gamepad_autoconfig(d["name"], d["vendor"], d["product"]))
             binds, hotkeys = pp.retroarch_player_binds(text, n)
-            if not who:
+            if who:
+                binds = apply_panel_overrides(binds, n, who, panel, games, rom)
+            else:
                 binds = apply_pad_overrides(binds, n, games, rom)
             lines += [f'input_player{n}_joypad_index = "{index}"'] + binds + (hotkeys if n == 1 else [])
         mice = parse_devices(Path("/proc/bus/input/devices").read_text(errors="replace"), r"mouse\d+")
