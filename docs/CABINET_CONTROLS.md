@@ -478,11 +478,12 @@ neither device drives. Each game's own folder (`games/arcade/<rom>/controls.json
 
 **Games and where they run now:** MAME 0.251: Birdie King, Discs of Tron, Gridlee, Wacko, Blasteroids, Exterminator, Moonwar, Mad Planets, Night Driver, Subs, Super Bug, Super Breakout, Tron. lr-mame2003: Missile Command, Centipede, Crystal Castles, Marble Madness, Millipede, Quantum, Tempest, Arkanoid, Omega Race, Cosmic Chasm, Pole Position 2, Turbo, Spy Hunter, Warlords, Star Trek, Tac/Scan, Zektor, Aztarac, Boxing Bugs, Demolition Derby, Major Havoc, Pole Position, Speed Freak. lr-mame2000: Reactor, Circus, Fire One. AdvanceMAME keeps Buck Rogers (pedal only).
 
-**Checked with pretend mice only; nobody has turned the real devices yet.**
+**The emulator wiring was checked with pretend mice; the real trackball's directions are captured (below); the real spinner and the feel of both in a game are not yet tried.**
 
-**The trackball is mounted a quarter turn** (ball up reads X positive, ball right reads Y negative). Every emulator but MAME takes
-the mouse as it comes, so the fix is the trackball's jumpers: swap X and Y and reverse both (up = Y negative, left = X
-negative). Then it is an ordinary mouse everywhere and nothing in software needs to turn it.
+**The trackball's quarter turn is fixed in the hardware.** It was mounted a quarter turn (ball up read X positive, ball right
+Y negative), and every emulator but MAME takes the mouse as it comes. On 20 October the jumpers were changed (X and Y swapped,
+both reversed) and the capture (`docs/data/panel-capture-2026-10-20-trackball.json`) now reads like an ordinary mouse:
+up = Y negative, down = Y positive, left = X negative, right = X positive. No software turns it.
 
 Not done: sensitivity tuning with the real spinner (a spinner game may feel too fast or slow; MAME and RetroArch each have a
 sensitivity setting), second trackball or spinner for two-player games, pedals, light guns, Sea Wolf's periscope.
