@@ -106,7 +106,9 @@ def teach_es(devices, panel, path=ES_INPUT):
 
 
 RA_JOYPADS = "/opt/retropie/configs/all/retroarch-joypads"
-RA_APPEND = "/dev/shm/retroarch.cfg"  # runcommand's per-launch RetroArch options, appended last
+# Written at each launch and included by RetroArch's global config (install_mame_human.py adds the #include): runcommand
+# rewrites its own per-launch options file after the onstart hook has run, so anything appended there is lost.
+RA_PLAYERS = "/dev/shm/ai-arcade-pads.cfg"
 
 
 def retroarch_players(devices, panel):
@@ -149,16 +151,14 @@ def main(argv):
     devices = parse_devices(Path("/proc/bus/input/devices").read_text(errors="replace"))
     if "--ra" in argv:  # runcommand-onstart: before a RetroArch core starts
         teach_retroarch(devices, panel)
-        if Path(RA_APPEND).exists():
-            lines = []
-            for n, index, who in retroarch_players(devices, panel):
-                d = devices[index]
-                text = (pp.retroarch_autoconfig(panel, who) if who else
-                        pp.retroarch_gamepad_autoconfig(d["name"], d["vendor"], d["product"]))
-                binds, hotkeys = pp.retroarch_player_binds(text, n)
-                lines += [f'input_player{n}_joypad_index = "{index}"'] + binds + (hotkeys if n == 1 else [])
-            with open(RA_APPEND, "a", encoding="utf-8") as f:
-                f.write("\n".join(lines) + "\n")
+        lines = []
+        for n, index, who in retroarch_players(devices, panel):
+            d = devices[index]
+            text = (pp.retroarch_autoconfig(panel, who) if who else
+                    pp.retroarch_gamepad_autoconfig(d["name"], d["vendor"], d["product"]))
+            binds, hotkeys = pp.retroarch_player_binds(text, n)
+            lines += [f'input_player{n}_joypad_index = "{index}"'] + binds + (hotkeys if n == 1 else [])
+        Path(RA_PLAYERS).write_text("\n".join(lines) + "\n", encoding="utf-8")
         return 0
     if "--es" in argv:  # before EmulationStation starts: give every gamepad it has not met a map
         print("; ".join(teach_es(devices, panel)) or "nothing to add")

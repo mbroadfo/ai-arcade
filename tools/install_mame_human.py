@@ -37,6 +37,10 @@ def main():
         hook = "/opt/retropie/configs/all/runcommand-onstart.sh"  # RetroArch cores: gamepad layouts and player order
         sftp.put(str(ROOT / "pi" / "controls" / "runcommand-onstart.sh"), hook)
         run(ssh, f"chmod +x {hook}")
+        # RetroArch reads this include after its other settings: the per-launch players file the hook writes
+        cfg = "/opt/retropie/configs/all/retroarch.cfg"
+        include = '#include "/dev/shm/ai-arcade-pads.cfg"'
+        run(ssh, f"grep -qF '{include}' {cfg} || (cp {cfg} {cfg}.before-pads && printf '\n{include}\n' >> {cfg})")
         sftp.close()
         run(ssh, f"chmod +x {CODE}/*.sh {CODE}/*.py && cp {CODE}/mame.ini {CONFIG}/mame.ini")
         print(run(ssh, f"cd {CODE} && python3 convert.py status").strip())
