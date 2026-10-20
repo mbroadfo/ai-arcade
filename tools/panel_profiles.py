@@ -107,11 +107,12 @@ def merge_es_input(existing, entry, device_name):
 
 # ---------------------------------------------------------------- RetroArch
 
-def retroarch_autoconfig(panel, player="P1"):
-    """The joypad autoconfig. RetroPad B, A, Y, X, L, R are the arcade BUTTON_1..6 (as mame2003 reads them); Select is
-    Coin and Start is Start. Esc is the hotkey and the exit (alone, as on the keyboard), Tab with Esc held opens the menu."""
+def retroarch_autoconfig(panel, player="P1", system=None):
+    """The joypad autoconfig. The panel's six action buttons press the RetroPad buttons panel.json "retroarch" lists for the
+    system (SNES order by default; B, Y, X, A, L, R for the arcade cores); Select is Coin and Start is Start. Esc is the hotkey and the exit (alone, as on the keyboard), Tab with Esc held opens the menu."""
     d = panel["device"]
-    names = {1: "b", 2: "a", 3: "y", 4: "x", 5: "l", 6: "r"}
+    orders = panel.get("retroarch", {}).get("button_order", {})
+    names = dict(enumerate(orders.get(system) or orders.get("default") or ["b", "a", "y", "x", "l", "r"], 1))
     first = actions(panel, player)
     lines = [f'input_device = "{d["evdev_name"]}"', 'input_driver = "udev"',
              f'input_vendor_id = "{int(d["vendor_id"], 16)}"', f'input_product_id = "{int(d["product_id"], 16)}"', ""]

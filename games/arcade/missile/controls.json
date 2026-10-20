@@ -5,7 +5,7 @@
   ],
   "pointer": "trackball",
   "retroarch_panel": {
-    "comment": "The panel's buttons in RetroArch, where this game wants others than the cabinet's defaults: RetroPad name -> the panel control that presses it, for both players' encoders. The three batteries, left to right, are RetroPad B, A and Y: panel A, B, Snowflake (the default third is X).",
-    "y": "SNOWFLAKE"
+    "comment": "The panel's buttons in RetroArch, where this game wants others than the cabinet's defaults: RetroPad name -> the panel control that presses it, for both players' encoders. The three batteries, left to right, are MAME buttons 1, 2 and 3 (RetroPad B, Y, X in the arcade core): panel A, B and Snowflake; by default the third is X.",
+    "x": "SNOWFLAKE"
   }
 }

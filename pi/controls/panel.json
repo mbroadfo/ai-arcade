@@ -128,5 +128,26 @@
       "vendor_id": "fafa",
       "product_id": "0020"
     }
+  },
+  "retroarch": {
+    "comment": "Which RetroPad button each of the panel's six action buttons (A, B, X, Y, Snowflake, Star) presses, by RetroArch system. The default is the SNES-like order consoles expect. The arcade cores (lr-mame2003 and lr-mame2000) read MAME buttons 1 to 6 from RetroPad B, Y, X, A, L, R (seen 20 October 2026: Missile Command's three batteries and Asteroids' thrust and hyperspace).",
+    "button_order": {
+      "default": [
+        "b",
+        "a",
+        "y",
+        "x",
+        "l",
+        "r"
+      ],
+      "arcade": [
+        "b",
+        "y",
+        "x",
+        "a",
+        "l",
+        "r"
+      ]
+    }
   }
 }

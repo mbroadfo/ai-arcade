@@ -168,10 +168,20 @@ def test_retroarch_with_only_a_gamepad_it_is_player_one():
 def test_a_games_folder_can_move_a_panel_button_for_both_players():
     games = pp.load_game_controls()
     for player, n in (("P1", 1), ("P2", 2)):
-        binds, _ = pp.retroarch_player_binds(pp.retroarch_autoconfig(PANEL, player), n)
+        binds, _ = pp.retroarch_player_binds(pp.retroarch_autoconfig(PANEL, player, "arcade"), n)
         changed = pad_map.apply_panel_overrides(binds, n, player, PANEL, games, "/roms/missile.zip")
         snowflake = pp.index(PANEL, player, "SNOWFLAKE")
-        assert f'input_player{n}_y_btn = "{snowflake}"' in changed  # the third battery
-        assert [l for l in changed if l.startswith(f"input_player{n}_b_btn")] == [l for l in binds if l.startswith(f"input_player{n}_b_btn")]
+        assert f'input_player{n}_x_btn = "{snowflake}"' in changed  # the third battery (MAME button 3 is RetroPad X in the arcade core)
+        for kept in ("b", "y"):  # the first two batteries stay on panel A and B
+            assert [l for l in changed if l.startswith(f"input_player{n}_{kept}_btn")] == [l for l in binds if l.startswith(f"input_player{n}_{kept}_btn")]
         assert pad_map.apply_panel_overrides(binds, n, player, PANEL, games, "/roms/pacman.zip") == binds
         assert pad_map.apply_panel_overrides(binds, n, player, PANEL, {}, "/roms/missile.zip") == binds
+
+
+def test_the_arcade_cores_read_buttons_1_to_6_from_retropad_b_y_x_a_l_r_and_consoles_keep_the_snes_order():
+    def button(text, name):
+        return next(l for l in text.splitlines() if l.startswith(f"input_{name}_btn")).split('"')[1]
+    arcade, console = pp.retroarch_autoconfig(PANEL, "P1", "arcade"), pp.retroarch_autoconfig(PANEL, "P1", "nes")
+    panel_b = str(pp.index(PANEL, "P1", "B"))
+    assert button(arcade, "y") == panel_b and button(arcade, "a") == str(pp.index(PANEL, "P1", "Y"))  # button 2 is RetroPad Y
+    assert button(console, "a") == panel_b and button(console, "y") == str(pp.index(PANEL, "P1", "X"))  # consoles as before

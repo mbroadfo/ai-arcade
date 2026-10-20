@@ -199,12 +199,13 @@ def main(argv):
     devices = parse_devices(Path("/proc/bus/input/devices").read_text(errors="replace"))
     games = pp.load_game_controls(HERE / "games")  # the games' own controls.json, copied here by install_mame_human.py
     if "--ra" in argv:  # runcommand-onstart: before a RetroArch core starts
-        rom = argv[argv.index("--ra") + 1] if len(argv) > argv.index("--ra") + 1 else ""
+        rest = argv[argv.index("--ra") + 1:]
+        rom, system = (rest + ["", ""])[:2]  # --ra ROM SYSTEM, as runcommand gives them
         teach_retroarch(devices, panel)
         lines = []
         for n, index, who in retroarch_players(devices, panel):
             d = devices[index]
-            text = (pp.retroarch_autoconfig(panel, who) if who else
+            text = (pp.retroarch_autoconfig(panel, who, system) if who else
                     pp.retroarch_gamepad_autoconfig(d["name"], d["vendor"], d["product"]))
             binds, hotkeys = pp.retroarch_player_binds(text, n)
             if who:
