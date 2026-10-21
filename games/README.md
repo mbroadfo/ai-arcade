@@ -60,6 +60,16 @@ person has to decide. `--dry-run` writes nothing; `--install` puts it on the Pi.
 
 ## Adding a game for the AI
 
+**Same hardware as a game that already has an AI player?** `python tools/new_game.py arcade/<zip>` (after `onboard_game.py`).
+MAME's driver file says which games share hardware (`docs/BOARD_FAMILIES.md`, from `tools/board_families.py`); a kit
+(`arcadekit/kits/<kit>/KIT.json`) lists the driver files it covers. For a covered game it scaffolds the folder from the
+kit's template game, builds the profile from MAME, runs the kit's validation, and plays one game with the rule decider
+(the labelled control) and, with `--model`, one with the model, then writes a README with what it found. A game on
+hardware with no kit gets a report of what is missing and which games share it. Pac-Man Plus and Puck Man were put on the
+AI this way with no new code (docs/BOARD_FAMILIES.md); a game whose rules differ, like Crush Roller, is stopped and reported.
+
+The manual steps:
+
 1. `python tools/game_profile.py <romset> --system <system>` (controls, score RAM)
 2. `python tools/discover_state.py <romset> --system <system>` (RAM discovery)
 3. Copy the adapter shape from `games/arcade/pacman/` and fill in the game's own decode and rules.

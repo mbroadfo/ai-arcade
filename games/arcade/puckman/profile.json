@@ -1,0 +1,60 @@
+{
+  "romset": "puckmanb",
+  "description": "Puck Man (bootleg set 1)",
+  "controls": {
+    "player1": [
+      "DOWN",
+      "LEFT",
+      "RIGHT",
+      "UP"
+    ],
+    "player2": [
+      "DOWN",
+      "LEFT",
+      "RIGHT",
+      "UP"
+    ],
+    "coin_slots": [
+      1,
+      2
+    ],
+    "start_buttons": [
+      1,
+      2
+    ]
+  },
+  "analog_inputs": [],
+  "other_inputs": [
+    "Lives",
+    "Coinage",
+    "Difficulty",
+    "Bonus Life",
+    "Ghost Names",
+    "Service 1",
+    "Rack Test (Cheat)",
+    "Cabinet",
+    "Service Mode"
+  ],
+  "score_ram": [
+    {
+      "cpu": "maincpu",
+      "space": "program",
+      "address": 20104,
+      "length": 4
+    },
+    {
+      "cpu": "maincpu",
+      "space": "program",
+      "address": 17389,
+      "length": 6
+    },
+    {
+      "cpu": "maincpu",
+      "space": "program",
+      "address": 17361,
+      "length": 1
+    }
+  ],
+  "named_ram": [],
+  "cabinet_file": "puckman"
+}

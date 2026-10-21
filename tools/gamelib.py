@@ -18,6 +18,10 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 DEFAULT_GAME = "arcade/pacman"
+# MAME (SDL) started for an AI run must see only the AI Arcade pads: they are then joysticks 1 and 2, which is where the
+# aiarcade controller file (tools/configure_mame_controller.py) puts coin, start and the sticks. Without it the panel's
+# encoders and any gamepad come first and the AI's presses reach nobody. Every tool that starts MAME for the broker uses it.
+AI_PADS_ENV = "SDL_GAMECONTROLLER_IGNORE_DEVICES_EXCEPT=0x1209/0xa101,0x1209/0xa102"
 # The cabinet Pi (Raspberry Pi 5 since 2026-10-02; the Pi 3 at 192.168.10.155 is the spare). Override with ARCADE_PI_HOST.
 DEFAULT_PI_HOST = os.environ.get("ARCADE_PI_HOST", "192.168.10.122")
 

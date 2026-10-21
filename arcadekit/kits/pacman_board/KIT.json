@@ -1,0 +1,11 @@
+{
+  "name": "pacman_board",
+  "genre": "maze chase",
+  "comment": "What tools/new_game.py needs to know to put a game on this kit. `sources` are MAME driver files whose games share this hardware; `template` is the game whose spec a new game starts from; `validate` checks the kit's decoder against the live game ({game} is system/name); `bind` is what a game's __init__.py imports.",
+  "sources": ["pacman/pacman.cpp"],
+  "template": "arcade/pacman",
+  "bind": "arcadekit.kits.pacman_board.bind",
+  "spec_fields_with_name": ["rules_l1", "ghost_behaviour_l3a", "forecast_note", "orders_example"],
+  "validate": ["games/arcade/pacman/scripts/validate_pacman_state.py", "--game", "{game}"],
+  "smoke": ["--decider", "rule", "--games", "1"]
+}

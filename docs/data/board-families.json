@@ -1,0 +1,2622 @@
+{
+ "families": [
+  {
+   "source": "galaxian/galaxian.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "amidar",
+     "set": "amidar1",
+     "title": "Amidar (older)",
+     "year": "1981",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "anteater",
+     "set": "anteater",
+     "title": "Anteater",
+     "year": "1982",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "armorcar",
+     "set": "armorcar",
+     "title": "Armored Car (set 1)",
+     "year": "1981",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "atlantis",
+     "set": "atlantis",
+     "title": "Battle of Atlantis (set 1)",
+     "year": "1981",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "blkhole",
+     "set": "blkhole",
+     "title": "Black Hole",
+     "year": "1981",
+     "emulator": "lr-mame2000",
+     "ai": false
+    },
+    {
+     "zip": "frogger",
+     "set": "frogger",
+     "title": "Frogger",
+     "year": "1981",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "galaxian",
+     "set": "galaxian",
+     "title": "Galaxian (Namco set 1)",
+     "year": "1979",
+     "emulator": "lr-mame2000",
+     "ai": false
+    },
+    {
+     "zip": "jumpbug",
+     "set": "jumpbug",
+     "title": "Jump Bug",
+     "year": "1981",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "moonal2",
+     "set": "moonal2",
+     "title": "Moon Alien Part 2",
+     "year": "1980",
+     "emulator": "lr-mame2000",
+     "ai": false
+    },
+    {
+     "zip": "mooncrst",
+     "set": "mooncrst",
+     "title": "Moon Cresta (Nichibutsu)",
+     "year": "1980",
+     "emulator": "lr-mame2000",
+     "ai": false
+    },
+    {
+     "zip": "moonwar",
+     "set": "moonwar",
+     "title": "Moonwar",
+     "year": "1981",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "mshuttle",
+     "set": "mshuttle",
+     "title": "Moon Shuttle (US? set 1)",
+     "year": "1981",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "orbitron",
+     "set": "orbitron",
+     "title": "Orbitron",
+     "year": "1982",
+     "emulator": "lr-mame2000",
+     "ai": false
+    },
+    {
+     "zip": "pisces",
+     "set": "pisces",
+     "title": "Pisces",
+     "year": "19??",
+     "emulator": "advmame",
+     "ai": false
+    },
+    {
+     "zip": "scobra",
+     "set": "scobra",
+     "title": "Super Cobra",
+     "year": "1981",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "scramble",
+     "set": "scramble",
+     "title": "Scramble",
+     "year": "1981",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "streakng",
+     "set": "streakng",
+     "title": "Streaking (set 1)",
+     "year": "1980",
+     "emulator": "lr-mame2000",
+     "ai": false
+    },
+    {
+     "zip": "warofbug",
+     "set": "warofbug",
+     "title": "War of the Bugs or Monsterous Manouvers in a Mushroom Maze",
+     "year": "1981",
+     "emulator": "lr-mame2000",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "cinematronics/cinemat.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "armora",
+     "set": "armora",
+     "title": "Armor Attack",
+     "year": "1980",
+     "emulator": "lr-mame2003",
+     "ai": false
+    },
+    {
+     "zip": "barrier",
+     "set": "barrier",
+     "title": "Barrier",
+     "year": "1979",
+     "emulator": "lr-mame2003",
+     "ai": false
+    },
+    {
+     "zip": "boxingb",
+     "set": "boxingb",
+     "title": "Boxing Bugs",
+     "year": "1981",
+     "emulator": "lr-mame2003",
+     "ai": false
+    },
+    {
+     "zip": "demon",
+     "set": "demon",
+     "title": "Demon",
+     "year": "1982",
+     "emulator": "lr-mame2003",
+     "ai": false
+    },
+    {
+     "zip": "ripoff",
+     "set": "ripoff",
+     "title": "Rip Off",
+     "year": "1980",
+     "emulator": "lr-mame2003",
+     "ai": false
+    },
+    {
+     "zip": "solarq",
+     "set": "solarq",
+     "title": "Solar Quest (rev 10 8 81)",
+     "year": "1981",
+     "emulator": "lr-mame2003",
+     "ai": false
+    },
+    {
+     "zip": "spacewar",
+     "set": "spacewar",
+     "title": "Space Wars",
+     "year": "1977",
+     "emulator": "lr-mame2003",
+     "ai": false
+    },
+    {
+     "zip": "speedfrk",
+     "set": "speedfrk",
+     "title": "Speed Freak",
+     "year": "1979",
+     "emulator": "lr-mame2003",
+     "ai": false
+    },
+    {
+     "zip": "starcas",
+     "set": "starcas",
+     "title": "Star Castle (version 3)",
+     "year": "1980",
+     "emulator": "lr-mame2003",
+     "ai": false
+    },
+    {
+     "zip": "starhawk",
+     "set": "starhawk",
+     "title": "Starhawk",
+     "year": "1979",
+     "emulator": "lr-mame2003",
+     "ai": false
+    },
+    {
+     "zip": "sundance",
+     "set": "sundance",
+     "title": "Sundance",
+     "year": "1979",
+     "emulator": "lr-mame2003",
+     "ai": false
+    },
+    {
+     "zip": "tailg",
+     "set": "tailg",
+     "title": "Tailgunner",
+     "year": "1979",
+     "emulator": "lr-mame2003",
+     "ai": false
+    },
+    {
+     "zip": "warrior",
+     "set": "warrior",
+     "title": "Warrior",
+     "year": "1979",
+     "emulator": "lr-mame2003",
+     "ai": false
+    },
+    {
+     "zip": "wotw",
+     "set": "wotw",
+     "title": "War of the Worlds",
+     "year": "1981",
+     "emulator": "lr-mame2003",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "midway/mcr.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "demoderb",
+     "set": "demoderb",
+     "title": "Demolition Derby",
+     "year": "1984",
+     "emulator": "lr-mame2003",
+     "ai": false
+    },
+    {
+     "zip": "dotron",
+     "set": "dotrona",
+     "title": "Discs of Tron (Upright, 9/22/83)",
+     "year": "1983",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "journey",
+     "set": "journey",
+     "title": "Journey",
+     "year": "1983",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "shollow",
+     "set": "shollow",
+     "title": "Satan's Hollow (set 1)",
+     "year": "1981",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "solarfox",
+     "set": "solarfox",
+     "title": "Solar Fox (upright)",
+     "year": "1981",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "tapper",
+     "set": "tapperb",
+     "title": "Tapper (Budweiser, 1/12/84)",
+     "year": "1983",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "tron",
+     "set": "tron2",
+     "title": "Tron (6/25)",
+     "year": "1982",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "wacko",
+     "set": "wacko",
+     "title": "Wacko",
+     "year": "1982",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "midway/williams.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "bubbles",
+     "set": "bubbles",
+     "title": "Bubbles",
+     "year": "1982",
+     "emulator": "lr-mame2000",
+     "ai": false
+    },
+    {
+     "zip": "defender",
+     "set": "defender",
+     "title": "Defender (Red label)",
+     "year": "1980",
+     "emulator": "lr-mame2003",
+     "ai": false
+    },
+    {
+     "zip": "joust",
+     "set": "joust",
+     "title": "Joust (Green label)",
+     "year": "1982",
+     "emulator": "advmame",
+     "ai": false
+    },
+    {
+     "zip": "joust2",
+     "set": "joust2",
+     "title": "Joust 2 - Survival of the Fittest (revision 2)",
+     "year": "1986",
+     "emulator": "lr-mame2000",
+     "ai": false
+    },
+    {
+     "zip": "robotron",
+     "set": "robotron",
+     "title": "Robotron: 2084 (Solid Blue label)",
+     "year": "1982",
+     "emulator": "lr-mame2000",
+     "ai": false
+    },
+    {
+     "zip": "sinistar",
+     "set": "sinistar",
+     "title": "Sinistar (revision 3)",
+     "year": "1982",
+     "emulator": "lr-mame2000",
+     "ai": false
+    },
+    {
+     "zip": "stargate",
+     "set": "stargate",
+     "title": "Stargate",
+     "year": "1981",
+     "emulator": "lr-mame2000",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "sega/vicdual.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "carnival",
+     "set": "carnival",
+     "title": "Carnival (upright, AY8912 music)",
+     "year": "1980",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "depthch",
+     "set": "depthch",
+     "title": "Depthcharge",
+     "year": "1977",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "digger",
+     "set": "digger",
+     "title": "Digger",
+     "year": "1980",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "headon",
+     "set": "headon",
+     "title": "Head On (2 players)",
+     "year": "1979",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "invinco",
+     "set": "invinco",
+     "title": "Invinco",
+     "year": "1979",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "pulsar",
+     "set": "pulsar",
+     "title": "Pulsar",
+     "year": "1981",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "exidy/exidy.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "mtrap",
+     "set": "mtrap",
+     "title": "Mouse Trap (version 5)",
+     "year": "1981",
+     "emulator": "lr-mame2000",
+     "ai": false
+    },
+    {
+     "zip": "pepper2",
+     "set": "pepper2",
+     "title": "Pepper II (version 8)",
+     "year": "1982",
+     "emulator": "lr-mame2000",
+     "ai": false
+    },
+    {
+     "zip": "spectar",
+     "set": "spectar",
+     "title": "Spectar (revision 3)",
+     "year": "1980",
+     "emulator": "lr-mame2000",
+     "ai": false
+    },
+    {
+     "zip": "targ",
+     "set": "targ",
+     "title": "Targ",
+     "year": "1980",
+     "emulator": "lr-mame2000",
+     "ai": false
+    },
+    {
+     "zip": "venture",
+     "set": "venture",
+     "title": "Venture (version 5 set 1)",
+     "year": "1981",
+     "emulator": "lr-mame2000",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "gottlieb/gottlieb.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "insector",
+     "set": "insector",
+     "title": "Insector (prototype)",
+     "year": "1982",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "mplanets",
+     "set": "mplanets",
+     "title": "Mad Planets",
+     "year": "1983",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "qbert",
+     "set": "qbert",
+     "title": "Q*bert (US set 1)",
+     "year": "1982",
+     "emulator": "lr-mame2000",
+     "ai": false
+    },
+    {
+     "zip": "qbertqub",
+     "set": "qbertqub",
+     "title": "Q*bert's Qubes",
+     "year": "1983",
+     "emulator": "lr-mame2000",
+     "ai": false
+    },
+    {
+     "zip": "reactor",
+     "set": "reactor",
+     "title": "Reactor",
+     "year": "1982",
+     "emulator": "lr-mame2000",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "midw8080/mw8080bw.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "boothill",
+     "set": "boothill",
+     "title": "Boot Hill",
+     "year": "1977",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "gunfight",
+     "set": "gunfight",
+     "title": "Gun Fight (set 1)",
+     "year": "1975",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "invad2ct",
+     "set": "invad2ct",
+     "title": "Space Invaders II (Midway, cocktail)",
+     "year": "1980",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "invaders",
+     "set": "invaders",
+     "title": "Space Invaders / Space Invaders M",
+     "year": "1978",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "seawolf",
+     "set": "seawolf",
+     "title": "Sea Wolf (set 1)",
+     "year": "1976",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "namco/galaga.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "battles",
+     "set": "battles",
+     "title": "Battles (set 1)",
+     "year": "1982",
+     "emulator": "advmame",
+     "ai": false
+    },
+    {
+     "zip": "bosco",
+     "set": "bosco",
+     "title": "Bosconian - Star Destroyer (version 5)",
+     "year": "1981",
+     "emulator": "lr-mame2000",
+     "ai": false
+    },
+    {
+     "zip": "digdug",
+     "set": "digdug",
+     "title": "Dig Dug (rev 2)",
+     "year": "1982",
+     "emulator": "lr-mame2000",
+     "ai": false
+    },
+    {
+     "zip": "galaga",
+     "set": "galaga",
+     "title": "Galaga (Namco rev. B)",
+     "year": "1981",
+     "emulator": "lr-mame2000",
+     "ai": false
+    },
+    {
+     "zip": "xevious",
+     "set": "xevious",
+     "title": "Xevious (Namco)",
+     "year": "1982",
+     "emulator": "lr-mame2000",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "pacman/pacman.cpp",
+   "kit": "pacman_board",
+   "games": [
+    {
+     "zip": "crush",
+     "set": "crush",
+     "title": "Crush Roller (set 1)",
+     "year": "1981",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "mspacman",
+     "set": "mspacman",
+     "title": "Ms. Pac-Man",
+     "year": "1981",
+     "emulator": "mame-0.251",
+     "ai": true
+    },
+    {
+     "zip": "pacman",
+     "set": "pacman",
+     "title": "Pac-Man (Midway)",
+     "year": "1980",
+     "emulator": "mame-0.251",
+     "ai": true
+    },
+    {
+     "zip": "pacplus",
+     "set": "pacplus",
+     "title": "Pac-Man Plus",
+     "year": "1982",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "puckman",
+     "set": "puckmanb",
+     "title": "Puck Man (bootleg set 1)",
+     "year": "1980",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": [
+    "mspacman",
+    "pacman"
+   ]
+  },
+  {
+   "source": "sega/segag80v.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "elim2",
+     "set": "elim2",
+     "title": "Eliminator (2 Players, set 1)",
+     "year": "1981",
+     "emulator": "lr-mame2003",
+     "ai": false
+    },
+    {
+     "zip": "spacfury",
+     "set": "spacfury",
+     "title": "Space Fury (revision C)",
+     "year": "1981",
+     "emulator": "lr-mame2003",
+     "ai": false
+    },
+    {
+     "zip": "startrek",
+     "set": "startrek",
+     "title": "Star Trek",
+     "year": "1982",
+     "emulator": "lr-mame2003",
+     "ai": false
+    },
+    {
+     "zip": "tacscan",
+     "set": "tacscan",
+     "title": "Tac/Scan",
+     "year": "1982",
+     "emulator": "lr-mame2003",
+     "ai": false
+    },
+    {
+     "zip": "zektor",
+     "set": "zektor",
+     "title": "Zektor (revision B)",
+     "year": "1982",
+     "emulator": "lr-mame2003",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "dataeast/btime.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "bnj",
+     "set": "bnjm",
+     "title": "Bump 'n' Jump (Midway)",
+     "year": "1982",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "brubber",
+     "set": "brubber",
+     "title": "Burnin' Rubber",
+     "year": "1982",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "btime",
+     "set": "btime",
+     "title": "Burger Time (Data East set 1)",
+     "year": "1982",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "lnc",
+     "set": "lnc",
+     "title": "Lock'n'Chase",
+     "year": "1981",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "midw8080/8080bw.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "galxwars",
+     "set": "galxwars",
+     "title": "Galaxy Wars (Universal set 1)",
+     "year": "1979",
+     "emulator": "lr-mame2003",
+     "ai": false
+    },
+    {
+     "zip": "invadpt2",
+     "set": "invadpt2",
+     "title": "Space Invaders Part II (Taito, bigger ROMs)",
+     "year": "1979",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "lrescue",
+     "set": "lrescue",
+     "title": "Lunar Rescue",
+     "year": "1979",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "polaris",
+     "set": "polarisb",
+     "title": "Polaris (first revision)",
+     "year": "1980",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "nintendo/dkong.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "dkong",
+     "set": "dkong",
+     "title": "Donkey Kong (US set 1)",
+     "year": "1981",
+     "emulator": "advmame",
+     "ai": false
+    },
+    {
+     "zip": "dkong3",
+     "set": "dkong3",
+     "title": "Donkey Kong 3 (US)",
+     "year": "1983",
+     "emulator": "lr-mame2000",
+     "ai": false
+    },
+    {
+     "zip": "dkongjr",
+     "set": "dkongjr",
+     "title": "Donkey Kong Junior (US set F-2)",
+     "year": "1982",
+     "emulator": "lr-mame2000",
+     "ai": false
+    },
+    {
+     "zip": "radarscp",
+     "set": "radarscpc",
+     "title": "Radar Scope (TRS02?, rev. C)",
+     "year": "1980",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "taito/taitosj.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "elevator",
+     "set": "elevator",
+     "title": "Elevator Action (BA3, 4 PCB version, 1.1)",
+     "year": "1983",
+     "emulator": "lr-mame2000",
+     "ai": false
+    },
+    {
+     "zip": "frontlin",
+     "set": "frontlin",
+     "title": "Front Line (AA1, 4 PCB version)",
+     "year": "1982",
+     "emulator": "lr-mame2000",
+     "ai": false
+    },
+    {
+     "zip": "junglek",
+     "set": "junglek",
+     "title": "Jungle King (Japan)",
+     "year": "1982",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "spacecr",
+     "set": "spacecr",
+     "title": "Space Cruiser",
+     "year": "1981",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "atari/asteroid.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "astdelux",
+     "set": "astdelux",
+     "title": "Asteroids Deluxe (rev 3)",
+     "year": "1980",
+     "emulator": "lr-mame2003",
+     "ai": false
+    },
+    {
+     "zip": "asteroid",
+     "set": "asteroid",
+     "title": "Asteroids (rev 4)",
+     "year": "1979",
+     "emulator": "lr-mame2003",
+     "ai": false
+    },
+    {
+     "zip": "llander",
+     "set": "llander",
+     "title": "Lunar Lander (rev 2)",
+     "year": "1979",
+     "emulator": "lr-mame2003",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "atari/bwidow.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "bwidow",
+     "set": "bwidow",
+     "title": "Black Widow",
+     "year": "1982",
+     "emulator": "lr-mame2003",
+     "ai": false
+    },
+    {
+     "zip": "gravitar",
+     "set": "gravitar",
+     "title": "Gravitar (version 3)",
+     "year": "1982",
+     "emulator": "lr-mame2003",
+     "ai": false
+    },
+    {
+     "zip": "spacduel",
+     "set": "spacduel",
+     "title": "Space Duel (version 2)",
+     "year": "1980",
+     "emulator": "lr-mame2003",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "atari/bzone.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "bradley",
+     "set": "bradley",
+     "title": "Bradley Trainer",
+     "year": "1980",
+     "emulator": "advmame",
+     "ai": false
+    },
+    {
+     "zip": "bzone",
+     "set": "bzone",
+     "title": "Battle Zone (rev 2)",
+     "year": "1980",
+     "emulator": "advmame",
+     "ai": true
+    },
+    {
+     "zip": "redbaron",
+     "set": "redbaron",
+     "title": "Red Baron (Revised Hardware)",
+     "year": "1980",
+     "emulator": "lr-mame2003",
+     "ai": false
+    }
+   ],
+   "ai_games": [
+    "bzone"
+   ]
+  },
+  {
+   "source": "atari/centiped.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "centiped",
+     "set": "centiped",
+     "title": "Centipede (revision 4)",
+     "year": "1980",
+     "emulator": "lr-mame2003",
+     "ai": false
+    },
+    {
+     "zip": "milliped",
+     "set": "milliped",
+     "title": "Millipede",
+     "year": "1982",
+     "emulator": "advmame",
+     "ai": false
+    },
+    {
+     "zip": "warlords",
+     "set": "warlords",
+     "title": "Warlords",
+     "year": "1980",
+     "emulator": "advmame",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "midway/astrocde.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "gorf",
+     "set": "gorf",
+     "title": "Gorf",
+     "year": "1981",
+     "emulator": "advmame",
+     "ai": false
+    },
+    {
+     "zip": "seawolf2",
+     "set": "seawolf2",
+     "title": "Sea Wolf II",
+     "year": "1978",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "wow",
+     "set": "wow",
+     "title": "Wizard of Wor",
+     "year": "1980",
+     "emulator": "lr-mame2000",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "namco/mappy.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "digdug2",
+     "set": "digdug2",
+     "title": "Dig Dug II (New Ver.)",
+     "year": "1985",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "mappy",
+     "set": "mappy",
+     "title": "Mappy (US)",
+     "year": "1983",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "superpac",
+     "set": "superpac",
+     "title": "Super Pac-Man",
+     "year": "1982",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "pacific/thief.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "natodef",
+     "set": "natodef",
+     "title": "NATO Defense",
+     "year": "1982",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "sharkatt",
+     "set": "sharkatt",
+     "title": "Shark Attack",
+     "year": "1980",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "thief",
+     "set": "thief",
+     "title": "Thief",
+     "year": "1981",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "sega/segag80r.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "astrob",
+     "set": "astrob",
+     "title": "Astro Blaster (version 3)",
+     "year": "1981",
+     "emulator": "lr-mame2000",
+     "ai": false
+    },
+    {
+     "zip": "monsterb",
+     "set": "monsterb",
+     "title": "Monster Bash",
+     "year": "1982",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "spaceod",
+     "set": "spaceod2",
+     "title": "Space Odyssey (version 1)",
+     "year": "1981",
+     "emulator": "lr-mame2000",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "sega/turbo.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "buckrog",
+     "set": "buckrog",
+     "title": "Buck Rogers: Planet of Zoom",
+     "year": "1982",
+     "emulator": "advmame",
+     "ai": false
+    },
+    {
+     "zip": "subroc3d",
+     "set": "subroc3d",
+     "title": "Subroc-3D",
+     "year": "1982",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "turbo",
+     "set": "turbo",
+     "title": "Turbo (program 1513-1515)",
+     "year": "1981",
+     "emulator": "advmame",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "sega/zaxxon.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "congo",
+     "set": "congo",
+     "title": "Congo Bongo (Rev C, 2 board stack)",
+     "year": "1983",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "szaxxon",
+     "set": "szaxxon",
+     "title": "Super Zaxxon (315-5013)",
+     "year": "1982",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "zaxxon",
+     "set": "zaxxon",
+     "title": "Zaxxon (set 1, rev D)",
+     "year": "1982",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "universal/docastle.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "docastle",
+     "set": "docastle",
+     "title": "Mr. Do's Castle (set 1)",
+     "year": "1983",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "dorunrun",
+     "set": "dorunrun",
+     "title": "Do! Run Run (set 1)",
+     "year": "1984",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "dowild",
+     "set": "dowild",
+     "title": "Mr. Do's Wild Ride",
+     "year": "1984",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "universal/ladybug.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "cavenger",
+     "set": "cavenger",
+     "title": "Cosmic Avenger",
+     "year": "1981",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "ladybug",
+     "set": "ladybug",
+     "title": "Lady Bug",
+     "year": "1981",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "snapjack",
+     "set": "snapjack",
+     "title": "Snap Jack",
+     "year": "1981",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "atari/gauntlet.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "gaunt2",
+     "set": "gaunt2",
+     "title": "Gauntlet II",
+     "year": "1986",
+     "emulator": "advmame",
+     "ai": false
+    },
+    {
+     "zip": "gauntlet",
+     "set": "gauntlet",
+     "title": "Gauntlet (rev 14)",
+     "year": "1985",
+     "emulator": "advmame",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "atari/starwars.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "esb",
+     "set": "esb",
+     "title": "The Empire Strikes Back",
+     "year": "1985",
+     "emulator": "lr-mame2003",
+     "ai": false
+    },
+    {
+     "zip": "starwars",
+     "set": "starwars",
+     "title": "Star Wars (set 1)",
+     "year": "1983",
+     "emulator": "lr-mame2003",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "exidy/exidy440.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "cracksht",
+     "set": "cracksht",
+     "title": "Crackshot (version 2.0)",
+     "year": "1985",
+     "emulator": "lr-mame2000",
+     "ai": false
+    },
+    {
+     "zip": "crossbow",
+     "set": "crossbow",
+     "title": "Crossbow (version 2.0)",
+     "year": "1983",
+     "emulator": "lr-mame2000",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "exidy/starfire.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "fireone",
+     "set": "fireone",
+     "title": "Fire One",
+     "year": "1979",
+     "emulator": "lr-mame2000",
+     "ai": false
+    },
+    {
+     "zip": "starfire",
+     "set": "starfire",
+     "title": "Star Fire (set 1)",
+     "year": "1979",
+     "emulator": "lr-mame2000",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "galaxian/scobra.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "hustler",
+     "set": "hustler",
+     "title": "Video Hustler",
+     "year": "1981",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "minefld",
+     "set": "minefld",
+     "title": "Minefield",
+     "year": "1983",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "namco/gaplus.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "galaga3",
+     "set": "galaga3",
+     "title": "Galaga 3 (GP3 rev. D)",
+     "year": "1984",
+     "emulator": "advmame",
+     "ai": false
+    },
+    {
+     "zip": "gaplus",
+     "set": "gaplus",
+     "title": "Gaplus (GP2 rev. B)",
+     "year": "1984",
+     "emulator": "lr-mame2003",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "namco/namcos1.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "galaga88",
+     "set": "galaga88",
+     "title": "Galaga '88",
+     "year": "1987",
+     "emulator": "lr-mame2000",
+     "ai": false
+    },
+    {
+     "zip": "tankfrce",
+     "set": "tankfrce",
+     "title": "Tank Force (US, 2 Players)",
+     "year": "1991",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "namco/polepos.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "polepos",
+     "set": "polepos",
+     "title": "Pole Position (World)",
+     "year": "1982",
+     "emulator": "lr-mame2003",
+     "ai": false
+    },
+    {
+     "zip": "polepos2",
+     "set": "polepos2",
+     "title": "Pole Position II (Japan)",
+     "year": "1983",
+     "emulator": "advmame",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "namco/rallyx.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "jungler",
+     "set": "jungler",
+     "title": "Jungler",
+     "year": "1981",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "rallyx",
+     "set": "rallyx",
+     "title": "Rally X (32k Ver.?)",
+     "year": "1980",
+     "emulator": "lr-mame2000",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "nichibutsu/cclimber.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "cclimber",
+     "set": "cclimber",
+     "title": "Crazy Climber (US set 1)",
+     "year": "1980",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "swimmer",
+     "set": "swimmer",
+     "title": "Swimmer (set 1)",
+     "year": "1982",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "nintendo/punchout.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "punchout",
+     "set": "punchout",
+     "title": "Punch-Out!! (Rev B)",
+     "year": "1984",
+     "emulator": "lr-mame2000",
+     "ai": false
+    },
+    {
+     "zip": "spnchout",
+     "set": "spnchout",
+     "title": "Super Punch-Out!! (Rev B)",
+     "year": "1984",
+     "emulator": "lr-mame2000",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "phoenix/phoenix.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "phoenix",
+     "set": "phoenix",
+     "title": "Phoenix (Amstar, set 1)",
+     "year": "1980",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "pleiads",
+     "set": "pleiads",
+     "title": "Pleiads (Tehkan)",
+     "year": "1981",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "sega/blockade.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "blockade",
+     "set": "blockade",
+     "title": "Blockade",
+     "year": "1976",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "mineswpr",
+     "set": "mineswpr",
+     "title": "Minesweeper",
+     "year": "1977",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "sega/system1.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "pitfall2",
+     "set": "pitfall2",
+     "title": "Pitfall II (315-5093)",
+     "year": "1985",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "starjack",
+     "set": "starjack",
+     "title": "Star Jacker (Sega)",
+     "year": "1983",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "snk/snk6502.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "satansat",
+     "set": "satansat",
+     "title": "Satan of Saturn (set 1)",
+     "year": "1981",
+     "emulator": "lr-mame2000",
+     "ai": false
+    },
+    {
+     "zip": "vanguard",
+     "set": "vanguard",
+     "title": "Vanguard (SNK)",
+     "year": "1981",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "sunelectronics/kangaroo.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "fnkyfish",
+     "set": "fnkyfish",
+     "title": "Funky Fish",
+     "year": "1981",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "kangaroo",
+     "set": "kangaroo",
+     "title": "Kangaroo",
+     "year": "1982",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "taito/qix.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "qix",
+     "set": "qix",
+     "title": "Qix (Rev 2)",
+     "year": "1981",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "sdungeon",
+     "set": "sdungeon",
+     "title": "Space Dungeon",
+     "year": "1981",
+     "emulator": "lr-mame2000",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "valadon/bagman.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "bagman",
+     "set": "bagman",
+     "title": "Bagman",
+     "year": "1982",
+     "emulator": "mame-0.251",
+     "ai": false
+    },
+    {
+     "zip": "sbagman",
+     "set": "sbagman2",
+     "title": "Super Bagman (version 3?)",
+     "year": "1984",
+     "emulator": "lr-mame2000",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "atari/atarisy1.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "marble",
+     "set": "marble",
+     "title": "Marble Madness (set 1)",
+     "year": "1984",
+     "emulator": "advmame",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "atari/atarisy2.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "paperboy",
+     "set": "paperboy",
+     "title": "Paperboy (rev 3)",
+     "year": "1984",
+     "emulator": "advmame",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "atari/blstroid.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "blstroid",
+     "set": "blstroid",
+     "title": "Blasteroids (rev 4)",
+     "year": "1987",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "atari/canyon.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "canyon",
+     "set": "canyon",
+     "title": "Canyon Bomber",
+     "year": "1977",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "atari/ccastles.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "ccastles",
+     "set": "ccastles",
+     "title": "Crystal Castles (version 4)",
+     "year": "1983",
+     "emulator": "lr-mame2003",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "atari/firetrk.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "superbug",
+     "set": "superbug",
+     "title": "Super Bug",
+     "year": "1977",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "atari/foodf.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "foodf",
+     "set": "foodf",
+     "title": "Food Fight (rev 3)",
+     "year": "1982",
+     "emulator": "lr-mame2000",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "atari/irobot.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "irobot",
+     "set": "irobot",
+     "title": "I, Robot",
+     "year": "1983",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "atari/jedi.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "jedi",
+     "set": "jedi",
+     "title": "Return of the Jedi",
+     "year": "1984",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "atari/mhavoc.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "mhavoc",
+     "set": "mhavoc",
+     "title": "Major Havoc (rev 3)",
+     "year": "1983",
+     "emulator": "lr-mame2003",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "atari/missile.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "missile",
+     "set": "missile",
+     "title": "Missile Command (rev 3)",
+     "year": "1980",
+     "emulator": "lr-mame2003",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "atari/nitedrvr.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "nitedrvr",
+     "set": "nitedrvr",
+     "title": "Night Driver",
+     "year": "1976",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "atari/quantum.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "quantum",
+     "set": "quantum",
+     "title": "Quantum (rev 2)",
+     "year": "1982",
+     "emulator": "advmame",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "atari/sbrkout.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "sbrkout",
+     "set": "sbrkout",
+     "title": "Super Breakout (rev 04)",
+     "year": "1978",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "atari/skydiver.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "skydiver",
+     "set": "skydiver",
+     "title": "Sky Diver",
+     "year": "1978",
+     "emulator": "lr-mame2000",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "atari/skyraid.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "skyraid",
+     "set": "skyraid",
+     "title": "Sky Raider",
+     "year": "1978",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "atari/starshp1.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "starshp1",
+     "set": "starshp1",
+     "title": "Starship 1",
+     "year": "1977",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "atari/subs.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "subs",
+     "set": "subs",
+     "title": "Subs",
+     "year": "1977",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "atari/tempest.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "tempest",
+     "set": "tempest",
+     "title": "Tempest (rev 3, Revised Hardware)",
+     "year": "1980",
+     "emulator": "advmame",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "atari/ultratnk.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "ultratnk",
+     "set": "ultratnk",
+     "title": "Ultra Tank",
+     "year": "1978",
+     "emulator": "advmame",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "cinematronics/cchasm.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "cchasm",
+     "set": "cchasm",
+     "title": "Cosmic Chasm (set 1)",
+     "year": "1983",
+     "emulator": "advmame",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "cinematronics/jack.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "jack",
+     "set": "jack",
+     "title": "Jack the Giantkiller (set 1)",
+     "year": "1982",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "dataeast/astrof.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "astrof",
+     "set": "astrof",
+     "title": "Astro Fighter (set 1)",
+     "year": "1979",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "exidy/circus.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "circus",
+     "set": "circus",
+     "title": "Circus / Acrobat TV",
+     "year": "1977",
+     "emulator": "lr-mame2000",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "galaxian/fastfred.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "jumpcoas",
+     "set": "jumpcoasa",
+     "title": "Jump Coaster",
+     "year": "1983",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "gametron/gotya.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "thehand",
+     "set": "thehand",
+     "title": "The Hand",
+     "year": "1981",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "gottlieb/exterm.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "exterm",
+     "set": "exterm",
+     "title": "Exterminator",
+     "year": "1989",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "irem/m52.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "mpatrol",
+     "set": "mpatrol",
+     "title": "Moon Patrol",
+     "year": "1982",
+     "emulator": "lr-mame2000",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "irem/redalert.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "redalert",
+     "set": "redalert",
+     "title": "Red Alert",
+     "year": "1981",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "jaleco/blueprnt.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "blueprnt",
+     "set": "blueprnt",
+     "title": "Blue Print (Midway)",
+     "year": "1982",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "konami/gyruss.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "gyruss",
+     "set": "gyruss",
+     "title": "Gyruss",
+     "year": "1983",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "konami/pooyan.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "pooyan",
+     "set": "pooyan",
+     "title": "Pooyan",
+     "year": "1982",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "konami/timeplt.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "timeplt",
+     "set": "timeplt",
+     "title": "Time Pilot",
+     "year": "1982",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "konami/tutankhm.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "tutankhm",
+     "set": "tutankhm",
+     "title": "Tutankham",
+     "year": "1982",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "meadows/lazercmd.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "lazercmd",
+     "set": "lazercmd",
+     "title": "Lazer Command",
+     "year": "1976",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "midway/gridlee.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "gridlee",
+     "set": "gridlee",
+     "title": "Gridlee",
+     "year": "1983",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "midway/mcr3.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "spyhunt",
+     "set": "spyhunt",
+     "title": "Spy Hunter",
+     "year": "1983",
+     "emulator": "advmame",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "midway/omegrace.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "omegrace",
+     "set": "omegrace",
+     "title": "Omega Race (set 1)",
+     "year": "1981",
+     "emulator": "advmame",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "misc/aztarac.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "aztarac",
+     "set": "aztarac",
+     "title": "Aztarac",
+     "year": "1983",
+     "emulator": "lr-mame2003",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "namco/pacland.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "pacland",
+     "set": "pacland",
+     "title": "Pac-Land (World)",
+     "year": "1984",
+     "emulator": "lr-mame2000",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "namco/tankbatt.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "tankbatt",
+     "set": "tankbatt",
+     "title": "Tank Battalion",
+     "year": "1980",
+     "emulator": "lr-mame2000",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "nintendo/mario.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "mario",
+     "set": "mario",
+     "title": "Mario Bros. (US, Revision G)",
+     "year": "1983",
+     "emulator": "lr-mame2000",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "nintendo/popeye.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "popeye",
+     "set": "popeye",
+     "title": "Popeye (revision D)",
+     "year": "1982",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "nintendo/spacefb.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "spacefb",
+     "set": "spacefbe2",
+     "title": "Space Firebird (rev. 03-e set 2)",
+     "year": "1980",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "pacman/jrpacman.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "jrpacman",
+     "set": "jrpacman",
+     "title": "Jr. Pac-Man (11/9/83)",
+     "year": "1983",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "pacman/pengo.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "pengo",
+     "set": "pengo",
+     "title": "Pengo (set 1 rev C, encrypted)",
+     "year": "1982",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "ramtek/starcrus.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "starcrus",
+     "set": "starcrus",
+     "title": "Star Cruiser",
+     "year": "1977",
+     "emulator": "lr-mame2000",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "sigma/nyny.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "nyny",
+     "set": "nyny",
+     "title": "New York! New York!",
+     "year": "1980",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "sigma/r2dtank.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "r2dtank",
+     "set": "r2dtank",
+     "title": "R2D Tank",
+     "year": "1980",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "sigma/spiders.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "spiders",
+     "set": "spiders",
+     "title": "Spiders (set 1)",
+     "year": "1981",
+     "emulator": "lr-mame2000",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "stern/astinvad.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "astinvad",
+     "set": "astinvad",
+     "title": "Astro Invader",
+     "year": "1980",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "stern/berzerk.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "berzerk",
+     "set": "berzerk",
+     "title": "Berzerk (revision RC31A)",
+     "year": "1980",
+     "emulator": "lr-mame2000",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "taito/arkanoid.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "arkanoid",
+     "set": "arkanoid",
+     "title": "Arkanoid (World, older)",
+     "year": "1986",
+     "emulator": "advmame",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "taito/bking.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "bking",
+     "set": "bking",
+     "title": "Birdie King",
+     "year": "1982",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "taito/bublbobl.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "bublbobl",
+     "set": "bublbobl",
+     "title": "Bubble Bobble (Japan, Ver 0.1)",
+     "year": "1986",
+     "emulator": "lr-mame2000",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "taito/taito_f2.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "ssi",
+     "set": "ssi",
+     "title": "Super Space Invaders '91 (World, revised code, Rev 1)",
+     "year": "1990",
+     "emulator": "lr-mame2000",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "tecmo/bombjack.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "bombjack",
+     "set": "bombjack",
+     "title": "Bomb Jack (set 1)",
+     "year": "1984",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "tecmo/senjyo.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "starforc",
+     "set": "starforc",
+     "title": "Star Force",
+     "year": "1984",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "universal/cosmic.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "panic",
+     "set": "panic",
+     "title": "Space Panic (version E)",
+     "year": "1980",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "universal/cosmicg.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "cosmicg",
+     "set": "cosmicg",
+     "title": "Cosmic Guerilla",
+     "year": "1979",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "universal/mrdo.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "mrdo",
+     "set": "mrdo",
+     "title": "Mr. Do!",
+     "year": "1982",
+     "emulator": "lr-mame2000",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  },
+  {
+   "source": "zaccaria/zac2650.cpp",
+   "kit": null,
+   "games": [
+    {
+     "zip": "dodgem",
+     "set": "dodgem",
+     "title": "Dodgem",
+     "year": "1979",
+     "emulator": "mame-0.251",
+     "ai": false
+    }
+   ],
+   "ai_games": []
+  }
+ ]
+}

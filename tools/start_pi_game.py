@@ -12,7 +12,7 @@ import time
 import paramiko
 
 from controller_client import dismiss_warning
-from gamelib import DEFAULT_GAME, DEFAULT_PI_HOST, ROOT, load_game, load_profile, pi_rompath, split_spec
+from gamelib import AI_PADS_ENV, DEFAULT_GAME, DEFAULT_PI_HOST, ROOT, load_game, load_profile, pi_rompath, split_spec
 from probe_mame_input import MAME_LOG, run
 from state_regions import regions_lua
 
@@ -20,7 +20,7 @@ from state_regions import regions_lua
 # physical panel or any other pad plugged into the Pi sorts before them and would take those numbers, so SDL is told to
 # ignore every device except the broker's (vendor 1209, products a101 and a102; pi/controller_broker.py). Checked with MAME
 # on 17 October 2026: with it MAME lists only "AI Arcade Player 1" and "AI Arcade Player 2".
-ONLY_AI_PADS = "SDL_GAMECONTROLLER_IGNORE_DEVICES_EXCEPT=0x1209/0xa101,0x1209/0xa102"
+ONLY_AI_PADS = AI_PADS_ENV
 
 REMOTE_DIR = "/home/pi/ai-arcade"
 STATE_FILE = "/dev/shm/ai-arcade-state.bin"
