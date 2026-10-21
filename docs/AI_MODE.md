@@ -289,3 +289,12 @@ Print exactly what a model would see: `python tools/show_prompt.py --game arcade
 | `tools/configure_mame_controller.py` | one-time controller profile |
 
 Game-specific code and scripts live under `games/<system>/<game>/` (see `games/README.md`).
+
+## When the model is slow
+
+A model server shared with something else (a game on the same GPU, a training run) answers slowly. Battle Zone's pilot makes
+four model calls per plan, about 0.4 s each on a quiet GPU; each may now take up to 4 s, and a whole plan older than 6 s is
+given up on (`games/arcade/bzone/pilot.py`: `CALL_TIMEOUT_S`, `PLAN_DEADLINE_S`). When 3 of the last 5 plans did not come in
+time, the Observatory shows a red **model: NOT ANSWERING IN TIME** tile and a line in the timeline, and says when the model
+answers in time again (`arcadekit/health.py`, logged as `model_health` events). Before, such plans silently became "stand
+still" (21 October 2026: Farming Simulator was using the GPU and the tank did nothing).

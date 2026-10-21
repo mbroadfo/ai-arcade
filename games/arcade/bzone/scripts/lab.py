@@ -20,6 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[4] / "tools"))
 from gamelib import DEFAULT_PI_HOST, ROOT, load_game  # noqa: E402  (puts the repository root on sys.path)
 
 from arcadekit.clock import TickClock  # noqa: E402
+from arcadekit.health import ModelHealth  # noqa: E402
 from arcadekit.observatory import DEFAULT_ADDRESS, LiveSink  # noqa: E402
 from broker_link import BrokerLink  # noqa: E402
 from games.arcade.bzone.controls import broker_actions, describe  # noqa: E402
@@ -143,12 +144,13 @@ def main(argv=None):
         policy = player
     elif args.policy == "pilot":
         from arcadekit.systemone import OllamaSystemOne
-        from games.arcade.bzone.pilot import S1MPilot
-        player = S1MPilot(OllamaSystemOne(model=args.model, timeout=2.0))
+        from games.arcade.bzone.pilot import CALL_TIMEOUT_S, S1MPilot
+        player = S1MPilot(OllamaSystemOne(model=args.model, timeout=CALL_TIMEOUT_S))
         policy = player
     else:
         policy = POLICIES[args.policy]
-    label = "-".join(p for p in (time.strftime("%Y%m%d-%H%M%S"), "arcade_bzone-lab", args.policy,
+    health = ModelHealth()
+    label ="-".join(p for p in (time.strftime("%Y%m%d-%H%M%S"), "arcade_bzone-lab", args.policy,
                                  f"{args.hz:g}hz", args.tag) if p)
     path = Path(args.out) / f"{label}.jsonl"
     path.parent.mkdir(exist_ok=True)
@@ -208,6 +210,13 @@ def main(argv=None):
             if player:
                 for asked in player.asked:  # answers that arrived this tick: the log and the Observatory's timeline
                     d = asked["decision"]
+                    answered = d["source"] == "model" if isinstance(d["source"], str) else "fallback" not in d["source"].values()
+                    change = health.record(answered)  # a slow model must not turn the player to code in silence
+                    if change:
+                        said = health.message() if change == "trouble" else "The model is answering in time again."
+                        log.write(json.dumps({"event": "model_health", "t": asked["t"], "state": change, "message": said}) + "\n")
+                        if live:
+                            live.send({"event": "lab", "what": said.upper() if change == "trouble" else said, "t": round(time.time(), 3)})
                     if args.policy == "pilot":  # a plan every second or so: the log; the status line shows it
                         log.write(json.dumps({"event": "plan", "t": asked["t"], "plan": d["plan"], "goal": d.get("goal"),
                                               "source": d["source"], "confidence": d.get("confidence"),
@@ -247,7 +256,10 @@ def main(argv=None):
             log.write(json.dumps(record) + "\n")
             if live and tick.began - shown >= 0.2:  # the Observatory: five status lines a second
                 shown = tick.began
-                live.send({**status(state, facts, frame, describe(names), why, kills), "t": round(time.time(), 3)})
+                record_status = status(state, facts, frame, describe(names), why, kills)
+                if health.trouble:  # the player is on its fallback: say so where the operator looks
+                    record_status["facts"] = [{"label": "model", "value": "NOT ANSWERING IN TIME", "tone": "bad"}] + record_status.get("facts", [])
+                live.send({**record_status, "t": round(time.time(), 3)})
             for change in record["changes"] if live else ():
                 live.send({"event": "lab", "what": change, "t": round(time.time(), 3)})
             kills += any(c.startswith("score") for c in record["changes"])  # a tank, missile or saucer destroyed
