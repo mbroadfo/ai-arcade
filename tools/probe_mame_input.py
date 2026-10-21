@@ -7,7 +7,7 @@ import time
 from pathlib import Path
 
 import paramiko
-from gamelib import DEFAULT_PI_HOST
+from gamelib import AI_PADS_ENV, DEFAULT_PI_HOST
 
 MAME_LOG = "/tmp/ai-arcade-mame.log"
 
@@ -55,7 +55,7 @@ def main():
         run(ssh, f"rm -f {probe_log}")
         run(
             ssh,
-            "nohup mame pacman -rompath /home/pi/RetroPie/roms/arcade "
+            f"nohup env {AI_PADS_ENV} mame pacman -rompath /home/pi/RetroPie/roms/arcade "
             "-sound none -video accel -nowindow -skip_gameinfo "
             "-joystick -joystickprovider sdl "
             "-ctrlrpath /home/pi/.mame/ctrlr -ctrlr aiarcade "

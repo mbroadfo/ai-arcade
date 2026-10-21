@@ -15,9 +15,10 @@ from pathlib import Path
 import paramiko
 
 import _bootstrap  # noqa: F401
-from controller_client import send
-from gamelib import DEFAULT_PI_HOST, load_game, load_profile, split_spec
+from controller_client import dismiss_warning, send
+from gamelib import AI_PADS_ENV, DEFAULT_PI_HOST, load_game, load_profile, split_spec
 from probe_mame_input import MAME_LOG, run
+from start_pi_game import ES_PROCESS
 from state_regions import regions_lua
 
 STATE_FILE = "/dev/shm/ai-arcade-state.bin"
@@ -80,8 +81,11 @@ def main():
         sftp.close()
 
         run(ssh, "pkill -9 -x mame || true")
+        # EmulationStation holds the screen (human mode): MAME cannot open it until ES has gone, as in tools/start_pi_game.py
+        run(ssh, f"pkill -f '{ES_PROCESS}' || true; "
+                 f"timeout 10 sh -c \"while pgrep -f '{ES_PROCESS}' >/dev/null; do sleep 0.2; done\" || true")
         run(ssh, f"rm -f {STATE_FILE}")
-        run(ssh, f"nohup mame {romset} -rompath /home/pi/RetroPie/roms/{system} -sound none "
+        run(ssh, f"nohup env {AI_PADS_ENV} mame {romset} -rompath /home/pi/RetroPie/roms/{system} -sound none "
                  "-video accel -nowindow -skip_gameinfo -joystick -joystickprovider sdl "
                  "-ctrlrpath /home/pi/.mame/ctrlr -ctrlr aiarcade "
                  f"-autoboot_script {REMOTE_DIR}/mame_state_export.lua "
@@ -94,6 +98,15 @@ def main():
             print("exporter never produced state; MAME log:\n" + run(ssh, f"tail -20 {MAME_LOG}"))
             return 1
         time.sleep(15)  # boot RAM test
+        first, _ = snapshot(ssh)
+        time.sleep(2)
+        second, _ = snapshot(ssh)
+        if second <= first:  # still frozen: a warning screen (a bootleg or imperfect driver) waits for a key
+            dismiss_warning(args.host, args.broker_port)
+            for _ in range(45):  # and a bootleg's start-up can be slower than the original's
+                time.sleep(1)
+                if snapshot(ssh)[1].mode == "attract":
+                    break
 
         print("== attract")
         f1, s = snapshot(ssh)
