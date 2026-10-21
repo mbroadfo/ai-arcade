@@ -36,6 +36,11 @@ TREADS = {  # name: (controls held, words, nose swing degrees a second (+ left),
     "stop": (frozenset(), "both treads still: stand still", 0, 0),
 }
 DURATIONS = (0.1, 0.25, 0.5, 1.0, 2.0, 3.0)
+# A plan is four model calls (tread, duration, fire, next tread), each about 0.4 s on a quiet GPU. One call may take up to
+# CALL_TIMEOUT_S (it was 2 s: any slow patch turned every plan into "stand still"); a whole plan older than PLAN_DEADLINE_S
+# is not worth playing, so it is given up on and the fallback shows (and tells the operator: arcadekit/health.py).
+CALL_TIMEOUT_S = 4.0
+PLAN_DEADLINE_S = 6.0
 INSTRUCTIONS = "You drive a Battlezone tank and plan its next moves."
 # One goal, one sentence: the model first picks the goal, then plans its moves under that goal's sentence alone. With
 # all five rules in one paragraph it turned toward an off-nose enemy 1 time in 30 and chose "forward" 21 times; told
@@ -194,6 +199,8 @@ class PlanDecider:
         self.client = client
 
     def ask(self, text, name, instructions, criteria):
+        if time.time() > getattr(self, "deadline", float("inf")):
+            raise TimeoutError(f"the plan took longer than {PLAN_DEADLINE_S:g} s")
         reply = self.client.ask(text, {name: {"type": "choice", "instructions": instructions,
                                               "criteria": shuffled(criteria)}})
         answer = reply["answers"][name]
@@ -216,6 +223,7 @@ class PlanDecider:
         b = f.enemy_bearing_deg if f.enemy_side != "none" else None
         ahead, behind = f.obstacle_ahead, f.obstacle_behind
         t0, latency = time.time(), []
+        self.deadline = t0 + PLAN_DEADLINE_S
         try:
             # 0. the goal (only those that make sense now); its one sentence is the instruction for the plan
             options = goals_now(f)
