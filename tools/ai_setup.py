@@ -61,6 +61,7 @@ def lab_schema(spec, game):
     return {
         "game": spec, "kind": "lab", "title": load_profile(spec).get("description", spec),
         "own_screen": bool(lab.get("own_screen")),  # not a MAME game: the run draws its own picture
+        "cabinet_screen": bool(lab.get("cabinet_screen")),  # ... and the game is shown on the cabinet's screen too
         "run_types": [
             {"value": "manual", "label": "Manual", "help": "A person plays on the cabinet."},
             {"value": "lab", "label": "Lab policy", "help": "Code plays: a fixed policy on a fixed-rate clock, every "
@@ -142,7 +143,8 @@ def command_line(spec, answers):
             raise ValueError(f"hz: {s['hz']['min']} to {s['hz']['max']}")
         if not s["seconds"]["min"] <= seconds <= s["seconds"]["max"]:
             raise ValueError(f"seconds: {s['seconds']['min']} to {s['seconds']['max']}")
-        return (args + ["--policy", policy, "--hz", f"{hz:g}", "--seconds", str(seconds)]
+        return (args + (["--show"] if s.get("cabinet_screen") else [])  # the game itself, on the cabinet's screen
+                + ["--policy", policy, "--hz", f"{hz:g}", "--seconds", str(seconds)]
                 + (["--model", str(answers.get("model") or modes[mode].get("model", "nimble"))] if ai else []))
 
     def pick(name, options, default):

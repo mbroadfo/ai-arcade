@@ -52,7 +52,8 @@ def status(state, decision, kind, ff, balls_lost, health_trouble=False):
               "playing": state.get("game_mode") == "in_game", "held": [f"{s} flipper" for s in held],
               "why": decision.get("choice", ""), "screen": {"size": list(SIZE), "smooth": True},
               "score": state.get("score", 0), "lives": state.get("ball_number")}
-    facts = [{"label": "decision", "value": f"{decision.get('choice')} ({decision.get('source')})", "tone": None},
+    facts = [{"label": "decision", "value": f"{decision.get('choice')}" + (f" + {decision['nudge']}" if decision.get("nudge") else "")
+              + f" ({decision.get('source')})", "tone": None},
              {"label": "kind", "value": kind, "tone": None},
              {"label": "message", "value": state.get("message") or "-", "tone": None},
              {"label": "balls lost", "value": balls_lost, "tone": None},

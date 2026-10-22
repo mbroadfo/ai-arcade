@@ -39,9 +39,10 @@ class SpaceCadet:
 
     def start(self):
         self._remote(f"[ -f {PID_FILE} ] && kill $(cat {PID_FILE}) 2>/dev/null; rm -f {PID_FILE}")
-        video = "" if self.show else "SDL_VIDEODRIVER=dummy "
-        launch = (f"cd {DATA} && echo $$ > {PID_FILE} && exec env SCP_AGENT_PORT={self.port} SCP_AGENT_STEP=1 {video}"
-                  f"SDL_AUDIODRIVER=dummy XDG_DATA_HOME=/tmp/scp-agent-prefs {GAME}/source/bin/SpaceCadetPinball"
+        # shown: the game opens on the cabinet's screen with its sound, as MAME does for an AI run; otherwise headless
+        video = "SDL_AUDIODRIVER=alsa" if self.show else "SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy"
+        launch = (f"cd {DATA} && echo $$ > {PID_FILE} && exec env SCP_AGENT_PORT={self.port} SCP_AGENT_STEP=1 {video} "
+                  f"XDG_DATA_HOME=/tmp/scp-agent-prefs {GAME}/source/bin/SpaceCadetPinball"
                   + (" -fullscreen" if self.show else ""))
         self.proc = subprocess.Popen(SSH + [self.host, launch], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         self.tunnel = subprocess.Popen(

@@ -18,6 +18,22 @@ PLUNGER_LANE_SX = 6.0  # the launch lane is at the screen's far right (sx about 
 
 HOLDS = {"neither": (False, False), "left": (True, False), "right": (False, True), "both": (True, True)}
 NUDGES = {"nudge_left": "nudge_left", "nudge_right": "nudge_right", "nudge_up": "nudge_up"}  # choice: the bridge's input
+NEAR = 4.5  # a flipper is "near" the ball within this of its pivot
+SOON_S, LANE_HALF = 0.7, 2.5  # ... or when the ball will pass flipper height within SOON_S, within LANE_HALF of its pivot
+
+
+def near(ff, side):
+    """Is the ball a matter for this flipper now: close to it, or about to arrive over it? (When the model is asked.)"""
+    f, a = ff[side], ff.get("arrives")
+    return f["dist"] <= NEAR or bool(a and a["s"] <= SOON_S and abs(a["sx"] - f["pivot"][0]) <= LANE_HALF)
+
+
+def nudge_matters(ff):
+    """Is a nudge worth asking about: the ball has stayed put, or it is heading for the gap between the flippers?"""
+    a = ff.get("arrives")
+    return ff["ball"].get("still_s", 0) >= 1.5 or bool(a and abs(a["sx"]) < 0.9 and a["s"] <= 1.0)
+
+
 PULLS = {"soft": 50, "medium": 100, "full": 150}  # frames of 10 ms the plunger is held
 
 
@@ -77,33 +93,35 @@ def situation(state, ff):
     return " ".join(lines)
 
 
-def hold_options(ff):
-    """Each choice with what it would do now (shuffled by the caller). Effects, in words, as facts: a flip that can reach the
-    ball sends it up the table; one that cannot does nothing; a ball resting on a raised flipper stays put until it is lowered."""
-    slow = ff["ball"]["speed"] < 1.5 and ff["ball"]["y"] > 10
-
-    def word(side):
+def flipper_questions(ff):
+    """The questions for one window: one for each flipper (raise or lower) and one for a nudge (none, or which way). Each
+    option says what it would do now, as a fact. Asked apart, the model answered each flipper on its own state: asked "which
+    flippers", with "both" among the answers, nimble:latest chose it 250 times in 284, with the ball far out of reach."""
+    ball = ff["ball"]
+    resting = ball["speed"] < 1.5 and ball["y"] > 10
+    questions = {}
+    for side in ("left", "right"):
         f = ff[side]
-        if f["up"] and f["reach"] and slow:
-            return f"keep the {side} flipper up: the ball is resting on it and will not move"
         if f["up"]:
-            return f"keep the {side} flipper up" + (": it can hit the ball" if f["reach"] else ": the ball is out of its reach")
-        if f["reach"]:
-            return f"raise the {side} flipper: it hits the ball up the table"
-        return f"raise the {side} flipper: the ball is out of its reach, nothing happens"
-
-    jammed = ff["ball"].get("still_s", 0) >= 1.5
-    shake = " A jammed ball may be knocked loose." if jammed else ""
-    lowering = [s for s in ("left", "right") if ff[s]["up"]]
-    return {"neither": ("Lower both flippers" + (f": the ball rolls off the {lowering[0]} flipper and falls toward the flippers"
-                                                 if lowering and slow and ff[lowering[0]]["reach"] else
-                                                 ": the ball rolls on") + "."),
-            "nudge_left": "Nudge the table left: pushes the ball left; the flippers stay as they are." + shake,
-            "nudge_right": "Nudge the table right: pushes the ball right; the flippers stay as they are." + shake,
-            "nudge_up": "Nudge the table up: pushes the ball up the table; the flippers stay as they are." + shake,
-            "left": f"Only the left: {word('left')}; the right goes down.",
-            "right": f"Only the right: {word('right')}; the left goes down.",
-            "both": f"Both: {word('left')}; {word('right')}."}
+            held = f"it has been up {f.get('up_s', 0):.1f} s"
+            raise_ = (f"Keep the {side} flipper up: " + ("the ball is resting on it and will not move" if f["reach"] and resting
+                                                         else "it can hit the ball" if f["reach"] else "the ball is out of its reach"))
+            lower = (f"Lower the {side} flipper: " + ("the ball rolls off it" if f["reach"] and resting else "it is ready to flip again"))
+        else:
+            held = "it is down"
+            raise_ = (f"Raise the {side} flipper: " + ("it hits the ball up the table" if f["reach"]
+                                                       else "the ball is out of its reach, nothing happens"))
+            lower = f"Keep the {side} flipper down: it stays ready"
+        questions[side] = {"instructions": f"You play pinball. The {side} flipper: {held}. Raise it or lower it?",
+                           "criteria": {"raise": raise_, "lower": lower}}
+    tilt = f"adds about 1.6 to the tilt meter (now {ff['tilt']:.1f}, the table tilts above 1.0)" if "tilt" in ff else "adds to the tilt meter"
+    jammed = " A jammed ball may be knocked loose." if ball.get("still_s", 0) >= 1.5 else ""
+    questions["nudge"] = {"instructions": "You play pinball. Nudge the table?",
+                          "criteria": {"none": "No nudge.",
+                                       "nudge_left": f"Nudge left: pushes the ball left; {tilt}.{jammed}",
+                                       "nudge_right": f"Nudge right: pushes the ball right; {tilt}.{jammed}",
+                                       "nudge_up": f"Nudge up: pushes the ball up the table; {tilt}.{jammed}"}}
+    return questions
 
 
 class ModelPlayer:
@@ -112,9 +130,12 @@ class ModelPlayer:
 
     kind = "model"
 
-    def __init__(self, client):
+    def __init__(self, client, ask_when="near"):
+        """ask_when [timing]: "near" asks about a flipper only when the ball is near it (and about a nudge only when it matters);
+        "always" asks every window. A window with nothing to ask is booked as "skipped": the flippers rest, and it is not a model move."""
         self.client = client
-        self.moves = {"model": 0, "fallback": 0}
+        self.ask_when = ask_when
+        self.moves = {"model": 0, "fallback": 0, "skipped": 0}
 
     def ask(self, text, name, instructions, criteria):
         items = list(criteria.items())
@@ -126,18 +147,39 @@ class ModelPlayer:
         return answer["choice"], answer.get("confidence"), reply["latency_ms"]
 
     def flippers(self, state, ff, held):
+        ff["tilt"] = state.get("nudge_count", 0)
         text = situation(state, ff)
-        options = hold_options(ff)
+        questions = flipper_questions(ff)
+        if self.ask_when == "near":
+            questions = {n: q for n, q in questions.items()
+                         if (near(ff, n) if n in ("left", "right") else nudge_matters(ff))}
+            if not questions:
+                self.moves["skipped"] += 1
+                return {"choice": "neither", "nudge": None, "source": "skipped", "state_text": text}
+        body = {}
+        for name, q in questions.items():  # a small model favours the first option listed: shuffled
+            items = list(q["criteria"].items())
+            random.shuffle(items)
+            body[name] = {"type": "choice", "instructions": q["instructions"], "criteria": dict(items)}
         try:
-            choice, conf, ms = self.ask(text, "flippers", "You play pinball: keep the ball in play and score. "
-                                        "Which flippers are up for the next moment?", options)
+            reply = self.client.ask(text, body)
+            picked = {}
+            for name, q in questions.items():
+                answer = reply["answers"][name]
+                if answer["choice"] not in q["criteria"]:
+                    raise ValueError(f"{name}: answered {answer['choice']!r}, not offered")
+                picked[name] = answer
+            up = tuple(s in picked and picked[s]["choice"] == "raise" for s in ("left", "right"))
+            choice = {(False, False): "neither", (True, False): "left", (False, True): "right", (True, True): "both"}[up]
+            nudge = None if picked.get("nudge", {"choice": "none"})["choice"] == "none" else picked["nudge"]["choice"]
             self.moves["model"] += 1
-            return {"choice": choice, "source": "model", "confidence": conf, "latency_ms": ms, "state_text": text,
-                    "options": options}
+            return {"choice": choice, "nudge": nudge, "source": "model",
+                    "confidence": {n: a.get("confidence") for n, a in picked.items()},
+                    "latency_ms": reply["latency_ms"], "state_text": text, "options": questions}
         except Exception as exc:
             self.moves["fallback"] += 1
-            return {"choice": "neither", "source": "fallback", "note": f"model error: {exc}", "state_text": text,
-                    "options": options}
+            return {"choice": "neither", "nudge": None, "source": "fallback", "note": f"model error: {exc}",
+                    "state_text": text, "options": questions}
 
     def launch(self, state):
         text = (f"Score {state['score']}. Ball {4 - state['ball_number']} of 3. The ball is in the plunger lane. "

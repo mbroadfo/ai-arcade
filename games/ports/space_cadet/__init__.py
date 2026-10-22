@@ -5,7 +5,7 @@ starts a run. The game is not a MAME game: it runs headless on the cabinet Pi (b
 not to start MAME for it, and the run sends its own picture (observe.py).
 """
 
-LAB = {"ai_player": True, "own_screen": True,
+LAB = {"ai_player": True, "own_screen": True, "cabinet_screen": True,
        "ai_modes": [
            {"value": "model", "policy": "model", "model": "nimble", "label": "AI plays (thinking time)",
             "help": "The model chooses the flippers, nudges and plunger pull every 80 ms of game time; the game waits for each "

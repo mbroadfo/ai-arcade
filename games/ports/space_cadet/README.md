@@ -80,3 +80,25 @@ it moves at the model's pace, not in real time.
 The Observatory server needed two generic changes: it accepts `{"event": "frame", "png": ...}` from a player (a game with no
 frame server), and a game package may declare `own_screen`. The player module is `players.py` because a submodule named
 `player` would make the AI setup treat the package as a model-player game.
+
+## What the model is asked, and when (2026-10-22)
+
+First live use in the Observatory showed `nimble:latest` holding both flippers up for 250 of 284 windows, whatever the ball was
+doing. Fixes, in the order they mattered:
+
+- **One question per flipper** (raise or lower) and a separate nudge question, not "which flippers" with "both" among the answers.
+  Alone this was not enough: the small models still raised a flipper with the ball out of its reach in 70 to 85 % of windows,
+  nudged in about half, and three questions made each window take 1.2 s.
+- **Ask only when it matters** (`--ask-when near`, a [timing] switch, on by default): a flipper question goes to the model only
+  when the ball is within 4.5 of that flipper's pivot or will pass flipper height over it within 0.7 s; the nudge question only
+  when the ball has stayed put 1.5 s or is heading for the gap. A window with nothing to ask is booked as `skipped` (the
+  flippers rest), never as a model move. `--ask-when always` is the pure version. First try, one seed, 240 s wall: nimble:latest
+  416,500 (350 model decisions, 857 skipped), nimble 373,000 (355, 707), against about 145,000 to 170,000 for the controls: not yet a
+  comparison (one seed, game not finished), and the controls' flippers are also worth re-checking.
+- Run logs no longer put a colon in the file name (`nimble:latest`): Windows made the rest a hidden stream, so the log looked empty.
+
+## On the cabinet's screen
+
+An AI run started from the Observatory takes the cabinet's screen (EmulationStation stops, as for MAME) and runs the game
+itself fullscreen with its sound (`--show`; `cabinet_screen` in `LAB`); the Observatory still gets the drawn picture. Back to
+menu in the Observatory brings EmulationStation back. Time is stepped, so the game on the screen moves in bursts at the model's pace.

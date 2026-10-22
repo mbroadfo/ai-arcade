@@ -88,11 +88,10 @@ def play(game, player, window=8, max_game_s=900, max_wall_s=1800, log=None, heal
             kind = "launch"
         else:
             d = player.flippers(state, ff, held)
-            if d["choice"] in NUDGES:  # a nudge leaves the flippers as they are
-                game.press(NUDGES[d["choice"]])
-                game.release(NUDGES[d["choice"]])
-            else:
-                held = apply_hold(game, held, HOLDS[d["choice"]])
+            held = apply_hold(game, held, HOLDS[d["choice"]])
+            if d.get("nudge"):  # a nudge goes with whatever the flippers are doing
+                game.press(NUDGES[d["nudge"]])
+                game.release(NUDGES[d["nudge"]])
             state = game.step(window)
             kind = "flippers"
         n += 1
@@ -106,9 +105,10 @@ def play(game, player, window=8, max_game_s=900, max_wall_s=1800, log=None, heal
                 trail = (trail + [(-state["balls"][0]["x"], state["balls"][0]["y"])])[-40:]
             for line in (d.get("note"),) if d.get("source") == "fallback" and d.get("note") else ():
                 live.send({"event": "lab", "what": f"fallback: {line}", "t": round(time.time(), 3)})
-            if kind == "launch" or d["choice"] in NUDGES:  # the timeline: the moves worth reading (flips are on the status line)
+            if kind == "launch" or d.get("nudge"):  # the timeline: the moves worth reading (flips are on the status line)
                 took = f", {d['latency_ms'] / 1000:.1f} s" if d.get("latency_ms") else ""
-                live.send({"event": "lab", "what": f"{kind}: {d['choice']} ({d['source']}{took})", "t": round(time.time(), 3)})
+                live.send({"event": "lab", "what": f"{kind}: {d.get('nudge') or d['choice']} ({d['source']}{took})",
+                           "t": round(time.time(), 3)})
             if time.time() - shown >= 0.2:  # the Observatory: five pictures and status lines a second
                 shown = time.time()
                 live.send({"event": "frame", "png": observe.frame_png(state, trail)})
@@ -128,6 +128,8 @@ def main(argv=None):
     ap.add_argument("--model", default="nimble")
     ap.add_argument("--window", type=int, default=None, help="[timing] frames of 10 ms between decisions (8 = 12.5 a second)")
     ap.add_argument("--hz", type=float, default=None, help="[timing] decisions per second of game time (100 / window)")
+    ap.add_argument("--ask-when", choices=("near", "always"), default="near",
+                    help="[timing] near: ask about a flipper only when the ball is near it; always: every window")
     ap.add_argument("--seed", type=int, default=None, help="[timing] vary the launch timing (see play)")
     ap.add_argument("--max-game-s", type=float, default=900)
     ap.add_argument("--max-wall-s", "--seconds", dest="max_wall_s", type=float, default=1800)
@@ -141,19 +143,20 @@ def main(argv=None):
 
     if args.player == "model":
         from arcadekit.systemone import OllamaSystemOne
-        player = ModelPlayer(OllamaSystemOne(model=args.model, timeout=4.0))
+        player = ModelPlayer(OllamaSystemOne(model=args.model, timeout=4.0), args.ask_when)
     else:
         player = ReflexControl() if args.player == "reflex" else IdleControl()
     label = "-".join(p for p in (time.strftime("%Y%m%d-%H%M%S"), "ports_space_cadet", args.player,
                                  args.model if args.player == "model" else "", f"w{window}",
                                  f"s{args.seed}" if args.seed is not None else "", args.tag) if p)
+    label = label.replace(":", "_")  # a model name like nimble:latest: a colon in a Windows file name starts a hidden stream
     path = Path(args.out) / f"{label}.jsonl"
     path.parent.mkdir(exist_ok=True)
     decider = (f"S1M {args.model}: every flipper, nudge and plunger choice (model)" if args.player == "model"
                else f"control: {args.player} (code)")
     run_record = {"event": "run", "label": label, "game": "ports/space_cadet", "policy": args.player, "hz": round(100 / window, 1),
                   "decider": decider, "model": args.model if args.player == "model" else None, "knowledge": None, "goal": None,
-                  "strategist": None, "games": 1, "switches": {"window": window, "seed": args.seed},
+                  "strategist": None, "games": 1, "switches": {"window": window, "seed": args.seed, "ask_when": args.ask_when},
                   "mode": "stepped (thinking time): the game waits for each answer", "t": time.time()}
     stop = []
 
