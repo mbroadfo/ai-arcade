@@ -41,11 +41,11 @@ ball, and a plunger pull made before the ball has rolled down to rest (y about 1
 
 ## Playing it
 
-    python -m games.pinball.space_cadet.run --player model --model nimble     # S1M decides every window
-    python -m games.pinball.space_cadet.run --player reflex                   # CONTROL (code): flip when the ball is in reach
-    python -m games.pinball.space_cadet.run --player idle                     # CONTROL (code): never touch a flipper
+    python -m games.ports.space_cadet.run --player model --model nimble     # S1M decides every window
+    python -m games.ports.space_cadet.run --player reflex                   # CONTROL (code): flip when the ball is in reach
+    python -m games.ports.space_cadet.run --player idle                     # CONTROL (code): never touch a flipper
 
-`player.py` describes the table in words and numbers (where the ball is going, which flipper could hit it, how long a flipper
+`players.py` describes the table in words and numbers (where the ball is going, which flipper could hit it, how long a flipper
 has been up, the tilt meter) and shows each choice with its effect; the model picks the flippers (neither, left, right, both),
 a nudge, or the plunger pull. `run.py` presses what was chosen and steps 8 frames (80 ms). Runs are labelled **stepped
 (thinking time)**; the log in `runs/` books every decision as model, fallback or code.
@@ -64,7 +64,19 @@ it never chose a nudge, which is what frees a jammed ball. Score alone is a weak
 
 ## Next
 
-1. A `--seed` (random settling time before the launch) so repeated runs differ and a comparison has a spread.
-2. A "ball has not moved for N s" fact and clearer options for a jammed ball; then the same game with `tev1:latest`.
-3. Observatory: a top-down view drawn from the state and a launcher, so it appears in the AI games list.
-4. Real-time mode (the model chooses goals and timing windows, skills do the milliseconds).
+1. Seeded batches (`--seed N`, a random 0 to 2 s wait before each launch) of the model and the controls, watched in the Observatory.
+2. The same game with `tev1:latest` and `tev1:0.8b`.
+3. Real-time mode (the model chooses goals and timing windows, skills do the milliseconds).
+
+## In the Observatory
+
+The game is listed in GAMES as "3D Pinball for Windows - Space Cadet" (system `ports`) and is started from the AI setup: choose
+"AI plays", or one of the two controls. The package declares `own_screen`, so the Observatory starts no MAME and clears no
+screen: it starts `run_lab.py`, which runs `run.py`. The run sends its own picture (`observe.py`: ball, path and flippers drawn
+from the bridge's state, about five a second) and a status line with whose move it was; the timeline gets every launch, nudge,
+lost ball and model fallback. The picture is not the game's screen (the game runs headless on the Pi), and time is stepped, so
+it moves at the model's pace, not in real time.
+
+The Observatory server needed two generic changes: it accepts `{"event": "frame", "png": ...}` from a player (a game with no
+frame server), and a game package may declare `own_screen`. The player module is `players.py` because a submodule named
+`player` would make the AI setup treat the package as a model-player game.

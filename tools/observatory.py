@@ -180,9 +180,13 @@ def events_loop(hub, address):
             with conn, conn.makefile("r", encoding="utf-8", errors="replace") as lines:
                 for line in lines:
                     try:
-                        hub.add_event(json.loads(line))
+                        record = json.loads(line)
                     except json.JSONDecodeError:
                         continue
+                    if record.get("event") == "frame":  # a game with no frame server draws its own picture
+                        hub.set_frame(record.get("png"))
+                    else:
+                        hub.add_event(record)
         except OSError:
             pass
         finally:
@@ -323,7 +327,9 @@ class Control:
     def _start_ai(self, game, answers):
         import ai_setup
         args = ai_setup.command_line(game, answers)  # checked before anything is stopped
-        script = "run_lab.py" if ai_setup.schema(game).get("kind") == "lab" else "play.py"
+        schema = ai_setup.schema(game)
+        script = "run_lab.py" if schema.get("kind") == "lab" else "play.py"
+        own_screen = bool(schema.get("own_screen"))  # not a MAME game: nothing to start but the player
         speed = float(answers.get("speed", 0.85))
         if not 0.2 <= speed <= 1.0:
             raise ValueError("speed: 0.2 to 1.0")
@@ -334,11 +340,11 @@ class Control:
         def go():  # the run on screen (if any) finishes its files first, as the picker says it will
             self.publish({**self.runner.state, "state": "stopping", "next": game})
             self._end_ai()
-            self.runner.start(game, args, speed, script)
+            self.runner.start(game, args, speed, script, fresh=not own_screen)
         if self.runner.busy() or self.hub.players:
             threading.Thread(target=go, daemon=True).start()
             return {"args": args, "after": "stopping the current run"}
-        self.runner.start(game, args, speed, script)
+        self.runner.start(game, args, speed, script, fresh=not own_screen)
         return {"args": args}
 
     def _end_ai(self, wait=25):
