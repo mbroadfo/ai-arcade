@@ -68,9 +68,10 @@ namespace
 		if (!t)
 			return o + "\"table\":false}";
 		snprintf(b, sizeof b, "\"score\":%d,\"score_e9\":%d,\"ball_number\":%d,\"balls_max\":%d,\"extra_balls\":%d,"
-		         "\"tilt_lock\":%s,\"multiball\":%s,\"multiplier\":%d,",
+		         "\"tilt_lock\":%s,\"multiball\":%s,\"multiplier\":%d,\"nudge_count\":%.3f,",
 		         t->CurScore, t->CurScoreE9, t->BallCount, t->MaxBallCount, t->ExtraBalls,
-		         t->TiltLockFlag ? "true" : "false", t->MultiballFlag ? "true" : "false", t->ScoreMultiplier);
+		         t->TiltLockFlag ? "true" : "false", t->MultiballFlag ? "true" : "false", t->ScoreMultiplier,
+		         nudge::nudge_count);
 		o += b;
 		o += "\"balls\":[";
 		bool first = true;
@@ -87,9 +88,10 @@ namespace
 		o += "],\"flippers\":{";
 		auto flipper = [&](const char* name, TFlipper* f, bool comma)
 		{
-			snprintf(b, sizeof b, "%s\"%s\":{\"angle\":%.4f,\"max\":%.4f}", comma ? "," : "", name,
-			         f && f->FlipperEdge ? f->FlipperEdge->CurrentAngle : 0.0f,
-			         f && f->FlipperEdge ? f->FlipperEdge->AngleMax : 0.0f);
+			auto* e = f ? f->FlipperEdge : nullptr;
+			snprintf(b, sizeof b, "%s\"%s\":{\"angle\":%.4f,\"max\":%.4f,\"pivot\":[%.3f,%.3f],\"tip\":[%.3f,%.3f]}",
+			         comma ? "," : "", name, e ? e->CurrentAngle : 0.0f, e ? e->AngleMax : 0.0f,
+			         e ? e->RotOrigin.X : 0.0f, e ? e->RotOrigin.Y : 0.0f, e ? e->T1.X : 0.0f, e ? e->T1.Y : 0.0f);
 			o += b;
 		};
 		flipper("left", t->FlipperL, false);
