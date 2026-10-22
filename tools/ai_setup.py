@@ -60,6 +60,7 @@ def lab_schema(spec, game):
     lo, hi = lab["hz_range"]
     return {
         "game": spec, "kind": "lab", "title": load_profile(spec).get("description", spec),
+        "own_screen": bool(lab.get("own_screen")),  # not a MAME game: the run draws its own picture
         "run_types": [
             {"value": "manual", "label": "Manual", "help": "A person plays on the cabinet."},
             {"value": "lab", "label": "Lab policy", "help": "Code plays: a fixed policy on a fixed-rate clock, every "

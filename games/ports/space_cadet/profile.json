@@ -1,0 +1,6 @@
+{
+  "romset": "3D Space Cadet Pinball",
+  "description": "3D Pinball for Windows - Space Cadet",
+  "cabinet_file": "3D Space Cadet Pinball",
+  "comment": "Not a MAME game: a port run by retropie-pinball. The AI plays a copy of it with an agent bridge (bridge/), headless."
+}

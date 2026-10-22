@@ -70,6 +70,8 @@ def situation(state, ff):
     count = state.get("nudge_count", 0)
     lines.append(f"Tilt meter {count:.1f} (the table tilts and the flippers die above 1.0; each nudge adds about 1.6, "
                  "and it drains 1.0 a second).")
+    if ff["ball"].get("still_s", 0) >= 1.5:
+        lines.append(f"The ball has stayed within 0.6 of the same spot for {ff['ball']['still_s']:.1f} s.")
     if b["speed"] < 1.5 and b["y"] > 10 and (ff["left"]["up"] or ff["right"]["up"]):
         lines.append("The ball is almost still: a ball resting on a raised flipper stays there until the flipper is lowered.")
     return " ".join(lines)
@@ -90,13 +92,15 @@ def hold_options(ff):
             return f"raise the {side} flipper: it hits the ball up the table"
         return f"raise the {side} flipper: the ball is out of its reach, nothing happens"
 
+    jammed = ff["ball"].get("still_s", 0) >= 1.5
+    shake = " A jammed ball may be knocked loose." if jammed else ""
     lowering = [s for s in ("left", "right") if ff[s]["up"]]
     return {"neither": ("Lower both flippers" + (f": the ball rolls off the {lowering[0]} flipper and falls toward the flippers"
                                                  if lowering and slow and ff[lowering[0]]["reach"] else
                                                  ": the ball rolls on") + "."),
-            "nudge_left": "Nudge the table left: pushes the ball left; the flippers stay as they are.",
-            "nudge_right": "Nudge the table right: pushes the ball right; the flippers stay as they are.",
-            "nudge_up": "Nudge the table up: pushes the ball up the table; the flippers stay as they are.",
+            "nudge_left": "Nudge the table left: pushes the ball left; the flippers stay as they are." + shake,
+            "nudge_right": "Nudge the table right: pushes the ball right; the flippers stay as they are." + shake,
+            "nudge_up": "Nudge the table up: pushes the ball up the table; the flippers stay as they are." + shake,
             "left": f"Only the left: {word('left')}; the right goes down.",
             "right": f"Only the right: {word('right')}; the left goes down.",
             "both": f"Both: {word('left')}; {word('right')}."}
