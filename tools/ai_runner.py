@@ -37,7 +37,9 @@ class Runner:
         return self.state["state"] in ("starting", "running", "stopping")
 
     def start(self, game, play_args, speed=0.85, script="play.py", fresh=True):
-        """fresh=False: the game is already up (an earlier run left it): start only the player, not MAME again."""
+        """fresh=False: the game is already up (an earlier run left it): start only the player, not MAME again.
+        fresh="clear": a game that is not MAME's (the package says so: own_screen): take the cabinet's screen (EmulationStation
+        stops) and start only the player, which brings its game up itself."""
         if self.busy():
             raise RuntimeError("an AI run is already going")
         self.tail.clear()
@@ -49,6 +51,7 @@ class Runner:
         try:
             if fresh:
                 self.cabinet.clear()
+            if fresh is True:
                 self._set(state="starting", game=game, step="Starting MAME and the streams", args=play_args)
                 p = subprocess.run([sys.executable, str(TOOLS / "start_pi_game.py"), "--game", game, "--host",
                                     self.host, "--speed", f"{speed:.2f}"],

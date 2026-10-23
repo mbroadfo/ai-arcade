@@ -340,11 +340,11 @@ class Control:
         def go():  # the run on screen (if any) finishes its files first, as the picker says it will
             self.publish({**self.runner.state, "state": "stopping", "next": game})
             self._end_ai()
-            self.runner.start(game, args, speed, script, fresh=not own_screen)
+            self.runner.start(game, args, speed, script, fresh="clear" if own_screen else True)
         if self.runner.busy() or self.hub.players:
             threading.Thread(target=go, daemon=True).start()
             return {"args": args, "after": "stopping the current run"}
-        self.runner.start(game, args, speed, script, fresh=not own_screen)
+        self.runner.start(game, args, speed, script, fresh="clear" if own_screen else True)
         return {"args": args}
 
     def _end_ai(self, wait=25):
