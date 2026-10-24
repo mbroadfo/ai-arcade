@@ -102,3 +102,28 @@ doing. Fixes, in the order they mattered:
 An AI run started from the Observatory takes the cabinet's screen (EmulationStation stops, as for MAME) and runs the game
 itself fullscreen with its sound (`--show`; `cabinet_screen` in `LAB`); the Observatory still gets the drawn picture. Back to
 menu in the Observatory brings EmulationStation back. Time is stepped, so the game on the screen moves in bursts at the model's pace.
+
+## Nine seeded games each (2026-10-24, nimble, window 8, `--ask-when near`, stepped / thinking time)
+
+Seeds 1 to 9 (`--seed N`), every game played to game over.
+
+| Player | Median | Mean | Range | Scores by seed 1 to 9 |
+|---|---|---|---|---|
+| model (nimble) | 328,000 | 413,000 | 141,750 to 965,000 | 242,750 / 383,750 / 321,000 / 141,750 / 965,000 / 225,000 / 328,000 / 515,500 / 597,500 |
+| reflex (control, code) | 227,000 | 235,000 | 158,000 to 405,000 | 173,250 / 256,000 / 158,000 / 171,500 / 227,000 / 322,750 / 235,750 / 405,000 / 168,250 |
+| idle (control, code) | 137,750 | 151,000 | 86,500 to 345,500 | 146,750 / 345,500 / 111,500 / 144,750 / 86,500 / 137,750 / 108,000 / 109,000 / 170,750 |
+
+The model scored higher than reflex on 7 of the 9 seeds and higher than idle on 8 of 9. A permutation test on the medians gives
+p about 0.05 against reflex and 0.02 against idle: suggestive, not settled, with 9 games each and a very wide spread (the model's
+own best game is 965,000, its worst 141,750).
+
+Read it with these in mind:
+
+- The model was **asked in a minority of windows**: in each game 40 to 55 % of windows were skipped (the ball far from both
+  flippers), booked as `skipped`, where the flippers rest. "Model" below means the windows it answered: 230 to 1,930 a game
+  (about 0.5 to 0.9 s each, up to 4 s; some timed out and were booked as `fallback`, 22 to 75 a game in the first three games).
+- The reflex control is crude (flip while the ball is in reach, down after three windows); a better code control would be a fairer
+  yardstick, and is worth building before any claim that the model "beats code".
+- The run is stepped (thinking time): the game waits for each answer. Real-time play, where the model's delay costs the ball, is
+  not tested.
+- Seed 2's first try ended at the 15-minute wall limit with the ball still alive (it was not a jam); rerun with a 40-minute limit.
