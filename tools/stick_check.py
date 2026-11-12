@@ -24,7 +24,7 @@ from probe_panel import connect
 # what a reading means on a standard stick: (axis, sign) -> the terminal / direction it comes from
 STANDARD = {(1, -1): "UP", (1, 1): "DOWN", (0, -1): "LEFT", (0, 1): "RIGHT"}
 ORDER = ["UP", "DOWN", "LEFT", "RIGHT"]
-USB_PORTS = {"P1": "usb-xhci-hcd.0-1.2/input0", "P2": "usb-xhci-hcd.0-1.3/input0"}
+USB_PORTS = {"P1": "usb-xhci-hcd.0-1.3/input0", "P2": "usb-xhci-hcd.0-1.1/input0"}
 
 
 def reading(event):

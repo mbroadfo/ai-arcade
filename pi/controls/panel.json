@@ -1,5 +1,5 @@
 {
-  "comment": "The panel as captured on 17 October 2026 (docs/CABINET_CONTROLS.md, docs/data/panel-capture-*.json). Codes are Linux evdev button codes; an SDL, RetroArch or MAME button number is the code minus 288. Axes: abs 0 is X, abs 1 is Y; a sign is the direction of the reading (negative: left or up on a standard stick). Both players are the same encoder model; they differ only by USB port.",
+  "comment": "The panel as captured on 17 October 2026 (USB ports and flippers re-captured 12 November 2026 after the rebuild) (docs/CABINET_CONTROLS.md, docs/data/panel-capture-*.json). Codes are Linux evdev button codes; an SDL, RetroArch or MAME button number is the code minus 288. Axes: abs 0 is X, abs 1 is Y; a sign is the direction of the reading (negative: left or up on a standard stick). Both players are the same encoder model; they differ only by USB port.",
   "device": {
     "evdev_name": "DragonRise Inc.   Generic   USB  Joystick  ",
     "sdl_name": "DragonRise Inc. Generic USB Joystick",
@@ -10,7 +10,7 @@
   },
   "players": {
     "P1": {
-      "usb_port": "usb-xhci-hcd.0-1.2/input0",
+      "usb_port": "usb-xhci-hcd.0-1.3/input0",
       "stick": {
         "up": [
           "abs",
@@ -47,7 +47,7 @@
       }
     },
     "P2": {
-      "usb_port": "usb-xhci-hcd.0-1.3/input0",
+      "usb_port": "usb-xhci-hcd.0-1.1/input0",
       "stick": {
         "up": [
           "abs",
@@ -85,6 +85,11 @@
         "FLIGHT2": 298
       }
     }
+  },
+  "flippers": {
+    "comment": "The two pinball flipper buttons (captured 12 November 2026); the two players take turns on them. Each is read as the left reading of the X axis of one encoder, so it is the same signal as that encoder's stick pushed left: nothing can tell a flipper from the stick, and a pinball game must not use the sticks.",
+    "left": {"player": "P1", "input": ["abs", 0, -1]},
+    "right": {"player": "P2", "input": ["abs", 0, -1]}
   },
   "layout": {
     "comment": "What each physical control means to a game. BUTTON_1..6 are the arcade action buttons in this order; the flight stick's trigger and secondary also act as Player 2's BUTTON_1 and BUTTON_2.",
