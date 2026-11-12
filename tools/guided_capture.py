@@ -36,7 +36,7 @@ SECTIONS = {
            ["UP", "DOWN", "RIGHT", "LEFT", "A", "B", "X", "Y", "SNOWFLAKE", "STAR", "COIN 1", "P1 START", "ESC", "TAB"]]),
     "p2": ("Player 2's controller", [("P2", n) for n in
            ["UP", "DOWN", "RIGHT", "LEFT", "A", "B", "X", "Y", "SNOWFLAKE", "STAR", "COIN 2", "P2 START", "ENTER", "PAUSE"]]),
-    "flippers": ("the pinball flipper buttons (two, shared by both players; wired as the stick-left of each encoder)",
+    "flippers": ("the pinball flipper buttons (two, shared by both players; wired to the Player 1 encoder's stick-left and stick-right)",
                  [("FLIPPER", "LEFT"), ("FLIPPER", "RIGHT")]),
     "p2stick": ("Player 2's stick alone (after rewiring it)", [("P2", n) for n in ["UP", "DOWN", "RIGHT", "LEFT"]]),
     "flight": ("the flight controller", [("FLIGHT", "button 1"), ("FLIGHT", "button 2")]),

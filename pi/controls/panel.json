@@ -87,9 +87,9 @@
     }
   },
   "flippers": {
-    "comment": "The two pinball flipper buttons (captured 12 November 2026); the two players take turns on them. Each is read as the left reading of the X axis of one encoder, so it is the same signal as that encoder's stick pushed left: nothing can tell a flipper from the stick, and a pinball game must not use the sticks.",
+    "comment": "The two pinball flipper buttons (captured 12 November 2026); the two players take turns on them. Both are wired to the Player 1 encoder's stick terminals: left is the X axis read negative, right is the X axis read positive, the same signals as that stick pushed left and right. A pinball game must not also use that stick.",
     "left": {"player": "P1", "input": ["abs", 0, -1]},
-    "right": {"player": "P2", "input": ["abs", 0, -1]}
+    "right": {"player": "P1", "input": ["abs", 0, 1]}
   },
   "layout": {
     "comment": "What each physical control means to a game. BUTTON_1..6 are the arcade action buttons in this order; the flight stick's trigger and secondary also act as Player 2's BUTTON_1 and BUTTON_2.",
