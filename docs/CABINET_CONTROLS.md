@@ -81,11 +81,12 @@ From `tools/guided_capture.py` with the panel wired (raw copy: `docs/data/panel-
 
 | Device | USB port | Presents as | Notes |
 | --- | --- | --- | --- |
-| Player 1 encoder | `usb-xhci-hcd.0-1.2` | gamepad, `0079:0006` DragonRise Generic USB Joystick | 12 buttons (codes 288 to 299), axes X, Y, Z, RX, RZ and a hat; only X and Y are wired |
-| Player 2 encoder | `usb-xhci-hcd.0-1.3` | the same model, **the same name and id** | |
-| Spinner (GGG TurboTwist 2) | `usb-xhci-hcd.0-1.1` | mouse, `fafa:0060` | |
-| Trackball (GGG ICE-T) | `usb-xhci-hcd.0-1.4` | mouse, `fafa:0020` | its three mouse buttons are not used |
-| Flight controller | on the **Player 2 encoder** (`1.3`) | two buttons, codes 299 and 298 (buttons 11 and 10), the encoder's two spare terminals | its stick is not used |
+| Player 1 encoder | `usb-xhci-hcd.0-1.3` | gamepad, `0079:0006` DragonRise Generic USB Joystick | 12 buttons (codes 288 to 299), axes X, Y, Z, RX, RZ and a hat; only X and Y are wired |
+| Player 2 encoder | `usb-xhci-hcd.0-1.1` | the same model, **the same name and id** | |
+| Spinner (GGG TurboTwist 2) | `usb-xhci-hcd.0-1.4` | mouse, `fafa:0060` | |
+| Trackball (GGG ICE-T) | `usb-xhci-hcd.0-1.2` | mouse, `fafa:0020` | its three mouse buttons are not used |
+| Flight controller | on the **Player 2 encoder** (`1.1`) | two buttons, codes 299 and 298 (buttons 11 and 10), the encoder's two spare terminals | its stick is not used |
+| Pinball flippers (two, both players take turns) | both on the **Player 1 encoder** (`1.3`) | left reads as `abs 0 -`, right as `abs 0 +`: the same signals as that stick pushed left and right | after the 12 November 2026 rebuild; the ports above changed then too |
 | Logitech F310 | `usb-xhci-hcd.1-2` | gamepad | a spare: it takes Player 1's slot when plugged in |
 
 A button's number in SDL, RetroArch and the Linux joystick interface is its code minus 288.

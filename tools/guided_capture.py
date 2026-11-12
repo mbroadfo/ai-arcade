@@ -4,7 +4,7 @@ devices (the AI Arcade virtual pads, the keyboard and the audio adapter are left
 
     python tools/guided_capture.py                      # P1, P2, the spinner and the trackball
     python tools/guided_capture.py --section p2stick,flight,trackball   # only some sections
-                                                        # (p1, p2, p2stick, spinner, trackball, flight, free)
+                                                        # (p1, p2, flippers, p2stick, spinner, trackball, flight, free)
     python tools/guided_capture.py --idle 10            # touch nothing for 10 s: which devices chatter by themselves
     python tools/guided_capture.py --check              # listen for 4 seconds and list the devices, then stop
 
@@ -36,13 +36,15 @@ SECTIONS = {
            ["UP", "DOWN", "RIGHT", "LEFT", "A", "B", "X", "Y", "SNOWFLAKE", "STAR", "COIN 1", "P1 START", "ESC", "TAB"]]),
     "p2": ("Player 2's controller", [("P2", n) for n in
            ["UP", "DOWN", "RIGHT", "LEFT", "A", "B", "X", "Y", "SNOWFLAKE", "STAR", "COIN 2", "P2 START", "ENTER", "PAUSE"]]),
+    "flippers": ("the pinball flipper buttons (two, shared by both players; wired to the Player 1 encoder's stick-left and stick-right)",
+                 [("FLIPPER", "LEFT"), ("FLIPPER", "RIGHT")]),
     "p2stick": ("Player 2's stick alone (after rewiring it)", [("P2", n) for n in ["UP", "DOWN", "RIGHT", "LEFT"]]),
     "flight": ("the flight controller", [("FLIGHT", "button 1"), ("FLIGHT", "button 2")]),
     "spinner": ("the spinner", [("SPINNER", "turn clockwise"), ("SPINNER", "turn counter-clockwise")]),
     "trackball": ("the trackball (rolling only: its three buttons are not used)",
                   [("TRACKBALL", n) for n in ["roll up", "roll down", "roll left", "roll right"]]),
 }
-ORDER = ["p1", "p2", "spinner", "trackball", "flight"]
+ORDER = ["p1", "p2", "flippers", "spinner", "trackball", "flight"]
 # Command devices: never captured as controls. Their keys steer the capture (keyboard S, B, Q; the F310's A, B, Start).
 COMMAND_KEYS = {"KEY_S": "s", "KEY_B": "b", "KEY_Q": "q", "BTN_SOUTH": "s", "BTN_A": "s", "BTN_EAST": "b", "BTN_B": "b",
                 "BTN_START": "q"}

@@ -16,8 +16,8 @@ def block(vendor, product, name, phys, event):
             f"H: Handlers=event{event} js{event}\n")
 
 
-P1 = block("0079", "0006", "DragonRise", "usb-xhci-hcd.0-1.2/input0", 7)
-P2 = block("0079", "0006", "DragonRise", "usb-xhci-hcd.0-1.3/input0", 12)
+P1 = block("0079", "0006", "DragonRise", "usb-xhci-hcd.0-1.3/input0", 7)
+P2 = block("0079", "0006", "DragonRise", "usb-xhci-hcd.0-1.1/input0", 12)
 F310 = block("046d", "c21d", "Logitech Gamepad F310", "usb-xhci-hcd.0-2.1/input0", 9)
 AI = block("1209", "a101", "AI Arcade Player 1", "py-evdev-uinput", 13)
 KEYBOARD = 'I: Bus=0003 Vendor=046d Product=4023 Version=0111\nN: Name="kbd"\nP: Phys=x\nH: Handlers=sysrq kbd event5\n'
@@ -191,8 +191,8 @@ def test_mame_numbers_joysticks_by_event_number_but_retroarch_by_device_path(tmp
     """On the Pi the pad (event 7) is MAME's Joy 1 and the encoders (events 8, 9) are Joy 2 and 3, while RetroArch lists the
     encoders first. The fixtures have no /sys, so make the udev order differ explicitly."""
     pad = block("046d", "c21d", "Logitech Gamepad F310", "usb-xhci-hcd.1-2/input0", 7)
-    e1 = block("0079", "0006", "DragonRise", "usb-xhci-hcd.0-1.2/input0", 8)
-    e2 = block("0079", "0006", "DragonRise", "usb-xhci-hcd.0-1.3/input0", 9)
+    e1 = block("0079", "0006", "DragonRise", "usb-xhci-hcd.0-1.3/input0", 8)
+    e2 = block("0079", "0006", "DragonRise", "usb-xhci-hcd.0-1.1/input0", 9)
     paths = {7: "/sys/b/event7", 8: "/sys/a/event8", 9: "/sys/a/event9"}
     monkeypatch.setattr(pad_map.os.path, "exists", lambda p: True)
     monkeypatch.setattr(pad_map.os.path, "realpath", lambda p: paths[int(p.rsplit("event", 1)[1])])
